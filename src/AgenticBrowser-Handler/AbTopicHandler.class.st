@@ -1,28 +1,12 @@
 Class {
 	#name : 'AbTopicHandler',
 	#superclass : 'ACPClientHandler',
-	#instVars : [ 'topic' ],
+	#instVars : [
+		'topic'
+	],
 	#category : 'AgenticBrowser-Handler',
 	#package : 'AgenticBrowser-Handler'
 }
-
-{ #category : 'accessing' }
-AbTopicHandler >> topic [
-	^ topic
-]
-
-{ #category : 'accessing' }
-AbTopicHandler >> topic: anAbTopic [
-	topic := anAbTopic
-]
-
-{ #category : 'agent-callbacks' }
-AbTopicHandler >> sessionUpdate: aSessionUpdate [
-
-	(aSessionUpdate isAgentMessageChunk or: [ aSessionUpdate isAgentThoughtChunk ])
-		ifFalse: [ ^ self ].
-	topic addAiTextChunk: aSessionUpdate content text
-]
 
 { #category : 'agent-callbacks' }
 AbTopicHandler >> requestPermission: anACPRequestPermission [
@@ -40,4 +24,22 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 		^ response ].
 	response allowAlways.
 	^ response
+]
+
+{ #category : 'agent-callbacks' }
+AbTopicHandler >> sessionUpdate: aSessionUpdate [
+
+	(aSessionUpdate isAgentMessageChunk or: [ aSessionUpdate isAgentThoughtChunk ])
+		ifFalse: [ ^ self ].
+	topic addAiTextChunk: aSessionUpdate content text
+]
+
+{ #category : 'accessing' }
+AbTopicHandler >> topic [
+	^ topic
+]
+
+{ #category : 'accessing' }
+AbTopicHandler >> topic: anAbTopic [
+	topic := anAbTopic
 ]

@@ -12,12 +12,6 @@ AbTopicManagerTest >> setUp [
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testUniqueInstance [
-
-	self assert: AbTopicManager uniqueInstance == AbTopicManager uniqueInstance
-]
-
-{ #category : 'tests' }
 AbTopicManagerTest >> testAddTopic [
 
 	| manager topic |
@@ -42,4 +36,10 @@ AbTopicManagerTest >> testRemoveTopic [
 AbTopicManagerTest >> testTopicsInitiallyEmpty [
 
 	self assert: AbTopicManager uniqueInstance topics isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testUniqueInstance [
+
+	self assert: AbTopicManager uniqueInstance == AbTopicManager uniqueInstance
 ]

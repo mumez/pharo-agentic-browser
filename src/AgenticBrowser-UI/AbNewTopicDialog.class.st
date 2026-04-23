@@ -12,26 +12,16 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
-{ #category : 'initialization' }
-AbNewTopicDialog >> initializePresenters [
+{ #category : 'private' }
+AbNewTopicDialog >> agentOptions [
 
-	titleField := self newTextInput.
-	titleField placeholder: 'Topic title...'.
-
-	agentDropList := self newDropList.
-	agentDropList items: self agentOptions.
-	agentDropList display: [ :opt | opt key ].
-
-	okButton := self newButton label: 'Create'.
-	cancelButton := self newButton label: 'Cancel'
-]
-
-{ #category : 'initialization' }
-AbNewTopicDialog >> initializeWindow: aWindowPresenter [
-
-	aWindowPresenter
-		title: 'New Topic';
-		initialExtent: 400 @ 200
+	^ OrderedCollection new
+		  add: 'claude-agent-acp' -> #( 'claude-agent-acp' );
+		  add: 'Gemini CLI' -> #( 'gemini' '--acp' );
+		  add: 'OpenCode' -> #( 'opencode' 'acp' );
+		  add: 'Copilot CLI' -> #( 'copilot' '--acp' '--stdio' );
+		  add: 'codex-acp' -> #( 'codex-acp' );
+		  yourself
 ]
 
 { #category : 'initialization' }
@@ -64,21 +54,26 @@ AbNewTopicDialog >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'api' }
-AbNewTopicDialog >> topic [
-	^ topic
+{ #category : 'initialization' }
+AbNewTopicDialog >> initializePresenters [
+
+	titleField := self newTextInput.
+	titleField placeholder: 'Topic title...'.
+
+	agentDropList := self newDropList.
+	agentDropList items: self agentOptions.
+	agentDropList display: [ :opt | opt key ].
+
+	okButton := self newButton label: 'Create'.
+	cancelButton := self newButton label: 'Cancel'
 ]
 
-{ #category : 'private' }
-AbNewTopicDialog >> agentOptions [
+{ #category : 'initialization' }
+AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 
-	^ OrderedCollection new
-		  add: 'claude-agent-acp' -> #( 'claude-agent-acp' );
-		  add: 'Gemini CLI' -> #( 'gemini' '--acp' );
-		  add: 'OpenCode' -> #( 'opencode' 'acp' );
-		  add: 'Copilot CLI' -> #( 'copilot' '--acp' '--stdio' );
-		  add: 'codex-acp' -> #( 'codex-acp' );
-		  yourself
+	aWindowPresenter
+		title: 'New Topic';
+		initialExtent: 400 @ 200
 ]
 
 { #category : 'private' }
@@ -92,4 +87,9 @@ AbNewTopicDialog >> onOkClicked [
 		         agentArguments: agentDropList selectedItem value;
 		         yourself.
 	self withWindowDo: [ :w | w close ]
+]
+
+{ #category : 'api' }
+AbNewTopicDialog >> topic [
+	^ topic
 ]

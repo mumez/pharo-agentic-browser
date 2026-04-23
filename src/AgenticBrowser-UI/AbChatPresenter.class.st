@@ -13,19 +13,6 @@ Class {
 }
 
 { #category : 'initialization' }
-AbChatPresenter >> initializePresenters [
-
-	messageDisplay := self newText.
-	messageDisplay beNotEditable.
-
-	inputField := self newText.
-	inputField placeholder: 'Type your request...'.
-
-	sendButton := self newButton.
-	sendButton label: 'Send'
-]
-
-{ #category : 'initialization' }
 AbChatPresenter >> connectPresenters [
 
 	sendButton action: [ self onSendButtonClicked ]
@@ -45,15 +32,6 @@ AbChatPresenter >> defaultLayout [
 ]
 
 { #category : 'api' }
-AbChatPresenter >> topic: anAbTopic [
-
-	currentTopic := anAbTopic.
-	self unsubscribeCurrentTopic.
-	self subscribeToTopic: anAbTopic.
-	self rerenderMessages
-]
-
-{ #category : 'api' }
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	pendingApprovalMessage := anAbMessage.
@@ -68,6 +46,27 @@ AbChatPresenter >> exitApprovalMode [
 	inputField placeholder: 'Type your request...'
 ]
 
+{ #category : 'initialization' }
+AbChatPresenter >> initializePresenters [
+
+	messageDisplay := self newText.
+	messageDisplay beNotEditable.
+
+	inputField := self newText.
+	inputField placeholder: 'Type your request...'.
+
+	sendButton := self newButton.
+	sendButton label: 'Send'
+]
+
+{ #category : 'private' }
+AbChatPresenter >> onMessageAdded: anAbMessage [
+
+	self rerenderMessages.
+	anAbMessage isApprovalRequest ifTrue: [
+		self enterApprovalMode: anAbMessage ]
+]
+
 { #category : 'private' }
 AbChatPresenter >> onSendButtonClicked [
 
@@ -79,33 +78,6 @@ AbChatPresenter >> onSendButtonClicked [
 	pendingApprovalMessage
 		ifNotNil: [ currentTopic resolveApproval: text ]
 		ifNil: [ currentTopic sendPrompt: text ]
-]
-
-{ #category : 'private' }
-AbChatPresenter >> subscribeToTopic: aTopic [
-
-	aTopic announcer
-		when: AbMessageAdded
-		do: [ :ann | self defer: [ self onMessageAdded: ann message ] ]
-		for: self.
-	aTopic announcer
-		when: AbTopicStatusChanged
-		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic ] ]
-		for: self
-]
-
-{ #category : 'private' }
-AbChatPresenter >> unsubscribeCurrentTopic [
-
-	currentTopic ifNotNil: [ :t | t announcer unsubscribe: self ]
-]
-
-{ #category : 'private' }
-AbChatPresenter >> onMessageAdded: anAbMessage [
-
-	self rerenderMessages.
-	anAbMessage isApprovalRequest ifTrue: [
-		self enterApprovalMode: anAbMessage ]
 ]
 
 { #category : 'private' }
@@ -124,4 +96,32 @@ AbChatPresenter >> rerenderMessages [
 				 s
 					 nextPutAll: m displayText;
 					 cr ] ])
+]
+
+{ #category : 'private' }
+AbChatPresenter >> subscribeToTopic: aTopic [
+
+	aTopic announcer
+		when: AbMessageAdded
+		do: [ :ann | self defer: [ self onMessageAdded: ann message ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic ] ]
+		for: self
+]
+
+{ #category : 'api' }
+AbChatPresenter >> topic: anAbTopic [
+
+	currentTopic := anAbTopic.
+	self unsubscribeCurrentTopic.
+	self subscribeToTopic: anAbTopic.
+	self rerenderMessages
+]
+
+{ #category : 'private' }
+AbChatPresenter >> unsubscribeCurrentTopic [
+
+	currentTopic ifNotNil: [ :t | t announcer unsubscribe: self ]
 ]

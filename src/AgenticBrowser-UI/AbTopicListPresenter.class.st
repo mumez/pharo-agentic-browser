@@ -11,15 +11,6 @@ Class {
 }
 
 { #category : 'initialization' }
-AbTopicListPresenter >> initializePresenters [
-
-	topicList := self newList.
-	topicList display: [ :topic | self statusIconFor: topic , ' ' , topic title ].
-	newTopicButton := self newButton.
-	newTopicButton label: '+ New Topic'
-]
-
-{ #category : 'initialization' }
 AbTopicListPresenter >> connectPresenters [
 
 	topicList whenSelectionChangedDo: [ :selection |
@@ -37,6 +28,31 @@ AbTopicListPresenter >> defaultLayout [
 		  add: newTopicButton
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
+]
+
+{ #category : 'initialization' }
+AbTopicListPresenter >> initializePresenters [
+
+	topicList := self newList.
+	topicList display: [ :topic | self statusIconFor: topic , ' ' , topic title ].
+	newTopicButton := self newButton.
+	newTopicButton label: '+ New Topic'
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onNewTopicRequest [
+
+	| dialog |
+	dialog := AbNewTopicDialog new.
+	dialog openModal.
+	dialog topic ifNotNil: [ :topic |
+		AbTopicManager uniqueInstance addTopic: topic.
+		topic announcer
+			when: AbTopicStatusChanged
+			do: [ self defer: [ self refresh ] ]
+			for: self.
+		self refresh.
+		topicList selectItem: topic ]
 ]
 
 { #category : 'api' }
@@ -70,20 +86,4 @@ AbTopicListPresenter >> subscribeToTopicManager [
 			when: AbTopicStatusChanged
 			do: [ self defer: [ self refresh ] ]
 			for: self ]
-]
-
-{ #category : 'private' }
-AbTopicListPresenter >> onNewTopicRequest [
-
-	| dialog |
-	dialog := AbNewTopicDialog new.
-	dialog openModal.
-	dialog topic ifNotNil: [ :topic |
-		AbTopicManager uniqueInstance addTopic: topic.
-		topic announcer
-			when: AbTopicStatusChanged
-			do: [ self defer: [ self refresh ] ]
-			for: self.
-		self refresh.
-		topicList selectItem: topic ]
 ]

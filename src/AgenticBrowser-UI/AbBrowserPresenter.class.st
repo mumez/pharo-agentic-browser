@@ -16,22 +16,6 @@ AbBrowserPresenter class >> open [
 ]
 
 { #category : 'initialization' }
-AbBrowserPresenter >> initializePresenters [
-
-	topicListPresenter := self instantiate: AbTopicListPresenter.
-	chatPresenter := self instantiate: AbChatPresenter
-]
-
-{ #category : 'initialization' }
-AbBrowserPresenter >> initializeWindow: aWindowPresenter [
-
-	aWindowPresenter
-		title: 'Agentic Browser';
-		initialExtent: 900 @ 600.
-	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
-]
-
-{ #category : 'initialization' }
 AbBrowserPresenter >> connectPresenters [
 
 	topicListPresenter onTopicSelected: [ :topic |
@@ -45,6 +29,22 @@ AbBrowserPresenter >> defaultLayout [
 		  add: topicListPresenter withConstraints: [ :c | c width: 220 ];
 		  add: chatPresenter;
 		  yourself
+]
+
+{ #category : 'initialization' }
+AbBrowserPresenter >> initializePresenters [
+
+	topicListPresenter := self instantiate: AbTopicListPresenter.
+	chatPresenter := self instantiate: AbChatPresenter
+]
+
+{ #category : 'initialization' }
+AbBrowserPresenter >> initializeWindow: aWindowPresenter [
+
+	aWindowPresenter
+		title: 'Agentic Browser';
+		initialExtent: 900 @ 600.
+	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
 ]
 
 { #category : 'private' }

@@ -1,7 +1,9 @@
 Class {
 	#name : 'AbTopicStatusChanged',
 	#superclass : 'Announcement',
-	#instVars : [ 'topic' ],
+	#instVars : [
+		'topic'
+	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
 }

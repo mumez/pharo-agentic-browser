@@ -14,15 +14,6 @@ Class {
 }
 
 { #category : 'instance creation' }
-AbMessage class >> sender: aSenderSymbol text: aString [
-
-	^ self new
-		  sender: aSenderSymbol;
-		  text: aString;
-		  yourself
-]
-
-{ #category : 'instance creation' }
 AbMessage class >> approvalRequestText: aString [
 
 	^ self new
@@ -33,6 +24,51 @@ AbMessage class >> approvalRequestText: aString [
 		  yourself
 ]
 
+{ #category : 'instance creation' }
+AbMessage class >> sender: aSenderSymbol text: aString [
+
+	^ self new
+		  sender: aSenderSymbol;
+		  text: aString;
+		  yourself
+]
+
+{ #category : 'operations' }
+AbMessage >> appendText: aString [
+	text := text , aString
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalResponse [
+	^ approvalResponse
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalResponse: aSymbol [
+	approvalResponse := aSymbol
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalSemaphore [
+	^ approvalSemaphore
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalSemaphore: aSemaphore [
+	approvalSemaphore := aSemaphore
+]
+
+{ #category : 'displaying' }
+AbMessage >> displayText [
+	| prefix |
+	prefix := sender = #human
+		ifTrue: [ '[Human] ' ]
+		ifFalse: [ sender = #ai
+			ifTrue: [ isApprovalRequest ifTrue: [ '[⏸ AI] ' ] ifFalse: [ '[AI] ' ] ]
+			ifFalse: [ '[System] ' ] ].
+	^ prefix , text
+]
+
 { #category : 'initialization' }
 AbMessage >> initialize [
 
@@ -40,6 +76,16 @@ AbMessage >> initialize [
 	text := ''.
 	timestamp := DateAndTime now.
 	isApprovalRequest := false
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest [
+	^ isApprovalRequest
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest: aBoolean [
+	isApprovalRequest := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -65,50 +111,4 @@ AbMessage >> text: aString [
 { #category : 'accessing' }
 AbMessage >> timestamp [
 	^ timestamp
-]
-
-{ #category : 'accessing' }
-AbMessage >> isApprovalRequest [
-	^ isApprovalRequest
-]
-
-{ #category : 'accessing' }
-AbMessage >> isApprovalRequest: aBoolean [
-	isApprovalRequest := aBoolean
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalSemaphore [
-	^ approvalSemaphore
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalSemaphore: aSemaphore [
-	approvalSemaphore := aSemaphore
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalResponse [
-	^ approvalResponse
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalResponse: aSymbol [
-	approvalResponse := aSymbol
-]
-
-{ #category : 'operations' }
-AbMessage >> appendText: aString [
-	text := text , aString
-]
-
-{ #category : 'displaying' }
-AbMessage >> displayText [
-	| prefix |
-	prefix := sender = #human
-		ifTrue: [ '[Human] ' ]
-		ifFalse: [ sender = #ai
-			ifTrue: [ isApprovalRequest ifTrue: [ '[⏸ AI] ' ] ifFalse: [ '[AI] ' ] ]
-			ifFalse: [ '[System] ' ] ].
-	^ prefix , text
 ]

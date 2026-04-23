@@ -55,16 +55,6 @@ All source lives as Tonel files in `src/`. The edit→import→test cycle:
 3. Import: use `/st-import` skill or `mcp__plugin_smalltalk-dev_smalltalk-interop__import_package`
 4. Run tests: use `/st-test` skill or `mcp__plugin_smalltalk-dev_smalltalk-interop__run_class_test`
 5. After interactive fixes in image, export back: use `/st-export` skill or `mcp__plugin_smalltalk-dev_smalltalk-interop__export_package`
-
-Import command reference:
-```smalltalk
-"Load from local src/ — run in Pharo Playground"
-Metacello new
-    baseline: 'AgenticBrowser';
-    repository: 'tonel:///home/mumez/git/pharo-agentic-browser/src';
-    load: 'Tests'.
-```
-
 ---
 
 ## Task 1: Baseline + directory scaffold
