@@ -34,7 +34,10 @@ AbWorkingDirectory >> path [
 AbWorkingDirectory >> safeTopicName [
 
 	| safe |
-	safe := topic title collect: [ :c | c = $  ifTrue: [ $- ] ifFalse: [ c ] ].
+	safe := topic title collect: [ :c |
+		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
+			    ifTrue: [ c ]
+			    ifFalse: [ $- ] ].
 	safe isEmpty ifTrue: [ safe := 'topic' ].
 	^ safe
 ]
@@ -57,6 +60,7 @@ AbWorkingDirectory >> exportPackage: aPackageName [
 { #category : 'operations' }
 AbWorkingDirectory >> importPackage: aPackageName [
 
+	self ensureExists.
 	^ SisServer current handleImportPackage: {
 		  'package_name' -> aPackageName.
 		  'path' -> self path fullName } asDictionary
@@ -88,5 +92,5 @@ AbWorkingDirectory >> runAllTests [
 		  topic watchedPackages do: [ :pkg |
 			  | result |
 			  result := self runTests: pkg.
-			  s nextPutAll: pkg; nextPutAll: ': '; nextPutAll: (result at: 'result'); cr ] ]
+			  s nextPutAll: pkg; nextPutAll: ': '; nextPutAll: (result at: 'result' ifAbsent: [ 'error' ]); cr ] ]
 ]

@@ -34,6 +34,16 @@ AbWorkingDirectoryTest >> testSafeTopicNameEmptyFallback [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
+
+	| topic workDir |
+	topic := AbTopic new title: 'DB/Schema: v2'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self deny: (workDir safeTopicName includesSubstring: '/').
+	self deny: (workDir safeTopicName includesSubstring: ':')
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testEnsureExists [
 
 	| topic workDir |
