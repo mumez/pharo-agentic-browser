@@ -6,7 +6,7 @@
 
 **Architecture:** Three packages: AgenticBrowser-Core (domain model with AbTopic/AbTopicManager/AbMessage and announcements), AgenticBrowser-Handler (AbTopicHandler bridges pharo-acp callbacks to domain), AgenticBrowser-UI (Spec2 presenters for 2-pane browser). Topics use SState FSM for status tracking. Human-in-the-loop approval uses Semaphore to block the handler thread while the UI collects user text response.
 
-**Tech Stack:** Pharo 12+, Spec2 (built-in), pharo-acp (`github://mumez/pharo-acp:main/src`), SState (`github://mumez/SState/src`), Tonel source format
+**Tech Stack:** Pharo 12+, Spec2 (built-in), pharo-acp (`github://mumez/pharo-acp:main/src`), SState (`github://mumez/SState/src`), PharoSmalltalkInteropServer (`github://mumez/PharoSmalltalkInteropServer:main/src`), Tonel source format
 
 ---
 
@@ -127,8 +127,11 @@ BaselineOfAgenticBrowser >> baseline: spec [
 			baseline: 'SState'
 			with: [ spec repository: 'github://mumez/SState/src' ].
 		spec
+			baseline: 'PharoSmalltalkInteropServer'
+			with: [ spec repository: 'github://mumez/PharoSmalltalkInteropServer:main/src' ].
+		spec
 			package: 'AgenticBrowser-Core'
-			with: [ spec requires: #( 'ACP' 'SState' ) ].
+			with: [ spec requires: #( 'ACP' 'SState' 'PharoSmalltalkInteropServer' ) ].
 		spec
 			package: 'AgenticBrowser-Handler'
 			with: [ spec requires: #( 'AgenticBrowser-Core' 'ACP' ) ].
@@ -1565,4 +1568,4 @@ git commit -m "Complete Phase 1: AgenticBrowser with topic management, chat UI, 
 - **Spec coverage**: ✓ All Phase 1 requirements covered: 2-pane layout, topic status (idle/working/waitingForHuman/done), conversation-style approval, per-topic agent selection, image-based persistence via singleton, SState FSM.
 - **Placeholder scan**: No TBDs or TODOs. All code steps include actual Tonel source.
 - **Type consistency**: `agentArguments` (Array) used consistently in AbTopic and AbNewTopicDialog. `AbMessage >> approvalResponse` is a Symbol (`#allowAlways`, `#rejectOnce`, `#rejectAlways`) matching ACPRequestPermissionResponse method names. `status` always delegated to `stateMachine currentState name`.
-- **Phase 2 items deferred correctly**: AbImageWatcher and working directory management not included in this plan.
+- **Phase 2 items deferred correctly**: AbImageWatcher and working directory management not included in this plan. PharoSmalltalkInteropServer is loaded as a dependency but direct `SisServer current` calls (for import/export/test from AbTopic) are a Phase 2 concern.

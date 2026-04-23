@@ -230,9 +230,10 @@ AbChatPresenter >> exitApprovalMode
 3. AbChatPresenter receives notification → displays message + enterApprovalMode:
 4. User types response → sendButton
 5. AbChatPresenter → topic resolveApproval: userText
-6. topic resolveApproval: sets approvalResponse and signals approvalSemaphore
-7. AbTopicHandler wait: unblocked → returns approvalResponse
-8. stateMachine handleEvent: #humanResponded → transitions back to #working
+6. topic resolveApproval: parses text → sets approvalResponse
+             → stateMachine handleEvent: #humanResponded  (transitions to #working)
+             → approvalSemaphore signal
+7. AbTopicHandler wait: unblocked → returns approvalResponse to ACP
 ```
 
 ### AbNewTopicDialog
@@ -292,7 +293,14 @@ Both approaches share the `AbTopic >> watchedPackages` design. The implementatio
 - AI works on the exported files
 - AI imports them back into Pharo and runs tests
 
-Export/import uses the smalltalk-dev-plugin skills (`/st-export`, `/st-import`).
+Export/import uses the smalltalk-dev-plugin skills (`/st-export`, `/st-import`), which internally route through PharoSmalltalkInteropServer. AgenticBrowser can also call SisServer directly (same image) to trigger import/export/test operations without going through the AI agent:
+
+```smalltalk
+"Direct call from AgenticBrowser (Phase 2)"
+SisServer current handleImportPackage: {
+    'package_name' -> 'AgenticBrowser-Core'.
+    'path' -> '/path/to/topic-workdir' } asDictionary.
+```
 
 ---
 
@@ -302,6 +310,7 @@ Export/import uses the smalltalk-dev-plugin skills (`/st-export`, `/st-import`).
 |---------|---------|
 | pharo-acp | ACP client (connection, session, prompt) |
 | SState | Topic state machine |
+| PharoSmalltalkInteropServer | HTTP API server for package import/export/test; callable directly via `SisServer current` from within the same Pharo image |
 | Spec2 | UI framework (Pharo built-in) |
 
 ---
