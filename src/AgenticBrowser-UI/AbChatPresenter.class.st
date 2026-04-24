@@ -6,7 +6,11 @@ Class {
 		'inputField',
 		'sendButton',
 		'currentTopic',
-		'pendingApprovalMessage'
+		'pendingApprovalMessage',
+		'workDirLabel',
+		'exportButton',
+		'importButton',
+		'runTestsButton'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -15,13 +19,23 @@ Class {
 { #category : 'initialization' }
 AbChatPresenter >> connectPresenters [
 
-	sendButton action: [ self onSendButtonClicked ]
+	sendButton action: [ self onSendButtonClicked ].
+	exportButton action: [ self onExportClicked ].
+	importButton action: [ self onImportClicked ].
+	runTestsButton action: [ self onRunTestsClicked ]
 ]
 
 { #category : 'layout' }
 AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
+		  add: (SpBoxLayout newLeftToRight
+				   add: workDirLabel;
+				   add: exportButton withConstraints: [ :c | c width: 80 ];
+				   add: importButton withConstraints: [ :c | c width: 80 ];
+				   add: runTestsButton withConstraints: [ :c | c width: 80 ];
+				   yourself)
+		  withConstraints: [ :c | c height: 32 ];
 		  add: messageDisplay;
 		  add: (SpBoxLayout newLeftToRight
 				   add: inputField;
@@ -56,7 +70,40 @@ AbChatPresenter >> initializePresenters [
 	inputField placeholder: 'Type your request...'.
 
 	sendButton := self newButton.
-	sendButton label: 'Send'
+	sendButton label: 'Send'.
+
+	workDirLabel := self newLabel.
+	workDirLabel label: ''.
+
+	exportButton := self newButton label: '↑ Export'.
+	importButton := self newButton label: '↓ Import'.
+	runTestsButton := self newButton label: '▶ Tests'
+]
+
+{ #category : 'private' }
+AbChatPresenter >> onExportClicked [
+
+	currentTopic ifNil: [ ^ self ].
+	[ currentTopic exportWatchedPackages.
+	  currentTopic addSystemMessage: 'Exported packages to ' , currentTopic workingDirectory path fullName ] fork
+]
+
+{ #category : 'private' }
+AbChatPresenter >> onImportClicked [
+
+	currentTopic ifNil: [ ^ self ].
+	[ currentTopic importWatchedPackages.
+	  currentTopic addSystemMessage: 'Imported packages from ' , currentTopic workingDirectory path fullName ] fork
+]
+
+{ #category : 'private' }
+AbChatPresenter >> onRunTestsClicked [
+
+	currentTopic ifNil: [ ^ self ].
+	currentTopic watchedPackages isEmpty ifTrue: [ ^ self ].
+	[ | results |
+	  results := currentTopic workingDirectory runAllTests.
+	  currentTopic addSystemMessage: 'Test results:' , String cr , results ] fork
 ]
 
 { #category : 'private' }
@@ -117,6 +164,7 @@ AbChatPresenter >> topic: anAbTopic [
 	currentTopic := anAbTopic.
 	self unsubscribeCurrentTopic.
 	self subscribeToTopic: anAbTopic.
+	self updateWorkDirLabel.
 	self rerenderMessages
 ]
 
@@ -124,4 +172,15 @@ AbChatPresenter >> topic: anAbTopic [
 AbChatPresenter >> unsubscribeCurrentTopic [
 
 	currentTopic ifNotNil: [ :t | t announcer unsubscribe: self ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> updateWorkDirLabel [
+
+	currentTopic ifNil: [
+		workDirLabel label: ''.
+		^ self ].
+	currentTopic watchedPackages isEmpty
+		ifTrue: [ workDirLabel label: '(no packages watched)' ]
+		ifFalse: [ workDirLabel label: currentTopic workingDirectory path fullName ]
 ]
