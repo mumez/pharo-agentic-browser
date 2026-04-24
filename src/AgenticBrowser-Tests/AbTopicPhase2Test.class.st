@@ -72,8 +72,7 @@ AbTopicPhase2Test >> testStartWatchingAndStop [
 	| topic |
 	topic := AbTopic new.
 	topic startWatching.
-	self assert: topic imageWatcher isWatching.
-	topic stopWatching.
+	[ self assert: topic imageWatcher isWatching ] ensure: [ topic stopWatching ].
 	self deny: topic imageWatcher isWatching
 ]
 
