@@ -1,16 +1,13 @@
 Class {
 	#name : 'AbImageWatcher',
 	#superclass : 'Object',
-	#instVars : [ 'topic', 'isWatching' ],
+	#instVars : [
+		'topic',
+		'isWatching'
+	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
 }
-
-{ #category : 'initialization' }
-AbImageWatcher >> initialize [
-
-	isWatching := false
-]
 
 { #category : 'instance creation' }
 AbImageWatcher class >> forTopic: anAbTopic [
@@ -20,15 +17,27 @@ AbImageWatcher class >> forTopic: anAbTopic [
 		  yourself
 ]
 
-{ #category : 'accessing' }
-AbImageWatcher >> topic [
-	^ topic
+{ #category : 'event handling' }
+AbImageWatcher >> handleClassChange: anAnnouncement [
+
+	| packageName |
+	packageName := anAnnouncement classAffected package name.
+	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
+	[ topic workingDirectory exportPackage: packageName ] fork
 ]
 
-{ #category : 'accessing' }
-AbImageWatcher >> topic: anAbTopic [
+{ #category : 'event handling' }
+AbImageWatcher >> handleMethodChange: anAnnouncement [
 
-	topic := anAbTopic.
+	| packageName |
+	packageName := anAnnouncement methodPackage name.
+	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
+	[ topic workingDirectory exportPackage: packageName ] fork
+]
+
+{ #category : 'initialization' }
+AbImageWatcher >> initialize [
+
 	isWatching := false
 ]
 
@@ -58,20 +67,14 @@ AbImageWatcher >> stop [
 	isWatching := false
 ]
 
-{ #category : 'event handling' }
-AbImageWatcher >> handleMethodChange: anAnnouncement [
-
-	| packageName |
-	packageName := anAnnouncement methodPackage name.
-	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
-	[ topic workingDirectory exportPackage: packageName ] fork
+{ #category : 'accessing' }
+AbImageWatcher >> topic [
+	^ topic
 ]
 
-{ #category : 'event handling' }
-AbImageWatcher >> handleClassChange: anAnnouncement [
+{ #category : 'accessing' }
+AbImageWatcher >> topic: anAbTopic [
 
-	| packageName |
-	packageName := anAnnouncement classAffected package name.
-	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
-	[ topic workingDirectory exportPackage: packageName ] fork
+	topic := anAbTopic.
+	isWatching := false
 ]

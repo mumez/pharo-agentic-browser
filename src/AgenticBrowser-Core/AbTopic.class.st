@@ -40,6 +40,22 @@ AbTopic >> addApprovalRequest: aDescription [
 	^ msg
 ]
 
+{ #category : 'operations' }
+AbTopic >> addSystemMessage: aString [
+
+	| msg |
+	msg := AbMessage sender: #system text: aString.
+	messages add: msg.
+	self announceMessageAdded: msg
+]
+
+{ #category : 'operations' }
+AbTopic >> addWatchedPackage: aPackageName [
+
+	(watchedPackages includes: aPackageName) ifFalse: [
+		watchedPackages add: aPackageName ]
+]
+
 { #category : 'accessing' }
 AbTopic >> agentArguments [
 	^ agentArguments
@@ -105,6 +121,24 @@ AbTopic >> ensureConnected [
 	client isNil ifTrue: [ self doConnect ]
 ]
 
+{ #category : 'operations' }
+AbTopic >> exportWatchedPackages [
+
+	self workingDirectory exportAll
+]
+
+{ #category : 'accessing' }
+AbTopic >> imageWatcher [
+
+	^ imageWatcher ifNil: [ imageWatcher := AbImageWatcher forTopic: self ]
+]
+
+{ #category : 'operations' }
+AbTopic >> importWatchedPackages [
+
+	self workingDirectory importAll
+]
+
 { #category : 'initialization' }
 AbTopic >> initialize [
 
@@ -138,6 +172,12 @@ AbTopic >> initializeStateMachine [
 { #category : 'accessing' }
 AbTopic >> messages [
 	^ messages
+]
+
+{ #category : 'operations' }
+AbTopic >> removeWatchedPackage: aPackageName [
+
+	watchedPackages remove: aPackageName ifAbsent: []
 ]
 
 { #category : 'operations' }
@@ -181,6 +221,12 @@ AbTopic >> sessionId [
 	^ sessionId
 ]
 
+{ #category : 'operations' }
+AbTopic >> startWatching [
+
+	self imageWatcher start
+]
+
 { #category : 'accessing' }
 AbTopic >> stateMachine [
 	^ stateMachine
@@ -189,6 +235,12 @@ AbTopic >> stateMachine [
 { #category : 'accessing' }
 AbTopic >> status [
 	^ stateMachine currentState name
+]
+
+{ #category : 'operations' }
+AbTopic >> stopWatching [
+
+	imageWatcher ifNotNil: [ imageWatcher stop ]
 ]
 
 { #category : 'accessing' }
@@ -210,56 +262,4 @@ AbTopic >> watchedPackages [
 AbTopic >> workingDirectory [
 
 	^ workingDirectory ifNil: [ workingDirectory := AbWorkingDirectory forTopic: self ]
-]
-
-{ #category : 'accessing' }
-AbTopic >> imageWatcher [
-
-	^ imageWatcher ifNil: [ imageWatcher := AbImageWatcher forTopic: self ]
-]
-
-{ #category : 'operations' }
-AbTopic >> addWatchedPackage: aPackageName [
-
-	(watchedPackages includes: aPackageName) ifFalse: [
-		watchedPackages add: aPackageName ]
-]
-
-{ #category : 'operations' }
-AbTopic >> removeWatchedPackage: aPackageName [
-
-	watchedPackages remove: aPackageName ifAbsent: []
-]
-
-{ #category : 'operations' }
-AbTopic >> startWatching [
-
-	self imageWatcher start
-]
-
-{ #category : 'operations' }
-AbTopic >> stopWatching [
-
-	imageWatcher ifNotNil: [ imageWatcher stop ]
-]
-
-{ #category : 'operations' }
-AbTopic >> exportWatchedPackages [
-
-	self workingDirectory exportAll
-]
-
-{ #category : 'operations' }
-AbTopic >> importWatchedPackages [
-
-	self workingDirectory importAll
-]
-
-{ #category : 'operations' }
-AbTopic >> addSystemMessage: aString [
-
-	| msg |
-	msg := AbMessage sender: #system text: aString.
-	messages add: msg.
-	self announceMessageAdded: msg
 ]

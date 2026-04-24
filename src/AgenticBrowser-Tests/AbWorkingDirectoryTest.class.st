@@ -6,6 +6,17 @@ Class {
 }
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExists [
+
+	| topic workDir |
+	topic := AbTopic new title: 'Test-WD-Creation'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	workDir ensureExists.
+	self assert: workDir path exists.
+	workDir path deleteAll
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testPath [
 
 	| topic workDir |
@@ -13,15 +24,6 @@ AbWorkingDirectoryTest >> testPath [
 	workDir := AbWorkingDirectory forTopic: topic.
 	self assert: (workDir path fullName includesSubstring: 'agentic-browser').
 	self assert: (workDir path fullName includesSubstring: 'DB-Optimization')
-]
-
-{ #category : 'tests' }
-AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpaces [
-
-	| topic workDir |
-	topic := AbTopic new title: 'My Cool Topic'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	self assert: workDir safeTopicName equals: 'My-Cool-Topic'
 ]
 
 { #category : 'tests' }
@@ -34,6 +36,15 @@ AbWorkingDirectoryTest >> testSafeTopicNameEmptyFallback [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpaces [
+
+	| topic workDir |
+	topic := AbTopic new title: 'My Cool Topic'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self assert: workDir safeTopicName equals: 'My-Cool-Topic'
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
 
 	| topic workDir |
@@ -41,15 +52,4 @@ AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
 	workDir := AbWorkingDirectory forTopic: topic.
 	self deny: (workDir safeTopicName includesSubstring: '/').
 	self deny: (workDir safeTopicName includesSubstring: ':')
-]
-
-{ #category : 'tests' }
-AbWorkingDirectoryTest >> testEnsureExists [
-
-	| topic workDir |
-	topic := AbTopic new title: 'Test-WD-Creation'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	workDir ensureExists.
-	self assert: workDir path exists.
-	workDir path deleteAll
 ]

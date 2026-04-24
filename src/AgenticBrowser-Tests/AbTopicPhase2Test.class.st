@@ -13,6 +13,17 @@ AbTopicPhase2Test >> tearDown [
 ]
 
 { #category : 'tests' }
+AbTopicPhase2Test >> testAddSystemMessage [
+
+	| topic |
+	topic := AbTopic new.
+	topic addSystemMessage: 'Export complete'.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #system.
+	self assert: topic messages last text equals: 'Export complete'
+]
+
+{ #category : 'tests' }
 AbTopicPhase2Test >> testAddWatchedPackage [
 
 	| topic |
@@ -51,6 +62,16 @@ AbTopicPhase2Test >> testRemoveWatchedPackageAbsent [
 ]
 
 { #category : 'tests' }
+AbTopicPhase2Test >> testStartWatchingAndStop [
+
+	| topic |
+	topic := AbTopic new.
+	topic startWatching.
+	[ self assert: topic imageWatcher isWatching ] ensure: [ topic stopWatching ].
+	self deny: topic imageWatcher isWatching
+]
+
+{ #category : 'tests' }
 AbTopicPhase2Test >> testWorkingDirectoryLazyInit [
 
 	| topic |
@@ -64,25 +85,4 @@ AbTopicPhase2Test >> testWorkingDirectoryReturnsSameInstance [
 	| topic |
 	topic := AbTopic new.
 	self assert: topic workingDirectory == topic workingDirectory
-]
-
-{ #category : 'tests' }
-AbTopicPhase2Test >> testStartWatchingAndStop [
-
-	| topic |
-	topic := AbTopic new.
-	topic startWatching.
-	[ self assert: topic imageWatcher isWatching ] ensure: [ topic stopWatching ].
-	self deny: topic imageWatcher isWatching
-]
-
-{ #category : 'tests' }
-AbTopicPhase2Test >> testAddSystemMessage [
-
-	| topic |
-	topic := AbTopic new.
-	topic addSystemMessage: 'Export complete'.
-	self assert: topic messages size equals: 1.
-	self assert: topic messages last sender equals: #system.
-	self assert: topic messages last text equals: 'Export complete'
 ]

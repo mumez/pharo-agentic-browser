@@ -105,6 +105,14 @@ AbChatPresenter >> onImportClicked [
 ]
 
 { #category : 'private' }
+AbChatPresenter >> onMessageAdded: anAbMessage [
+
+	self rerenderMessages.
+	anAbMessage isApprovalRequest ifTrue: [
+		self enterApprovalMode: anAbMessage ]
+]
+
+{ #category : 'private' }
 AbChatPresenter >> onRunTestsClicked [
 
 	| topic |
@@ -116,14 +124,6 @@ AbChatPresenter >> onRunTestsClicked [
 	    topic addSystemMessage: 'Test results:' , String cr , results ]
 		  on: Error
 		  do: [ :e | topic addSystemMessage: 'Tests failed: ' , e messageText ] ] fork
-]
-
-{ #category : 'private' }
-AbChatPresenter >> onMessageAdded: anAbMessage [
-
-	self rerenderMessages.
-	anAbMessage isApprovalRequest ifTrue: [
-		self enterApprovalMode: anAbMessage ]
 ]
 
 { #category : 'private' }
