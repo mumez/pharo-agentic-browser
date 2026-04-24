@@ -60,9 +60,15 @@ AbImageWatcherTest >> testHandleClassChangeIgnoresUnwatchedPackage [
 
 	| ann errorRaised |
 	errorRaised := false.
+	"ClassModifiedClassDefinition has no classAffected: setter;
+	 newClassDefinition: sets the class returned by classAffected.
+	 The handler calls anAnnouncement classAffected package name,
+	 so we must use newClassDefinition: to populate classAffected."
 	ann := ClassModifiedClassDefinition new.
 	ann newClassDefinition: AbTopic.
-	"watchedPackages is empty so handler should return early without accessing workingDirectory"
+	"topic watchedPackages is empty, so the handler calls classAffected package name
+	 and then returns early — no workingDirectory access should occur"
+	topic watchedPackages add: 'SomeOtherPackage'.
 	[ watcher handleClassChange: ann ]
 		on: Error
 		do: [ :e | errorRaised := true ].

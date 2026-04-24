@@ -6,6 +6,12 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
+{ #category : 'initialization' }
+AbImageWatcher >> initialize [
+
+	isWatching := false
+]
+
 { #category : 'instance creation' }
 AbImageWatcher class >> forTopic: anAbTopic [
 
