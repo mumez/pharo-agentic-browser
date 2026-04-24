@@ -83,27 +83,39 @@ AbChatPresenter >> initializePresenters [
 { #category : 'private' }
 AbChatPresenter >> onExportClicked [
 
-	currentTopic ifNil: [ ^ self ].
-	[ currentTopic exportWatchedPackages.
-	  currentTopic addSystemMessage: 'Exported packages to ' , currentTopic workingDirectory path fullName ] fork
+	| topic |
+	topic := currentTopic.
+	topic ifNil: [ ^ self ].
+	[ [ topic exportWatchedPackages.
+	    topic addSystemMessage: 'Exported packages to ' , topic workingDirectory path fullName ]
+		  on: Error
+		  do: [ :e | topic addSystemMessage: 'Export failed: ' , e messageText ] ] fork
 ]
 
 { #category : 'private' }
 AbChatPresenter >> onImportClicked [
 
-	currentTopic ifNil: [ ^ self ].
-	[ currentTopic importWatchedPackages.
-	  currentTopic addSystemMessage: 'Imported packages from ' , currentTopic workingDirectory path fullName ] fork
+	| topic |
+	topic := currentTopic.
+	topic ifNil: [ ^ self ].
+	[ [ topic importWatchedPackages.
+	    topic addSystemMessage: 'Imported packages from ' , topic workingDirectory path fullName ]
+		  on: Error
+		  do: [ :e | topic addSystemMessage: 'Import failed: ' , e messageText ] ] fork
 ]
 
 { #category : 'private' }
 AbChatPresenter >> onRunTestsClicked [
 
-	currentTopic ifNil: [ ^ self ].
-	currentTopic watchedPackages isEmpty ifTrue: [ ^ self ].
-	[ | results |
-	  results := currentTopic workingDirectory runAllTests.
-	  currentTopic addSystemMessage: 'Test results:' , String cr , results ] fork
+	| topic |
+	topic := currentTopic.
+	topic ifNil: [ ^ self ].
+	topic watchedPackages isEmpty ifTrue: [ ^ self ].
+	[ [ | results |
+	    results := topic workingDirectory runAllTests.
+	    topic addSystemMessage: 'Test results:' , String cr , results ]
+		  on: Error
+		  do: [ :e | topic addSystemMessage: 'Tests failed: ' , e messageText ] ] fork
 ]
 
 { #category : 'private' }
@@ -150,7 +162,10 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 
 	aTopic announcer
 		when: AbMessageAdded
-		do: [ :ann | self defer: [ self onMessageAdded: ann message ] ]
+		do: [ :ann |
+			self defer: [
+				self onMessageAdded: ann message.
+				self updateWorkDirLabel ] ]
 		for: self.
 	aTopic announcer
 		when: AbTopicStatusChanged
