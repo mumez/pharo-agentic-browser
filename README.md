@@ -6,8 +6,8 @@ A GUI application inside the Pharo image for managing multiple AI agent work ses
 
 ```
 +---------------------+-------------------------------------------+
-|   Topics            |  DB Optimization                          |
-|                     |                                           |
+|   Topics            |  ~/agentic-browser/DB-Optimization  ↑ ↓ ▶ |
+|                     +-------------------------------------------+
 |  ● DB Optimization  |  AI: Found QueryClass and DBAdapter.      |
 |  ⏸ UI Improvement   |      Starting export and work.            |
 |  ✓ Fix Tests        |                                           |
@@ -32,6 +32,8 @@ The core workflow:
 - **Human-in-the-loop** — conversation-style approval flow (no modal dialogs)
 - **Agent-agnostic** — works with any ACP-compatible agent
 - **Image persistence** — topic history and state survive Pharo image save/restore
+- **Working directory management** — per-topic directory with one-click export/import/test via SisServer
+- **Image change watching** — auto re-exports watched packages when you edit code in the Pharo image
 
 ## Requirements
 
@@ -70,12 +72,33 @@ AbBrowserPresenter open.
 ```
 
 1. Click **+ New Topic**
-2. Enter a title and select an agent from the dropdown
+2. Enter a title, select an agent, and optionally select packages to watch
 3. Click **Create** — the topic appears in the left sidebar with `○` (idle)
 4. Type a request and press **Send** — status changes to `●` (working)
 5. When the AI requests permission, the input placeholder changes and status shows `⏸`
 6. Type your response (e.g. `yes` / `no`) and press **Send**
 7. The AI resumes; when finished, status changes to `✓` (done)
+
+### Working Directory Toolbar
+
+When a topic has watched packages, the chat pane shows a toolbar with:
+
+- **Path label** — working directory (`~/agentic-browser/<topic-name>/`)
+- **↑ Export** — export watched packages from the image to the working directory
+- **↓ Import** — import packages from the working directory into the image
+- **▶ Tests** — run tests for watched packages and show results in chat
+
+### Image Change Watching
+
+Enable automatic re-export whenever you edit code in the Pharo image:
+
+```smalltalk
+"Start watching (re-exports on every method/class save)"
+AbTopicManager uniqueInstance topics first startWatching.
+
+"Stop watching"
+AbTopicManager uniqueInstance topics first stopWatching.
+```
 
 ## Supported Agents
 
@@ -91,7 +114,7 @@ AbBrowserPresenter open.
 
 | Package | Contents |
 |---------|----------|
-| `AgenticBrowser-Core` | Domain model: `AbTopic`, `AbTopicManager`, `AbMessage`, announcements |
+| `AgenticBrowser-Core` | Domain model: `AbTopic`, `AbTopicManager`, `AbMessage`, `AbWorkingDirectory`, `AbImageWatcher`, announcements |
 | `AgenticBrowser-Handler` | ACP callback bridge: `AbTopicHandler` |
 | `AgenticBrowser-UI` | Spec2 presenters: browser, topic list, chat, new-topic dialog |
 | `AgenticBrowser-Tests` | SUnit tests for Core |
@@ -116,6 +139,20 @@ Each topic has an FSM with four states:
 ### Human-in-the-Loop Approval
 
 When the AI requests permission, `AbTopicHandler#requestPermission:` blocks its thread on a `Semaphore`. The UI enters approval mode (placeholder text changes). When the user submits a response, `AbTopic#resolveApproval:` fires the `#humanResponded` event and signals the semaphore, unblocking the handler thread.
+
+### Working Directory (`AbWorkingDirectory`)
+
+Each topic has a working directory at `~/agentic-browser/<safe-topic-name>/`. It wraps `SisServer` to export, import, and run tests for a named package:
+
+```smalltalk
+topic workingDirectory exportPackage: 'AgenticBrowser-Core'.
+topic workingDirectory importPackage: 'AgenticBrowser-Core'.
+topic workingDirectory runAllTests.
+```
+
+### Image Change Watcher (`AbImageWatcher`)
+
+`AbImageWatcher` subscribes to `SystemAnnouncer` for `MethodAnnouncement` and `ClassAnnouncement`. When a method or class in a watched package is saved, it forks a call to `workingDirectory exportPackage:`, keeping the working directory in sync automatically.
 
 ## Related Projects
 
