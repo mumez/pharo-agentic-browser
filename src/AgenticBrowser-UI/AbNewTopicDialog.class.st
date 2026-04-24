@@ -4,6 +4,7 @@ Class {
 	#instVars : [
 		'titleField',
 		'agentDropList',
+		'packageList',
 		'okButton',
 		'cancelButton',
 		'topic'
@@ -46,6 +47,9 @@ AbNewTopicDialog >> defaultLayout [
 				   add: agentDropList;
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
+		  add: (self newLabel label: 'Packages to watch (optional, multi-select):')
+		  withConstraints: [ :c | c height: 24 ];
+		  add: packageList;
 		  add: (SpBoxLayout newLeftToRight
 				   addLast: cancelButton withConstraints: [ :c | c width: 80 ];
 				   addLast: okButton withConstraints: [ :c | c width: 80 ];
@@ -64,6 +68,11 @@ AbNewTopicDialog >> initializePresenters [
 	agentDropList items: self agentOptions.
 	agentDropList display: [ :opt | opt key ].
 
+	packageList := self newList.
+	packageList beMultipleSelection.
+	packageList items: self installedPackageNames.
+	packageList display: [ :name | name ].
+
 	okButton := self newButton label: 'Create'.
 	cancelButton := self newButton label: 'Cancel'
 ]
@@ -73,7 +82,16 @@ AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 
 	aWindowPresenter
 		title: 'New Topic';
-		initialExtent: 400 @ 200
+		initialExtent: 420 @ 420
+]
+
+{ #category : 'private' }
+AbNewTopicDialog >> installedPackageNames [
+
+	^ (PackageOrganizer default packages
+		   collect: [ :p | p name ]
+		   thenSelect: [ :name | name notEmpty ])
+		  asSortedCollection asArray
 ]
 
 { #category : 'private' }
@@ -86,6 +104,7 @@ AbNewTopicDialog >> onOkClicked [
 		         title: titleText;
 		         agentArguments: agentDropList selectedItem value;
 		         yourself.
+	packageList selectedItems do: [ :name | topic addWatchedPackage: name ].
 	self withWindowDo: [ :w | w close ]
 ]
 

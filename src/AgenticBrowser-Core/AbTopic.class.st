@@ -9,7 +9,9 @@ Class {
 		'sessionId',
 		'stateMachine',
 		'announcer',
-		'watchedPackages'
+		'watchedPackages',
+		'workingDirectory',
+		'imageWatcher'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -36,6 +38,22 @@ AbTopic >> addApprovalRequest: aDescription [
 	messages add: msg.
 	self announceMessageAdded: msg.
 	^ msg
+]
+
+{ #category : 'operations' }
+AbTopic >> addSystemMessage: aString [
+
+	| msg |
+	msg := AbMessage sender: #system text: aString.
+	messages add: msg.
+	self announceMessageAdded: msg
+]
+
+{ #category : 'operations' }
+AbTopic >> addWatchedPackage: aPackageName [
+
+	(watchedPackages includes: aPackageName) ifFalse: [
+		watchedPackages add: aPackageName ]
 ]
 
 { #category : 'accessing' }
@@ -103,6 +121,24 @@ AbTopic >> ensureConnected [
 	client isNil ifTrue: [ self doConnect ]
 ]
 
+{ #category : 'operations' }
+AbTopic >> exportWatchedPackages [
+
+	self workingDirectory exportAll
+]
+
+{ #category : 'accessing' }
+AbTopic >> imageWatcher [
+
+	^ imageWatcher ifNil: [ imageWatcher := AbImageWatcher forTopic: self ]
+]
+
+{ #category : 'operations' }
+AbTopic >> importWatchedPackages [
+
+	self workingDirectory importAll
+]
+
 { #category : 'initialization' }
 AbTopic >> initialize [
 
@@ -136,6 +172,12 @@ AbTopic >> initializeStateMachine [
 { #category : 'accessing' }
 AbTopic >> messages [
 	^ messages
+]
+
+{ #category : 'operations' }
+AbTopic >> removeWatchedPackage: aPackageName [
+
+	watchedPackages remove: aPackageName ifAbsent: []
 ]
 
 { #category : 'operations' }
@@ -179,6 +221,12 @@ AbTopic >> sessionId [
 	^ sessionId
 ]
 
+{ #category : 'operations' }
+AbTopic >> startWatching [
+
+	self imageWatcher start
+]
+
 { #category : 'accessing' }
 AbTopic >> stateMachine [
 	^ stateMachine
@@ -187,6 +235,12 @@ AbTopic >> stateMachine [
 { #category : 'accessing' }
 AbTopic >> status [
 	^ stateMachine currentState name
+]
+
+{ #category : 'operations' }
+AbTopic >> stopWatching [
+
+	imageWatcher ifNotNil: [ imageWatcher stop ]
 ]
 
 { #category : 'accessing' }
@@ -202,4 +256,10 @@ AbTopic >> title: aString [
 { #category : 'accessing' }
 AbTopic >> watchedPackages [
 	^ watchedPackages
+]
+
+{ #category : 'accessing' }
+AbTopic >> workingDirectory [
+
+	^ workingDirectory ifNil: [ workingDirectory := AbWorkingDirectory forTopic: self ]
 ]
