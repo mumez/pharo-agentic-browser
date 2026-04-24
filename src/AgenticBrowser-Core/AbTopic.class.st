@@ -9,7 +9,9 @@ Class {
 		'sessionId',
 		'stateMachine',
 		'announcer',
-		'watchedPackages'
+		'watchedPackages',
+		'workingDirectory',
+		'imageWatcher'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -202,4 +204,62 @@ AbTopic >> title: aString [
 { #category : 'accessing' }
 AbTopic >> watchedPackages [
 	^ watchedPackages
+]
+
+{ #category : 'accessing' }
+AbTopic >> workingDirectory [
+
+	^ workingDirectory ifNil: [ workingDirectory := AbWorkingDirectory forTopic: self ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> imageWatcher [
+
+	^ imageWatcher ifNil: [ imageWatcher := AbImageWatcher forTopic: self ]
+]
+
+{ #category : 'operations' }
+AbTopic >> addWatchedPackage: aPackageName [
+
+	(watchedPackages includes: aPackageName) ifFalse: [
+		watchedPackages add: aPackageName ]
+]
+
+{ #category : 'operations' }
+AbTopic >> removeWatchedPackage: aPackageName [
+
+	watchedPackages remove: aPackageName ifAbsent: []
+]
+
+{ #category : 'operations' }
+AbTopic >> startWatching [
+
+	self imageWatcher start
+]
+
+{ #category : 'operations' }
+AbTopic >> stopWatching [
+
+	imageWatcher ifNotNil: [ imageWatcher stop ]
+]
+
+{ #category : 'operations' }
+AbTopic >> exportWatchedPackages [
+
+	self workingDirectory exportAll
+]
+
+{ #category : 'operations' }
+AbTopic >> importWatchedPackages [
+
+	self workingDirectory importAll
+]
+
+{ #category : 'operations' }
+AbTopic >> addSystemMessage: aString [
+
+	| msg |
+	msg := AbMessage sender: #system text: aString.
+	messages add: msg.
+	self announceMessageAdded: msg
 ]
