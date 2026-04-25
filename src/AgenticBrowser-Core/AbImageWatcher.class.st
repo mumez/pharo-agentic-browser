@@ -20,19 +20,15 @@ AbImageWatcher class >> forTopic: anAbTopic [
 { #category : 'event handling' }
 AbImageWatcher >> handleClassChange: anAnnouncement [
 
-	| packageName |
-	packageName := anAnnouncement classAffected package name.
-	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
-	[ topic workingDirectory exportPackage: packageName ] fork
+	topic workingDirectory isImporting ifTrue: [ ^ self ].
+	[ topic workingDirectory exportPackage: anAnnouncement classAffected package name ] fork
 ]
 
 { #category : 'event handling' }
 AbImageWatcher >> handleMethodChange: anAnnouncement [
 
-	| packageName |
-	packageName := anAnnouncement methodPackage name.
-	(topic watchedPackages includes: packageName) ifFalse: [ ^ self ].
-	[ topic workingDirectory exportPackage: packageName ] fork
+	topic workingDirectory isImporting ifTrue: [ ^ self ].
+	[ topic workingDirectory exportPackage: anAnnouncement methodPackage name ] fork
 ]
 
 { #category : 'initialization' }

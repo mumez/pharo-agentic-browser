@@ -9,7 +9,8 @@ Class {
 		'sessionId',
 		'stateMachine',
 		'announcer',
-		'watchedPackages',
+		'topicId',
+		'packagePrefix',
 		'workingDirectory',
 		'imageWatcher'
 	],
@@ -22,7 +23,7 @@ AbTopic >> addAiTextChunk: aString [
 
 	| msg |
 	(messages notEmpty and: [
-		 messages last sender = #ai and: [ messages last isApprovalRequest not ] ])
+			 messages last sender = #ai and: [ messages last isApprovalRequest not ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
 			msg := AbMessage sender: #ai text: aString.
@@ -49,13 +50,6 @@ AbTopic >> addSystemMessage: aString [
 	self announceMessageAdded: msg
 ]
 
-{ #category : 'operations' }
-AbTopic >> addWatchedPackage: aPackageName [
-
-	(watchedPackages includes: aPackageName) ifFalse: [
-		watchedPackages add: aPackageName ]
-]
-
 { #category : 'accessing' }
 AbTopic >> agentArguments [
 	^ agentArguments
@@ -70,9 +64,9 @@ AbTopic >> agentArguments: anArray [
 AbTopic >> announceMessageAdded: aMessage [
 
 	self announcer announce: (AbMessageAdded new
-		 topic: self;
-		 message: aMessage;
-		 yourself)
+			 topic: self;
+			 message: aMessage;
+			 yourself)
 ]
 
 { #category : 'private' }
@@ -111,7 +105,7 @@ AbTopic >> doConnect [
 	client connect.
 	client initializeBy: [ :params | "use defaults" ].
 	sessionResult := client newSessionBy: [ :params |
-		                 params cwd: FileSystem workingDirectory fullName ].
+			                 params cwd: self ensureWorkingDirectoryForConnection ].
 	sessionId := sessionResult sessionId
 ]
 
@@ -119,6 +113,14 @@ AbTopic >> doConnect [
 AbTopic >> ensureConnected [
 
 	client isNil ifTrue: [ self doConnect ]
+]
+
+{ #category : 'private' }
+AbTopic >> ensureWorkingDirectoryForConnection [
+
+	self workingDirectory ensureExists.
+	self imageWatcher isWatching ifFalse: [ self startWatching ].
+	^ self workingDirectory path fullName
 ]
 
 { #category : 'operations' }
@@ -145,7 +147,7 @@ AbTopic >> initialize [
 	title := 'Untitled'.
 	agentArguments := #( 'claude-agent-acp' ).
 	messages := OrderedCollection new.
-	watchedPackages := OrderedCollection new.
+	topicId := UUID new asString.
 	self initializeStateMachine
 ]
 
@@ -170,14 +172,29 @@ AbTopic >> initializeStateMachine [
 ]
 
 { #category : 'accessing' }
+AbTopic >> matchingPackageNames [
+
+	packagePrefix isNil ifTrue: [ ^ #() ].
+	packagePrefix isEmpty ifTrue: [ ^ #() ].
+	^ (PackageOrganizer default packages
+			   select: [ :p | packagePrefix match: p name asString ]
+			   thenCollect: [ :p | p name asString ])
+		  asSortedCollection asArray
+]
+
+{ #category : 'accessing' }
 AbTopic >> messages [
 	^ messages
 ]
 
-{ #category : 'operations' }
-AbTopic >> removeWatchedPackage: aPackageName [
+{ #category : 'accessing' }
+AbTopic >> packagePrefix [
+	^ packagePrefix
+]
 
-	watchedPackages remove: aPackageName ifAbsent: []
+{ #category : 'accessing' }
+AbTopic >> packagePrefix: aString [
+	packagePrefix := aString
 ]
 
 { #category : 'operations' }
@@ -185,9 +202,9 @@ AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
 	pending := messages
-		           detect: [ :m |
-			           m isApprovalRequest and: [ m approvalResponse isNil ] ]
-		           ifNone: [ ^ self ].
+			           detect: [ :m |
+				           m isApprovalRequest and: [ m approvalResponse isNil ] ]
+			           ifNone: [ ^ self ].
 	response := (aUserText trimmed asLowercase includesSubstring: 'no') |
 	            (aUserText trimmed asLowercase includesSubstring: 'deny') |
 	            (aUserText trimmed asLowercase includesSubstring: 'reject')
@@ -210,8 +227,8 @@ AbTopic >> sendPrompt: aString [
 	| result |
 	self ensureConnected.
 	result := client promptBy: [ :params |
-		          params sessionId: sessionId.
-		          params textPrompt: aString ].
+			          params sessionId: sessionId.
+			          params textPrompt: aString ].
 	result stopReason = 'end_turn' ifTrue: [
 		stateMachine handleEvent: #ended ] ] fork
 ]
@@ -254,8 +271,8 @@ AbTopic >> title: aString [
 ]
 
 { #category : 'accessing' }
-AbTopic >> watchedPackages [
-	^ watchedPackages
+AbTopic >> topicId [
+	^ topicId
 ]
 
 { #category : 'accessing' }
