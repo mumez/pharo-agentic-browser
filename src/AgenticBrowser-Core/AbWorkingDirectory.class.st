@@ -2,7 +2,8 @@ Class {
 	#name : 'AbWorkingDirectory',
 	#superclass : 'Object',
 	#instVars : [
-		'topic'
+		'topic',
+		'isImporting'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -16,6 +17,12 @@ AbWorkingDirectory class >> forTopic: anAbTopic [
 		  yourself
 ]
 
+{ #category : 'accessing' }
+AbWorkingDirectory >> directoryName [
+
+	^ self safeTopicName , '-' , (topic topicId copyFrom: 1 to: 8)
+]
+
 { #category : 'operations' }
 AbWorkingDirectory >> ensureExists [
 
@@ -25,7 +32,7 @@ AbWorkingDirectory >> ensureExists [
 { #category : 'operations' }
 AbWorkingDirectory >> exportAll [
 
-	topic watchedPackages do: [ :pkg | self exportPackage: pkg ]
+	topic matchingPackageNames do: [ :pkg | self exportPackage: pkg ]
 ]
 
 { #category : 'operations' }
@@ -40,7 +47,9 @@ AbWorkingDirectory >> exportPackage: aPackageName [
 { #category : 'operations' }
 AbWorkingDirectory >> importAll [
 
-	topic watchedPackages do: [ :pkg | self importPackage: pkg ]
+	isImporting := true.
+	[ topic matchingPackageNames do: [ :pkg | self importPackage: pkg ] ]
+		ensure: [ isImporting := false ]
 ]
 
 { #category : 'operations' }
@@ -52,20 +61,40 @@ AbWorkingDirectory >> importPackage: aPackageName [
 		  'path' -> self path fullName } asDictionary
 ]
 
+{ #category : 'initialization' }
+AbWorkingDirectory >> initialize [
+
+	isImporting := false
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> isImporting [
+	^ isImporting
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> isImporting: aBoolean [
+	isImporting := aBoolean
+]
+
 { #category : 'accessing' }
 AbWorkingDirectory >> path [
 
-	^ FileLocator home / 'agentic-browser' / self safeTopicName
+	^ Smalltalk imageDirectory / 'agentic-browser' / self directoryName
 ]
 
 { #category : 'operations' }
 AbWorkingDirectory >> runAllTests [
 
 	^ String streamContents: [ :s |
-		  topic watchedPackages do: [ :pkg |
+		  topic matchingPackageNames do: [ :pkg |
 			  | result |
 			  result := self runTests: pkg.
-			  s nextPutAll: pkg; nextPutAll: ': '; nextPutAll: (result at: 'result' ifAbsent: [ 'error' ]); cr ] ]
+			  s
+				  nextPutAll: pkg;
+				  nextPutAll: ': ';
+				  nextPutAll: (result at: 'result' ifAbsent: [ 'error' ]);
+				  cr ] ]
 ]
 
 { #category : 'operations' }

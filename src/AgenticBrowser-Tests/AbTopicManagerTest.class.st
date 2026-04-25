@@ -22,6 +22,21 @@ AbTopicManagerTest >> testAddTopic [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
+
+	| manager topic received |
+	manager := AbTopicManager uniqueInstance.
+	received := nil.
+	manager announcer
+		when: AbTopicAdded
+		do: [ :ann | received := ann topic ]
+		for: self.
+	topic := AbTopic new title: 'Test'.
+	manager addTopic: topic.
+	self assert: received == topic
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testRemoveTopic [
 
 	| manager topic |

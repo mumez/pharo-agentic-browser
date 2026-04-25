@@ -2,7 +2,8 @@ Class {
 	#name : 'AbTopicManager',
 	#superclass : 'Object',
 	#instVars : [
-		'topics'
+		'topics',
+		'announcer'
 	],
 	#classInstVars : [
 		'uniqueInstance'
@@ -26,7 +27,14 @@ AbTopicManager class >> uniqueInstance [
 { #category : 'operations' }
 AbTopicManager >> addTopic: anAbTopic [
 
-	topics add: anAbTopic
+	topics add: anAbTopic.
+	self announcer announce: (AbTopicAdded new topic: anAbTopic; yourself)
+]
+
+{ #category : 'accessing' }
+AbTopicManager >> announcer [
+
+	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
 { #category : 'initialization' }
