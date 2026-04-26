@@ -10,7 +10,7 @@ Class {
 		'stateMachine',
 		'announcer',
 		'topicId',
-		'packagePrefix',
+		'packagePrefixes',
 		'workingDirectory',
 		'imageWatcher'
 	],
@@ -39,6 +39,12 @@ AbTopic >> addApprovalRequest: aDescription [
 	messages add: msg.
 	self announceMessageAdded: msg.
 	^ msg
+]
+
+{ #category : 'operations' }
+AbTopic >> addPackagePrefix: aString [
+
+	packagePrefixes add: aString
 ]
 
 { #category : 'operations' }
@@ -105,7 +111,7 @@ AbTopic >> doConnect [
 	client connect.
 	client initializeBy: [ :params | "use defaults" ].
 	sessionResult := client newSessionBy: [ :params |
-			                 params cwd: self ensureWorkingDirectoryForConnection ].
+						 params cwd: self ensureWorkingDirectoryForConnection ].
 	sessionId := sessionResult sessionId
 ]
 
@@ -132,7 +138,13 @@ AbTopic >> exportWatchedPackages [
 { #category : 'accessing' }
 AbTopic >> imageWatcher [
 
-	^ imageWatcher ifNil: [ imageWatcher := AbImageWatcher forTopic: self ]
+	^ imageWatcher ifNil: [ imageWatcher := AbTopicRelatedPackagesWatcher forTopic: self ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> hasPackagePrefix: aString [
+
+	^ packagePrefixes includes: aString
 ]
 
 { #category : 'operations' }
@@ -147,6 +159,7 @@ AbTopic >> initialize [
 	title := 'Untitled'.
 	agentArguments := #( 'claude-agent-acp' ).
 	messages := OrderedCollection new.
+	packagePrefixes := Set new.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -174,11 +187,12 @@ AbTopic >> initializeStateMachine [
 { #category : 'accessing' }
 AbTopic >> matchingPackageNames [
 
-	packagePrefix isNil ifTrue: [ ^ #() ].
-	packagePrefix isEmpty ifTrue: [ ^ #() ].
+	packagePrefixes isEmpty ifTrue: [ ^ #() ].
 	^ (PackageOrganizer default packages
-			   select: [ :p | packagePrefix match: p name asString ]
-			   thenCollect: [ :p | p name asString ])
+			 select: [ :p |
+				 packagePrefixes anySatisfy: [ :prefix |
+					 prefix match: p name asString ] ]
+			 thenCollect: [ :p | p name asString ])
 		  asSortedCollection asArray
 ]
 
@@ -188,13 +202,19 @@ AbTopic >> messages [
 ]
 
 { #category : 'accessing' }
-AbTopic >> packagePrefix [
-	^ packagePrefix
+AbTopic >> packagePrefixes [
+	^ packagePrefixes
 ]
 
 { #category : 'accessing' }
-AbTopic >> packagePrefix: aString [
-	packagePrefix := aString
+AbTopic >> packagePrefixes: aCollection [
+	packagePrefixes := aCollection asSet
+]
+
+{ #category : 'operations' }
+AbTopic >> removePackagePrefix: aString [
+
+	packagePrefixes remove: aString ifAbsent: []
 ]
 
 { #category : 'operations' }
@@ -202,14 +222,14 @@ AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
 	pending := messages
-			           detect: [ :m |
-				           m isApprovalRequest and: [ m approvalResponse isNil ] ]
-			           ifNone: [ ^ self ].
+					   detect: [ :m |
+						   m isApprovalRequest and: [ m approvalResponse isNil ] ]
+					   ifNone: [ ^ self ].
 	response := (aUserText trimmed asLowercase includesSubstring: 'no') |
-	            (aUserText trimmed asLowercase includesSubstring: 'deny') |
-	            (aUserText trimmed asLowercase includesSubstring: 'reject')
-		            ifTrue: [ #rejectOnce ]
-		            ifFalse: [ #allowAlways ].
+				(aUserText trimmed asLowercase includesSubstring: 'deny') |
+				(aUserText trimmed asLowercase includesSubstring: 'reject')
+					ifTrue: [ #rejectOnce ]
+					ifFalse: [ #allowAlways ].
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
 	pending approvalSemaphore signal
@@ -227,8 +247,8 @@ AbTopic >> sendPrompt: aString [
 	| result |
 	self ensureConnected.
 	result := client promptBy: [ :params |
-			          params sessionId: sessionId.
-			          params textPrompt: aString ].
+				  params sessionId: sessionId.
+				  params textPrompt: aString ].
 	result stopReason = 'end_turn' ifTrue: [
 		stateMachine handleEvent: #ended ] ] fork
 ]

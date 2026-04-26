@@ -69,12 +69,12 @@ AbTopicListPresenter >> onPackagePrefixSet: aTopic [
 	| workDir matchingNames |
 	workDir := aTopic workingDirectory.
 	matchingNames := aTopic matchingPackageNames.
-	matchingNames isEmpty
-		ifTrue: [
+	matchingNames
+		ifEmpty: [
 			aTopic addSystemMessage:
-				'No packages match "' , aTopic packagePrefix printString
-				, '". Starting new project development.' ]
-		ifFalse: [
+				'No packages match ' , aTopic packagePrefixes asSortedCollection printString
+				, '. Starting new project development.' ]
+		ifNotEmpty: [
 			(workDir path exists and: [ workDir path hasChildren ])
 				ifTrue: [
 					(UIManager default
@@ -101,7 +101,9 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	dialog := AbPackagePrefixDialog new.
 	dialog openModal.
 	dialog prefix ifNil: [ ^ self ].
-	topic packagePrefix: dialog prefix.
+	dialog prefix
+		ifEmpty: [ topic packagePrefixes: Set new ]
+		ifNotEmpty: [ topic addPackagePrefix: dialog prefix ].
 	self onPackagePrefixSet: topic
 ]
 
