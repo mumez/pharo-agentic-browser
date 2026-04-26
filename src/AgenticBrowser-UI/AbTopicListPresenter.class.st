@@ -18,6 +18,14 @@ AbTopicListPresenter >> buildTopicContextMenu [
 			  item
 				  name: 'Set Target Packages...';
 				  action: [ self onSetTargetPackagesRequest ] ];
+		  addItem: [ :item |
+			  item
+				  name: 'Rename...';
+				  action: [ self onRenameTopicRequest ] ];
+		  addItem: [ :item |
+			  item
+				  name: 'Delete';
+				  action: [ self onDeleteTopicRequest ] ];
 		  yourself
 ]
 
@@ -53,6 +61,20 @@ AbTopicListPresenter >> initializePresenters [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onDeleteTopicRequest [
+
+	| selectedTopic |
+	selectedTopic := topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	(UIManager default
+		 confirm: 'Delete topic "' , selectedTopic title , '"?'
+		 label: 'Confirm Delete')
+		ifTrue: [
+			AbTopicManager uniqueInstance removeTopic: selectedTopic.
+			self defer: [ self refresh ] ]
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onNewTopicRequest [
 
 	| dialog |
@@ -64,17 +86,32 @@ AbTopicListPresenter >> onNewTopicRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onRenameTopicRequest [
+
+	| selectedTopic newTitle |
+	selectedTopic := topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	newTitle := UIManager default
+				    request: 'New title:'
+				    initialAnswer: selectedTopic title
+				    title: 'Rename Topic'.
+	(newTitle isNil or: [ newTitle trimmed isEmpty ]) ifTrue: [ ^ self ].
+	selectedTopic title: newTitle trimmed.
+	self defer: [ self refresh ]
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onPackagePrefixSet: aTopic [
 
 	| workDir matchingNames |
 	workDir := aTopic workingDirectory.
 	matchingNames := aTopic matchingPackageNames.
-	matchingNames isEmpty
-		ifTrue: [
+	matchingNames
+		ifEmpty: [
 			aTopic addSystemMessage:
-				'No packages match "' , aTopic packagePrefix printString
-				, '". Starting new project development.' ]
-		ifFalse: [
+				'No packages match ' , aTopic packagePrefixes asSortedCollection printString
+				, '. Starting new project development.' ]
+		ifNotEmpty: [
 			(workDir path exists and: [ workDir path hasChildren ])
 				ifTrue: [
 					(UIManager default
@@ -101,7 +138,9 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	dialog := AbPackagePrefixDialog new.
 	dialog openModal.
 	dialog prefix ifNil: [ ^ self ].
-	topic packagePrefix: dialog prefix.
+	dialog prefix
+		ifEmpty: [ topic packagePrefixes: Set new ]
+		ifNotEmpty: [ topic addPackagePrefix: dialog prefix ].
 	self onPackagePrefixSet: topic
 ]
 

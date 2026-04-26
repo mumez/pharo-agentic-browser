@@ -25,7 +25,7 @@ AbTopicListPresenterTest >> testAutoExportPreconditionsForNewTopic [
 	   - no existing working directory on disk
 	 The actual export (SisServer call) is verified in the integration smoke test."
 
-	topic packagePrefix: 'AgenticBrowser-*'.
+	topic addPackagePrefix: 'AgenticBrowser-*'.
 	self assert: topic matchingPackageNames notEmpty.
 	self deny: topic workingDirectory path exists
 ]
@@ -33,7 +33,7 @@ AbTopicListPresenterTest >> testAutoExportPreconditionsForNewTopic [
 { #category : 'tests' }
 AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessage [
 
-	topic packagePrefix: ''.
+	topic packagePrefixes: Set new.
 	presenter onPackagePrefixSet: topic.
 	self assert: (topic messages anySatisfy: [ :m |
 		m sender = #system and: [ m text includesSubstring: 'new project' ] ])
@@ -42,7 +42,7 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessa
 { #category : 'tests' }
 AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 
-	topic packagePrefix: 'NonExistentXYZ99-*'.
+	topic addPackagePrefix: 'NonExistentXYZ99-*'.
 	presenter onPackagePrefixSet: topic.
 	self assert: (topic messages anySatisfy: [ :m |
 		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])

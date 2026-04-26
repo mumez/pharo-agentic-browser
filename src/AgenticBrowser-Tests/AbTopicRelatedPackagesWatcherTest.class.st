@@ -1,5 +1,5 @@
 Class {
-	#name : 'AbImageWatcherTest',
+	#name : 'AbTopicRelatedPackagesWatcherTest',
 	#superclass : 'TestCase',
 	#instVars : [
 		'topic',
@@ -10,21 +10,21 @@ Class {
 }
 
 { #category : 'running' }
-AbImageWatcherTest >> setUp [
+AbTopicRelatedPackagesWatcherTest >> setUp [
 
 	topic := AbTopic new.
-	watcher := AbImageWatcher forTopic: topic
+	watcher := AbTopicRelatedPackagesWatcher forTopic: topic
 ]
 
 { #category : 'running' }
-AbImageWatcherTest >> tearDown [
+AbTopicRelatedPackagesWatcherTest >> tearDown [
 
 	watcher stop.
 	super tearDown
 ]
 
 { #category : 'tests' }
-AbImageWatcherTest >> testHandleClassChangeSuppressedDuringImport [
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport [
 
 	| ann errorRaised |
 	errorRaised := false.
@@ -38,7 +38,7 @@ AbImageWatcherTest >> testHandleClassChangeSuppressedDuringImport [
 ]
 
 { #category : 'tests' }
-AbImageWatcherTest >> testHandleMethodChangeSuppressedDuringImport [
+AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringImport [
 
 	| ann errorRaised |
 	errorRaised := false.
@@ -52,20 +52,20 @@ AbImageWatcherTest >> testHandleMethodChangeSuppressedDuringImport [
 ]
 
 { #category : 'tests' }
-AbImageWatcherTest >> testIsWatchingInitiallyFalse [
+AbTopicRelatedPackagesWatcherTest >> testIsWatchingInitiallyFalse [
 
 	self deny: watcher isWatching
 ]
 
 { #category : 'tests' }
-AbImageWatcherTest >> testStartSetsIsWatching [
+AbTopicRelatedPackagesWatcherTest >> testStartSetsIsWatching [
 
 	watcher start.
 	self assert: watcher isWatching
 ]
 
 { #category : 'tests' }
-AbImageWatcherTest >> testStopClearsIsWatching [
+AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
 
 	watcher start.
 	watcher stop.

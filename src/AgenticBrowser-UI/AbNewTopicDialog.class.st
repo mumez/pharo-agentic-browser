@@ -4,6 +4,7 @@ Class {
 	#instVars : [
 		'titleField',
 		'agentDropList',
+		'workingDirField',
 		'okButton',
 		'cancelButton',
 		'topic'
@@ -37,13 +38,18 @@ AbNewTopicDialog >> defaultLayout [
 	^ SpBoxLayout newTopToBottom
 		  spacing: 8;
 		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 60 ];
+				   add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
 				   add: titleField;
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 60 ];
+				   add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
 				   add: agentDropList;
+				   yourself)
+		  withConstraints: [ :c | c height: 32 ];
+		  add: (SpBoxLayout newLeftToRight
+				   add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
+				   add: workingDirField;
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
@@ -52,6 +58,29 @@ AbNewTopicDialog >> defaultLayout [
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
+]
+
+{ #category : 'operations' }
+AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
+
+	| dir srcDir prefixes |
+	dir := aPathString asFileReference.
+	dir exists ifFalse: [ ^ #() ].
+	prefixes := Set new.
+	srcDir := dir / 'src'.
+	srcDir exists ifFalse: [ ^ #() ].
+	srcDir directories do: [ :sub |
+		| name |
+		name := sub basename.
+		(name beginsWith: 'BaselineOf')
+			ifTrue: [ prefixes add: name ]
+			ifFalse: [
+				| hyphenPos base |
+				hyphenPos := name indexOf: $-.
+				hyphenPos > 1 ifTrue: [
+					base := name copyFrom: 1 to: hyphenPos - 1.
+					prefixes add: base , '-*' ] ] ].
+	^ prefixes asArray
 ]
 
 { #category : 'initialization' }
@@ -64,6 +93,9 @@ AbNewTopicDialog >> initializePresenters [
 	agentDropList items: self agentOptions.
 	agentDropList display: [ :opt | opt key ].
 
+	workingDirField := self newTextInput.
+	workingDirField placeholder: '(optional) Path to existing project directory...'.
+
 	okButton := self newButton label: 'Create'.
 	cancelButton := self newButton label: 'Cancel'
 ]
@@ -73,23 +105,28 @@ AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 
 	aWindowPresenter
 		title: 'New Topic';
-		initialExtent: 420 @ 160
+		initialExtent: 480 @ 200
 ]
 
 { #category : 'private' }
 AbNewTopicDialog >> onOkClicked [
 
-	| titleText |
+	| titleText dirPath detectedPrefixes |
 	titleText := titleField text trimmed.
 	titleText isEmpty ifTrue: [ ^ self ].
 	topic := AbTopic new
-		         title: titleText;
-		         agentArguments: agentDropList selectedItem value;
-		         yourself.
+				 title: titleText;
+				 agentArguments: agentDropList selectedItem value;
+				 yourself.
+	dirPath := workingDirField text trimmed.
+	dirPath ifNotEmpty: [
+		topic customWorkingDirectoryPath: dirPath.
+		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
+		topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]
 ]
 
-{ #category : 'api' }
+{ #category : 'accessing' }
 AbNewTopicDialog >> topic [
 	^ topic
 ]

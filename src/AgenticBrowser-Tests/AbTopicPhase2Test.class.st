@@ -6,6 +6,28 @@ Class {
 }
 
 { #category : 'tests' }
+AbTopicPhase2Test >> testAddPackagePrefix [
+
+	| topic |
+	topic := AbTopic new.
+	topic addPackagePrefix: 'ACP-*'.
+	topic addPackagePrefix: 'BaselineOfACP'.
+	self assert: topic packagePrefixes size equals: 2.
+	self assert: (topic hasPackagePrefix: 'ACP-*').
+	self assert: (topic hasPackagePrefix: 'BaselineOfACP')
+]
+
+{ #category : 'tests' }
+AbTopicPhase2Test >> testAddPackagePrefixIgnoresDuplicate [
+
+	| topic |
+	topic := AbTopic new.
+	topic addPackagePrefix: 'ACP-*'.
+	topic addPackagePrefix: 'ACP-*'.
+	self assert: topic packagePrefixes size equals: 1
+]
+
+{ #category : 'tests' }
 AbTopicPhase2Test >> testAddSystemMessage [
 
 	| topic |
@@ -21,24 +43,27 @@ AbTopicPhase2Test >> testImageWatcherLazyInit [
 
 	| topic |
 	topic := AbTopic new.
-	self assert: (topic imageWatcher isKindOf: AbImageWatcher)
+	self assert: (topic imageWatcher isKindOf: AbTopicRelatedPackagesWatcher)
 ]
 
 { #category : 'tests' }
-AbTopicPhase2Test >> testMatchingPackageNamesEmptyPrefix [
-
-	| topic |
-	topic := AbTopic new.
-	topic packagePrefix: ''.
-	self assert: topic matchingPackageNames isEmpty
-]
-
-{ #category : 'tests' }
-AbTopicPhase2Test >> testMatchingPackageNamesNilPrefix [
+AbTopicPhase2Test >> testMatchingPackageNamesEmptyPrefixes [
 
 	| topic |
 	topic := AbTopic new.
 	self assert: topic matchingPackageNames isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicPhase2Test >> testMatchingPackageNamesMultiplePrefixes [
+
+	| topic names |
+	topic := AbTopic new.
+	topic addPackagePrefix: 'AgenticBrowser-*'.
+	topic addPackagePrefix: 'BaselineOfAgenticBrowser'.
+	names := topic matchingPackageNames.
+	self assert: (names anySatisfy: [ :n | n = 'AgenticBrowser-Core' ]).
+	self assert: (names anySatisfy: [ :n | n = 'AgenticBrowser-Tests' ])
 ]
 
 { #category : 'tests' }
@@ -46,24 +71,26 @@ AbTopicPhase2Test >> testMatchingPackageNamesWithPrefix [
 
 	| topic names |
 	topic := AbTopic new.
-	topic packagePrefix: 'AgenticBrowser-*'.
+	topic addPackagePrefix: 'AgenticBrowser-*'.
 	names := topic matchingPackageNames.
 	self assert: (names anySatisfy: [ :n | n = 'AgenticBrowser-Core' ])
 ]
 
 { #category : 'tests' }
-AbTopicPhase2Test >> testPackagePrefixDefaultsToNil [
+AbTopicPhase2Test >> testPackagePrefixesDefaultsToEmptySet [
 
-	self assert: AbTopic new packagePrefix isNil
+	self assert: AbTopic new packagePrefixes isEmpty.
+	self assert: (AbTopic new packagePrefixes isKindOf: Set)
 ]
 
 { #category : 'tests' }
-AbTopicPhase2Test >> testSetPackagePrefix [
+AbTopicPhase2Test >> testRemovePackagePrefix [
 
 	| topic |
 	topic := AbTopic new.
-	topic packagePrefix: 'ACP-*'.
-	self assert: topic packagePrefix equals: 'ACP-*'
+	topic addPackagePrefix: 'ACP-*'.
+	topic removePackagePrefix: 'ACP-*'.
+	self deny: (topic hasPackagePrefix: 'ACP-*')
 ]
 
 { #category : 'tests' }
