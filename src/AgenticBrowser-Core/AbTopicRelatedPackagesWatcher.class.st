@@ -21,7 +21,7 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 
 	topic addSystemMessage:
-		aPackageName , ' が変更されたので .st ファイルを更新しました'.
+		aPackageName , ' was modified; .st files have been updated'.
 	[ topic workingDirectory exportPackage: aPackageName ] fork
 ]
 

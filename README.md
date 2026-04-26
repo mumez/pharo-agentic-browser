@@ -90,10 +90,12 @@ You can also right-click a topic to **Rename...** or **Delete** it.
 
 ### Image Change Watching
 
-Enable automatic re-export whenever you edit code in the Pharo image:
+Watching starts automatically when a topic first connects (on the first **Send**). No manual setup is required.
+
+To manually control watching if needed:
 
 ```smalltalk
-"Start watching (re-exports on every method/class save)"
+"Start watching"
 AbTopicManager uniqueInstance topics first startWatching.
 
 "Stop watching"
@@ -156,7 +158,7 @@ You can also set a custom working directory path when creating a topic from an e
 
 `AbTopicRelatedPackagesWatcher` subscribes to `SystemAnnouncer` for `MethodAnnouncement` and `ClassAnnouncement`. When a method or class is saved:
 
-- If the package matches any of the topic's `packagePrefixes`, it inserts a system message into the chat (e.g. `"AgenticBrowser-Core が変更されたので .st ファイルを更新しました"`) and exports the package
+- If the package matches any of the topic's `packagePrefixes`, it inserts a system message into the chat (e.g. `"AgenticBrowser-Core was modified; .st files have been updated"`) and exports the package
 - If the package does **not** match, it shows a confirmation dialog asking whether to add the package to tracked prefixes
 - Changes during import are suppressed to avoid re-export loops
 
