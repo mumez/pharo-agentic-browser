@@ -18,6 +18,14 @@ AbTopicListPresenter >> buildTopicContextMenu [
 			  item
 				  name: 'Set Target Packages...';
 				  action: [ self onSetTargetPackagesRequest ] ];
+		  addItem: [ :item |
+			  item
+				  name: 'Rename...';
+				  action: [ self onRenameTopicRequest ] ];
+		  addItem: [ :item |
+			  item
+				  name: 'Delete';
+				  action: [ self onDeleteTopicRequest ] ];
 		  yourself
 ]
 
@@ -53,6 +61,20 @@ AbTopicListPresenter >> initializePresenters [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onDeleteTopicRequest [
+
+	| selectedTopic |
+	selectedTopic := topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	(UIManager default
+		 confirm: 'Delete topic "' , selectedTopic title , '"?'
+		 label: 'Confirm Delete')
+		ifTrue: [
+			AbTopicManager uniqueInstance removeTopic: selectedTopic.
+			self defer: [ self refresh ] ]
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onNewTopicRequest [
 
 	| dialog |
@@ -61,6 +83,21 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog topic ifNotNil: [ :topic |
 		AbTopicManager uniqueInstance addTopic: topic.
 		self defer: [ self refresh. topicList selectItem: topic ] ]
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onRenameTopicRequest [
+
+	| selectedTopic newTitle |
+	selectedTopic := topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	newTitle := UIManager default
+				    request: 'New title:'
+				    initialAnswer: selectedTopic title
+				    title: 'Rename Topic'.
+	(newTitle isNil or: [ newTitle trimmed isEmpty ]) ifTrue: [ ^ self ].
+	selectedTopic title: newTitle trimmed.
+	self defer: [ self refresh ]
 ]
 
 { #category : 'private' }
