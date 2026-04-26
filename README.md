@@ -12,8 +12,8 @@ A GUI application inside the Pharo image for managing multiple AI agent work ses
 |  ● DB Optimization  |  [AI] I'll add pagination. First, let     |
 |  ⏸ UI Improvement   |       me check the current structure...   |
 |  ✓ Fix Tests        |                                           |
-|                     |  [System] UserList-Core が変更されたので   |
-|  [+ New Topic]      |           .st ファイルを更新しました        |
+|                     |  [System] UserList-Core was modified;     |
+|  [+ New Topic]      |           .st files have been updated       |
 |                     |  ⏸ [AI] May I modify DBAdapter#connect?   |
 |                     |  [Human] yes                              |
 +---------------------+-------------------------------------------+
