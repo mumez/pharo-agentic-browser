@@ -12,7 +12,8 @@ Class {
 		'topicId',
 		'packagePrefixes',
 		'workingDirectory',
-		'imageWatcher'
+		'imageWatcher',
+		'customWorkingDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -293,6 +294,18 @@ AbTopic >> title: aString [
 { #category : 'accessing' }
 AbTopic >> topicId [
 	^ topicId
+]
+
+{ #category : 'accessing' }
+AbTopic >> customWorkingDirectoryPath [
+
+	^ customWorkingDirectoryPath
+]
+
+{ #category : 'accessing' }
+AbTopic >> customWorkingDirectoryPath: aString [
+
+	customWorkingDirectoryPath := aString
 ]
 
 { #category : 'accessing' }
