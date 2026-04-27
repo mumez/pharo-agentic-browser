@@ -77,6 +77,16 @@ AbTopicTest >> testInitialStatus [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testHasPendingApprovalRequest [
+
+	| topic |
+	topic := AbTopic new.
+	self deny: topic hasPendingApprovalRequest.
+	topic addApprovalRequest: 'Approve?'.
+	self assert: topic hasPendingApprovalRequest
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testPermissionRequestedTransition [
 
 	| topic |
@@ -121,6 +131,22 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic resolveApproval: 'no'.
 	self assert: msg approvalResponse equals: #rejectOnce.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
+
+	| topic response done |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMSecs: 1000.
+	self assert: response equals: #allowAlways
 ]
 
 { #category : 'tests' }

@@ -148,6 +148,13 @@ AbTopic >> hasPackagePrefix: aString [
 	^ packagePrefixes includes: aString
 ]
 
+{ #category : 'accessing' }
+AbTopic >> hasPendingApprovalRequest [
+
+	^ messages anySatisfy: [ :m |
+		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
+]
+
 { #category : 'operations' }
 AbTopic >> importWatchedPackages [
 
@@ -234,6 +241,16 @@ AbTopic >> resolveApproval: aUserText [
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
 	pending approvalSemaphore signal
+]
+
+{ #category : 'operations' }
+AbTopic >> requestApproval: aDescription [
+
+	| msg |
+	msg := self addApprovalRequest: aDescription.
+	stateMachine handleEvent: #permissionRequested.
+	msg approvalSemaphore wait.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 
 { #category : 'operations' }
