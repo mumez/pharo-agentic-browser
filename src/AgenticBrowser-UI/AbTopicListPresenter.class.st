@@ -16,6 +16,10 @@ AbTopicListPresenter >> buildTopicContextMenu [
 	^ SpMenuPresenter new
 		  addItem: [ :item |
 			  item
+				  name: 'Inspect...';
+				  action: [ self onInspectTopicRequest ] ];
+		  addItem: [ :item |
+			  item
 				  name: 'Set Target Packages...';
 				  action: [ self onSetTargetPackagesRequest ] ];
 		  addItem: [ :item |
@@ -72,6 +76,15 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		ifTrue: [
 			AbTopicManager uniqueInstance removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onInspectTopicRequest [
+
+	| selectedTopic |
+	selectedTopic := topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	selectedTopic inspect
 ]
 
 { #category : 'private' }
@@ -135,12 +148,12 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	| topic dialog |
 	topic := topicList selectedItem.
 	topic ifNil: [ ^ self ].
-	dialog := AbPackagePrefixDialog new.
+	dialog := AbPackagePrefixesDialog new.
 	dialog openModal.
-	dialog prefix ifNil: [ ^ self ].
-	dialog prefix
+	dialog prefixPatterns
 		ifEmpty: [ topic packagePrefixes: Set new ]
-		ifNotEmpty: [ topic addPackagePrefix: dialog prefix ].
+		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
+			topic addPackagePrefix: pattern ] ].
 	self onPackagePrefixSet: topic
 ]
 
