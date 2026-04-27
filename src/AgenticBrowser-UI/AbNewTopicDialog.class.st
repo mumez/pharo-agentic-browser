@@ -120,7 +120,7 @@ AbNewTopicDialog >> onOkClicked [
 				 yourself.
 	dirPath := workingDirField text trimmed.
 	dirPath ifNotEmpty: [
-		topic customWorkingDirectoryPath: dirPath.
+		topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
 		topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]

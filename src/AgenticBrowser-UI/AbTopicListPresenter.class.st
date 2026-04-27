@@ -144,13 +144,13 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	self onPackagePrefixSet: topic
 ]
 
-{ #category : 'api' }
+{ #category : 'accessing' }
 AbTopicListPresenter >> onTopicSelected: aBlock [
 
 	onTopicSelectedBlock := aBlock
 ]
 
-{ #category : 'api' }
+{ #category : 'refreshing' }
 AbTopicListPresenter >> refresh [
 
 	| items |

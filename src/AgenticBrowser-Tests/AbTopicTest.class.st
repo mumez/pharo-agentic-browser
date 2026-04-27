@@ -136,3 +136,24 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 	topic stateMachine handleEvent: #promptSent.
 	self assert: (statusChanges includes: #working)
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
+
+	| topic customPath |
+	topic := AbTopic new.
+	customPath := (FileLocator temp / ('ab-topic-custom-' , UUID new asString36))
+		              fullName.
+	topic workingDirectoryPath: customPath.
+	self assert: topic workingDirectoryPath equals: customPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
+
+	| topic expectedPath |
+	topic := AbTopic new title: 'Topic Name'.
+	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
+	                 / topic workingDirectory directoryName) fullName.
+	self assert: topic workingDirectoryPath equals: expectedPath
+]

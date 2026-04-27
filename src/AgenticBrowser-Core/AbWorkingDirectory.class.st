@@ -80,9 +80,7 @@ AbWorkingDirectory >> isImporting: aBoolean [
 { #category : 'accessing' }
 AbWorkingDirectory >> path [
 
-	topic customWorkingDirectoryPath ifNotNil: [ :p |
-		^ p asFileReference ].
-	^ Smalltalk imageDirectory / 'agentic-browser' / self directoryName
+	^ topic workingDirectoryPath asFileReference
 ]
 
 { #category : 'operations' }
