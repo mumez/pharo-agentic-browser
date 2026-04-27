@@ -102,3 +102,12 @@ AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWi
 			 shouldAnnouncePackageChangeFor: 'Pkg-A'
 			 at: now + (watcher messageThrottleDuration / 2))
 ]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
+
+	self assert:
+		(watcher shouldProceedWithExportForApprovalResponse: #allowAlways).
+	self deny:
+		(watcher shouldProceedWithExportForApprovalResponse: #rejectOnce)
+]

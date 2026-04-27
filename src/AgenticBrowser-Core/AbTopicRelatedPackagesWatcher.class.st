@@ -54,7 +54,7 @@ AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 	matchesPrefix := topic packagePrefixes anySatisfy: [ :prefix |
 						 prefix match: aPackageName ].
 	matchesPrefix
-		ifTrue: [ self announceChangeAndExport: aPackageName ]
+		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
 		ifFalse: [ self requestApprovalToTrackPackage: aPackageName ]
 ]
 
@@ -103,7 +103,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 		                    , ''' was modified but does not match any tracked prefix.'
 		                    , String cr
 		                    , 'Add this package to tracked prefixes and export? (yes/no)'.
-	approvalResponse = #allowAlways
+	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [
 			topic addPackagePrefix: aPackageName.
 			self announceChangeAndExport: aPackageName ]
@@ -112,6 +112,32 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 				'Ignored package change for ' , aPackageName
 				, ' (not added to tracked prefixes).' ] ]
 		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
+
+	| approvalResponse |
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	pendingPackageApprovals add: aPackageName.
+	[
+	approvalResponse := topic requestApproval:
+		                    'Package ''' , aPackageName
+		                    , ''' was modified.'
+		                    , String cr
+		                    , 'Export .st files now? (yes/no)'.
+	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
+		ifTrue: [ self announceChangeAndExport: aPackageName ]
+		ifFalse: [
+			topic addSystemMessage:
+				'Skipped export for ' , aPackageName , ' (approval denied).' ] ]
+		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
+
+	^ aResponseSymbol = #allowAlways
 ]
 
 { #category : 'private' }
