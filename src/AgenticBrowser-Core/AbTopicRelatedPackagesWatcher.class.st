@@ -3,7 +3,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'topic',
-		'isWatching'
+		'isWatching',
+		'pendingPackageApprovals',
+		'lastAnnouncedAtByPackage'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -20,9 +22,11 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 
-	topic addSystemMessage:
-		aPackageName , ' was modified; .st files have been updated'.
-	[ topic workingDirectory exportPackage: aPackageName ] fork
+	(self shouldAnnouncePackageChangeFor: aPackageName at: DateAndTime now)
+		ifTrue: [
+			topic addSystemMessage:
+				aPackageName , ' was modified; .st files have been updated' ].
+	topic workingDirectory exportPackage: aPackageName
 ]
 
 { #category : 'event handling' }
@@ -50,21 +54,22 @@ AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 	matchesPrefix := topic packagePrefixes anySatisfy: [ :prefix |
 						 prefix match: aPackageName ].
 	matchesPrefix
-		ifTrue: [ self announceChangeAndExport: aPackageName ]
-		ifFalse: [
-			(UIManager default confirm:
-				 'Package ''' , aPackageName
-				 , ''' was modified but does not match any tracked prefix.' , String cr
-				 , 'Add this package to tracked prefixes and export?')
-				ifTrue: [
-					topic addPackagePrefix: aPackageName.
-					self announceChangeAndExport: aPackageName ] ]
+		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
+		ifFalse: [ self requestApprovalToTrackPackage: aPackageName ]
 ]
 
 { #category : 'initialization' }
 AbTopicRelatedPackagesWatcher >> initialize [
 
-	isWatching := false
+	isWatching := false.
+	pendingPackageApprovals := Set new.
+	lastAnnouncedAtByPackage := Dictionary new
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
+
+	^ AbSettings default watcherMessageThrottleDuration
 ]
 
 { #category : 'accessing' }
@@ -84,6 +89,69 @@ AbTopicRelatedPackagesWatcher >> start [
 		when: ClassAnnouncement
 		do: [ :ann | self handleClassChange: ann ]
 		for: self
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
+
+	| approvalResponse |
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	pendingPackageApprovals add: aPackageName.
+	[
+	approvalResponse := topic requestApproval:
+		                    'Package ''' , aPackageName
+		                    , ''' was modified but does not match any tracked prefix.'
+		                    , String cr
+		                    , 'Add this package to tracked prefixes and export? (yes/no)'.
+	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
+		ifTrue: [
+			topic addPackagePrefix: aPackageName.
+			self announceChangeAndExport: aPackageName ]
+		ifFalse: [
+			topic addSystemMessage:
+				'Ignored package change for ' , aPackageName
+				, ' (not added to tracked prefixes).' ] ]
+		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
+
+	| approvalResponse |
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	pendingPackageApprovals add: aPackageName.
+	[
+	approvalResponse := topic requestApproval:
+		                    'Package ''' , aPackageName
+		                    , ''' was modified.'
+		                    , String cr
+		                    , 'Export .st files now? (yes/no)'.
+	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
+		ifTrue: [ self announceChangeAndExport: aPackageName ]
+		ifFalse: [
+			topic addSystemMessage:
+				'Skipped export for ' , aPackageName , ' (approval denied).' ] ]
+		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
+
+	^ aResponseSymbol = #allowAlways
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> shouldAnnouncePackageChangeFor: aPackageName at: aTimestamp [
+
+	| lastTimestamp shouldAnnounce |
+	lastTimestamp := lastAnnouncedAtByPackage
+		                 at: aPackageName
+		                 ifAbsent: [ nil ].
+	shouldAnnounce := lastTimestamp isNil or: [
+		                  aTimestamp - lastTimestamp >= self messageThrottleDuration ].
+	shouldAnnounce ifTrue: [
+		lastAnnouncedAtByPackage at: aPackageName put: aTimestamp ].
+	^ shouldAnnounce
 ]
 
 { #category : 'operations' }

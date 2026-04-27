@@ -27,7 +27,7 @@ AbTopicManager class >> uniqueInstance [
 { #category : 'operations' }
 AbTopicManager >> addTopic: anAbTopic [
 
-	topics add: anAbTopic.
+	topics at: anAbTopic topicId put: anAbTopic.
 	self announcer announce: (AbTopicAdded new topic: anAbTopic; yourself)
 ]
 
@@ -40,22 +40,28 @@ AbTopicManager >> announcer [
 { #category : 'initialization' }
 AbTopicManager >> initialize [
 
-	topics := OrderedCollection new
+	topics := Dictionary new
 ]
 
 { #category : 'operations' }
 AbTopicManager >> removeTopic: anAbTopic [
 
-	topics remove: anAbTopic ifAbsent: []
+	topics removeKey: anAbTopic topicId ifAbsent: []
 ]
 
 { #category : 'accessing' }
 AbTopicManager >> topics [
-	^ topics
+	^ topics values asArray
 ]
 
 { #category : 'operations' }
 AbTopicManager >> topicsDo: aBlock [
 
-	topics do: aBlock
+	topics valuesDo: aBlock
+]
+
+{ #category : 'accessing' }
+AbTopicManager >> at: aTopicId [
+
+	^ topics at: aTopicId ifAbsent: [ nil ]
 ]

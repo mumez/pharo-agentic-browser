@@ -71,3 +71,43 @@ AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
 	watcher stop.
 	self deny: watcher isWatching
 ]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeAllowsDifferentPackages [
+
+	| now |
+	now := DateAndTime now.
+	self assert: (watcher shouldAnnouncePackageChangeFor: 'Pkg-A' at: now).
+	self assert: (watcher shouldAnnouncePackageChangeFor: 'Pkg-B' at: now)
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeAllowsWhenWindowPassed [
+
+	| now later |
+	now := DateAndTime now.
+	later := now + watcher messageThrottleDuration + 1 second.
+	self assert: (watcher shouldAnnouncePackageChangeFor: 'Pkg-A' at: now).
+	self assert: (watcher shouldAnnouncePackageChangeFor: 'Pkg-A' at: later)
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWithinThrottleWindow [
+
+	| now |
+	now := DateAndTime now.
+	self assert: (watcher shouldAnnouncePackageChangeFor: 'Pkg-A' at: now).
+	self deny:
+		(watcher
+			 shouldAnnouncePackageChangeFor: 'Pkg-A'
+			 at: now + (watcher messageThrottleDuration / 2))
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
+
+	self assert:
+		(watcher shouldProceedWithExportForApprovalResponse: #allowAlways).
+	self deny:
+		(watcher shouldProceedWithExportForApprovalResponse: #rejectOnce)
+]

@@ -5,6 +5,7 @@ Class {
 		'titleField',
 		'agentDropList',
 		'workingDirField',
+		'selectWorkingDirButton',
 		'okButton',
 		'cancelButton',
 		'topic'
@@ -29,6 +30,7 @@ AbNewTopicDialog >> agentOptions [
 AbNewTopicDialog >> connectPresenters [
 
 	okButton action: [ self onOkClicked ].
+	selectWorkingDirButton action: [ self onSelectWorkingDirClicked ].
 	cancelButton action: [ self withWindowDo: [ :w | w close ] ]
 ]
 
@@ -50,6 +52,7 @@ AbNewTopicDialog >> defaultLayout [
 		  add: (SpBoxLayout newLeftToRight
 				   add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
 				   add: workingDirField;
+				   add: selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
@@ -95,6 +98,8 @@ AbNewTopicDialog >> initializePresenters [
 
 	workingDirField := self newTextInput.
 	workingDirField placeholder: '(optional) Path to existing project directory...'.
+	selectWorkingDirButton := self newButton.
+	selectWorkingDirButton label: 'Select...'.
 
 	okButton := self newButton label: 'Create'.
 	cancelButton := self newButton label: 'Cancel'
@@ -105,7 +110,18 @@ AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 
 	aWindowPresenter
 		title: 'New Topic';
-		initialExtent: 480 @ 200
+		initialExtent: 580 @ 200
+]
+
+{ #category : 'private' }
+AbNewTopicDialog >> onSelectWorkingDirClicked [
+
+	| selectedDir |
+	selectedDir := UIManager default
+		               chooseDirectory: 'Choose working directory'
+		               from: FileLocator home.
+	selectedDir ifNil: [ ^ self ].
+	workingDirField text: selectedDir fullName
 ]
 
 { #category : 'private' }
@@ -120,7 +136,7 @@ AbNewTopicDialog >> onOkClicked [
 				 yourself.
 	dirPath := workingDirField text trimmed.
 	dirPath ifNotEmpty: [
-		topic customWorkingDirectoryPath: dirPath.
+		topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
 		topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]

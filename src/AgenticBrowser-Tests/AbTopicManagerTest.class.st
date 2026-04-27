@@ -54,6 +54,16 @@ AbTopicManagerTest >> testTopicsInitiallyEmpty [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testAtReturnsTopicByTopicId [
+
+	| manager topic |
+	manager := AbTopicManager uniqueInstance.
+	topic := AbTopic new title: 'Lookup topic by at:'.
+	manager addTopic: topic.
+	self assert: (manager at: topic topicId) == topic
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testUniqueInstance [
 
 	self assert: AbTopicManager uniqueInstance == AbTopicManager uniqueInstance

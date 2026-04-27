@@ -36,6 +36,7 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	pendingApprovalMessage := anAbMessage.
 	inputField placeholder: 'Respond to AI (yes / no / always)...'.
+	sendButton label: 'Confirm'.
 	inputField text: ''
 ]
 
@@ -43,7 +44,8 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 AbChatPresenter >> exitApprovalMode [
 
 	pendingApprovalMessage := nil.
-	inputField placeholder: 'Type your request...'
+	inputField placeholder: 'Type your request...'.
+	sendButton label: 'Send'
 ]
 
 { #category : 'initialization' }
@@ -130,4 +132,16 @@ AbChatPresenter >> topic: anAbTopic [
 	previousTopic ifNotNil: [ :t | t announcer unsubscribe: self ].
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages
+]
+
+{ #category : 'testing' }
+AbChatPresenter >> inputPlaceholder [
+
+	^ inputField placeholder
+]
+
+{ #category : 'testing' }
+AbChatPresenter >> sendButtonLabel [
+
+	^ sendButton label
 ]

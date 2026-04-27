@@ -1,29 +1,29 @@
 Class {
-	#name : 'AbPackagePrefixDialog',
+	#name : 'AbPackagePrefixesDialog',
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'prefixField',
 		'okButton',
 		'cancelButton',
-		'prefix'
+		'prefixPatterns'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
 
 { #category : 'initialization' }
-AbPackagePrefixDialog >> connectPresenters [
+AbPackagePrefixesDialog >> connectPresenters [
 
 	okButton action: [ self onOkClicked ].
 	cancelButton action: [ self withWindowDo: [ :w | w close ] ]
 ]
 
 { #category : 'layout' }
-AbPackagePrefixDialog >> defaultLayout [
+AbPackagePrefixesDialog >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  spacing: 8;
-		  add: (self newLabel label: 'Package prefix (use * as wildcard, empty = new project):')
+		  add: (self newLabel label: 'Package prefix patterns (comma-separated, * as wildcard):')
 		  withConstraints: [ :c | c height: 24 ];
 		  add: prefixField
 		  withConstraints: [ :c | c height: 32 ];
@@ -36,31 +36,33 @@ AbPackagePrefixDialog >> defaultLayout [
 ]
 
 { #category : 'initialization' }
-AbPackagePrefixDialog >> initializePresenters [
+AbPackagePrefixesDialog >> initializePresenters [
 
 	prefixField := self newTextInput.
-	prefixField placeholder: 'e.g. ACP-*'.
+	prefixField placeholder: 'e.g. ACP-*, BaselineOfACP'.
 
 	okButton := self newButton label: 'OK'.
 	cancelButton := self newButton label: 'Cancel'
 ]
 
 { #category : 'initialization' }
-AbPackagePrefixDialog >> initializeWindow: aWindowPresenter [
+AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
 
 	aWindowPresenter
 		title: 'Target Packages';
-		initialExtent: 400 @ 130
+		initialExtent: 500 @ 130
 ]
 
 { #category : 'private' }
-AbPackagePrefixDialog >> onOkClicked [
+AbPackagePrefixesDialog >> onOkClicked [
 
-	prefix := prefixField text trimmed.
+	prefixPatterns := (prefixField text substrings: ',')
+		                  collect: [ :each | each trimmed ]
+		                  thenSelect: [ :each | each isNotEmpty ].
 	self withWindowDo: [ :w | w close ]
 ]
 
-{ #category : 'api' }
-AbPackagePrefixDialog >> prefix [
-	^ prefix
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> prefixPatterns [
+	^ prefixPatterns ifNil: [ #() ]
 ]

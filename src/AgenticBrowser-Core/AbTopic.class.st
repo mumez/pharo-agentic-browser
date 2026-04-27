@@ -13,7 +13,7 @@ Class {
 		'packagePrefixes',
 		'workingDirectory',
 		'imageWatcher',
-		'customWorkingDirectoryPath'
+		'workingDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -148,6 +148,13 @@ AbTopic >> hasPackagePrefix: aString [
 	^ packagePrefixes includes: aString
 ]
 
+{ #category : 'accessing' }
+AbTopic >> hasPendingApprovalRequest [
+
+	^ messages anySatisfy: [ :m |
+		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
+]
+
 { #category : 'operations' }
 AbTopic >> importWatchedPackages [
 
@@ -237,6 +244,16 @@ AbTopic >> resolveApproval: aUserText [
 ]
 
 { #category : 'operations' }
+AbTopic >> requestApproval: aDescription [
+
+	| msg |
+	msg := self addApprovalRequest: aDescription.
+	stateMachine handleEvent: #permissionRequested.
+	msg approvalSemaphore wait.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'operations' }
 AbTopic >> sendPrompt: aString [
 
 	| msg |
@@ -297,19 +314,26 @@ AbTopic >> topicId [
 ]
 
 { #category : 'accessing' }
-AbTopic >> customWorkingDirectoryPath [
+AbTopic >> defaultWorkingDirectoryPath [
 
-	^ customWorkingDirectoryPath
-]
-
-{ #category : 'accessing' }
-AbTopic >> customWorkingDirectoryPath: aString [
-
-	customWorkingDirectoryPath := aString
+	^ (Smalltalk imageDirectory / 'agentic-browser'
+	   / self workingDirectory directoryName) fullName
 ]
 
 { #category : 'accessing' }
 AbTopic >> workingDirectory [
 
 	^ workingDirectory ifNil: [ workingDirectory := AbWorkingDirectory forTopic: self ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> workingDirectoryPath [
+
+	^ workingDirectoryPath ifNil: [ workingDirectoryPath := self defaultWorkingDirectoryPath ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> workingDirectoryPath: aString [
+
+	workingDirectoryPath := aString
 ]

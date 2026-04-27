@@ -77,6 +77,16 @@ AbTopicTest >> testInitialStatus [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testHasPendingApprovalRequest [
+
+	| topic |
+	topic := AbTopic new.
+	self deny: topic hasPendingApprovalRequest.
+	topic addApprovalRequest: 'Approve?'.
+	self assert: topic hasPendingApprovalRequest
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testPermissionRequestedTransition [
 
 	| topic |
@@ -124,6 +134,22 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
+
+	| topic response done |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMSecs: 1000.
+	self assert: response equals: #allowAlways
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testStatusChangedAnnouncementFired [
 
 	| topic statusChanges |
@@ -135,4 +161,25 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 		for: self.
 	topic stateMachine handleEvent: #promptSent.
 	self assert: (statusChanges includes: #working)
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
+
+	| topic customPath |
+	topic := AbTopic new.
+	customPath := (FileLocator temp / ('ab-topic-custom-' , UUID new asString36))
+		              fullName.
+	topic workingDirectoryPath: customPath.
+	self assert: topic workingDirectoryPath equals: customPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
+
+	| topic expectedPath |
+	topic := AbTopic new title: 'Topic Name'.
+	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
+	                 / topic workingDirectory directoryName) fullName.
+	self assert: topic workingDirectoryPath equals: expectedPath
 ]

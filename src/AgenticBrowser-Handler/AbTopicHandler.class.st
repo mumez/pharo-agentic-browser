@@ -11,15 +11,13 @@ Class {
 { #category : 'agent-callbacks' }
 AbTopicHandler >> requestPermission: anACPRequestPermission [
 
-	| msg response |
-	msg := topic addApprovalRequest: anACPRequestPermission printString.
-	topic stateMachine handleEvent: #permissionRequested.
-	msg approvalSemaphore wait.
+	| response approvalResponse |
+	approvalResponse := topic requestApproval: anACPRequestPermission printString.
 	response := anACPRequestPermission makeResponse.
-	msg approvalResponse = #rejectOnce ifTrue: [
+	approvalResponse = #rejectOnce ifTrue: [
 		response rejectOnce.
 		^ response ].
-	msg approvalResponse = #rejectAlways ifTrue: [
+	approvalResponse = #rejectAlways ifTrue: [
 		response rejectAlways.
 		^ response ].
 	response allowAlways.
