@@ -41,22 +41,6 @@ AbMessage class >> sender: aSenderSymbol text: aString think: aBoolean [
 		  yourself
 ]
 
-{ #category : 'instance creation' }
-AbMessage class >> sender: aSenderSymbol text: aString [
-
-	^ self sender: aSenderSymbol text: aString think: false
-]
-
-{ #category : 'instance creation' }
-AbMessage class >> sender: aSenderSymbol text: aString think: aBoolean [
-
-	^ self new
-		  sender: aSenderSymbol;
-		  text: aString;
-		  isThink: aBoolean;
-		  yourself
-]
-
 { #category : 'operations' }
 AbMessage >> appendText: aString [
 	text := text , aString
@@ -109,18 +93,6 @@ AbMessage >> initialize [
 	timestamp := DateAndTime now.
 	isApprovalRequest := false.
 	isThink := false
-]
-
-{ #category : 'accessing' }
-AbMessage >> isThink [
-
-	^ isThink
-]
-
-{ #category : 'accessing' }
-AbMessage >> isThink: aBoolean [
-
-	isThink := aBoolean
 ]
 
 { #category : 'accessing' }

@@ -18,18 +18,6 @@ AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
-
-	| topic |
-	topic := AbTopic new.
-	topic addAiThoughtChunk: 'Let me think...'.
-	self assert: topic messages size equals: 1.
-	self assert: topic messages last sender equals: #ai.
-	self assert: topic messages last text equals: 'Let me think...'.
-	self assert: topic messages last isThink
-]
-
-{ #category : 'tests' }
 AbTopicTest >> testAddAiTextChunkAppendsToExistingAiMessage [
 
 	| topic |
@@ -38,20 +26,6 @@ AbTopicTest >> testAddAiTextChunkAppendsToExistingAiMessage [
 	topic addAiTextChunk: ' world'.
 	self assert: topic messages size equals: 1.
 	self assert: topic messages last text equals: 'Hello world'
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testAddAiTextChunkDoesNotAppendToThinkMessage [
-
-	| topic |
-	topic := AbTopic new.
-	topic addAiThoughtChunk: 'Thinking...'.
-	topic addAiTextChunk: 'Response text'.
-	self assert: topic messages size equals: 2.
-	self assert: topic messages first text equals: 'Thinking...'.
-	self assert: topic messages first isThink.
-	self assert: topic messages second text equals: 'Response text'.
-	self deny: topic messages second isThink
 ]
 
 { #category : 'tests' }

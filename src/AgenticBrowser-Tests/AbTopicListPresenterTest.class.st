@@ -64,10 +64,3 @@ AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 	topic agentArguments: #( 'claude-agent-acp' ).
 	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (claude-agent-acp)'
 ]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testTopicListLabelForOmitsAgentNameWhenEmpty [
-
-	topic agentArguments: #(  ).
-	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic'
-]

@@ -22,41 +22,26 @@ Class {
 { #category : 'operations' }
 AbTopic >> addAiTextChunk: aString [
 
-	| msg |
-	(messages notEmpty and: [
-			 messages last sender = #ai and: [
-				 messages last isApprovalRequest not and: [ messages last isThink not ] ] ])
-		ifTrue: [ messages last appendText: aString ]
-		ifFalse: [
-			msg := AbMessage sender: #ai text: aString.
-			messages add: msg ].
-	self announceMessageAdded: messages last
+	self addAiChunk: aString think: false
 ]
 
 { #category : 'operations' }
 AbTopic >> addAiThoughtChunk: aString [
 
-	| msg |
-	(messages notEmpty and: [
-			 messages last sender = #ai and: [
-				 messages last isApprovalRequest not and: [ messages last isThink ] ] ])
-		ifTrue: [ messages last appendText: aString ]
-		ifFalse: [
-			msg := AbMessage sender: #ai text: aString think: true.
-			messages add: msg ].
-	self announceMessageAdded: messages last
+	self addAiChunk: aString think: true
 ]
 
-{ #category : 'operations' }
-AbTopic >> addAiThoughtChunk: aString [
+{ #category : 'private' }
+AbTopic >> addAiChunk: aString think: aBoolean [
 
 	| msg |
 	(messages notEmpty and: [
 			 messages last sender = #ai and: [
-				 messages last isApprovalRequest not and: [ messages last isThink ] ] ])
+				 messages last isApprovalRequest not and: [
+					 messages last isThink = aBoolean ] ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
-			msg := AbMessage sender: #ai text: aString think: true.
+			msg := AbMessage sender: #ai text: aString think: aBoolean.
 			messages add: msg ].
 	self announceMessageAdded: messages last
 ]
@@ -285,6 +270,7 @@ AbTopic >> requestApproval: aDescription [
 { #category : 'operations' }
 AbTopic >> cancelPrompt [
 
+	self status = #working ifFalse: [ ^ self ].
 	self addSystemMessage: 'Cancelled by user.'.
 	stateMachine handleEvent: #ended
 ]

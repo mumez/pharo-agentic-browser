@@ -185,9 +185,8 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 
 	| label |
 	label := (self statusIconFor: aTopic) , ' ' , aTopic title.
-	aTopic agentArguments
-		ifNotNil: [ :args |
-			args ifNotEmpty: [ label := label , ' (' , args first , ')' ] ].
+	aTopic agentArguments ifNotEmpty: [ :args |
+		label := label , ' (' , args first , ')' ].
 	^ label
 ]
 
