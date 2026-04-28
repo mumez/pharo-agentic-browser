@@ -5,6 +5,7 @@ Class {
 		'messageDisplay',
 		'inputField',
 		'sendButton',
+		'cancelButton',
 		'currentTopic',
 		'pendingApprovalMessage'
 	],
@@ -15,7 +16,8 @@ Class {
 { #category : 'initialization' }
 AbChatPresenter >> connectPresenters [
 
-	sendButton action: [ self onSendButtonClicked ]
+	sendButton action: [ self onSendButtonClicked ].
+	cancelButton action: [ self onCancelButtonClicked ]
 ]
 
 { #category : 'layout' }
@@ -26,6 +28,7 @@ AbChatPresenter >> defaultLayout [
 		  add: (SpBoxLayout newLeftToRight
 				   add: inputField;
 				   add: sendButton withConstraints: [ :c | c width: 80 ];
+				   add: cancelButton withConstraints: [ :c | c width: 60 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 60 ];
 		  yourself
@@ -58,7 +61,10 @@ AbChatPresenter >> initializePresenters [
 	inputField placeholder: 'Type your request...'.
 
 	sendButton := self newButton.
-	sendButton label: 'Send'
+	sendButton label: 'Send'.
+
+	cancelButton := self newButton.
+	cancelButton label: 'Cancel'
 ]
 
 { #category : 'private' }
@@ -73,6 +79,13 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 	self rerenderMessages.
 	anAbMessage isApprovalRequest ifTrue: [
 		self enterApprovalMode: anAbMessage ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> onCancelButtonClicked [
+
+	currentTopic ifNil: [ ^ self ].
+	currentTopic cancelPrompt
 ]
 
 { #category : 'private' }
@@ -144,4 +157,10 @@ AbChatPresenter >> inputPlaceholder [
 AbChatPresenter >> sendButtonLabel [
 
 	^ sendButton label
+]
+
+{ #category : 'testing' }
+AbChatPresenter >> cancelButtonLabel [
+
+	^ cancelButton label
 ]

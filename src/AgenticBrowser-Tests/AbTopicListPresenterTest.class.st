@@ -51,5 +51,23 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 { #category : 'tests' }
 AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
 
+	topic agentArguments: #(  ).
+	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic'
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
+
+	topic agentArguments: #( 'opencode' ).
+	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (opencode)'.
+
+	topic agentArguments: #( 'claude-agent-acp' ).
+	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (claude-agent-acp)'
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testTopicListLabelForOmitsAgentNameWhenEmpty [
+
+	topic agentArguments: #(  ).
 	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic'
 ]

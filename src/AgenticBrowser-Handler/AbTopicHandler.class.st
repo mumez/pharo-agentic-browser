@@ -27,9 +27,10 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 { #category : 'agent-callbacks' }
 AbTopicHandler >> sessionUpdate: aSessionUpdate [
 
-	(aSessionUpdate isAgentMessageChunk or: [ aSessionUpdate isAgentThoughtChunk ])
-		ifFalse: [ ^ self ].
-	topic addAiTextChunk: aSessionUpdate content text
+	aSessionUpdate isAgentMessageChunk
+		ifTrue: [ ^ topic addAiTextChunk: aSessionUpdate content text ].
+	aSessionUpdate isAgentThoughtChunk
+		ifTrue: [ ^ topic addAiThoughtChunk: aSessionUpdate content text ]
 ]
 
 { #category : 'accessing' }

@@ -24,10 +24,39 @@ AbTopic >> addAiTextChunk: aString [
 
 	| msg |
 	(messages notEmpty and: [
-			 messages last sender = #ai and: [ messages last isApprovalRequest not ] ])
+			 messages last sender = #ai and: [
+				 messages last isApprovalRequest not and: [ messages last isThink not ] ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
 			msg := AbMessage sender: #ai text: aString.
+			messages add: msg ].
+	self announceMessageAdded: messages last
+]
+
+{ #category : 'operations' }
+AbTopic >> addAiThoughtChunk: aString [
+
+	| msg |
+	(messages notEmpty and: [
+			 messages last sender = #ai and: [
+				 messages last isApprovalRequest not and: [ messages last isThink ] ] ])
+		ifTrue: [ messages last appendText: aString ]
+		ifFalse: [
+			msg := AbMessage sender: #ai text: aString think: true.
+			messages add: msg ].
+	self announceMessageAdded: messages last
+]
+
+{ #category : 'operations' }
+AbTopic >> addAiThoughtChunk: aString [
+
+	| msg |
+	(messages notEmpty and: [
+			 messages last sender = #ai and: [
+				 messages last isApprovalRequest not and: [ messages last isThink ] ] ])
+		ifTrue: [ messages last appendText: aString ]
+		ifFalse: [
+			msg := AbMessage sender: #ai text: aString think: true.
 			messages add: msg ].
 	self announceMessageAdded: messages last
 ]
@@ -251,6 +280,13 @@ AbTopic >> requestApproval: aDescription [
 	stateMachine handleEvent: #permissionRequested.
 	msg approvalSemaphore wait.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'operations' }
+AbTopic >> cancelPrompt [
+
+	self addSystemMessage: 'Cancelled by user.'.
+	stateMachine handleEvent: #ended
 ]
 
 { #category : 'operations' }
