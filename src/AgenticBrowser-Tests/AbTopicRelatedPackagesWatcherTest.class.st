@@ -52,6 +52,23 @@ AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringImpor
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringSourceImport [
+
+	| ann errorRaised |
+	errorRaised := false.
+	ann := MethodModified new.
+	ann method: (AbTopic >> #status).
+	topic beginImportFromSource.
+	[
+	[ watcher handleMethodChange: ann ]
+			on: Error
+			do: [ :e | errorRaised := true ] ]
+		ensure: [ topic endImportFromSource ].
+	self deny: errorRaised.
+	self deny: topic hasPendingApprovalRequest
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testIsWatchingInitiallyFalse [
 
 	self deny: watcher isWatching

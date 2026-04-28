@@ -5,6 +5,12 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'running' }
+AbTopicTest >> setUp [
+
+	AbSettings initialize
+]
+
 { #category : 'tests' }
 AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
 
@@ -123,6 +129,30 @@ AbTopicTest >> testPermissionRequestedTransition [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransitionFromIdle [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testImportGuardNestingCounter [
+
+	| topic |
+	topic := AbTopic new.
+	self deny: topic isImportingFromSource.
+	topic beginImportFromSource.
+	self assert: topic isImportingFromSource.
+	topic beginImportFromSource.
+	topic endImportFromSource.
+	self assert: topic isImportingFromSource.
+	topic endImportFromSource.
+	self deny: topic isImportingFromSource
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testPromptSentTransition [
 
 	| topic |
@@ -171,8 +201,28 @@ AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
-	done waitTimeoutMSecs: 1000.
+	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allowAlways
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalTimesOutAndRejects [
+
+	| topic response done timedOut |
+	topic := AbTopic new.
+	AbSettings default approvalWaitTimeoutSeconds: 0.
+	topic stateMachine handleEvent: #promptSent.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	timedOut ifTrue: [
+		topic resolveApproval: 'no'.
+		done waitTimeoutMilliseconds: 200 ].
+	self deny: timedOut.
+	self assert: response equals: #rejectOnce.
+	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }

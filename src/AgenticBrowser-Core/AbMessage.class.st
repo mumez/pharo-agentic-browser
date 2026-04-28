@@ -21,7 +21,7 @@ AbMessage class >> approvalRequestText: aString [
 		  sender: #ai;
 		  text: aString;
 		  isApprovalRequest: true;
-		  approvalSemaphore: Semaphore new;
+		  initializeApprovalSemaphore;
 		  yourself
 ]
 
@@ -61,11 +61,6 @@ AbMessage >> approvalSemaphore [
 	^ approvalSemaphore
 ]
 
-{ #category : 'accessing' }
-AbMessage >> approvalSemaphore: aSemaphore [
-	approvalSemaphore := aSemaphore
-]
-
 { #category : 'displaying' }
 AbMessage >> displayText [
 
@@ -93,6 +88,12 @@ AbMessage >> initialize [
 	timestamp := DateAndTime now.
 	isApprovalRequest := false.
 	isThink := false
+]
+
+{ #category : 'private' }
+AbMessage >> initializeApprovalSemaphore [
+
+	approvalSemaphore := Semaphore new
 ]
 
 { #category : 'accessing' }

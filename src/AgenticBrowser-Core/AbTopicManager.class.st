@@ -61,6 +61,17 @@ AbTopicManager >> topicsDo: aBlock [
 ]
 
 { #category : 'accessing' }
+AbTopicManager >> topicForWorkingDirectoryPath: aString [
+
+	| lookupPath |
+	lookupPath := aString asFileReference fullName.
+	^ topics values
+		detect: [ :each |
+			each workingDirectoryPath asFileReference fullName = lookupPath ]
+		ifNone: [ nil ]
+]
+
+{ #category : 'accessing' }
 AbTopicManager >> at: aTopicId [
 
 	^ topics at: aTopicId ifAbsent: [ nil ]

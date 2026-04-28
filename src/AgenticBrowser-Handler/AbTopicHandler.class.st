@@ -12,7 +12,9 @@ Class {
 AbTopicHandler >> requestPermission: anACPRequestPermission [
 
 	| response approvalResponse |
+	Transcript crShow:'[AbLog] requestPermission: ' , anACPRequestPermission printString.
 	approvalResponse := topic requestApproval: anACPRequestPermission printString.
+	Transcript crShow:'[AbLog] requestPermission: got approvalResponse=' , approvalResponse printString.
 	response := anACPRequestPermission makeResponse.
 	approvalResponse = #rejectOnce ifTrue: [
 		response rejectOnce.

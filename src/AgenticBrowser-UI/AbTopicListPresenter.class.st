@@ -39,7 +39,7 @@ AbTopicListPresenter >> connectPresenters [
 	topicList whenSelectionChangedDo: [ :selection |
 		selection selectedItem ifNotNil: [ :topic |
 			onTopicSelectedBlock ifNotNil: [ onTopicSelectedBlock value: topic ] ] ].
-	topicList contextMenu: [ self buildTopicContextMenu ].
+	topicList contextMenu: [ topicList selectedItem ifNotNil: [ self buildTopicContextMenu ] ].
 	newTopicButton action: [ self onNewTopicRequest ].
 	self subscribeToTopicManager.
 	self refresh

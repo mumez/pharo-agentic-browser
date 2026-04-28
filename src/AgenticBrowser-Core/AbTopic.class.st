@@ -13,7 +13,8 @@ Class {
 		'packagePrefixes',
 		'workingDirectory',
 		'imageWatcher',
-		'workingDirectoryPath'
+		'workingDirectoryPath',
+		'importNestingCount'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -183,7 +184,26 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	topicId := UUID new asString.
+	importNestingCount := 0.
 	self initializeStateMachine
+]
+
+{ #category : 'operations' }
+AbTopic >> beginImportFromSource [
+
+	importNestingCount := importNestingCount + 1
+]
+
+{ #category : 'operations' }
+AbTopic >> endImportFromSource [
+
+	importNestingCount := (importNestingCount - 1) max: 0
+]
+
+{ #category : 'accessing' }
+AbTopic >> isImportingFromSource [
+
+	^ importNestingCount > 0
 ]
 
 { #category : 'initialization' }
@@ -191,6 +211,7 @@ AbTopic >> initializeStateMachine [
 
 	stateMachine := SsStateMachine new.
 	(stateMachine addStateNamed: #idle)
+		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
 	(stateMachine addStateNamed: #working)
 		entryAction: [ self announceStatusChanged ];
@@ -243,27 +264,41 @@ AbTopic >> removePackagePrefix: aString [
 AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
+	Transcript crShow:'[AbLog] resolveApproval: entered userText=' , aUserText printString.
 	pending := messages
 					   detect: [ :m |
 						   m isApprovalRequest and: [ m approvalResponse isNil ] ]
-					   ifNone: [ ^ self ].
+					   ifNone: [
+						   Transcript crShow:'[AbLog] resolveApproval: no pending approval found, returning'.
+						   ^ self ].
 	response := (aUserText trimmed asLowercase includesSubstring: 'no') |
 				(aUserText trimmed asLowercase includesSubstring: 'deny') |
 				(aUserText trimmed asLowercase includesSubstring: 'reject')
 					ifTrue: [ #rejectOnce ]
 					ifFalse: [ #allowAlways ].
+	Transcript crShow:'[AbLog] resolveApproval: response=' , response printString , ' signaling semaphore'.
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
-	pending approvalSemaphore signal
+	pending approvalSemaphore signal.
+	Transcript crShow:'[AbLog] resolveApproval: done'
 ]
 
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
-	| msg |
+	| msg timedOut |
+	Transcript crShow:'[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
-	msg approvalSemaphore wait.
+	Transcript crShow:'[AbLog] requestApproval: semaphore wait start. state=' , stateMachine currentState printString.
+	timedOut := msg approvalSemaphore waitTimeoutSeconds:
+		            AbSettings default approvalWaitTimeoutSeconds.
+	timedOut ifTrue: [
+		Transcript crShow:'[AbLog] requestApproval: timeout reached, auto rejecting'.
+		msg approvalResponse ifNil: [ msg approvalResponse: #rejectOnce ].
+		self status = #waitingForHuman ifTrue: [
+			stateMachine handleEvent: #humanResponded ] ].
+	Transcript crShow:'[AbLog] requestApproval: semaphore wait done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 

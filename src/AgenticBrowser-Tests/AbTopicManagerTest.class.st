@@ -68,3 +68,15 @@ AbTopicManagerTest >> testUniqueInstance [
 
 	self assert: AbTopicManager uniqueInstance == AbTopicManager uniqueInstance
 ]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
+
+	| manager topic path |
+	manager := AbTopicManager uniqueInstance.
+	topic := AbTopic new title: 'Path Lookup'.
+	path := (FileLocator temp / ('ab-topic-path-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	manager addTopic: topic.
+	self assert: (manager topicForWorkingDirectoryPath: path) == topic
+]

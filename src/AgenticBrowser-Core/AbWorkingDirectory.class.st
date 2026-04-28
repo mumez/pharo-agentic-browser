@@ -39,7 +39,7 @@ AbWorkingDirectory >> exportAll [
 AbWorkingDirectory >> exportPackage: aPackageName [
 
 	self ensureExists.
-	^ SisServer current handleExportPackage: {
+	^ AbSisServer current handleExportPackage: {
 		  'package_name' -> aPackageName.
 		  'path' -> self path fullName } asDictionary
 ]
@@ -56,7 +56,7 @@ AbWorkingDirectory >> importAll [
 AbWorkingDirectory >> importPackage: aPackageName [
 
 	self ensureExists.
-	^ SisServer current handleImportPackage: {
+	^ AbSisServer current handleImportPackage: {
 		  'package_name' -> aPackageName.
 		  'path' -> self path fullName } asDictionary
 ]
@@ -100,7 +100,7 @@ AbWorkingDirectory >> runAllTests [
 { #category : 'operations' }
 AbWorkingDirectory >> runTests: aPackageName [
 
-	^ SisServer current handleRunPackageTest: {
+	^ AbSisServer current handleRunPackageTest: {
 		  'package_name' -> aPackageName } asDictionary
 ]
 

@@ -68,6 +68,23 @@ AbWorkingDirectoryTest >> testPathIsInsideAgenticBrowserSubdir [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testImportPackageUsesAbSisServerCurrent [
+
+	| topic workDir stub result path |
+	topic := AbTopic new title: 'Server Routing'.
+	path := (FileLocator temp / ('ab-working-dir-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	stub := AbSisServerStub new.
+	[
+	AbSisServer current: stub.
+	result := workDir importPackage: 'AgenticBrowser-Core'.
+	self assert: result equals: 'stub-import'.
+	self assert: (stub lastRequest at: 'package_name') equals: 'AgenticBrowser-Core' ]
+		ensure: [ AbSisServer current: nil ]
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testSafeTopicNameEmptyFallback [
 
 	| topic workDir |
