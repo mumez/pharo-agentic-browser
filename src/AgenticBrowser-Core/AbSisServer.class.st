@@ -32,11 +32,3 @@ AbSisServer >> withImportGuardForRequest: request do: aBlock [
 	topic beginImportFromSource.
 	^ [ aBlock value ] ensure: [ topic endImportFromSource ]
 ]
-
-{ #category : 'system startup' }
-AbSisServer class >> startUp: isImageStarting [
-    isImageStarting ifFalse: [ ^ self ].
-    (Delay forSeconds: 3) wait.
-	SisServer current stop.
-	super startUp: isImageStarting
-]
