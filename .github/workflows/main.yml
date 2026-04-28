@@ -1,0 +1,32 @@
+name: smalltalkCI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        smalltalk: [Pharo64-12, Pharo64-13]
+        experimental: [false]
+    continue-on-error: ${{ matrix.experimental }}
+    name: ${{ matrix.smalltalk }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hpi-swa/setup-smalltalkCI@v1
+        with:
+          smalltalk-image: ${{ matrix.smalltalk }}
+      - name: Run tests
+        run: smalltalkci -s ${{ matrix.smalltalk }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        timeout-minutes: 10
