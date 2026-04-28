@@ -47,6 +47,7 @@ AbChatPresenterTest >> testCancelButtonClickAddsSystemMessage [
 
 	| topic |
 	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	presenter onCancelButtonClicked.
 	self assert: (topic messages anySatisfy: [ :m |
