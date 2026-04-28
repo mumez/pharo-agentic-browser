@@ -7,7 +7,8 @@ Class {
 		'timestamp',
 		'isApprovalRequest',
 		'approvalSemaphore',
-		'approvalResponse'
+		'approvalResponse',
+		'isThink'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -27,9 +28,16 @@ AbMessage class >> approvalRequestText: aString [
 { #category : 'instance creation' }
 AbMessage class >> sender: aSenderSymbol text: aString [
 
+	^ self sender: aSenderSymbol text: aString think: false
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> sender: aSenderSymbol text: aString think: aBoolean [
+
 	^ self new
 		  sender: aSenderSymbol;
 		  text: aString;
+		  isThink: aBoolean;
 		  yourself
 ]
 
@@ -60,12 +68,20 @@ AbMessage >> approvalSemaphore: aSemaphore [
 
 { #category : 'displaying' }
 AbMessage >> displayText [
+
 	| prefix |
 	prefix := sender = #human
-		ifTrue: [ '[Human] ' ]
-		ifFalse: [ sender = #ai
-			ifTrue: [ isApprovalRequest ifTrue: [ '[⏸ AI] ' ] ifFalse: [ '[AI] ' ] ]
-			ifFalse: [ '[System] ' ] ].
+				  ifTrue: [ '[Human] ' ]
+				  ifFalse: [
+					  sender = #ai
+						  ifTrue: [
+							  isApprovalRequest
+								  ifTrue: [ '[⏸ AI] ' ]
+								  ifFalse: [
+									  isThink
+									  	ifTrue: [ '[AI(think)] ' ]
+									  	ifFalse: [ '[AI] ' ] ] ]
+					  ifFalse: [ '[System] ' ] ].
 	^ prefix , text
 ]
 
@@ -75,7 +91,20 @@ AbMessage >> initialize [
 	sender := #system.
 	text := ''.
 	timestamp := DateAndTime now.
-	isApprovalRequest := false
+	isApprovalRequest := false.
+	isThink := false
+]
+
+{ #category : 'accessing' }
+AbMessage >> isThink [
+
+	^ isThink
+]
+
+{ #category : 'accessing' }
+AbMessage >> isThink: aBoolean [
+
+	isThink := aBoolean
 ]
 
 { #category : 'accessing' }

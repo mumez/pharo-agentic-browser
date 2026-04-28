@@ -22,12 +22,26 @@ Class {
 { #category : 'operations' }
 AbTopic >> addAiTextChunk: aString [
 
+	self addAiChunk: aString think: false
+]
+
+{ #category : 'operations' }
+AbTopic >> addAiThoughtChunk: aString [
+
+	self addAiChunk: aString think: true
+]
+
+{ #category : 'private' }
+AbTopic >> addAiChunk: aString think: aBoolean [
+
 	| msg |
 	(messages notEmpty and: [
-			 messages last sender = #ai and: [ messages last isApprovalRequest not ] ])
+			 messages last sender = #ai and: [
+				 messages last isApprovalRequest not and: [
+					 messages last isThink = aBoolean ] ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
-			msg := AbMessage sender: #ai text: aString.
+			msg := AbMessage sender: #ai text: aString think: aBoolean.
 			messages add: msg ].
 	self announceMessageAdded: messages last
 ]
@@ -251,6 +265,14 @@ AbTopic >> requestApproval: aDescription [
 	stateMachine handleEvent: #permissionRequested.
 	msg approvalSemaphore wait.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'operations' }
+AbTopic >> cancelPrompt [
+
+	self status = #working ifFalse: [ ^ self ].
+	self addSystemMessage: 'Cancelled by user.'.
+	stateMachine handleEvent: #ended
 ]
 
 { #category : 'operations' }

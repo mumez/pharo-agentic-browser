@@ -35,3 +35,20 @@ AbChatPresenterTest >> testExitApprovalModeRestoresInputAndButton [
 	self assert: presenter sendButtonLabel equals: 'Send'.
 	self assert: presenter inputPlaceholder equals: 'Type your request...'
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonExists [
+
+	self assert: presenter cancelButtonLabel equals: 'Cancel'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonClickAddsSystemMessage [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onCancelButtonClicked.
+	self assert: (topic messages anySatisfy: [ :m |
+			 m sender = #system and: [ m text includesSubstring: 'Cancelled' ] ])
+]

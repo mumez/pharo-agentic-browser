@@ -183,7 +183,11 @@ AbTopicListPresenter >> statusIconFor: aTopic [
 { #category : 'private' }
 AbTopicListPresenter >> topicListLabelFor: aTopic [
 
-	^ (self statusIconFor: aTopic) , ' ' , aTopic title
+	| label |
+	label := (self statusIconFor: aTopic) , ' ' , aTopic title.
+	aTopic agentArguments ifNotEmpty: [ :args |
+		label := label , ' (' , args first , ')' ].
+	^ label
 ]
 
 { #category : 'private' }

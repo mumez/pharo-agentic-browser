@@ -61,3 +61,22 @@ AbMessageTest >> testHumanMessageCreation [
 	self deny: msg isApprovalRequest.
 	self assert: msg approvalSemaphore isNil
 ]
+
+{ #category : 'tests' }
+AbMessageTest >> testThinkMessageCreation [
+
+	| msg |
+	msg := AbMessage sender: #ai text: 'Let me think...' think: true.
+	self assert: msg sender equals: #ai.
+	self assert: msg text equals: 'Let me think...'.
+	self assert: msg isThink.
+	self assert: (msg displayText includesSubstring: 'AI(think)')
+]
+
+{ #category : 'tests' }
+AbMessageTest >> testDisplayStringAiThink [
+
+	| msg |
+	msg := AbMessage sender: #ai text: 'Planning steps' think: true.
+	self assert: msg displayText equals: '[AI(think)] Planning steps'
+]
