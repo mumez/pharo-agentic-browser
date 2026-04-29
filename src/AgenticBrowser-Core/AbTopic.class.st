@@ -94,7 +94,7 @@ AbTopic >> announceMessageAdded: aMessage [
 AbTopic >> announceStatusChanged [
 
 	self announcer announce:
-		(AbTopicStatusChanged new topic: self; yourself)
+		(AbTopicStatusChanged new topic: self; status: self status; yourself)
 ]
 
 { #category : 'accessing' }
@@ -258,7 +258,8 @@ AbTopic >> resolveApproval: aUserText [
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
-	| msg waitSeconds |
+	| msg waitSeconds wasIdle |
+	wasIdle := self status = #idle.
 	Transcript crShow: '[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
@@ -273,6 +274,8 @@ AbTopic >> requestApproval: aDescription [
 		msg approvalResponse: #rejectOnce.
 		self status = #waitingForHuman ifTrue: [
 			stateMachine handleEvent: #humanResponded ] ].
+
+	wasIdle ifTrue: [ stateMachine handleEvent: #ended ].
 
 	Transcript crShow: '[AbLog] requestApproval: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]

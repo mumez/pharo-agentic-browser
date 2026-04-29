@@ -38,9 +38,10 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	pendingApprovalMessage := anAbMessage.
-	inputField placeholder: 'Respond to AI (yes / no / always)...'.
+	inputField placeholder: ''.
+	inputField text: ''.
 	sendButton label: 'Confirm'.
-	inputField text: ''
+	cancelButton label: 'Deny'
 ]
 
 { #category : 'api' }
@@ -48,7 +49,8 @@ AbChatPresenter >> exitApprovalMode [
 
 	pendingApprovalMessage := nil.
 	inputField placeholder: 'Type your request...'.
-	sendButton label: 'Send'
+	sendButton label: 'Send'.
+	cancelButton label: 'Cancel'
 ]
 
 { #category : 'initialization' }
@@ -85,30 +87,32 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 AbChatPresenter >> onCancelButtonClicked [
 
 	currentTopic ifNil: [ ^ self ].
-	currentTopic cancelPrompt
+	pendingApprovalMessage
+		ifNotNil: [ currentTopic resolveApproval: 'no' ]
+		ifNil: [ currentTopic cancelPrompt ]
 ]
 
 { #category : 'private' }
 AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
+	currentTopic ifNil: [ ^ self ].
+	pendingApprovalMessage ifNotNil: [
+		currentTopic resolveApproval: 'yes'.
+		^ self ].
 	text := inputField text trimmed.
 	text isEmpty ifTrue: [ ^ self ].
 	inputField text: ''.
-	currentTopic ifNil: [ ^ self ].
-	pendingApprovalMessage
-		ifNotNil: [ currentTopic resolveApproval: text ]
-		ifNil: [
-			promptText := self isFirstMessageInTopic
-			              ifTrue: [ '/st-buddy ' , text ]
-			              ifFalse: [ text ].
-			currentTopic sendPrompt: promptText ]
+	promptText := self isFirstMessageInTopic
+		              ifTrue: [ '/st-buddy ' , text ]
+		              ifFalse: [ text ].
+	currentTopic sendPrompt: promptText
 ]
 
 { #category : 'private' }
-AbChatPresenter >> onTopicStatusChanged: aTopic [
+AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
-	aTopic status = #working ifTrue: [ self exitApprovalMode ].
+	aStatus = #working ifTrue: [ self exitApprovalMode ].
 	self rerenderMessages
 ]
 
@@ -132,7 +136,7 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 		for: self.
 	aTopic announcer
 		when: AbTopicStatusChanged
-		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic ] ]
+		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic status: ann status ] ]
 		for: self
 ]
 
