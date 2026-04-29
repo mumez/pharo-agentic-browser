@@ -125,6 +125,21 @@ AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWi
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
+
+	AbSettings default approvalWaitTimeoutSeconds: 0.
+	topic packagePrefixes: #( 'MyPkg' ).
+	watcher handlePackageChange: 'MyPkg'.
+	watcher handlePackageChange: 'MyPkg'.
+	watcher handlePackageChange: 'MyPkg'.
+	"Wait briefly for the single forked process to run with 0-second timeout"
+	(Delay forMilliseconds: 100) wait.
+	self
+		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
+		equals: 1
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:

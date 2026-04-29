@@ -43,7 +43,53 @@ The referenced class definition or method source is attached as ACP **text resou
 
 ---
 
-## 3. Screenshot Attachment
+## 3. Queue-Based Package Change Processing in AbTopicRelatedPackagesWatcher
+
+Replace the current `fork`-per-change approach with a `SharedQueue` + single worker process (producer-consumer pattern).
+
+**Motivation:** The current implementation forks a new process for each package change event. Although a `pendingPackageApprovals` guard prevents duplicate approvals, processing order is non-deterministic when multiple packages change in rapid succession. A queue guarantees FIFO ordering and keeps all approval handling on a single background thread.
+
+**Sketch:**
+```smalltalk
+"handlePackageChange: enqueues synchronously (lightweight, no fork)"
+handlePackageChange: aPackageName [
+    (pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+    pendingPackageApprovals add: aPackageName.
+    changeQueue nextPut: aPackageName
+]
+
+"Worker loop runs on a single background process started by start"
+runWorkerLoop [
+    [ isWatching ] whileTrue: [
+        | pkgName |
+        pkgName := changeQueue next.
+        self doHandlePackageChange: pkgName ]
+]
+
+"start/stop manage the worker process"
+start [
+    isWatching := true.
+    changeQueue := SharedQueue new.
+    workerProcess := [ self runWorkerLoop ] newProcess
+        name: 'AgenticBrowser package watcher';
+        priority: Processor userBackgroundPriority;
+        yourself.
+    workerProcess resume.
+    "... SystemAnnouncer subscriptions ..."
+]
+
+stop [
+    SystemAnnouncer uniqueInstance unsubscribe: self.
+    isWatching := false.
+    workerProcess ifNotNil: [ :p | p terminate. workerProcess := nil ]
+]
+```
+
+**New instVars:** `changeQueue` (SharedQueue), `workerProcess` (Process).
+
+---
+
+## 4. Screenshot Attachment
 
 Select a Pharo window and send its screenshot to the AI agent as an ACP **binary resource**.
 

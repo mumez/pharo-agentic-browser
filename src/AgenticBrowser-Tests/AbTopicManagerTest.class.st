@@ -11,6 +11,12 @@ AbTopicManagerTest >> setUp [
 	AbTopicManager resetInstance
 ]
 
+{ #category : 'running' }
+AbTopicManagerTest >> tearDown [
+
+	AbTopicManager resetInstance
+]
+
 { #category : 'tests' }
 AbTopicManagerTest >> testAddTopic [
 

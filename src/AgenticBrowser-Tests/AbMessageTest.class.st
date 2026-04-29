@@ -31,7 +31,6 @@ AbMessageTest >> testApprovalRequestCreation [
 	self assert: msg sender equals: #ai.
 	self assert: msg text equals: 'May I modify DBAdapter?'.
 	self assert: msg isApprovalRequest.
-	self assert: msg approvalSemaphore notNil.
 	self assert: msg approvalResponse isNil
 ]
 
@@ -59,7 +58,6 @@ AbMessageTest >> testHumanMessageCreation [
 	self assert: msg sender equals: #human.
 	self assert: msg text equals: 'Fix the N+1 issue'.
 	self deny: msg isApprovalRequest.
-	self assert: msg approvalSemaphore isNil
 ]
 
 { #category : 'tests' }

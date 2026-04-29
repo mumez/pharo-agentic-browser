@@ -67,6 +67,14 @@ AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	pendingPackageApprovals add: aPackageName.
+	[ self doHandlePackageChange: aPackageName ] fork
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
+
 	| matchesPrefix |
 	matchesPrefix := topic packagePrefixes anySatisfy: [ :prefix |
 						 prefix match: aPackageName ].
@@ -113,10 +121,6 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 
 	| approvalResponse |
 	Transcript crShow:'[AbLog] requestApprovalToTrackPackage: ' , aPackageName.
-	(pendingPackageApprovals includes: aPackageName) ifTrue: [
-		Transcript crShow:'[AbLog] requestApprovalToTrackPackage: already pending, skipping'.
-		^ self ].
-	pendingPackageApprovals add: aPackageName.
 	[
 	approvalResponse := topic requestApproval:
 		                    'Package ''' , aPackageName
@@ -142,10 +146,6 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 
 	| approvalResponse |
 	Transcript crShow:'[AbLog] requestApprovalToExportPackage: ' , aPackageName.
-	(pendingPackageApprovals includes: aPackageName) ifTrue: [
-		Transcript crShow:'[AbLog] requestApprovalToExportPackage: already pending, skipping'.
-		^ self ].
-	pendingPackageApprovals add: aPackageName.
 	[
 	approvalResponse := topic requestApproval:
 		                    'Package ''' , aPackageName

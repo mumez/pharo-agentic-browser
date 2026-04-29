@@ -22,9 +22,8 @@ AbChatPresenterTest >> testEnterApprovalModeUpdatesInputAndButton [
 	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter sendButtonLabel equals: 'Confirm'.
-	self
-		assert: presenter inputPlaceholder
-		equals: 'Respond to AI (yes / no / always)...'
+	self assert: presenter cancelButtonLabel equals: 'Deny'.
+	self assert: presenter inputPlaceholder equals: ''
 ]
 
 { #category : 'tests' }
@@ -33,6 +32,7 @@ AbChatPresenterTest >> testExitApprovalModeRestoresInputAndButton [
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow package export?').
 	presenter exitApprovalMode.
 	self assert: presenter sendButtonLabel equals: 'Send'.
+	self assert: presenter cancelButtonLabel equals: 'Cancel'.
 	self assert: presenter inputPlaceholder equals: 'Type your request...'
 ]
 
@@ -40,6 +40,30 @@ AbChatPresenterTest >> testExitApprovalModeRestoresInputAndButton [
 AbChatPresenterTest >> testCancelButtonExists [
 
 	self assert: presenter cancelButtonLabel equals: 'Cancel'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicStatusWorkingExitsApprovalMode [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	self assert: presenter sendButtonLabel equals: 'Confirm'.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter sendButtonLabel equals: 'Send'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	self assert: presenter sendButtonLabel equals: 'Confirm'.
+	presenter onTopicStatusChanged: topic status: #done.
+	self assert: presenter sendButtonLabel equals: 'Confirm'
 ]
 
 { #category : 'tests' }

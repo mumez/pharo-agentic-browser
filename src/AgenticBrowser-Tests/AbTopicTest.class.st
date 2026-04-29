@@ -67,7 +67,6 @@ AbTopicTest >> testAddApprovalRequestAddsMessage [
 	msg := topic addApprovalRequest: 'May I delete files?'.
 	self assert: topic messages size equals: 1.
 	self assert: msg isApprovalRequest.
-	self assert: msg approvalSemaphore notNil
 ]
 
 { #category : 'tests' }
@@ -204,6 +203,23 @@ AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allowAlways
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
+
+	| topic response done |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowAlways.
+	self assert: topic status equals: #done
 ]
 
 { #category : 'tests' }
