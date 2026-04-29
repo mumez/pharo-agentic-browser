@@ -6,7 +6,6 @@ Class {
 		'text',
 		'timestamp',
 		'isApprovalRequest',
-		'approvalSemaphore',
 		'approvalResponse',
 		'isThink'
 	],
@@ -21,7 +20,6 @@ AbMessage class >> approvalRequestText: aString [
 		  sender: #ai;
 		  text: aString;
 		  isApprovalRequest: true;
-		  initializeApprovalSemaphore;
 		  yourself
 ]
 
@@ -56,11 +54,6 @@ AbMessage >> approvalResponse: aSymbol [
 	approvalResponse := aSymbol
 ]
 
-{ #category : 'accessing' }
-AbMessage >> approvalSemaphore [
-	^ approvalSemaphore
-]
-
 { #category : 'displaying' }
 AbMessage >> displayText [
 
@@ -88,12 +81,6 @@ AbMessage >> initialize [
 	timestamp := DateAndTime now.
 	isApprovalRequest := false.
 	isThink := false
-]
-
-{ #category : 'private' }
-AbMessage >> initializeApprovalSemaphore [
-
-	approvalSemaphore := Semaphore new
 ]
 
 { #category : 'accessing' }

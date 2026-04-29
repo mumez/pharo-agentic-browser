@@ -67,7 +67,6 @@ AbTopicTest >> testAddApprovalRequestAddsMessage [
 	msg := topic addApprovalRequest: 'May I delete files?'.
 	self assert: topic messages size equals: 1.
 	self assert: msg isApprovalRequest.
-	self assert: msg approvalSemaphore notNil
 ]
 
 { #category : 'tests' }

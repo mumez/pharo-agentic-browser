@@ -249,29 +249,32 @@ AbTopic >> resolveApproval: aUserText [
 				(aUserText trimmed asLowercase includesSubstring: 'reject')
 					ifTrue: [ #rejectOnce ]
 					ifFalse: [ #allowAlways ].
-	Transcript crShow:'[AbLog] resolveApproval: response=' , response printString , ' signaling semaphore'.
+	Transcript crShow: '[AbLog] resolveApproval: response=' , response printString.
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
-	pending approvalSemaphore signal.
-	Transcript crShow:'[AbLog] resolveApproval: done'
+	Transcript crShow: '[AbLog] resolveApproval: done'
 ]
 
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
-	| msg timedOut |
-	Transcript crShow:'[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
+	| msg waitSeconds |
+	Transcript crShow: '[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
-	Transcript crShow:'[AbLog] requestApproval: semaphore wait start. state=' , stateMachine currentState printString.
-	timedOut := msg approvalSemaphore waitTimeoutSeconds:
-		            AbSettings default approvalWaitTimeoutSeconds.
-	timedOut ifTrue: [
-		Transcript crShow:'[AbLog] requestApproval: timeout reached, auto rejecting'.
-		msg approvalResponse ifNil: [ msg approvalResponse: #rejectOnce ].
+
+	waitSeconds := 0.
+	[ msg approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
+		1 second wait.
+		waitSeconds := waitSeconds + 1 ].
+
+	msg approvalResponse ifNil: [
+		Transcript crShow: '[AbLog] requestApproval: timeout reached, auto rejecting'.
+		msg approvalResponse: #rejectOnce.
 		self status = #waitingForHuman ifTrue: [
 			stateMachine handleEvent: #humanResponded ] ].
-	Transcript crShow:'[AbLog] requestApproval: semaphore wait done. response=' , msg approvalResponse printString.
+
+	Transcript crShow: '[AbLog] requestApproval: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 
