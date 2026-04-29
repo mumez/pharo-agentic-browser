@@ -51,7 +51,9 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 { #category : 'private' }
 AbBrowserPresenter >> onWindowClosed [
 
-	AbTopicManager uniqueInstance topicsDo: [ :t |
-		t workingDirectory unsubscribeFromSisServerImportEvents.
+	| manager |
+	manager := AbTopicManager uniqueInstance.
+	manager unsubscribeAllTopicsFromSisServer.
+	manager topicsDo: [ :t |
 		[ t disconnect ] on: Error do: [ :e | "ignore disconnect errors" ] ]
 ]

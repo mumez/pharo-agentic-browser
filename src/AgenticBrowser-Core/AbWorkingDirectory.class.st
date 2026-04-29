@@ -60,7 +60,7 @@ AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
 	urlPath := ann teapotRequest url pathPrintString.
 	urlPath = '/import-package' ifFalse: [ ^ self ].
 	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
-	self path fullName = sourcePath ifFalse: [ ^ self ].
+	topic workingDirectoryPath = sourcePath ifFalse: [ ^ self ].
 	ann type = #before
 		ifTrue: [ self beginImportFromSource ]
 		ifFalse: [ self endImportFromSource ]
@@ -69,17 +69,18 @@ AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
 { #category : 'operations' }
 AbWorkingDirectory >> subscribeToSisServerImportEvents [
 
-	SisServer current announcer unsubscribe: self.
-	SisServer current announcer
-		when: SisRequestAnnouncement
-		do: [ :ann | self handleSisRequestAnnouncement: ann ]
+	| server |
+	server := SisServer current.
+	server unsubscribe: self.
+	server
+		subscribeOnRequest: [ :ann | self handleSisRequestAnnouncement: ann ]
 		for: self
 ]
 
 { #category : 'operations' }
 AbWorkingDirectory >> unsubscribeFromSisServerImportEvents [
 
-	SisServer current announcer unsubscribe: self
+	SisServer current unsubscribe: self
 ]
 
 
