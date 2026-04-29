@@ -56,6 +56,12 @@ AbSettings >> defaultWatcherMessageThrottleDuration [
 	^ 2 seconds
 ]
 
+{ #category : 'defaults' }
+AbSettings >> defaultApprovalWaitTimeoutSeconds [
+
+	^ 30
+]
+
 { #category : 'initialization' }
 AbSettings >> initFrom: otherSettings [
 
@@ -95,4 +101,18 @@ AbSettings >> watcherMessageThrottleDuration [
 AbSettings >> watcherMessageThrottleDuration: aDuration [
 
 	self at: #watcherMessageThrottleDuration put: aDuration
+]
+
+{ #category : 'accessing' }
+AbSettings >> approvalWaitTimeoutSeconds [
+
+	^ self
+		  at: #approvalWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultApprovalWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> approvalWaitTimeoutSeconds: anInteger [
+
+	self at: #approvalWaitTimeoutSeconds put: anInteger
 ]

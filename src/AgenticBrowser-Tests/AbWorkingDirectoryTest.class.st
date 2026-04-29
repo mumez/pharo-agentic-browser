@@ -35,14 +35,6 @@ AbWorkingDirectoryTest >> testEnsureExists [
 	workDir path deleteAll
 ]
 
-{ #category : 'tests' }
-AbWorkingDirectoryTest >> testIsImportingInitiallyFalse [
-
-	| topic workDir |
-	topic := AbTopic new title: 'Test'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	self deny: workDir isImporting
-]
 
 { #category : 'tests' }
 AbWorkingDirectoryTest >> testNewTopicWorkingDirectoryDoesNotExist [
@@ -65,6 +57,73 @@ AbWorkingDirectoryTest >> testPathIsInsideAgenticBrowserSubdir [
 	self
 		assert: workDir path parent fullName
 		equals: (Smalltalk imageDirectory / 'agentic-browser') fullName
+]
+
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementBeginImport [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path=' , path.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	self deny: workDir isImportingFromSource.
+	workDir handleSisRequestAnnouncement: ann.
+	self assert: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementEndImport [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	workDir beginImportFromSource.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path=' , path.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement after: teaReq.
+	workDir handleSisRequestAnnouncement: ann.
+	self deny: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresDifferentPath [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path=/different/path'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	workDir handleSisRequestAnnouncement: ann.
+	self deny: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresOtherUrls [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/eval?package_name=Foo&path=' , path.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	workDir handleSisRequestAnnouncement: ann.
+	self deny: workDir isImportingFromSource
 ]
 
 { #category : 'tests' }

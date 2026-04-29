@@ -55,9 +55,32 @@ AbTopicManager >> topics [
 ]
 
 { #category : 'operations' }
+AbTopicManager >> subscribeAllTopicsToSisServer [
+
+	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
+]
+
+{ #category : 'operations' }
+AbTopicManager >> unsubscribeAllTopicsFromSisServer [
+
+	topics valuesDo: [ :t | t workingDirectory unsubscribeFromSisServerImportEvents ]
+]
+
+{ #category : 'operations' }
 AbTopicManager >> topicsDo: aBlock [
 
 	topics valuesDo: aBlock
+]
+
+{ #category : 'accessing' }
+AbTopicManager >> topicForWorkingDirectoryPath: aString [
+
+	| lookupPath |
+	lookupPath := aString asFileReference fullName.
+	^ topics values
+		detect: [ :each |
+			each workingDirectoryPath asFileReference fullName = lookupPath ]
+		ifNone: [ nil ]
 ]
 
 { #category : 'accessing' }

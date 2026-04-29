@@ -35,7 +35,8 @@ AbBrowserPresenter >> defaultLayout [
 AbBrowserPresenter >> initializePresenters [
 
 	topicListPresenter := self instantiate: AbTopicListPresenter.
-	chatPresenter := self instantiate: AbChatPresenter
+	chatPresenter := self instantiate: AbChatPresenter.
+	AbTopicManager uniqueInstance subscribeAllTopicsToSisServer
 ]
 
 { #category : 'initialization' }
@@ -50,6 +51,9 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 { #category : 'private' }
 AbBrowserPresenter >> onWindowClosed [
 
-	AbTopicManager uniqueInstance topicsDo: [ :t |
+	| manager |
+	manager := AbTopicManager uniqueInstance.
+	manager unsubscribeAllTopicsFromSisServer.
+	manager topicsDo: [ :t |
 		[ t disconnect ] on: Error do: [ :e | "ignore disconnect errors" ] ]
 ]

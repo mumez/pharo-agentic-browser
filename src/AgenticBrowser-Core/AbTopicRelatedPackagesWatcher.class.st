@@ -22,18 +22,32 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 
-	(self shouldAnnouncePackageChangeFor: aPackageName at: DateAndTime now)
+	| shouldAnnounce |
+	shouldAnnounce := self
+		                  shouldAnnouncePackageChangeFor: aPackageName
+		                  at: DateAndTime now.
+	shouldAnnounce
 		ifTrue: [
 			topic addSystemMessage:
-				aPackageName , ' was modified; .st files have been updated' ].
-	topic workingDirectory exportPackage: aPackageName
+				aPackageName , ' was modified; .st files have been updated' ]
+		ifFalse: [
+			Transcript crShow:
+				'[AbLog] announceChangeAndExport: system message suppressed for '
+				, aPackageName ].
+	topic workingDirectory ensureExists.
+	SisServer current handleExportPackage: {
+		  'package_name' -> aPackageName.
+		  'path' -> topic workingDirectory path fullName } asDictionary
 ]
 
 { #category : 'event handling' }
 AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 
 	| pkgName |
-	topic workingDirectory isImporting ifTrue: [ ^ self ].
+	topic workingDirectory isImportingFromSource ifTrue: [
+		Transcript crShow:
+			'[AbLog] handleClassChange: suppressed during import'.
+		^ self ].
 	pkgName := anAnnouncement classAffected package name asString.
 	self handlePackageChange: pkgName
 ]
@@ -42,7 +56,10 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 
 	| pkgName |
-	topic workingDirectory isImporting ifTrue: [ ^ self ].
+	topic workingDirectory isImportingFromSource ifTrue: [
+		Transcript crShow:
+			'[AbLog] handleMethodChange: suppressed during import'.
+		^ self ].
 	pkgName := anAnnouncement methodPackage name asString.
 	self handlePackageChange: pkgName
 ]
@@ -95,7 +112,10 @@ AbTopicRelatedPackagesWatcher >> start [
 AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 
 	| approvalResponse |
-	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	Transcript crShow:'[AbLog] requestApprovalToTrackPackage: ' , aPackageName.
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [
+		Transcript crShow:'[AbLog] requestApprovalToTrackPackage: already pending, skipping'.
+		^ self ].
 	pendingPackageApprovals add: aPackageName.
 	[
 	approvalResponse := topic requestApproval:
@@ -103,6 +123,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 		                    , ''' was modified but does not match any tracked prefix.'
 		                    , String cr
 		                    , 'Add this package to tracked prefixes and export? (yes/no)'.
+	Transcript crShow:'[AbLog] requestApprovalToTrackPackage: got response=' , approvalResponse printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [
 			topic addPackagePrefix: aPackageName.
@@ -111,14 +132,19 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 			topic addSystemMessage:
 				'Ignored package change for ' , aPackageName
 				, ' (not added to tracked prefixes).' ] ]
-		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+		ensure: [
+			Transcript crShow:'[AbLog] requestApprovalToTrackPackage: ensure cleanup for ' , aPackageName.
+			pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
 
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 
 	| approvalResponse |
-	(pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	Transcript crShow:'[AbLog] requestApprovalToExportPackage: ' , aPackageName.
+	(pendingPackageApprovals includes: aPackageName) ifTrue: [
+		Transcript crShow:'[AbLog] requestApprovalToExportPackage: already pending, skipping'.
+		^ self ].
 	pendingPackageApprovals add: aPackageName.
 	[
 	approvalResponse := topic requestApproval:
@@ -126,12 +152,15 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 		                    , ''' was modified.'
 		                    , String cr
 		                    , 'Export .st files now? (yes/no)'.
+	Transcript crShow:'[AbLog] requestApprovalToExportPackage: got response=' , approvalResponse printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [ self announceChangeAndExport: aPackageName ]
 		ifFalse: [
 			topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ] ]
-		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+		ensure: [
+			Transcript crShow:'[AbLog] requestApprovalToExportPackage: ensure cleanup for ' , aPackageName.
+			pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
 
 { #category : 'private' }

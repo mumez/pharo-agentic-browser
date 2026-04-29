@@ -119,7 +119,7 @@ AbNewTopicDialog >> onSelectWorkingDirClicked [
 	| selectedDir |
 	selectedDir := UIManager default
 		               chooseDirectory: 'Choose working directory'
-		               from: FileLocator home.
+		               path: FileLocator home asFileReference.
 	selectedDir ifNil: [ ^ self ].
 	workingDirField text: selectedDir fullName
 ]

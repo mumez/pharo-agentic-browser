@@ -38,3 +38,16 @@ AbSettingsTest >> testWatcherMessageThrottleDurationSettable [
 	AbSettings default watcherMessageThrottleDuration: 7 seconds.
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 7 seconds
 ]
+
+{ #category : 'tests' }
+AbSettingsTest >> testApprovalWaitTimeoutSecondsDefault [
+
+	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 30
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testApprovalWaitTimeoutSecondsSettable [
+
+	AbSettings default approvalWaitTimeoutSeconds: 5.
+	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 5
+]

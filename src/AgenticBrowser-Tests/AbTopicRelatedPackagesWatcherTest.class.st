@@ -30,10 +30,12 @@ AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport
 	errorRaised := false.
 	ann := ClassModifiedClassDefinition new.
 	ann newClassDefinition: AbTopic.
-	topic workingDirectory isImporting: true.
+	topic workingDirectory beginImportFromSource.
+	[
 	[ watcher handleClassChange: ann ]
 		on: Error
-		do: [ :e | errorRaised := true ].
+		do: [ :e | errorRaised := true ] ]
+		ensure: [ topic workingDirectory endImportFromSource ].
 	self deny: errorRaised
 ]
 
@@ -44,11 +46,30 @@ AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringImpor
 	errorRaised := false.
 	ann := MethodModified new.
 	ann method: (AbTopic >> #status).
-	topic workingDirectory isImporting: true.
+	topic workingDirectory beginImportFromSource.
+	[
 	[ watcher handleMethodChange: ann ]
 		on: Error
-		do: [ :e | errorRaised := true ].
+		do: [ :e | errorRaised := true ] ]
+		ensure: [ topic workingDirectory endImportFromSource ].
 	self deny: errorRaised
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringSourceImport [
+
+	| ann errorRaised |
+	errorRaised := false.
+	ann := MethodModified new.
+	ann method: (AbTopic >> #status).
+	topic workingDirectory beginImportFromSource.
+	[
+	[ watcher handleMethodChange: ann ]
+			on: Error
+			do: [ :e | errorRaised := true ] ]
+		ensure: [ topic workingDirectory endImportFromSource ].
+	self deny: errorRaised.
+	self deny: topic hasPendingApprovalRequest
 ]
 
 { #category : 'tests' }
