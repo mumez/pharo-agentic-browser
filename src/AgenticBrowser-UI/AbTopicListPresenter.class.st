@@ -125,21 +125,9 @@ AbTopicListPresenter >> onPackagePrefixSet: aTopic [
 				'No packages match ' , aTopic packagePrefixes asSortedCollection printString
 				, '. Starting new project development.' ]
 		ifNotEmpty: [
-			(workDir path exists and: [ workDir path hasChildren ])
-				ifTrue: [
-					(UIManager default
-						 confirm:
-						 'Existing topic directory found at ' , workDir path fullName
-						 , '. Import packages into image?')
-						ifTrue: [
-							[ aTopic importWatchedPackages.
-							  aTopic addSystemMessage:
-								  'Imported packages from ' , workDir path fullName ] fork ] ]
-				ifFalse: [
-					[ aTopic exportWatchedPackages.
-					  aTopic addSystemMessage:
-						  'Exported ' , matchingNames size printString , ' package(s) to '
-						  , workDir path fullName ] fork ] ]
+			aTopic addSystemMessage:
+				'Tracking ' , matchingNames size printString , ' package(s). Working directory: '
+				, workDir path fullName ]
 ]
 
 { #category : 'private' }

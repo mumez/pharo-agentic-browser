@@ -3,7 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'topic',
-		'isImporting'
+		'importNestingCount'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -24,58 +24,64 @@ AbWorkingDirectory >> directoryName [
 ]
 
 { #category : 'operations' }
+AbWorkingDirectory >> beginImportFromSource [
+
+	importNestingCount := importNestingCount + 1
+]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> endImportFromSource [
+
+	importNestingCount := (importNestingCount - 1) max: 0
+]
+
+{ #category : 'operations' }
 AbWorkingDirectory >> ensureExists [
 
 	self path ensureCreateDirectory
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> exportAll [
-
-	topic matchingPackageNames do: [ :pkg | self exportPackage: pkg ]
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> exportPackage: aPackageName [
-
-	self ensureExists.
-	^ AbSisServer current handleExportPackage: {
-		  'package_name' -> aPackageName.
-		  'path' -> self path fullName } asDictionary
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> importAll [
-
-	isImporting := true.
-	[ topic matchingPackageNames do: [ :pkg | self importPackage: pkg ] ]
-		ensure: [ isImporting := false ]
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> importPackage: aPackageName [
-
-	self ensureExists.
-	^ AbSisServer current handleImportPackage: {
-		  'package_name' -> aPackageName.
-		  'path' -> self path fullName } asDictionary
-]
-
 { #category : 'initialization' }
 AbWorkingDirectory >> initialize [
 
-	isImporting := false
+	importNestingCount := 0
 ]
 
 { #category : 'accessing' }
-AbWorkingDirectory >> isImporting [
-	^ isImporting
+AbWorkingDirectory >> isImportingFromSource [
+
+	^ importNestingCount > 0
 ]
 
-{ #category : 'accessing' }
-AbWorkingDirectory >> isImporting: aBoolean [
-	isImporting := aBoolean
+{ #category : 'private' }
+AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
+
+	| urlPath sourcePath |
+	urlPath := ann teapotRequest url pathPrintString.
+	urlPath = '/import-package' ifFalse: [ ^ self ].
+	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
+	self path fullName = sourcePath ifFalse: [ ^ self ].
+	ann type = #before
+		ifTrue: [ self beginImportFromSource ]
+		ifFalse: [ self endImportFromSource ]
 ]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> subscribeToSisServerImportEvents [
+
+	SisServer current announcer unsubscribe: self.
+	SisServer current announcer
+		when: SisRequestAnnouncement
+		do: [ :ann | self handleSisRequestAnnouncement: ann ]
+		for: self
+]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> unsubscribeFromSisServerImportEvents [
+
+	SisServer current announcer unsubscribe: self
+]
+
 
 { #category : 'accessing' }
 AbWorkingDirectory >> path [
@@ -100,7 +106,7 @@ AbWorkingDirectory >> runAllTests [
 { #category : 'operations' }
 AbWorkingDirectory >> runTests: aPackageName [
 
-	^ AbSisServer current handleRunPackageTest: {
+	^ SisServer current handleRunPackageTest: {
 		  'package_name' -> aPackageName } asDictionary
 ]
 

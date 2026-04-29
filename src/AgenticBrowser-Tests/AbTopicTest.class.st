@@ -140,16 +140,17 @@ AbTopicTest >> testPermissionRequestedTransitionFromIdle [
 { #category : 'tests' }
 AbTopicTest >> testImportGuardNestingCounter [
 
-	| topic |
+	| topic workDir |
 	topic := AbTopic new.
-	self deny: topic isImportingFromSource.
-	topic beginImportFromSource.
-	self assert: topic isImportingFromSource.
-	topic beginImportFromSource.
-	topic endImportFromSource.
-	self assert: topic isImportingFromSource.
-	topic endImportFromSource.
-	self deny: topic isImportingFromSource
+	workDir := topic workingDirectory.
+	self deny: workDir isImportingFromSource.
+	workDir beginImportFromSource.
+	self assert: workDir isImportingFromSource.
+	workDir beginImportFromSource.
+	workDir endImportFromSource.
+	self assert: workDir isImportingFromSource.
+	workDir endImportFromSource.
+	self deny: workDir isImportingFromSource
 ]
 
 { #category : 'tests' }

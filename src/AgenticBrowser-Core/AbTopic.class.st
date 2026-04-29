@@ -13,8 +13,7 @@ Class {
 		'packagePrefixes',
 		'workingDirectory',
 		'imageWatcher',
-		'workingDirectoryPath',
-		'importNestingCount'
+		'workingDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -141,15 +140,11 @@ AbTopic >> ensureConnected [
 AbTopic >> ensureWorkingDirectoryForConnection [
 
 	self workingDirectory ensureExists.
+	self workingDirectory subscribeToSisServerImportEvents.
 	self imageWatcher isWatching ifFalse: [ self startWatching ].
 	^ self workingDirectory path fullName
 ]
 
-{ #category : 'operations' }
-AbTopic >> exportWatchedPackages [
-
-	self workingDirectory exportAll
-]
 
 { #category : 'accessing' }
 AbTopic >> imageWatcher [
@@ -170,11 +165,7 @@ AbTopic >> hasPendingApprovalRequest [
 		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
 ]
 
-{ #category : 'operations' }
-AbTopic >> importWatchedPackages [
 
-	self workingDirectory importAll
-]
 
 { #category : 'initialization' }
 AbTopic >> initialize [
@@ -184,27 +175,9 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	topicId := UUID new asString.
-	importNestingCount := 0.
 	self initializeStateMachine
 ]
 
-{ #category : 'operations' }
-AbTopic >> beginImportFromSource [
-
-	importNestingCount := importNestingCount + 1
-]
-
-{ #category : 'operations' }
-AbTopic >> endImportFromSource [
-
-	importNestingCount := (importNestingCount - 1) max: 0
-]
-
-{ #category : 'accessing' }
-AbTopic >> isImportingFromSource [
-
-	^ importNestingCount > 0
-]
 
 { #category : 'initialization' }
 AbTopic >> initializeStateMachine [

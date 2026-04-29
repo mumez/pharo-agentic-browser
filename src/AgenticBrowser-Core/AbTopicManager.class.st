@@ -55,6 +55,12 @@ AbTopicManager >> topics [
 ]
 
 { #category : 'operations' }
+AbTopicManager >> subscribeAllTopicsToSisServer [
+
+	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
+]
+
+{ #category : 'operations' }
 AbTopicManager >> topicsDo: aBlock [
 
 	topics valuesDo: aBlock

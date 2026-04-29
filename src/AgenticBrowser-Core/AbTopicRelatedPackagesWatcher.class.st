@@ -34,15 +34,17 @@ AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 			Transcript crShow:
 				'[AbLog] announceChangeAndExport: system message suppressed for '
 				, aPackageName ].
-	topic workingDirectory exportPackage: aPackageName
+	topic workingDirectory ensureExists.
+	SisServer current handleExportPackage: {
+		  'package_name' -> aPackageName.
+		  'path' -> topic workingDirectory path fullName } asDictionary
 ]
 
 { #category : 'event handling' }
 AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 
 	| pkgName |
-	(topic workingDirectory isImporting or: [ topic isImportingFromSource ])
-		ifTrue: [
+	topic workingDirectory isImportingFromSource ifTrue: [
 		Transcript crShow:
 			'[AbLog] handleClassChange: suppressed during import'.
 		^ self ].
@@ -54,8 +56,7 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 
 	| pkgName |
-	(topic workingDirectory isImporting or: [ topic isImportingFromSource ])
-		ifTrue: [
+	topic workingDirectory isImportingFromSource ifTrue: [
 		Transcript crShow:
 			'[AbLog] handleMethodChange: suppressed during import'.
 		^ self ].
