@@ -268,6 +268,54 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathLoadsSrcDirectoryFromProject [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'source'.
+		self
+			assert: topic workingDirectory sourcePath fullName
+			equals: dir fullName , '/source' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'src' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathResetsWorkingDirectoryInstance [
+
+	| topic firstWorkDir dir |
+	topic := AbTopic new.
+	firstWorkDir := topic workingDirectory.
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic workingDirectoryPath: dir fullName.
+		self deny: topic workingDirectory == firstWorkDir.
+		self assert: topic workingDirectory srcDirectory equals: 'source' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
 
 	| topic expectedPath |

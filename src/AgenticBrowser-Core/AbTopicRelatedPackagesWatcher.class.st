@@ -37,7 +37,7 @@ AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 	topic workingDirectory ensureExists.
 	SisServer current handleExportPackage: {
 		  'package_name' -> aPackageName.
-		  'path' -> topic workingDirectory path fullName } asDictionary
+		  'path' -> topic workingDirectory sourcePath fullName } asDictionary
 ]
 
 { #category : 'event handling' }

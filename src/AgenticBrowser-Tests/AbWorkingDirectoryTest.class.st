@@ -69,7 +69,8 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementBeginImport [
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
 	znReq := ZnRequest get:
-		         'http://localhost:1234/import-package?package_name=Foo&path=' , path.
+		         'http://localhost:1234/import-package?package_name=Foo&path='
+		         , path , '/src'.
 	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
 	ann := SisRequestAnnouncement before: teaReq.
 	self deny: workDir isImportingFromSource.
@@ -87,7 +88,8 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementEndImport [
 	workDir := AbWorkingDirectory forTopic: topic.
 	workDir beginImportFromSource.
 	znReq := ZnRequest get:
-		         'http://localhost:1234/import-package?package_name=Foo&path=' , path.
+		         'http://localhost:1234/import-package?package_name=Foo&path='
+		         , path , '/src'.
 	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
 	ann := SisRequestAnnouncement after: teaReq.
 	workDir handleSisRequestAnnouncement: ann.
@@ -142,4 +144,42 @@ AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
 	topic := AbTopic new title: 'My Cool Topic!'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self assert: workDir safeTopicName equals: 'My-Cool-Topic-'
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
+
+	| topic workDir |
+	topic := AbTopic new title: 'Test'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self assert: workDir srcDirectory equals: 'src'
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testSourcePathAppendsSrcDirectory [
+
+	| topic workDir |
+	topic := AbTopic new title: 'Test'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self
+		assert: workDir sourcePath fullName
+		equals: workDir path fullName , '/src'
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesSourcePath [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path='
+		         , path , '/src'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	self deny: workDir isImportingFromSource.
+	workDir handleSisRequestAnnouncement: ann.
+	self assert: workDir isImportingFromSource
 ]

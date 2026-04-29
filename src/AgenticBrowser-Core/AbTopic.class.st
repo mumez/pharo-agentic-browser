@@ -371,5 +371,30 @@ AbTopic >> workingDirectoryPath [
 { #category : 'accessing' }
 AbTopic >> workingDirectoryPath: aString [
 
-	workingDirectoryPath := aString
+	| parsedSrcDirectory previousWorkingDirectory |
+	previousWorkingDirectory := workingDirectory.
+	previousWorkingDirectory ifNotNil: [
+		previousWorkingDirectory unsubscribeFromSisServerImportEvents ].
+	workingDirectoryPath := aString.
+	parsedSrcDirectory := self srcDirectoryFromProjectAt: aString.
+	workingDirectory := nil.
+	self workingDirectory srcDirectory: parsedSrcDirectory
+]
+
+{ #category : 'private' }
+AbTopic >> srcDirectoryFromProjectAt: aWorkingDirectoryPath [
+
+	| projectFile projectDefinition configuredSrcDirectory |
+	projectFile := aWorkingDirectoryPath asFileReference / '.project'.
+	projectFile exists ifFalse: [ ^ 'src' ].
+	projectDefinition := [ STON fromString: projectFile contents ]
+		                     on: Error
+		                     do: [ ^ 'src' ].
+	configuredSrcDirectory := projectDefinition
+		at: 'srcDirectory'
+		ifAbsent: [
+			projectDefinition at: #srcDirectory ifAbsent: [ ^ 'src' ] ].
+	^ (configuredSrcDirectory isString and: [ configuredSrcDirectory isNotEmpty ])
+		ifTrue: [ configuredSrcDirectory ]
+		ifFalse: [ 'src' ]
 ]

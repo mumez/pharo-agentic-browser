@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'topic',
-		'importNestingCount'
+		'importNestingCount',
+		'srcDirectory'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -60,7 +61,7 @@ AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
 	urlPath := ann teapotRequest url pathPrintString.
 	urlPath = '/import-package' ifFalse: [ ^ self ].
 	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
-	topic workingDirectoryPath = sourcePath ifFalse: [ ^ self ].
+	self sourcePath fullName = sourcePath ifFalse: [ ^ self ].
 	ann type = #before
 		ifTrue: [ self beginImportFromSource ]
 		ifFalse: [ self endImportFromSource ]
@@ -90,25 +91,24 @@ AbWorkingDirectory >> path [
 	^ topic workingDirectoryPath asFileReference
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> runAllTests [
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory [
 
-	^ String streamContents: [ :s |
-		  topic matchingPackageNames do: [ :pkg |
-			  | result |
-			  result := self runTests: pkg.
-			  s
-				  nextPutAll: pkg;
-				  nextPutAll: ': ';
-				  nextPutAll: (result at: 'result' ifAbsent: [ 'error' ]);
-				  cr ] ]
+	^ srcDirectory ifNil: [ srcDirectory := 'src' ]
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> runTests: aPackageName [
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory: aString [
 
-	^ SisServer current handleRunPackageTest: {
-		  'package_name' -> aPackageName } asDictionary
+	srcDirectory := (aString isString and: [ aString isNotEmpty ])
+		ifTrue: [ aString ]
+		ifFalse: [ 'src' ]
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> sourcePath [
+
+	^ self path / self srcDirectory
 ]
 
 { #category : 'accessing' }
