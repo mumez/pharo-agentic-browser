@@ -31,6 +31,15 @@ AbTopicManager >> addTopic: anAbTopic [
 	self announcer announce: (AbTopicAdded new topic: anAbTopic; yourself)
 ]
 
+{ #category : 'operations' }
+AbTopicManager >> cleanupAllTopics [
+
+	topics valuesDo: [ :topic |
+		topic stopWatching.
+		topic workingDirectory unsubscribeFromSisServerImportEvents.
+		[ topic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ] ]
+]
+
 { #category : 'accessing' }
 AbTopicManager >> announcer [
 
@@ -46,6 +55,9 @@ AbTopicManager >> initialize [
 { #category : 'operations' }
 AbTopicManager >> removeTopic: anAbTopic [
 
+	anAbTopic stopWatching.
+	anAbTopic workingDirectory unsubscribeFromSisServerImportEvents.
+	[ anAbTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ].
 	topics removeKey: anAbTopic topicId ifAbsent: []
 ]
 

@@ -53,7 +53,5 @@ AbBrowserPresenter >> onWindowClosed [
 
 	| manager |
 	manager := AbTopicManager uniqueInstance.
-	manager unsubscribeAllTopicsFromSisServer.
-	manager topicsDo: [ :t |
-		[ t disconnect ] on: Error do: [ :e | "ignore disconnect errors" ] ]
+	manager cleanupAllTopics
 ]

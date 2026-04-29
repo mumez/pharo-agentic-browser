@@ -75,7 +75,7 @@ AbTopicTest >> testDoneToWorkingOnNewPrompt [
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #ended.
+	topic stateMachine handleEvent: #turnEnded.
 	topic stateMachine handleEvent: #promptSent.
 	self assert: topic status equals: #working
 ]
@@ -86,8 +86,8 @@ AbTopicTest >> testEndedTransition [
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #ended.
-	self assert: topic status equals: #done
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic status equals: #endTurn
 ]
 
 { #category : 'tests' }
@@ -104,7 +104,7 @@ AbTopicTest >> testHumanRespondedTransition [
 { #category : 'tests' }
 AbTopicTest >> testInitialStatus [
 
-	self assert: AbTopic new status equals: #idle
+	self assert: AbTopic new status equals: #initial
 ]
 
 { #category : 'tests' }
@@ -132,6 +132,17 @@ AbTopicTest >> testPermissionRequestedTransitionFromIdle [
 
 	| topic |
 	topic := AbTopic new.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransitionFromDone [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
 	topic stateMachine handleEvent: #permissionRequested.
 	self assert: topic status equals: #waitingForHuman
 ]
@@ -219,7 +230,26 @@ AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allowAlways.
-	self assert: topic status equals: #done
+	self assert: topic status equals: #endTurn
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalFromDoneTransitionsToWorking [
+
+	| topic response done |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowAlways.
+	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
