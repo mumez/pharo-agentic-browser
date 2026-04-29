@@ -164,7 +164,7 @@ AbTopicListPresenter >> statusIconFor: aTopic [
 
 	aTopic status = #working ifTrue: [ ^ '●' ].
 	aTopic status = #waitingForHuman ifTrue: [ ^ '⏸' ].
-	aTopic status = #done ifTrue: [ ^ '✓' ].
+	aTopic status = #endTurn ifTrue: [ ^ '✓' ].
 	^ '○'
 ]
 
