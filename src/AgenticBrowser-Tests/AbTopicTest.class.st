@@ -75,7 +75,7 @@ AbTopicTest >> testDoneToWorkingOnNewPrompt [
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #ended.
+	topic stateMachine handleEvent: #turnEnded.
 	topic stateMachine handleEvent: #promptSent.
 	self assert: topic status equals: #working
 ]
@@ -86,8 +86,8 @@ AbTopicTest >> testEndedTransition [
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #ended.
-	self assert: topic status equals: #done
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic status equals: #endTurn
 ]
 
 { #category : 'tests' }
@@ -104,7 +104,7 @@ AbTopicTest >> testHumanRespondedTransition [
 { #category : 'tests' }
 AbTopicTest >> testInitialStatus [
 
-	self assert: AbTopic new status equals: #idle
+	self assert: AbTopic new status equals: #initial
 ]
 
 { #category : 'tests' }
@@ -132,6 +132,17 @@ AbTopicTest >> testPermissionRequestedTransitionFromIdle [
 
 	| topic |
 	topic := AbTopic new.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransitionFromDone [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
 	topic stateMachine handleEvent: #permissionRequested.
 	self assert: topic status equals: #waitingForHuman
 ]
@@ -219,7 +230,26 @@ AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allowAlways.
-	self assert: topic status equals: #done
+	self assert: topic status equals: #endTurn
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalFromDoneTransitionsToWorking [
+
+	| topic response done |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowAlways.
+	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
@@ -252,8 +282,9 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 		when: AbTopicStatusChanged
 		do: [ :ann | statusChanges add: ann topic status ]
 		for: self.
-	topic stateMachine handleEvent: #promptSent.
-	self assert: (statusChanges includes: #working)
+	[ topic stateMachine handleEvent: #promptSent.
+	self assert: (statusChanges includes: #working) ]
+		ensure: [ topic announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
@@ -265,6 +296,54 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 		              fullName.
 	topic workingDirectoryPath: customPath.
 	self assert: topic workingDirectoryPath equals: customPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathLoadsSrcDirectoryFromProject [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'source'.
+		self
+			assert: topic workingDirectory sourcePath fullName
+			equals: dir fullName , '/source' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'src' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathResetsWorkingDirectoryInstance [
+
+	| topic firstWorkDir dir |
+	topic := AbTopic new.
+	firstWorkDir := topic workingDirectory.
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic workingDirectoryPath: dir fullName.
+		self deny: topic workingDirectory == firstWorkDir.
+		self assert: topic workingDirectory srcDirectory equals: 'source' ]
+		ensure: [ dir deleteAll ]
 ]
 
 { #category : 'tests' }

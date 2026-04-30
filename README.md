@@ -48,7 +48,7 @@ The core workflow:
 
 ## Installation
 
-In a Pharo 12 image, open a Playground and evaluate:
+In a Pharo 13 image, open a Playground and evaluate:
 
 ```smalltalk
 Metacello new
@@ -80,8 +80,8 @@ AbBrowserPresenter open.
 4. Click **Create** — the topic appears in the left sidebar with `○` (idle)
 5. Right-click the topic and choose **Set Target Packages...** to configure which packages to watch
 6. Type a request and press **Send** — status changes to `●` (working)
-7. When the AI requests permission, the input placeholder changes and status shows `⏸`
-8. Type your response (e.g. `yes` / `no`) and press **Send**
+7. When the AI requests permission, the Send button changes to **Confirm** and Cancel to **Deny**, and status shows `⏸`
+8. Click **Confirm** to approve or **Deny** to reject
 9. The AI resumes; when finished, status changes to `✓` (done)
 
 You can also right-click a topic to **Rename...** or **Delete** it.
@@ -129,22 +129,22 @@ AbTopicManager uniqueInstance topics first stopWatching.
 Each topic has an FSM with four states:
 
 ```
-#idle ──promptSent──▶ #working ──permissionRequested──▶ #waitingForHuman
-                          ▲                                      │
-                          └──────────humanResponded──────────────┘
-                          │
-                       ended
-                          ▼
-                        #done ──promptSent──▶ #working
+#initial ──promptSent──▶ #working ──permissionRequested──▶ #waitingForHuman
+                             ▲                                      │
+                             └──────────humanResponded──────────────┘
+                             │
+                          turnEnded
+                             ▼
+                          #endTurn ──promptSent──▶ #working
 ```
 
 ### Human-in-the-Loop Approval
 
-When the AI requests permission, `AbTopicHandler#requestPermission:` blocks its thread on a `Semaphore`. The UI enters approval mode (placeholder text changes). When the user submits a response, `AbTopic#resolveApproval:` fires the `#humanResponded` event and signals the semaphore, unblocking the handler thread.
+When the AI requests permission, `AbTopicHandler#requestPermission:` blocks its thread on a `Semaphore`. The UI enters approval mode (Send button becomes **Confirm**, Cancel becomes **Deny**). When the user clicks a button, `AbTopic#resolveApproval:` fires the `#humanResponded` event and signals the semaphore, unblocking the handler thread.
 
 ### Working Directory (`AbWorkingDirectory`)
 
-Each topic has a working directory at `~/agentic-browser/<safe-topic-name>-<uuid8>/`. The UUID suffix ensures stability even if the topic title changes. It wraps `SisServer` to export, import, and run tests for packages matching any of the topic's `packagePrefixes`:
+Each topic has a working directory at `<imageDir>/agentic-browser/<safe-topic-name>-<uuid8>/`. The UUID suffix ensures stability even if the topic title changes. It wraps `SisServer` to export, import, and run tests for packages matching any of the topic's `packagePrefixes`:
 
 ```smalltalk
 topic workingDirectory exportPackage: 'AgenticBrowser-Core'.

@@ -688,10 +688,10 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
+AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 
 	topic addSystemMessage:
-		aPackageName , ' が変更されたので .st ファイルを更新しました'.
+		aPackageName , ' .st was updated from user. Reload needed.'.
 	[ topic workingDirectory exportPackage: aPackageName ] fork
 ]
 
@@ -720,7 +720,6 @@ AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 	matchesPrefix := topic packagePrefixes anySatisfy: [ :prefix |
 						 prefix match: aPackageName ].
 	matchesPrefix
-		ifTrue: [ self announceChangeAndExport: aPackageName ]
 		ifFalse: [
 			(UIManager default confirm:
 				 'Package ''' , aPackageName
@@ -728,7 +727,9 @@ AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 				 , 'Add this package to tracked prefixes and export?')
 				ifTrue: [
 					topic addPackagePrefix: aPackageName.
-					self announceChangeAndExport: aPackageName ] ]
+				] 
+		].
+		self postSystemMessageAndExport: aPackageName
 ]
 
 { #category : 'initialization' }

@@ -93,6 +93,11 @@ AbTopic >> announceMessageAdded: aMessage [
 { #category : 'private' }
 AbTopic >> announceStatusChanged [
 
+	Transcript crShow:
+		'[AbLog] announceStatusChanged: topic='
+		, self title printString
+		, ' status='
+		, self status printString.
 	self announcer announce:
 		(AbTopicStatusChanged new topic: self; status: self status; yourself)
 ]
@@ -183,20 +188,21 @@ AbTopic >> initialize [
 AbTopic >> initializeStateMachine [
 
 	stateMachine := SsStateMachine new.
-	(stateMachine addStateNamed: #idle)
+	(stateMachine addStateNamed: #initial)
 		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
 	(stateMachine addStateNamed: #working)
 		entryAction: [ self announceStatusChanged ];
 		when: #permissionRequested to: #waitingForHuman;
-		when: #ended to: #done.
+		when: #turnEnded to: #endTurn.
 	(stateMachine addStateNamed: #waitingForHuman)
 		entryAction: [ self announceStatusChanged ];
 		when: #humanResponded to: #working.
-	(stateMachine addStateNamed: #done)
+	(stateMachine addStateNamed: #endTurn)
 		entryAction: [ self announceStatusChanged ];
+		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
-	stateMachine setStartStateTo: #idle.
+	stateMachine setStartStateTo: #initial.
 	stateMachine start
 ]
 
@@ -238,6 +244,9 @@ AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
 	Transcript crShow:'[AbLog] resolveApproval: entered userText=' , aUserText printString.
+	Transcript crShow:
+		'[AbLog] resolveApproval: status(before humanResponded)='
+		, self status printString.
 	pending := messages
 					   detect: [ :m |
 						   m isApprovalRequest and: [ m approvalResponse isNil ] ]
@@ -252,17 +261,26 @@ AbTopic >> resolveApproval: aUserText [
 	Transcript crShow: '[AbLog] resolveApproval: response=' , response printString.
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
+	Transcript crShow:
+		'[AbLog] resolveApproval: status(after humanResponded)='
+		, self status printString.
 	Transcript crShow: '[AbLog] resolveApproval: done'
 ]
 
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
-	| msg waitSeconds wasIdle |
-	wasIdle := self status = #idle.
+	| msg waitSeconds wasInitial |
+	wasInitial := self status = #initial.
 	Transcript crShow: '[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
+	Transcript crShow:
+		'[AbLog] requestApproval: status(before permissionRequested)='
+		, self status printString.
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
+	Transcript crShow:
+		'[AbLog] requestApproval: status(after permissionRequested)='
+		, self status printString.
 
 	waitSeconds := 0.
 	[ msg approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
@@ -275,7 +293,11 @@ AbTopic >> requestApproval: aDescription [
 		self status = #waitingForHuman ifTrue: [
 			stateMachine handleEvent: #humanResponded ] ].
 
-	wasIdle ifTrue: [ stateMachine handleEvent: #ended ].
+	wasInitial ifTrue: [ stateMachine handleEvent: #turnEnded ].
+	wasInitial ifTrue: [
+		Transcript crShow:
+			'[AbLog] requestApproval: status(after turnEnded from initial)='
+			, self status printString ].
 
 	Transcript crShow: '[AbLog] requestApproval: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
@@ -286,7 +308,7 @@ AbTopic >> cancelPrompt [
 
 	self status = #working ifFalse: [ ^ self ].
 	self addSystemMessage: 'Cancelled by user.'.
-	stateMachine handleEvent: #ended
+	stateMachine handleEvent: #turnEnded
 ]
 
 { #category : 'operations' }
@@ -300,11 +322,11 @@ AbTopic >> sendPrompt: aString [
 	[
 	| result |
 	self ensureConnected.
-	result := client promptBy: [ :params |
+		result := client promptBy: [ :params |
 				  params sessionId: sessionId.
 				  params textPrompt: aString ].
-	result stopReason = 'end_turn' ifTrue: [
-		stateMachine handleEvent: #ended ] ] fork
+		result stopReason = 'end_turn' ifTrue: [
+			stateMachine handleEvent: #turnEnded ] ] fork
 ]
 
 { #category : 'accessing' }
@@ -371,5 +393,11 @@ AbTopic >> workingDirectoryPath [
 { #category : 'accessing' }
 AbTopic >> workingDirectoryPath: aString [
 
-	workingDirectoryPath := aString
+	| previousWorkingDirectory |
+	previousWorkingDirectory := workingDirectory.
+	previousWorkingDirectory ifNotNil: [
+		previousWorkingDirectory unsubscribeFromSisServerImportEvents ].
+	workingDirectoryPath := aString.
+	workingDirectory := nil
 ]
+

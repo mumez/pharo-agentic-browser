@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'topic',
-		'importNestingCount'
+		'importNestingCount',
+		'srcDirectory'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -60,7 +61,7 @@ AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
 	urlPath := ann teapotRequest url pathPrintString.
 	urlPath = '/import-package' ifFalse: [ ^ self ].
 	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
-	topic workingDirectoryPath = sourcePath ifFalse: [ ^ self ].
+	self sourcePath fullName = sourcePath ifFalse: [ ^ self ].
 	ann type = #before
 		ifTrue: [ self beginImportFromSource ]
 		ifFalse: [ self endImportFromSource ]
@@ -90,25 +91,41 @@ AbWorkingDirectory >> path [
 	^ topic workingDirectoryPath asFileReference
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> runAllTests [
+{ #category : 'private' }
+AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
 
-	^ String streamContents: [ :s |
-		  topic matchingPackageNames do: [ :pkg |
-			  | result |
-			  result := self runTests: pkg.
-			  s
-				  nextPutAll: pkg;
-				  nextPutAll: ': ';
-				  nextPutAll: (result at: 'result' ifAbsent: [ 'error' ]);
-				  cr ] ]
+	| projectFile projectDefinition configuredSrcDirectory defaultSrcDirectory |
+	defaultSrcDirectory := 'src'.
+	projectFile := self path / '.project'.
+	projectFile exists ifFalse: [ ^ defaultSrcDirectory ].
+	projectDefinition := [ STON fromString: projectFile contents ]
+		                     on: Error
+		                     do: [ ^ defaultSrcDirectory ].
+	configuredSrcDirectory := projectDefinition
+		at: 'srcDirectory'
+		ifAbsent: [
+			projectDefinition at: #srcDirectory ifAbsent: [ ^ defaultSrcDirectory ] ].
+	^ srcDirectory := (configuredSrcDirectory isString and: [ configuredSrcDirectory isNotEmpty ])
+		ifTrue: [ configuredSrcDirectory ]
+		ifFalse: [ defaultSrcDirectory ]
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> runTests: aPackageName [
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory [
 
-	^ SisServer current handleRunPackageTest: {
-		  'package_name' -> aPackageName } asDictionary
+	^ srcDirectory ifNil: [ self detectSrcDirectoryFromProjectMetafile ]
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory: aString [
+
+	srcDirectory := aString
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> sourcePath [
+
+	^ self path / self srcDirectory
 ]
 
 { #category : 'accessing' }
@@ -119,7 +136,7 @@ AbWorkingDirectory >> safeTopicName [
 		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
 			    ifTrue: [ c ]
 			    ifFalse: [ $- ] ].
-	safe isEmpty ifTrue: [ safe := 'topic' ].
+	safe ifEmpty: [ safe := 'topic' ].
 	^ safe
 ]
 
@@ -131,4 +148,12 @@ AbWorkingDirectory >> topic [
 { #category : 'accessing' }
 AbWorkingDirectory >> topic: anAbTopic [
 	topic := anAbTopic
+]
+
+{ #category : 'exporting' }
+AbWorkingDirectory >> exportPackageNamed: aPackageName [
+    self ensureExists.
+    SisServer current handleExportPackage: {
+		  'package_name' -> aPackageName.
+		  'path' -> self sourcePath fullName } asDictionary
 ]

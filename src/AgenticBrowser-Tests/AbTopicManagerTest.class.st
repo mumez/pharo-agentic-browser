@@ -37,9 +37,10 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 		when: AbTopicAdded
 		do: [ :ann | received := ann topic ]
 		for: self.
-	topic := AbTopic new title: 'Test'.
+	[ topic := AbTopic new title: 'Test'.
 	manager addTopic: topic.
-	self assert: received == topic
+	self assert: received == topic ]
+		ensure: [ manager announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
@@ -51,6 +52,40 @@ AbTopicManagerTest >> testRemoveTopic [
 	manager addTopic: topic.
 	manager removeTopic: topic.
 	self deny: (manager topics includes: topic)
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicStopsImageWatcher [
+
+	| manager topic |
+	manager := AbTopicManager uniqueInstance.
+	topic := AbTopic new title: 'Test topic'.
+	manager addTopic: topic.
+	topic startWatching.
+	self assert: topic imageWatcher isWatching.
+	[
+	manager removeTopic: topic.
+	self deny: topic imageWatcher isWatching ]
+		ensure: [ topic stopWatching ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
+
+	| manager topic hasSubscription |
+	manager := AbTopicManager uniqueInstance.
+	topic := AbTopic new title: 'Test topic'.
+	manager addTopic: topic.
+	topic workingDirectory subscribeToSisServerImportEvents.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self assert: hasSubscription.
+	[
+	manager removeTopic: topic.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self deny: hasSubscription ]
+		ensure: [ topic workingDirectory unsubscribeFromSisServerImportEvents ]
 ]
 
 { #category : 'tests' }
@@ -67,6 +102,30 @@ AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 	topic := AbTopic new title: 'Lookup topic by at:'.
 	manager addTopic: topic.
 	self assert: (manager at: topic topicId) == topic
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDirectories [
+
+	| manager topic hasSubscription |
+	manager := AbTopicManager uniqueInstance.
+	topic := AbTopic new title: 'Cleanup topic'.
+	manager addTopic: topic.
+	topic startWatching.
+	topic workingDirectory subscribeToSisServerImportEvents.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self assert: topic imageWatcher isWatching.
+	self assert: hasSubscription.
+	[
+	manager cleanupAllTopics.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self deny: topic imageWatcher isWatching.
+	self deny: hasSubscription ]
+		ensure: [
+		topic stopWatching.
+		topic workingDirectory unsubscribeFromSisServerImportEvents ]
 ]
 
 { #category : 'tests' }

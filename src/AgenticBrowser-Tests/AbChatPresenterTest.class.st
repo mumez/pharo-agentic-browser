@@ -43,7 +43,7 @@ AbChatPresenterTest >> testCancelButtonExists [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testTopicStatusWorkingExitsApprovalMode [
+AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 
 	| topic |
 	topic := AbTopic new.
@@ -51,7 +51,7 @@ AbChatPresenterTest >> testTopicStatusWorkingExitsApprovalMode [
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
 	self assert: presenter sendButtonLabel equals: 'Confirm'.
 	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter sendButtonLabel equals: 'Send'
+	self assert: presenter sendButtonLabel equals: 'Confirm'
 ]
 
 { #category : 'tests' }
@@ -62,7 +62,7 @@ AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 	presenter topic: topic.
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
 	self assert: presenter sendButtonLabel equals: 'Confirm'.
-	presenter onTopicStatusChanged: topic status: #done.
+	presenter onTopicStatusChanged: topic status: #endTurn.
 	self assert: presenter sendButtonLabel equals: 'Confirm'
 ]
 
@@ -76,4 +76,18 @@ AbChatPresenterTest >> testCancelButtonClickAddsSystemMessage [
 	presenter onCancelButtonClicked.
 	self assert: (topic messages anySatisfy: [ :m |
 			 m sender = #system and: [ m text includesSubstring: 'Cancelled' ] ])
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
+	presenter enterApprovalMode: approvalMessage.
+	presenter onSendButtonClicked.
+	self assert: approvalMessage approvalResponse equals: #allowAlways.
+	self assert: presenter sendButtonLabel equals: 'Send'.
+	self assert: presenter cancelButtonLabel equals: 'Cancel'
 ]

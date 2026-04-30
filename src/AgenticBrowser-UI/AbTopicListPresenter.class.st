@@ -164,7 +164,7 @@ AbTopicListPresenter >> statusIconFor: aTopic [
 
 	aTopic status = #working ifTrue: [ ^ '●' ].
 	aTopic status = #waitingForHuman ifTrue: [ ^ '⏸' ].
-	aTopic status = #done ifTrue: [ ^ '✓' ].
+	aTopic status = #endTurn ifTrue: [ ^ '✓' ].
 	^ '○'
 ]
 
@@ -178,7 +178,7 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 	^ label
 ]
 
-{ #category : 'private' }
+{ #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
 	AbTopicManager uniqueInstance topicsDo: [ :t |
@@ -194,4 +194,19 @@ AbTopicListPresenter >> subscribeToTopicManager [
 				do: [ self defer: [ self refresh ] ]
 				for: self ]
 		for: self
+]
+
+{ #category : 'subscriptions' }
+AbTopicListPresenter >> unsubscribeFromTopicManager [
+
+	AbTopicManager uniqueInstance topicsDo: [ :t |
+		t announcer unsubscribe: self ].
+	AbTopicManager uniqueInstance announcer unsubscribe: self
+]
+
+{ #category : 'initialization' }
+AbTopicListPresenter >> destroy [
+
+	self unsubscribeFromTopicManager.
+	super destroy
 ]
