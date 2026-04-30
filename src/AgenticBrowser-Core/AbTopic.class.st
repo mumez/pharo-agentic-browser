@@ -13,7 +13,8 @@ Class {
 		'packagePrefixes',
 		'workingDirectory',
 		'imageWatcher',
-		'workingDirectoryPath'
+		'workingDirectoryPath',
+		'logger'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -93,8 +94,7 @@ AbTopic >> announceMessageAdded: aMessage [
 { #category : 'private' }
 AbTopic >> announceStatusChanged [
 
-	Transcript crShow:
-		'[AbLog] announceStatusChanged: topic='
+	self logger debug: 'announceStatusChanged: topic='
 		, self title printString
 		, ' status='
 		, self status printString.
@@ -105,6 +105,11 @@ AbTopic >> announceStatusChanged [
 { #category : 'accessing' }
 AbTopic >> announcer [
 	^ announcer ifNil: [ announcer := Announcer new ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }
@@ -243,28 +248,26 @@ AbTopic >> removePackagePrefix: aString [
 AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
-	Transcript crShow:'[AbLog] resolveApproval: entered userText=' , aUserText printString.
-	Transcript crShow:
-		'[AbLog] resolveApproval: status(before humanResponded)='
+	self logger debug: 'resolveApproval: entered userText=' , aUserText printString.
+	self logger debug: 'resolveApproval: status(before humanResponded)='
 		, self status printString.
 	pending := messages
 					   detect: [ :m |
 						   m isApprovalRequest and: [ m approvalResponse isNil ] ]
 					   ifNone: [
-						   Transcript crShow:'[AbLog] resolveApproval: no pending approval found, returning'.
+						   self logger debug: 'resolveApproval: no pending approval found, returning'.
 						   ^ self ].
 	response := (aUserText trimmed asLowercase includesSubstring: 'no') |
 				(aUserText trimmed asLowercase includesSubstring: 'deny') |
 				(aUserText trimmed asLowercase includesSubstring: 'reject')
 					ifTrue: [ #rejectOnce ]
 					ifFalse: [ #allowAlways ].
-	Transcript crShow: '[AbLog] resolveApproval: response=' , response printString.
+	self logger debug: 'resolveApproval: response=' , response printString.
 	pending approvalResponse: response.
 	stateMachine handleEvent: #humanResponded.
-	Transcript crShow:
-		'[AbLog] resolveApproval: status(after humanResponded)='
+	self logger debug: 'resolveApproval: status(after humanResponded)='
 		, self status printString.
-	Transcript crShow: '[AbLog] resolveApproval: done'
+	self logger debug: 'resolveApproval: done'
 ]
 
 { #category : 'operations' }
@@ -272,14 +275,12 @@ AbTopic >> requestApproval: aDescription [
 
 	| msg waitSeconds wasInitial |
 	wasInitial := self status = #initial.
-	Transcript crShow: '[AbLog] requestApproval: waiting for human approval. description=' , aDescription printString.
-	Transcript crShow:
-		'[AbLog] requestApproval: status(before permissionRequested)='
+	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
+	self logger debug: 'requestApproval: status(before permissionRequested)='
 		, self status printString.
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
-	Transcript crShow:
-		'[AbLog] requestApproval: status(after permissionRequested)='
+	self logger debug: 'requestApproval: status(after permissionRequested)='
 		, self status printString.
 
 	waitSeconds := 0.
@@ -288,18 +289,17 @@ AbTopic >> requestApproval: aDescription [
 		waitSeconds := waitSeconds + 1 ].
 
 	msg approvalResponse ifNil: [
-		Transcript crShow: '[AbLog] requestApproval: timeout reached, auto rejecting'.
+		self logger debug: 'requestApproval: timeout reached, auto rejecting'.
 		msg approvalResponse: #rejectOnce.
 		self status = #waitingForHuman ifTrue: [
 			stateMachine handleEvent: #humanResponded ] ].
 
 	wasInitial ifTrue: [ stateMachine handleEvent: #turnEnded ].
 	wasInitial ifTrue: [
-		Transcript crShow:
-			'[AbLog] requestApproval: status(after turnEnded from initial)='
+		self logger debug: 'requestApproval: status(after turnEnded from initial)='
 			, self status printString ].
 
-	Transcript crShow: '[AbLog] requestApproval: done. response=' , msg approvalResponse printString.
+	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 
