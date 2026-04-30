@@ -20,7 +20,7 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
+AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 
 	| shouldAnnounce |
 	shouldAnnounce := self
@@ -32,12 +32,9 @@ AbTopicRelatedPackagesWatcher >> announceChangeAndExport: aPackageName [
 				aPackageName , ' was modified; .st files have been updated' ]
 		ifFalse: [
 			Transcript crShow:
-				'[AbLog] announceChangeAndExport: system message suppressed for '
+				'[AbLog] postSystemMessageAndExport: system message suppressed for '
 				, aPackageName ].
-	topic workingDirectory ensureExists.
-	SisServer current handleExportPackage: {
-		  'package_name' -> aPackageName.
-		  'path' -> topic workingDirectory sourcePath fullName } asDictionary
+	topic workingDirectory exportPackageNamed: aPackageName.
 ]
 
 { #category : 'event handling' }
@@ -131,7 +128,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [
 			topic addPackagePrefix: aPackageName.
-			self announceChangeAndExport: aPackageName ]
+			self postSystemMessageAndExport: aPackageName ]
 		ifFalse: [
 			topic addSystemMessage:
 				'Ignored package change for ' , aPackageName
@@ -154,7 +151,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 		                    , 'Export .st files now? (yes/no)'.
 	Transcript crShow:'[AbLog] requestApprovalToExportPackage: got response=' , approvalResponse printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
-		ifTrue: [ self announceChangeAndExport: aPackageName ]
+		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
 		ifFalse: [
 			topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ] ]

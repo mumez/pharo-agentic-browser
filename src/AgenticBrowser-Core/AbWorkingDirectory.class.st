@@ -91,18 +91,35 @@ AbWorkingDirectory >> path [
 	^ topic workingDirectoryPath asFileReference
 ]
 
+{ #category : 'private' }
+AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
+
+	| projectFile projectDefinition configuredSrcDirectory defaultSrcDirectory |
+	defaultSrcDirectory := 'src'.
+	projectFile := self path / '.project'.
+	projectFile exists ifFalse: [ ^ defaultSrcDirectory ].
+	projectDefinition := [ STON fromString: projectFile contents ]
+		                     on: Error
+		                     do: [ ^ defaultSrcDirectory ].
+	configuredSrcDirectory := projectDefinition
+		at: 'srcDirectory'
+		ifAbsent: [
+			projectDefinition at: #srcDirectory ifAbsent: [ ^ defaultSrcDirectory ] ].
+	^ srcDirectory := (configuredSrcDirectory isString and: [ configuredSrcDirectory isNotEmpty ])
+		ifTrue: [ configuredSrcDirectory ]
+		ifFalse: [ defaultSrcDirectory ]
+]
+
 { #category : 'accessing' }
 AbWorkingDirectory >> srcDirectory [
 
-	^ srcDirectory ifNil: [ srcDirectory := 'src' ]
+	^ srcDirectory ifNil: [ self detectSrcDirectoryFromProjectMetafile ]
 ]
 
 { #category : 'accessing' }
 AbWorkingDirectory >> srcDirectory: aString [
 
-	srcDirectory := (aString isString and: [ aString isNotEmpty ])
-		ifTrue: [ aString ]
-		ifFalse: [ 'src' ]
+	srcDirectory := aString
 ]
 
 { #category : 'accessing' }
@@ -119,7 +136,7 @@ AbWorkingDirectory >> safeTopicName [
 		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
 			    ifTrue: [ c ]
 			    ifFalse: [ $- ] ].
-	safe isEmpty ifTrue: [ safe := 'topic' ].
+	safe ifEmpty: [ safe := 'topic' ].
 	^ safe
 ]
 
@@ -131,4 +148,12 @@ AbWorkingDirectory >> topic [
 { #category : 'accessing' }
 AbWorkingDirectory >> topic: anAbTopic [
 	topic := anAbTopic
+]
+
+{ #category : 'exporting' }
+AbWorkingDirectory >> exportPackageNamed: aPackageName [
+    self ensureExists.
+    SisServer current handleExportPackage: {
+		  'package_name' -> aPackageName.
+		  'path' -> self sourcePath fullName } asDictionary
 ]
