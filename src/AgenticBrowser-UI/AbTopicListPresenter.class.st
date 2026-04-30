@@ -24,6 +24,10 @@ AbTopicListPresenter >> buildTopicContextMenu [
 				  action: [ self onSetTargetPackagesRequest ] ];
 		  addItem: [ :item |
 			  item
+				  name: 'Set Working Directory...';
+				  action: [ self onSetWorkingDirectoryRequest ] ];
+		  addItem: [ :item |
+			  item
 				  name: 'Rename...';
 				  action: [ self onRenameTopicRequest ] ];
 		  addItem: [ :item |
@@ -143,6 +147,22 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
 			topic addPackagePrefix: pattern ] ].
 	self onPackagePrefixSet: topic
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onSetWorkingDirectoryRequest [
+
+	| topic directoryPath |
+	topic := topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	directoryPath := UIManager default
+		request: 'Working directory path:'
+		initialAnswer: topic workingDirectoryPath
+		title: 'Set Working Directory'.
+	(directoryPath isNil or: [ directoryPath trimmed isEmpty ])
+		ifTrue: [ ^ self ].
+	topic workingDirectoryPath: directoryPath trimmed.
+	self defer: [ self refresh ]
 ]
 
 { #category : 'accessing' }

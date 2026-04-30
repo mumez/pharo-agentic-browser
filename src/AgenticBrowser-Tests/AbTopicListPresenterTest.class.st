@@ -64,3 +64,12 @@ AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 	topic agentArguments: #( 'claude-agent-acp' ).
 	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (claude-agent-acp)'
 ]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
+
+	| testPath |
+	testPath := '/tmp/test-working-dir'.
+	topic workingDirectoryPath: testPath.
+	self assert: topic workingDirectoryPath equals: testPath
+]
