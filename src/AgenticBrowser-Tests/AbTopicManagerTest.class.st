@@ -37,9 +37,10 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 		when: AbTopicAdded
 		do: [ :ann | received := ann topic ]
 		for: self.
-	topic := AbTopic new title: 'Test'.
+	[ topic := AbTopic new title: 'Test'.
 	manager addTopic: topic.
-	self assert: received == topic
+	self assert: received == topic ]
+		ensure: [ manager announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }

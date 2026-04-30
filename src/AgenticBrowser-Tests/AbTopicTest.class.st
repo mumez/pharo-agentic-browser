@@ -282,8 +282,9 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 		when: AbTopicStatusChanged
 		do: [ :ann | statusChanges add: ann topic status ]
 		for: self.
-	topic stateMachine handleEvent: #promptSent.
-	self assert: (statusChanges includes: #working)
+	[ topic stateMachine handleEvent: #promptSent.
+	self assert: (statusChanges includes: #working) ]
+		ensure: [ topic announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
