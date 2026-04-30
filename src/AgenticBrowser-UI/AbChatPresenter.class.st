@@ -133,7 +133,7 @@ AbChatPresenter >> rerenderMessages [
 					 cr ] ])
 ]
 
-{ #category : 'private' }
+{ #category : 'subscriptions' }
 AbChatPresenter >> subscribeToTopic: aTopic [
 
 	aTopic announcer
@@ -146,13 +146,25 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 		for: self
 ]
 
+{ #category : 'subscriptions' }
+AbChatPresenter >> unsubscribeFromTopic: aTopic [
+
+	aTopic ifNil: [ ^ self ].
+	aTopic announcer unsubscribe: self
+]
+
+{ #category : 'initialization' }
+AbChatPresenter >> destroy [
+
+	self unsubscribeFromTopic: currentTopic.
+	super destroy
+]
+
 { #category : 'api' }
 AbChatPresenter >> topic: anAbTopic [
 
-	| previousTopic |
-	previousTopic := currentTopic.
+	self unsubscribeFromTopic: currentTopic.
 	currentTopic := anAbTopic.
-	previousTopic ifNotNil: [ :t | t announcer unsubscribe: self ].
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages
 ]
