@@ -30,7 +30,7 @@ The core workflow:
 ## Features
 
 - **Multi-topic management** — run multiple AI agent sessions in parallel
-- **Status tracking** — per-topic state machine (`idle → working → waitingForHuman → done`)
+- **Status tracking** — per-topic state machine (`initial → working → waitingForHuman → endTurn`)
 - **Human-in-the-loop** — conversation-style approval flow (no modal dialogs)
 - **Agent-agnostic** — works with any ACP-compatible agent
 - **Image persistence** — topic history and state survive Pharo image save/restore
@@ -77,12 +77,12 @@ AbBrowserPresenter open.
 1. Click **+ New Topic**
 2. Enter a title and select an agent
 3. (Optional) Enter an existing project directory — package prefixes are auto-detected from `src/` subdirectories
-4. Click **Create** — the topic appears in the left sidebar with `○` (idle)
+4. Click **Create** — the topic appears in the left sidebar with `○` (initial)
 5. Right-click the topic and choose **Set Target Packages...** to configure which packages to watch
 6. Type a request and press **Send** — status changes to `●` (working)
 7. When the AI requests permission, the Send button changes to **Confirm** and Cancel to **Deny**, and status shows `⏸`
 8. Click **Confirm** to approve or **Deny** to reject
-9. The AI resumes; when finished, status changes to `✓` (done)
+9. The AI resumes; when finished, status changes to `✓` (endTurn)
 
 You can also right-click a topic to **Rename...** or **Delete** it.
 
@@ -90,17 +90,7 @@ You can also right-click a topic to **Rename...** or **Delete** it.
 
 ### Image Change Watching
 
-Watching starts automatically when a topic first connects (on the first **Send**). No manual setup is required.
-
-To manually control watching if needed:
-
-```smalltalk
-"Start watching"
-AbTopicManager uniqueInstance topics first startWatching.
-
-"Stop watching"
-AbTopicManager uniqueInstance topics first stopWatching.
-```
+Watching starts automatically when a topic first connects (on the first **Send**).
 
 ## Supported Agents
 
@@ -140,26 +130,19 @@ Each topic has an FSM with four states:
 
 ### Human-in-the-Loop Approval
 
-When the AI requests permission, `AbTopicHandler#requestPermission:` blocks its thread on a `Semaphore`. The UI enters approval mode (Send button becomes **Confirm**, Cancel becomes **Deny**). When the user clicks a button, `AbTopic#resolveApproval:` fires the `#humanResponded` event and signals the semaphore, unblocking the handler thread.
+When the AI requests permission, `AbTopicHandler#requestPermission:` The UI enters approval mode (Send button becomes **Confirm**, Cancel becomes **Deny**). When the user clicks a button, the UI changes to notmal mode again.
 
 ### Working Directory (`AbWorkingDirectory`)
 
-Each topic has a working directory at `<imageDir>/agentic-browser/<safe-topic-name>-<uuid8>/`. The UUID suffix ensures stability even if the topic title changes. It wraps `SisServer` to export, import, and run tests for packages matching any of the topic's `packagePrefixes`:
-
-```smalltalk
-topic workingDirectory exportPackage: 'AgenticBrowser-Core'.
-topic workingDirectory importPackage: 'AgenticBrowser-Core'.
-topic workingDirectory runAllTests.
-```
-
+Each topic has a working directory at `<imageDir>/agentic-browser/<safe-topic-name>-<uuid8>/`. The UUID suffix ensures stability even if the topic title changes. 
 You can also set a custom working directory path when creating a topic from an existing project directory.
 
-### Image Change Watcher (`AbTopicRelatedPackagesWatcher`)
+### Package Change Watcher (`AbTopicRelatedPackagesWatcher`)
 
 `AbTopicRelatedPackagesWatcher` subscribes to `SystemAnnouncer` for `MethodAnnouncement` and `ClassAnnouncement`. When a method or class is saved:
 
 - If the package matches any of the topic's `packagePrefixes`, it inserts a system message into the chat (e.g. `"AgenticBrowser-Core was modified; .st files have been updated"`) and exports the package
-- If the package does **not** match, it shows a confirmation dialog asking whether to add the package to tracked prefixes
+- If the package does **not** match, it shows a confirmation asking whether to add the package to tracked prefixes
 - Changes during import are suppressed to avoid re-export loops
 
 ## Related Projects
