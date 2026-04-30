@@ -7,7 +7,8 @@ Class {
 		'sendButton',
 		'cancelButton',
 		'currentTopic',
-		'pendingApprovalMessage'
+		'pendingApprovalMessage',
+		'logger'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -113,8 +114,7 @@ AbChatPresenter >> onSendButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
-	Transcript crShow:
-		'[AbLog] onTopicStatusChanged: topic='
+	self logger debug: 'onTopicStatusChanged: topic='
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
@@ -166,6 +166,11 @@ AbChatPresenter >> topic: anAbTopic [
 	self currentTopic: anAbTopic.
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }

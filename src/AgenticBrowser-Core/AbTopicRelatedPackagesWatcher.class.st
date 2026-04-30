@@ -5,7 +5,8 @@ Class {
 		'topic',
 		'isWatching',
 		'pendingPackageApprovals',
-		'lastAnnouncedAtByPackage'
+		'lastAnnouncedAtByPackage',
+		'logger'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -31,8 +32,7 @@ AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 			topic addSystemMessage:
 				aPackageName , ' was modified; .st files have been updated' ]
 		ifFalse: [
-			Transcript crShow:
-				'[AbLog] postSystemMessageAndExport: system message suppressed for '
+			self logger debug: 'postSystemMessageAndExport: system message suppressed for '
 				, aPackageName ].
 	topic workingDirectory exportPackageNamed: aPackageName.
 ]
@@ -42,8 +42,7 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 
 	| pkgName |
 	topic workingDirectory isImportingFromSource ifTrue: [
-		Transcript crShow:
-			'[AbLog] handleClassChange: suppressed during import'.
+		self logger debug: 'handleClassChange: suppressed during import'.
 		^ self ].
 	pkgName := anAnnouncement classAffected package name asString.
 	self handlePackageChange: pkgName
@@ -54,8 +53,7 @@ AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 
 	| pkgName |
 	topic workingDirectory isImportingFromSource ifTrue: [
-		Transcript crShow:
-			'[AbLog] handleMethodChange: suppressed during import'.
+		self logger debug: 'handleMethodChange: suppressed during import'.
 		^ self ].
 	pkgName := anAnnouncement methodPackage name asString.
 	self handlePackageChange: pkgName
@@ -117,14 +115,14 @@ AbTopicRelatedPackagesWatcher >> start [
 AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 
 	| approvalResponse |
-	Transcript crShow:'[AbLog] requestApprovalToTrackPackage: ' , aPackageName.
+	self logger debug: 'requestApprovalToTrackPackage: ' , aPackageName.
 	[
 	approvalResponse := topic requestApproval:
 		                    'Package ''' , aPackageName
 		                    , ''' was modified but does not match any tracked prefix.'
 		                    , String cr
 		                    , 'Add this package to tracked prefixes and export? (yes/no)'.
-	Transcript crShow:'[AbLog] requestApprovalToTrackPackage: got response=' , approvalResponse printString.
+	self logger debug: 'requestApprovalToTrackPackage: got response=' , approvalResponse printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [
 			topic addPackagePrefix: aPackageName.
@@ -134,7 +132,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 				'Ignored package change for ' , aPackageName
 				, ' (not added to tracked prefixes).' ] ]
 		ensure: [
-			Transcript crShow:'[AbLog] requestApprovalToTrackPackage: ensure cleanup for ' , aPackageName.
+			self logger debug: 'requestApprovalToTrackPackage: ensure cleanup for ' , aPackageName.
 			pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
 
@@ -142,21 +140,21 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
 AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 
 	| approvalResponse |
-	Transcript crShow:'[AbLog] requestApprovalToExportPackage: ' , aPackageName.
+	self logger debug: 'requestApprovalToExportPackage: ' , aPackageName.
 	[
 	approvalResponse := topic requestApproval:
 		                    'Package ''' , aPackageName
 		                    , ''' was modified.'
 		                    , String cr
 		                    , 'Export .st files now? (yes/no)'.
-	Transcript crShow:'[AbLog] requestApprovalToExportPackage: got response=' , approvalResponse printString.
+	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalResponse printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
 		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
 		ifFalse: [
 			topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ] ]
 		ensure: [
-			Transcript crShow:'[AbLog] requestApprovalToExportPackage: ensure cleanup for ' , aPackageName.
+			self logger debug: 'requestApprovalToExportPackage: ensure cleanup for ' , aPackageName.
 			pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
 
@@ -185,6 +183,11 @@ AbTopicRelatedPackagesWatcher >> stop [
 
 	SystemAnnouncer uniqueInstance unsubscribe: self.
 	isWatching := false
+]
+
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }
