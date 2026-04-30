@@ -39,11 +39,11 @@ AbTopicPhase2Test >> testAddSystemMessage [
 ]
 
 { #category : 'tests' }
-AbTopicPhase2Test >> testImageWatcherLazyInit [
+AbTopicPhase2Test >> testrelatedPackagesWatcherLazyInit [
 
 	| topic |
 	topic := AbTopic new.
-	self assert: (topic imageWatcher isKindOf: AbTopicRelatedPackagesWatcher)
+	self assert: (topic relatedPackagesWatcher isKindOf: AbTopicRelatedPackagesWatcher)
 ]
 
 { #category : 'tests' }
@@ -99,9 +99,9 @@ AbTopicPhase2Test >> testStartWatchingAndStop [
 	| topic |
 	topic := AbTopic new.
 	topic startWatching.
-	self assert: topic imageWatcher isWatching.
+	self assert: topic relatedPackagesWatcher isWatching.
 	topic stopWatching.
-	self deny: topic imageWatcher isWatching
+	self deny: topic relatedPackagesWatcher isWatching
 ]
 
 { #category : 'tests' }
@@ -143,10 +143,10 @@ AbTopicPhase2Test >> testWorkingDirectoryWasCreatedForConnection [
 	topic := AbTopic new title: 'money calc'.
 	path := topic workingDirectory path.
 	self deny: path exists.
-	self deny: topic imageWatcher isWatching.
+	self deny: topic relatedPackagesWatcher isWatching.
 	topic ensureWorkingDirectoryForConnection.
 	self assert: path exists.
-	self assert: topic imageWatcher isWatching.
+	self assert: topic relatedPackagesWatcher isWatching.
 	topic stopWatching.
 	path deleteAll
 ]

@@ -12,7 +12,7 @@ Class {
 		'topicId',
 		'packagePrefixes',
 		'workingDirectory',
-		'imageWatcher',
+		'relatedPackagesWatcher',
 		'workingDirectoryPath',
 		'logger'
 	],
@@ -151,15 +151,15 @@ AbTopic >> ensureWorkingDirectoryForConnection [
 
 	self workingDirectory ensureExists.
 	self workingDirectory subscribeToSisServerImportEvents.
-	self imageWatcher isWatching ifFalse: [ self startWatching ].
+	self relatedPackagesWatcher isWatching ifFalse: [ self startWatching ].
 	^ self workingDirectory path fullName
 ]
 
 
 { #category : 'accessing' }
-AbTopic >> imageWatcher [
+AbTopic >> relatedPackagesWatcher [
 
-	^ imageWatcher ifNil: [ imageWatcher := AbTopicRelatedPackagesWatcher forTopic: self ]
+	^ relatedPackagesWatcher ifNil: [ relatedPackagesWatcher := AbTopicRelatedPackagesWatcher forTopic: self ]
 ]
 
 { #category : 'accessing' }
@@ -337,7 +337,7 @@ AbTopic >> sessionId [
 { #category : 'operations' }
 AbTopic >> startWatching [
 
-	self imageWatcher start
+	self relatedPackagesWatcher start
 ]
 
 { #category : 'accessing' }
@@ -353,7 +353,7 @@ AbTopic >> status [
 { #category : 'operations' }
 AbTopic >> stopWatching [
 
-	imageWatcher ifNotNil: [ imageWatcher stop ]
+	relatedPackagesWatcher ifNotNil: [ relatedPackagesWatcher stop ]
 ]
 
 { #category : 'accessing' }

@@ -55,17 +55,17 @@ AbTopicManagerTest >> testRemoveTopic [
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testRemoveTopicStopsImageWatcher [
+AbTopicManagerTest >> testRemoveTopicStopsrelatedPackagesWatcher [
 
 	| manager topic |
 	manager := AbTopicManager uniqueInstance.
 	topic := AbTopic new title: 'Test topic'.
 	manager addTopic: topic.
 	topic startWatching.
-	self assert: topic imageWatcher isWatching.
+	self assert: topic relatedPackagesWatcher isWatching.
 	[
 	manager removeTopic: topic.
-	self deny: topic imageWatcher isWatching ]
+	self deny: topic relatedPackagesWatcher isWatching ]
 		ensure: [ topic stopWatching ]
 ]
 
@@ -115,13 +115,13 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 	topic workingDirectory subscribeToSisServerImportEvents.
 	hasSubscription := SisServer current announcer subscriptions subscriptions
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
-	self assert: topic imageWatcher isWatching.
+	self assert: topic relatedPackagesWatcher isWatching.
 	self assert: hasSubscription.
 	[
 	manager cleanupAllTopics.
 	hasSubscription := SisServer current announcer subscriptions subscriptions
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
-	self deny: topic imageWatcher isWatching.
+	self deny: topic relatedPackagesWatcher isWatching.
 	self deny: hasSubscription ]
 		ensure: [
 		topic stopWatching.
