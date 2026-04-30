@@ -56,13 +56,18 @@ AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
 { #category : 'private' }
 AbPackagePrefixesDialog >> onOkClicked [
 
-	prefixPatterns := (prefixField text substrings: ',')
-		                  collect: [ :each | each trimmed ]
-		                  thenSelect: [ :each | each isNotEmpty ].
+	self prefixPatterns: ((prefixField text substrings: ',')
+		                       collect: [ :each | each trimmed ]
+		                       thenSelect: [ :each | each isNotEmpty ]).
 	self withWindowDo: [ :w | w close ]
 ]
 
 { #category : 'accessing' }
 AbPackagePrefixesDialog >> prefixPatterns [
 	^ prefixPatterns ifNil: [ #() ]
+]
+
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> prefixPatterns: aCollection [
+	prefixPatterns := aCollection
 ]

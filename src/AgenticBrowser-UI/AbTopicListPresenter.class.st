@@ -14,26 +14,12 @@ Class {
 AbTopicListPresenter >> buildTopicContextMenu [
 
 	^ SpMenuPresenter new
-		  addItem: [ :item |
-			  item
-				  name: 'Inspect...';
-				  action: [ self onInspectTopicRequest ] ];
-		  addItem: [ :item |
-			  item
-				  name: 'Set Target Packages...';
-				  action: [ self onSetTargetPackagesRequest ] ];
-		  addItem: [ :item |
-			  item
-				  name: 'Set Working Directory...';
-				  action: [ self onSetWorkingDirectoryRequest ] ];
-		  addItem: [ :item |
-			  item
-				  name: 'Rename...';
-				  action: [ self onRenameTopicRequest ] ];
-		  addItem: [ :item |
-			  item
-				  name: 'Delete';
-				  action: [ self onDeleteTopicRequest ] ];
+		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
+		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
+		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
+		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
+		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
+		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
 		  yourself
 ]
 
@@ -147,6 +133,25 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
 			topic addPackagePrefix: pattern ] ].
 	self onPackagePrefixSet: topic
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onSetAgentRequest [
+
+	| topic dialog |
+	topic := topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	dialog := AbSetAgentDialog new.
+	dialog selectCurrentArguments: topic agentArguments.
+	dialog openModal.
+	dialog selectedArguments ifNil: [ ^ self ].
+	topic sessionId ifNotNil: [
+		(UIManager default
+			 confirm: 'The active agent session will be disconnected. Continue?'
+			 label: 'Change Agent') ifFalse: [ ^ self ].
+		topic disconnect ].
+	topic agentArguments: dialog selectedArguments.
+	self defer: [ self refresh ]
 ]
 
 { #category : 'private' }
