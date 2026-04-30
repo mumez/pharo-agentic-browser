@@ -99,6 +99,7 @@ AbChatPresenter >> onSendButtonClicked [
 	currentTopic ifNil: [ ^ self ].
 	pendingApprovalMessage ifNotNil: [
 		currentTopic resolveApproval: 'yes'.
+		self exitApprovalMode.
 		^ self ].
 	text := inputField text trimmed.
 	text isEmpty ifTrue: [ ^ self ].
@@ -117,7 +118,6 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
-	aStatus = #working ifTrue: [ self exitApprovalMode ].
 	self rerenderMessages
 ]
 
