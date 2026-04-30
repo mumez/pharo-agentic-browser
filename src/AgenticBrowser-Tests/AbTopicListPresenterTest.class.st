@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicListPresenterTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'presenter',
 		'topic'
@@ -9,11 +9,24 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'accessing' }
+AbTopicListPresenterTest >> presenter: aPresenter [
+
+	presenter := aPresenter
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenterTest >> topic: anAbTopic [
+
+	topic := anAbTopic
+]
+
 { #category : 'running' }
 AbTopicListPresenterTest >> setUp [
 
-	presenter := AbTopicListPresenter new.
-	topic := AbTopic new title: 'TestTopic'
+	super setUp.
+	self presenter: AbTopicListPresenter new.
+	self topic: (AbTopic new title: 'TestTopic').
 ]
 
 { #category : 'tests' }

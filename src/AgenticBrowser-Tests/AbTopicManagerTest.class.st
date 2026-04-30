@@ -1,27 +1,15 @@
 Class {
 	#name : 'AbTopicManagerTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
-
-{ #category : 'running' }
-AbTopicManagerTest >> setUp [
-
-	AbTopicManager resetInstance
-]
-
-{ #category : 'running' }
-AbTopicManagerTest >> tearDown [
-
-	AbTopicManager resetInstance
-]
 
 { #category : 'tests' }
 AbTopicManagerTest >> testAddTopic [
 
 	| manager topic |
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager forTest.
 	topic := AbTopic new title: 'Test topic'.
 	manager addTopic: topic.
 	self assert: (manager topics includes: topic)
@@ -31,7 +19,7 @@ AbTopicManagerTest >> testAddTopic [
 AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 
 	| manager topic received |
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager forTest.
 	received := nil.
 	manager announcer
 		when: AbTopicAdded
@@ -44,61 +32,10 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testRemoveTopic [
-
-	| manager topic |
-	manager := AbTopicManager uniqueInstance.
-	topic := AbTopic new title: 'Test topic'.
-	manager addTopic: topic.
-	manager removeTopic: topic.
-	self deny: (manager topics includes: topic)
-]
-
-{ #category : 'tests' }
-AbTopicManagerTest >> testRemoveTopicStopsrelatedPackagesWatcher [
-
-	| manager topic |
-	manager := AbTopicManager uniqueInstance.
-	topic := AbTopic new title: 'Test topic'.
-	manager addTopic: topic.
-	topic startWatching.
-	self assert: topic relatedPackagesWatcher isWatching.
-	[
-	manager removeTopic: topic.
-	self deny: topic relatedPackagesWatcher isWatching ]
-		ensure: [ topic stopWatching ]
-]
-
-{ #category : 'tests' }
-AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
-
-	| manager topic hasSubscription |
-	manager := AbTopicManager uniqueInstance.
-	topic := AbTopic new title: 'Test topic'.
-	manager addTopic: topic.
-	topic workingDirectory subscribeToSisServerImportEvents.
-	hasSubscription := SisServer current announcer subscriptions subscriptions
-		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
-	self assert: hasSubscription.
-	[
-	manager removeTopic: topic.
-	hasSubscription := SisServer current announcer subscriptions subscriptions
-		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
-	self deny: hasSubscription ]
-		ensure: [ topic workingDirectory unsubscribeFromSisServerImportEvents ]
-]
-
-{ #category : 'tests' }
-AbTopicManagerTest >> testTopicsInitiallyEmpty [
-
-	self assert: AbTopicManager uniqueInstance topics isEmpty
-]
-
-{ #category : 'tests' }
 AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 
 	| manager topic |
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager forTest.
 	topic := AbTopic new title: 'Lookup topic by at:'.
 	manager addTopic: topic.
 	self assert: (manager at: topic topicId) == topic
@@ -108,7 +45,7 @@ AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDirectories [
 
 	| manager topic hasSubscription |
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager forTest.
 	topic := AbTopic new title: 'Cleanup topic'.
 	manager addTopic: topic.
 	topic startWatching.
@@ -129,19 +66,76 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testUniqueInstance [
+AbTopicManagerTest >> testDefaultReturnsSameInstance [
 
-	self assert: AbTopicManager uniqueInstance == AbTopicManager uniqueInstance
+	self assert: AbTopicManager default == AbTopicManager default
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testForTestReturnsSameInstance [
+
+	self assert: AbTopicManager forTest == AbTopicManager forTest
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopic [
+
+	| manager topic |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'Test topic'.
+	manager addTopic: topic.
+	manager removeTopic: topic.
+	self deny: (manager topics includes: topic)
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicStopsrelatedPackagesWatcher [
+
+	| manager topic |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'Test topic'.
+	manager addTopic: topic.
+	topic startWatching.
+	self assert: topic relatedPackagesWatcher isWatching.
+	[
+	manager removeTopic: topic.
+	self deny: topic relatedPackagesWatcher isWatching ]
+		ensure: [ topic stopWatching ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
+
+	| manager topic hasSubscription |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'Test topic'.
+	manager addTopic: topic.
+	topic workingDirectory subscribeToSisServerImportEvents.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self assert: hasSubscription.
+	[
+	manager removeTopic: topic.
+	hasSubscription := SisServer current announcer subscriptions subscriptions
+		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
+	self deny: hasSubscription ]
+		ensure: [ topic workingDirectory unsubscribeFromSisServerImportEvents ]
 ]
 
 { #category : 'tests' }
 AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 
 	| manager topic path |
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager forTest.
 	topic := AbTopic new title: 'Path Lookup'.
 	path := (FileLocator temp / ('ab-topic-path-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	manager addTopic: topic.
 	self assert: (manager topicForWorkingDirectoryPath: path) == topic
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicsInitiallyEmpty [
+
+	self assert: AbTopicManager forTest topics isEmpty
 ]
