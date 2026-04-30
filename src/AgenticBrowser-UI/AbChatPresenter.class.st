@@ -34,7 +34,7 @@ AbChatPresenter >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'api' }
+{ #category : 'private' }
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	self pendingApprovalMessage: anAbMessage.
@@ -44,7 +44,7 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 	self cancelButton label: 'Deny'
 ]
 
-{ #category : 'api' }
+{ #category : 'private' }
 AbChatPresenter >> exitApprovalMode [
 
 	self pendingApprovalMessage: nil.
@@ -75,7 +75,7 @@ AbChatPresenter >> isFirstMessageInTopic [
 	^ self currentTopic messages noneSatisfy: [ :m | m sender = #human ]
 ]
 
-{ #category : 'private' }
+{ #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
 	self rerenderMessages.
@@ -83,7 +83,7 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 		self enterApprovalMode: anAbMessage ]
 ]
 
-{ #category : 'private' }
+{ #category : 'event handling' }
 AbChatPresenter >> onCancelButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
@@ -92,7 +92,7 @@ AbChatPresenter >> onCancelButtonClicked [
 		ifNil: [ self currentTopic cancelPrompt ]
 ]
 
-{ #category : 'private' }
+{ #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
@@ -110,7 +110,7 @@ AbChatPresenter >> onSendButtonClicked [
 	self currentTopic sendPrompt: promptText
 ]
 
-{ #category : 'private' }
+{ #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
 	Transcript crShow:
@@ -159,7 +159,7 @@ AbChatPresenter >> destroy [
 	super destroy
 ]
 
-{ #category : 'api' }
+{ #category : 'accessing' }
 AbChatPresenter >> topic: anAbTopic [
 
 	self unsubscribeFromTopic: self currentTopic.
