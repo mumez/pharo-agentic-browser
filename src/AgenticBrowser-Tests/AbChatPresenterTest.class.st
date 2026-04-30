@@ -43,7 +43,7 @@ AbChatPresenterTest >> testCancelButtonExists [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testTopicStatusWorkingExitsApprovalMode [
+AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 
 	| topic |
 	topic := AbTopic new.
@@ -51,7 +51,7 @@ AbChatPresenterTest >> testTopicStatusWorkingExitsApprovalMode [
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
 	self assert: presenter sendButtonLabel equals: 'Confirm'.
 	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter sendButtonLabel equals: 'Send'
+	self assert: presenter sendButtonLabel equals: 'Confirm'
 ]
 
 { #category : 'tests' }

@@ -37,20 +37,20 @@ AbChatPresenter >> defaultLayout [
 { #category : 'api' }
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
-	pendingApprovalMessage := anAbMessage.
-	inputField placeholder: ''.
-	inputField text: ''.
-	sendButton label: 'Confirm'.
-	cancelButton label: 'Deny'
+	self pendingApprovalMessage: anAbMessage.
+	self inputField placeholder: ''.
+	self inputField text: ''.
+	self sendButton label: 'Confirm'.
+	self cancelButton label: 'Deny'
 ]
 
 { #category : 'api' }
 AbChatPresenter >> exitApprovalMode [
 
-	pendingApprovalMessage := nil.
-	inputField placeholder: 'Type your request...'.
-	sendButton label: 'Send'.
-	cancelButton label: 'Cancel'
+	self pendingApprovalMessage: nil.
+	self inputField placeholder: 'Type your request...'.
+	self sendButton label: 'Send'.
+	self cancelButton label: 'Cancel'
 ]
 
 { #category : 'initialization' }
@@ -72,7 +72,7 @@ AbChatPresenter >> initializePresenters [
 { #category : 'private' }
 AbChatPresenter >> isFirstMessageInTopic [
 
-	^ currentTopic messages noneSatisfy: [ :m | m sender = #human ]
+	^ self currentTopic messages noneSatisfy: [ :m | m sender = #human ]
 ]
 
 { #category : 'private' }
@@ -86,28 +86,28 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 { #category : 'private' }
 AbChatPresenter >> onCancelButtonClicked [
 
-	currentTopic ifNil: [ ^ self ].
-	pendingApprovalMessage
-		ifNotNil: [ currentTopic resolveApproval: 'no' ]
-		ifNil: [ currentTopic cancelPrompt ]
+	self currentTopic ifNil: [ ^ self ].
+	self pendingApprovalMessage
+		ifNotNil: [ self currentTopic resolveApproval: 'no' ]
+		ifNil: [ self currentTopic cancelPrompt ]
 ]
 
 { #category : 'private' }
 AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
-	currentTopic ifNil: [ ^ self ].
-	pendingApprovalMessage ifNotNil: [
-		currentTopic resolveApproval: 'yes'.
+	self currentTopic ifNil: [ ^ self ].
+	self pendingApprovalMessage ifNotNil: [
+		self currentTopic resolveApproval: 'yes'.
 		self exitApprovalMode.
 		^ self ].
-	text := inputField text trimmed.
-	text isEmpty ifTrue: [ ^ self ].
-	inputField text: ''.
+	text := self inputField text trimmed.
+	text ifEmpty: [ ^ self ].
+	self inputField text: ''.
 	promptText := self isFirstMessageInTopic
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
-	currentTopic sendPrompt: promptText
+	self currentTopic sendPrompt: promptText
 ]
 
 { #category : 'private' }
@@ -124,9 +124,9 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 { #category : 'private' }
 AbChatPresenter >> rerenderMessages [
 
-	currentTopic ifNil: [ ^ self ].
+	self currentTopic ifNil: [ ^ self ].
 	messageDisplay text: (String streamContents: [ :s |
-			 currentTopic messages do: [ :m |
+			 self currentTopic messages do: [ :m |
 				 s
 					 nextPutAll: m displayText;
 					 cr ] ])
@@ -155,33 +155,75 @@ AbChatPresenter >> unsubscribeFromTopic: aTopic [
 { #category : 'initialization' }
 AbChatPresenter >> destroy [
 
-	self unsubscribeFromTopic: currentTopic.
+	self unsubscribeFromTopic: self currentTopic.
 	super destroy
 ]
 
 { #category : 'api' }
 AbChatPresenter >> topic: anAbTopic [
 
-	self unsubscribeFromTopic: currentTopic.
-	currentTopic := anAbTopic.
+	self unsubscribeFromTopic: self currentTopic.
+	self currentTopic: anAbTopic.
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> cancelButton [
+
+	^ cancelButton
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentTopic [
+
+	^ currentTopic
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentTopic: aTopic [
+
+	currentTopic := aTopic
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> inputField [
+
+	^ inputField
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> pendingApprovalMessage [
+
+	^ pendingApprovalMessage
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> pendingApprovalMessage: aMessage [
+
+	pendingApprovalMessage := aMessage
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> sendButton [
+
+	^ sendButton
 ]
 
 { #category : 'testing' }
 AbChatPresenter >> inputPlaceholder [
 
-	^ inputField placeholder
+	^ self inputField placeholder
 ]
 
 { #category : 'testing' }
 AbChatPresenter >> sendButtonLabel [
 
-	^ sendButton label
+	^ self sendButton label
 ]
 
 { #category : 'testing' }
 AbChatPresenter >> cancelButtonLabel [
 
-	^ cancelButton label
+	^ self cancelButton label
 ]
