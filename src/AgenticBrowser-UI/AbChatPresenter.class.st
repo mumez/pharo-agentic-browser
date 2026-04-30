@@ -99,7 +99,6 @@ AbChatPresenter >> onSendButtonClicked [
 	currentTopic ifNil: [ ^ self ].
 	pendingApprovalMessage ifNotNil: [
 		currentTopic resolveApproval: 'yes'.
-		self exitApprovalMode.
 		^ self ].
 	text := inputField text trimmed.
 	text isEmpty ifTrue: [ ^ self ].
