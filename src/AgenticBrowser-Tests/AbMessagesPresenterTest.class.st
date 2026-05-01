@@ -107,3 +107,44 @@ AbMessagesPresenterTest >> testRichTextContainsMessageText [
 	richText := presenter richTextFor: msg.
 	self assert: (richText string includesSubstring: 'Hello world')
 ]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
+
+	| msg |
+	msg := AbMessage sender: #human text: 'Hello'.
+	presenter addOrUpdateMessage: msg.
+	self assert: presenter messageList items size equals: 1
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testMessageListItemCountMatchesAfterMultipleAdds [
+
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
+	self assert: presenter messageList items size equals: 2
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
+
+	| msgs |
+	msgs := OrderedCollection
+		with: (AbMessage sender: #human text: 'A')
+		with: (AbMessage sender: #ai text: 'B').
+	presenter setMessages: msgs.
+	self assert: presenter messageList items size equals: 2
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testPerformScrollToBottomDoesNotError [
+
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	self shouldnt: [ presenter performScrollToBottom ] raise: Error
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testScrollToBottomDoesNotErrorWhenEmpty [
+
+	self shouldnt: [ presenter scrollToBottom ] raise: Error
+]

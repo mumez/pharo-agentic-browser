@@ -25,8 +25,8 @@ AbMessagePresenter >> defaultLayout [
 
 	^ SpBoxLayout newLeftToRight
 		  spacing: 4;
-		  add: senderLabel withConstraints: [ :c | c width: 70 ];
-		  add: contentText;
+		  add: self senderLabel withConstraints: [ :c | c width: 70 ];
+		  add: self contentText;
 		  yourself
 ]
 
@@ -34,10 +34,10 @@ AbMessagePresenter >> defaultLayout [
 AbMessagePresenter >> message: anAbMessage [
 
 	message := anAbMessage.
-	senderLabel label: (Text
+	self senderLabel label: (Text
 			 string: self senderDisplayName
 			 attribute: (TextColor color: self senderColor)).
-	contentText text: anAbMessage text
+	self contentText text: anAbMessage text
 ]
 
 { #category : 'accessing' }
@@ -49,16 +49,28 @@ AbMessagePresenter >> message [
 { #category : 'rendering' }
 AbMessagePresenter >> updateContent [
 
-	contentText text: message text
+	self contentText text: self message text
+]
+
+{ #category : 'accessing' }
+AbMessagePresenter >> senderLabel [
+
+	^ senderLabel
+]
+
+{ #category : 'accessing' }
+AbMessagePresenter >> contentText [
+
+	^ contentText
 ]
 
 { #category : 'private' }
 AbMessagePresenter >> senderDisplayName [
 
-	message sender = #human ifTrue: [ ^ 'You' ].
-	message sender = #ai ifTrue: [
-		message isThink ifTrue: [ ^ 'AI(think)' ].
-		message isApprovalRequest ifTrue: [ ^ 'AI(⏸)' ].
+	self message sender = #human ifTrue: [ ^ 'You' ].
+	self message sender = #ai ifTrue: [
+		self message isThink ifTrue: [ ^ 'AI(think)' ].
+		self message isApprovalRequest ifTrue: [ ^ 'AI(⏸)' ].
 		^ 'AI' ].
 	^ 'System'
 ]
@@ -66,8 +78,8 @@ AbMessagePresenter >> senderDisplayName [
 { #category : 'private' }
 AbMessagePresenter >> senderColor [
 
-	message sender = #human ifTrue: [ ^ Color blue darker ].
-	message sender = #ai ifTrue: [ ^ Color green darker ].
+	self message sender = #human ifTrue: [ ^ Color blue darker ].
+	self message sender = #ai ifTrue: [ ^ Color green darker ].
 	^ Color gray
 ]
 
@@ -75,11 +87,11 @@ AbMessagePresenter >> senderColor [
 AbMessagePresenter >> senderLabelText [
 	"Return as String because label may be a richtext Text object."
 
-	^ senderLabel label asString
+	^ self senderLabel label asString
 ]
 
 { #category : 'testing' }
 AbMessagePresenter >> contentTextString [
 
-	^ contentText text
+	^ self contentText text
 ]

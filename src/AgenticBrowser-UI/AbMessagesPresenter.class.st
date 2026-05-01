@@ -10,9 +10,15 @@ Class {
 }
 
 { #category : 'initialization' }
+AbMessagesPresenter >> initialize [
+
+	super initialize.
+	messages := OrderedCollection new
+]
+
+{ #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
-	messages := OrderedCollection new.
 	messageList := self newList.
 	messageList display: [ :msg | self richTextFor: msg ]
 ]
@@ -21,7 +27,7 @@ AbMessagesPresenter >> initializePresenters [
 AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messageList;
+		  add: self messageList;
 		  yourself
 ]
 
@@ -31,10 +37,10 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
 	(messages includes: anAbMessage)
-		ifTrue: [ messageList refresh ]
+		ifTrue: [ self messageList refresh ]
 		ifFalse: [
 			messages add: anAbMessage.
-			messageList items: messages.
+			self messageList items: messages.
 			self scrollToBottom ]
 ]
 
@@ -42,8 +48,8 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	messages := aCollection asOrderedCollection.
-	messageList items: messages.
+	self messages: aCollection asOrderedCollection.
+	self messageList items: messages.
 	self scrollToBottom
 ]
 
@@ -52,17 +58,46 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	messageList refresh
+	self messageList refresh
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messages [
+
+	^ messages copy
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messages: aCollection [
+
+	messages := aCollection
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageList [
+
+	^ messageList
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageCount [
+
+	^ messages size
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	messages isEmpty ifTrue: [ ^ self ].
-	self defer: [
-		messageList selectIndex: messages size.
-		messageList unselectAll ]
+	messages ifEmpty: [ ^ self ].
+	self defer: [ self performScrollToBottom ]
+]
+
+{ #category : 'private' }
+AbMessagesPresenter >> performScrollToBottom [
+
+	self messageList selectIndex: messages size.
+	self messageList unselectAll
 ]
 
 { #category : 'private' }
@@ -73,7 +108,7 @@ AbMessagesPresenter >> richTextFor: anAbMessage [
 	senderPart := self senderLabelFor: anAbMessage.
 	senderLen := senderPart size.
 	fullStr := senderPart , anAbMessage text.
-	richText := Text string: fullStr.
+	richText := fullStr asText.
 	richText
 		addAttribute: (TextColor color: (self senderColorFor: anAbMessage sender))
 		from: 1
@@ -99,16 +134,4 @@ AbMessagesPresenter >> senderColorFor: aSender [
 	aSender = #human ifTrue: [ ^ Color blue darker ].
 	aSender = #ai ifTrue: [ ^ Color green darker ].
 	^ Color gray
-]
-
-{ #category : 'testing' }
-AbMessagesPresenter >> messageCount [
-
-	^ messages size
-]
-
-{ #category : 'testing' }
-AbMessagesPresenter >> messages [
-
-	^ messages copy
 ]

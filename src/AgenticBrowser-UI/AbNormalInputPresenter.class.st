@@ -27,34 +27,34 @@ AbNormalInputPresenter >> initializePresenters [
 AbNormalInputPresenter >> defaultLayout [
 
 	^ SpBoxLayout newLeftToRight
-		  add: inputField;
-		  add: sendButton withConstraints: [ :c | c width: 80 ];
-		  add: cancelButton withConstraints: [ :c | c width: 60 ];
+		  add: self inputField;
+		  add: self sendButton withConstraints: [ :c | c width: 80 ];
+		  add: self cancelButton withConstraints: [ :c | c width: 60 ];
 		  yourself
 ]
 
 { #category : 'actions' }
 AbNormalInputPresenter >> onSendAction: aBlock [
 
-	sendButton action: aBlock
+	self sendButton action: aBlock
 ]
 
 { #category : 'actions' }
 AbNormalInputPresenter >> onCancelAction: aBlock [
 
-	cancelButton action: aBlock
+	self cancelButton action: aBlock
 ]
 
 { #category : 'accessing' }
 AbNormalInputPresenter >> inputText [
 
-	^ inputField text
+	^ self inputField text
 ]
 
 { #category : 'accessing' }
 AbNormalInputPresenter >> clearInput [
 
-	inputField text: ''
+	self inputField text: ''
 ]
 
 { #category : 'accessing' }
@@ -78,17 +78,17 @@ AbNormalInputPresenter >> cancelButton [
 { #category : 'testing' }
 AbNormalInputPresenter >> sendButtonLabel [
 
-	^ sendButton label
+	^ self sendButton label
 ]
 
 { #category : 'testing' }
 AbNormalInputPresenter >> cancelButtonLabel [
 
-	^ cancelButton label
+	^ self cancelButton label
 ]
 
 { #category : 'testing' }
 AbNormalInputPresenter >> inputPlaceholder [
 
-	^ inputField placeholder
+	^ self inputField placeholder
 ]

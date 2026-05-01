@@ -29,10 +29,10 @@ AbConfirmPresenter >> defaultLayout [
 	^ SpBoxLayout newTopToBottom
 		  borderWidth: 6;
 		  spacing: 4;
-		  add: confirmationLabel;
+		  add: self confirmationLabel;
 		  add: (SpBoxLayout newLeftToRight
-				   addLast: confirmButton withConstraints: [ :c | c width: 100 ];
-				   addLast: denyButton withConstraints: [ :c | c width: 80 ];
+				   addLast: self confirmButton withConstraints: [ :c | c width: 100 ];
+				   addLast: self denyButton withConstraints: [ :c | c width: 80 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
@@ -41,19 +41,25 @@ AbConfirmPresenter >> defaultLayout [
 { #category : 'accessing' }
 AbConfirmPresenter >> confirmationText: aString [
 
-	confirmationLabel text: aString
+	self confirmationLabel text: aString
 ]
 
 { #category : 'actions' }
 AbConfirmPresenter >> onConfirmAction: aBlock [
 
-	confirmButton action: aBlock
+	self confirmButton action: aBlock
 ]
 
 { #category : 'actions' }
 AbConfirmPresenter >> onDenyAction: aBlock [
 
-	denyButton action: aBlock
+	self denyButton action: aBlock
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> confirmationLabel [
+
+	^ confirmationLabel
 ]
 
 { #category : 'accessing' }
@@ -71,11 +77,11 @@ AbConfirmPresenter >> denyButton [
 { #category : 'testing' }
 AbConfirmPresenter >> confirmButtonLabel [
 
-	^ confirmButton label
+	^ self confirmButton label
 ]
 
 { #category : 'testing' }
 AbConfirmPresenter >> denyButtonLabel [
 
-	^ denyButton label
+	^ self denyButton label
 ]
