@@ -161,3 +161,29 @@ AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 	presenter onDenyButtonClicked.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
+
+	| msg |
+	msg := AbMessage sender: #human text: 'Hello'.
+	presenter onMessageAdded: msg.
+	self assert: presenter messagesPresenter messageCount equals: 1
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedWithAiMessageUpdatesCount [
+
+	presenter onMessageAdded: (AbMessage sender: #human text: 'Hi').
+	presenter onMessageAdded: (AbMessage sender: #ai text: 'Hello').
+	self assert: presenter messagesPresenter messageCount equals: 2
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
+
+	| msg |
+	msg := AbMessage approvalRequestText: 'Allow?'.
+	presenter onMessageAdded: msg.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
+]

@@ -72,7 +72,7 @@ AbChatPresenter >> isFirstMessageInTopic [
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
-	self rerenderMessages.
+	messagesPresenter addOrUpdateMessage: anAbMessage.
 	anAbMessage isApprovalRequest ifTrue: [
 		self enterApprovalMode: anAbMessage ]
 ]
@@ -121,14 +121,14 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
-	self rerenderMessages
+	messagesPresenter refreshMessages
 ]
 
 { #category : 'private' }
 AbChatPresenter >> rerenderMessages [
 
 	self currentTopic ifNil: [ ^ self ].
-	messagesPresenter renderMessages: self currentTopic messages
+	messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'subscriptions' }
