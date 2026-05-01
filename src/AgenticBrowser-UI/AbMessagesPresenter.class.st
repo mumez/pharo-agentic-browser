@@ -131,7 +131,5 @@ AbMessagesPresenter >> senderLabelFor: anAbMessage [
 { #category : 'private' }
 AbMessagesPresenter >> senderColorFor: aSender [
 
-	aSender = #human ifTrue: [ ^ Color blue darker ].
-	aSender = #ai ifTrue: [ ^ Color green darker ].
-	^ Color gray
+	^ AbMessagePresenter senderColorFor: aSender
 ]

@@ -6,9 +6,35 @@ Class {
 		'senderLabel',
 		'contentText'
 	],
+	#classVars : [
+		'SenderColors'
+	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
+
+{ #category : 'initialization' }
+AbMessagePresenter class >> initialize [
+
+	| theme |
+	theme := Smalltalk ui theme.
+	SenderColors := Dictionary new.
+	SenderColors at: #human put: theme textColor.
+	SenderColors at: #ai put: theme lightSelectionColor.
+	SenderColors at: #default put: theme ghostTextColor
+]
+
+{ #category : 'colors' }
+AbMessagePresenter class >> senderColors [
+
+	^ SenderColors
+]
+
+{ #category : 'colors' }
+AbMessagePresenter class >> senderColorFor: aSender [
+
+	^ SenderColors at: aSender ifAbsent: [ SenderColors at: #default ]
+]
 
 { #category : 'initialization' }
 AbMessagePresenter >> initializePresenters [
@@ -33,17 +59,23 @@ AbMessagePresenter >> defaultLayout [
 { #category : 'accessing' }
 AbMessagePresenter >> message: anAbMessage [
 
-	message := anAbMessage.
-	self senderLabel label: (Text
-			 string: self senderDisplayName
-			 attribute: (TextColor color: self senderColor)).
-	self contentText text: anAbMessage text
+	message := anAbMessage
 ]
 
 { #category : 'accessing' }
 AbMessagePresenter >> message [
 
 	^ message
+]
+
+{ #category : 'rendering' }
+AbMessagePresenter >> updateMessage: anAbMessage [
+
+	self message: anAbMessage.
+	self senderLabel label: (Text
+			 string: self senderDisplayName
+			 attribute: (TextColor color: self senderColor)).
+	self contentText text: anAbMessage text
 ]
 
 { #category : 'rendering' }
@@ -78,9 +110,7 @@ AbMessagePresenter >> senderDisplayName [
 { #category : 'private' }
 AbMessagePresenter >> senderColor [
 
-	self message sender = #human ifTrue: [ ^ Color blue darker ].
-	self message sender = #ai ifTrue: [ ^ Color green darker ].
-	^ Color gray
+	^ self class senderColorFor: self message sender
 ]
 
 { #category : 'testing' }
