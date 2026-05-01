@@ -118,7 +118,7 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 { #category : 'tests' }
 AbChatPresenterTest >> testInitialAnswerPresenterIsNormalInput [
 
-	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
@@ -127,7 +127,7 @@ AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
 	| approvalMessage |
 	approvalMessage := AbMessage approvalRequestText: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter currentAnswerPresenter equals: presenter confirmPresenter
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
 
 { #category : 'tests' }
@@ -135,7 +135,7 @@ AbChatPresenterTest >> testExitApprovalModeSwitchesToNormalInputPresenter [
 
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
 	presenter exitApprovalMode.
-	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
@@ -147,7 +147,7 @@ AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 	approvalMessage := topic addApprovalRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
-	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
@@ -159,5 +159,5 @@ AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 	approvalMessage := topic addApprovalRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
-	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]

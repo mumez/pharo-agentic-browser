@@ -216,8 +216,8 @@ AbChatPresenter >> pendingApprovalMessage: aMessage [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> currentAnswerPresenter [
-	"Returns the currently active lower presenter: confirmPresenter in approval mode,
+AbChatPresenter >> currentAnswerAreaPresenter [
+	"Returns the currently active answer area presenter: confirmPresenter in approval mode,
 	 normalInputPresenter otherwise."
 
 	^ pendingApprovalMessage
