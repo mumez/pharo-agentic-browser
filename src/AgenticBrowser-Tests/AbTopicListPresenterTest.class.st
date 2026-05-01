@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicListPresenterTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'presenter',
 		'topic'
@@ -9,11 +9,24 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'accessing' }
+AbTopicListPresenterTest >> presenter: aPresenter [
+
+	presenter := aPresenter
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenterTest >> topic: anAbTopic [
+
+	topic := anAbTopic
+]
+
 { #category : 'running' }
 AbTopicListPresenterTest >> setUp [
 
-	presenter := AbTopicListPresenter new.
-	topic := AbTopic new title: 'TestTopic'
+	super setUp.
+	self presenter: AbTopicListPresenter new.
+	self topic: (AbTopic new title: 'TestTopic').
 ]
 
 { #category : 'tests' }
@@ -63,4 +76,13 @@ AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 
 	topic agentArguments: #( 'claude-agent-acp' ).
 	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (claude-agent-acp)'
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
+
+	| testPath |
+	testPath := '/tmp/test-working-dir'.
+	topic workingDirectoryPath: testPath.
+	self assert: topic workingDirectoryPath equals: testPath
 ]

@@ -2,7 +2,8 @@ Class {
 	#name : 'AbTopicHandler',
 	#superclass : 'ACPClientHandler',
 	#instVars : [
-		'topic'
+		'topic',
+		'logger'
 	],
 	#category : 'AgenticBrowser-Handler',
 	#package : 'AgenticBrowser-Handler'
@@ -12,9 +13,9 @@ Class {
 AbTopicHandler >> requestPermission: anACPRequestPermission [
 
 	| response approvalResponse |
-	Transcript crShow:'[AbLog] requestPermission: ' , anACPRequestPermission printString.
+	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
 	approvalResponse := topic requestApproval: anACPRequestPermission printString.
-	Transcript crShow:'[AbLog] requestPermission: got approvalResponse=' , approvalResponse printString.
+	self logger debug: 'requestPermission: got approvalResponse=' , approvalResponse printString.
 	response := anACPRequestPermission makeResponse.
 	approvalResponse = #rejectOnce ifTrue: [
 		response rejectOnce.
@@ -33,6 +34,11 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 		ifTrue: [ ^ topic addAiTextChunk: aSessionUpdate content text ].
 	aSessionUpdate isAgentThoughtChunk
 		ifTrue: [ ^ topic addAiThoughtChunk: aSessionUpdate content text ]
+]
+
+{ #category : 'accessing' }
+AbTopicHandler >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }

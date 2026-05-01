@@ -2,35 +2,49 @@ Class {
 	#name : 'AbChatPresenter',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'messageDisplay',
-		'inputField',
-		'sendButton',
-		'cancelButton',
+		'messagesPresenter',
+		'normalInputPresenter',
+		'confirmPresenter',
 		'currentTopic',
-		'pendingApprovalMessage'
+		'pendingApprovalMessage',
+		'logger'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
 
 { #category : 'initialization' }
+AbChatPresenter >> initializePresenters [
+
+	messagesPresenter := self instantiate: AbMessagesPresenter.
+	normalInputPresenter := self instantiate: AbNormalInputPresenter.
+	confirmPresenter := self instantiate: AbConfirmPresenter
+]
+
+{ #category : 'initialization' }
 AbChatPresenter >> connectPresenters [
 
-	sendButton action: [ self onSendButtonClicked ].
-	cancelButton action: [ self onCancelButtonClicked ]
+	normalInputPresenter onSendAction: [ self onSendButtonClicked ].
+	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
+	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
+	confirmPresenter onDenyAction: [ self onDenyButtonClicked ]
 ]
 
 { #category : 'layout' }
 AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messageDisplay;
-		  add: (SpBoxLayout newLeftToRight
-				   add: inputField;
-				   add: sendButton withConstraints: [ :c | c width: 80 ];
-				   add: cancelButton withConstraints: [ :c | c width: 60 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 60 ];
+		  add: messagesPresenter;
+		  add: normalInputPresenter withConstraints: [ :c | c height: 60 ];
+		  yourself
+]
+
+{ #category : 'layout' }
+AbChatPresenter >> confirmModeLayout [
+
+	^ SpBoxLayout newTopToBottom
+		  add: messagesPresenter;
+		  add: confirmPresenter withConstraints: [ :c | c height: 90 ];
 		  yourself
 ]
 
@@ -38,35 +52,15 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	self pendingApprovalMessage: anAbMessage.
-	self inputField placeholder: ''.
-	self inputField text: ''.
-	self sendButton label: 'Confirm'.
-	self cancelButton label: 'Deny'
+	confirmPresenter confirmationText: anAbMessage text.
+	self layout: self confirmModeLayout
 ]
 
 { #category : 'private' }
 AbChatPresenter >> exitApprovalMode [
 
 	self pendingApprovalMessage: nil.
-	self inputField placeholder: 'Type your request...'.
-	self sendButton label: 'Send'.
-	self cancelButton label: 'Cancel'
-]
-
-{ #category : 'initialization' }
-AbChatPresenter >> initializePresenters [
-
-	messageDisplay := self newText.
-	messageDisplay beNotEditable.
-
-	inputField := self newText.
-	inputField placeholder: 'Type your request...'.
-
-	sendButton := self newButton.
-	sendButton label: 'Send'.
-
-	cancelButton := self newButton.
-	cancelButton label: 'Cancel'
+	self layout: self defaultLayout
 ]
 
 { #category : 'private' }
@@ -78,18 +72,9 @@ AbChatPresenter >> isFirstMessageInTopic [
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
-	self rerenderMessages.
+	messagesPresenter addOrUpdateMessage: anAbMessage.
 	anAbMessage isApprovalRequest ifTrue: [
 		self enterApprovalMode: anAbMessage ]
-]
-
-{ #category : 'event handling' }
-AbChatPresenter >> onCancelButtonClicked [
-
-	self currentTopic ifNil: [ ^ self ].
-	self pendingApprovalMessage
-		ifNotNil: [ self currentTopic resolveApproval: 'no' ]
-		ifNil: [ self currentTopic cancelPrompt ]
 ]
 
 { #category : 'event handling' }
@@ -97,13 +82,9 @@ AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
 	self currentTopic ifNil: [ ^ self ].
-	self pendingApprovalMessage ifNotNil: [
-		self currentTopic resolveApproval: 'yes'.
-		self exitApprovalMode.
-		^ self ].
-	text := self inputField text trimmed.
+	text := normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
-	self inputField text: ''.
+	normalInputPresenter clearInput.
 	promptText := self isFirstMessageInTopic
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
@@ -111,25 +92,43 @@ AbChatPresenter >> onSendButtonClicked [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onCancelButtonClicked [
+
+	self currentTopic ifNil: [ ^ self ].
+	self currentTopic cancelPrompt
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onConfirmButtonClicked [
+
+	self currentTopic ifNil: [ ^ self ].
+	self currentTopic resolveApproval: 'yes'.
+	self exitApprovalMode
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onDenyButtonClicked [
+
+	self currentTopic ifNil: [ ^ self ].
+	self currentTopic resolveApproval: 'no'.
+	self exitApprovalMode
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
-	Transcript crShow:
-		'[AbLog] onTopicStatusChanged: topic='
+	self logger debug: 'onTopicStatusChanged: topic='
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
-	self rerenderMessages
+	messagesPresenter refreshMessages
 ]
 
 { #category : 'private' }
 AbChatPresenter >> rerenderMessages [
 
 	self currentTopic ifNil: [ ^ self ].
-	messageDisplay text: (String streamContents: [ :s |
-			 self currentTopic messages do: [ :m |
-				 s
-					 nextPutAll: m displayText;
-					 cr ] ])
+	messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'subscriptions' }
@@ -169,9 +168,9 @@ AbChatPresenter >> topic: anAbTopic [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> cancelButton [
+AbChatPresenter >> logger [
 
-	^ cancelButton
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }
@@ -187,9 +186,21 @@ AbChatPresenter >> currentTopic: aTopic [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> inputField [
+AbChatPresenter >> messagesPresenter [
 
-	^ inputField
+	^ messagesPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> normalInputPresenter [
+
+	^ normalInputPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> confirmPresenter [
+
+	^ confirmPresenter
 ]
 
 { #category : 'accessing' }
@@ -205,25 +216,11 @@ AbChatPresenter >> pendingApprovalMessage: aMessage [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> sendButton [
+AbChatPresenter >> currentAnswerAreaPresenter [
+	"Returns the currently active answer area presenter: confirmPresenter in approval mode,
+	 normalInputPresenter otherwise."
 
-	^ sendButton
-]
-
-{ #category : 'testing' }
-AbChatPresenter >> inputPlaceholder [
-
-	^ self inputField placeholder
-]
-
-{ #category : 'testing' }
-AbChatPresenter >> sendButtonLabel [
-
-	^ self sendButton label
-]
-
-{ #category : 'testing' }
-AbChatPresenter >> cancelButtonLabel [
-
-	^ self cancelButton label
+	^ pendingApprovalMessage
+		  ifNil: [ normalInputPresenter ]
+		  ifNotNil: [ confirmPresenter ]
 ]

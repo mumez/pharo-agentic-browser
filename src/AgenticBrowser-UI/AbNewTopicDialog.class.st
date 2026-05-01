@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbNewTopicDialog',
-	#superclass : 'SpPresenter',
+	#superclass : 'AbDialog',
 	#instVars : [
 		'titleField',
 		'agentDropList',
@@ -13,18 +13,6 @@ Class {
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
-
-{ #category : 'private' }
-AbNewTopicDialog >> agentOptions [
-
-	^ OrderedCollection new
-		  add: 'claude-agent-acp' -> #( 'claude-agent-acp' );
-		  add: 'Gemini CLI' -> #( 'gemini' '--acp' );
-		  add: 'OpenCode' -> #( 'opencode' 'acp' );
-		  add: 'Copilot CLI' -> #( 'copilot' '--acp' '--stdio' );
-		  add: 'codex-acp' -> #( 'codex-acp' );
-		  yourself
-]
 
 { #category : 'initialization' }
 AbNewTopicDialog >> connectPresenters [
@@ -129,20 +117,25 @@ AbNewTopicDialog >> onOkClicked [
 
 	| titleText dirPath detectedPrefixes |
 	titleText := titleField text trimmed.
-	titleText isEmpty ifTrue: [ ^ self ].
-	topic := AbTopic new
+	titleText ifEmpty: [ ^ self ].
+	self topic: (AbTopic new
 				 title: titleText;
 				 agentArguments: agentDropList selectedItem value;
-				 yourself.
+				 yourself).
 	dirPath := workingDirField text trimmed.
 	dirPath ifNotEmpty: [
-		topic workingDirectoryPath: dirPath.
+		self topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
-		topic packagePrefixes: detectedPrefixes ].
+		self topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]
 ]
 
 { #category : 'accessing' }
 AbNewTopicDialog >> topic [
 	^ topic
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> topic: anAbTopic [
+	topic := anAbTopic
 ]
