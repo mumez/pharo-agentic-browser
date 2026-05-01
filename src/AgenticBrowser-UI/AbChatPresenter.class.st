@@ -214,3 +214,13 @@ AbChatPresenter >> pendingApprovalMessage: aMessage [
 
 	pendingApprovalMessage := aMessage
 ]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentAnswerPresenter [
+	"Returns the currently active lower presenter: confirmPresenter in approval mode,
+	 normalInputPresenter otherwise."
+
+	^ pendingApprovalMessage
+		  ifNil: [ normalInputPresenter ]
+		  ifNotNil: [ confirmPresenter ]
+]

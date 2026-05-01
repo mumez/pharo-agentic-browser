@@ -114,3 +114,50 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 	presenter onDenyButtonClicked.
 	self assert: presenter pendingApprovalMessage isNil
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testInitialAnswerPresenterIsNormalInput [
+
+	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
+
+	| approvalMessage |
+	approvalMessage := AbMessage approvalRequestText: 'Allow?'.
+	presenter enterApprovalMode: approvalMessage.
+	self assert: presenter currentAnswerPresenter equals: presenter confirmPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testExitApprovalModeSwitchesToNormalInputPresenter [
+
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	presenter exitApprovalMode.
+	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic addApprovalRequest: 'Allow?'.
+	presenter enterApprovalMode: approvalMessage.
+	presenter onConfirmButtonClicked.
+	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic addApprovalRequest: 'Allow?'.
+	presenter enterApprovalMode: approvalMessage.
+	presenter onDenyButtonClicked.
+	self assert: presenter currentAnswerPresenter equals: presenter normalInputPresenter
+]
