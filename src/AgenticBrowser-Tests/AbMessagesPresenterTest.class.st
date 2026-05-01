@@ -22,7 +22,7 @@ AbMessagesPresenterTest >> testInitialMessageCountIsZero [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewPresenter [
+AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewMessage [
 
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
@@ -31,49 +31,46 @@ AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewPresenter [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testAddOrUpdateMessageSetsContent [
+AbMessagesPresenterTest >> testAddOrUpdateMessageStoresMessage [
 
-	| msg mp |
+	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
-	mp := presenter messagePresenters first.
-	self assert: mp contentTextString equals: 'Hello'
+	self assert: (presenter messages includes: msg)
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testAddOrUpdateMessageUpdatesExistingPresenter [
-	"When the same AbMessage object is announced again (AI chunk), update content not add new presenter."
+AbMessagesPresenterTest >> testAddOrUpdateMessageDoesNotDuplicateExistingMessage [
+	"When the same AbMessage object is updated (e.g. AI chunk appended),
+	 it should not be added as a new entry."
 
 	| msg |
 	msg := AbMessage sender: #ai text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
 	msg appendText: ' world'.
 	presenter addOrUpdateMessage: msg.
-	self assert: presenter messageCount equals: 1.
-	self assert: presenter messagePresenters first contentTextString equals: 'Hello world'
+	self assert: presenter messageCount equals: 1
 ]
 
 { #category : 'tests' }
 AbMessagesPresenterTest >> testAddMultipleDistinctMessages [
 
-	| msg1 msg2 |
-	msg1 := AbMessage sender: #human text: 'Hi'.
-	msg2 := AbMessage sender: #ai text: 'Hello'.
-	presenter addOrUpdateMessage: msg1.
-	presenter addOrUpdateMessage: msg2.
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
 	self assert: presenter messageCount equals: 2
 ]
 
 { #category : 'tests' }
 AbMessagesPresenterTest >> testSetMessagesReplacesAll [
 
-	| msgs |
+	| newMsgs |
 	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Old').
-	msgs := OrderedCollection with: (AbMessage sender: #human text: 'New1')
+	newMsgs := OrderedCollection
+		with: (AbMessage sender: #human text: 'New1')
 		with: (AbMessage sender: #ai text: 'New2').
-	presenter setMessages: msgs.
+	presenter setMessages: newMsgs.
 	self assert: presenter messageCount equals: 2.
-	self assert: presenter messagePresenters first contentTextString equals: 'New1'
+	self assert: (presenter messages first text) equals: 'New1'
 ]
 
 { #category : 'tests' }
@@ -85,13 +82,28 @@ AbMessagesPresenterTest >> testSetMessagesWithEmptyCollectionClearsAll [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testRefreshMessagesUpdatesContent [
+AbMessagesPresenterTest >> testRichTextForHumanMessageContainsSenderLabel [
 
-	| msg mp |
-	msg := AbMessage sender: #ai text: 'First'.
-	presenter addOrUpdateMessage: msg.
-	mp := presenter messagePresenters first.
-	msg appendText: ' update'.
-	presenter refreshMessages.
-	self assert: mp contentTextString equals: 'First update'
+	| msg richText |
+	msg := AbMessage sender: #human text: 'Hello'.
+	richText := presenter richTextFor: msg.
+	self assert: (richText string includesSubstring: 'You')
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testRichTextForAiMessageContainsSenderLabel [
+
+	| msg richText |
+	msg := AbMessage sender: #ai text: 'Hi'.
+	richText := presenter richTextFor: msg.
+	self assert: (richText string includesSubstring: 'AI')
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testRichTextContainsMessageText [
+
+	| msg richText |
+	msg := AbMessage sender: #human text: 'Hello world'.
+	richText := presenter richTextFor: msg.
+	self assert: (richText string includesSubstring: 'Hello world')
 ]

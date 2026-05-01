@@ -73,8 +73,9 @@ AbMessagePresenter >> senderColor [
 
 { #category : 'testing' }
 AbMessagePresenter >> senderLabelText [
+	"Return as String because label may be a richtext Text object."
 
-	^ senderLabel label
+	^ senderLabel label asString
 ]
 
 { #category : 'testing' }
