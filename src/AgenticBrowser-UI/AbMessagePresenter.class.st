@@ -7,7 +7,7 @@ Class {
 		'contentText'
 	],
 	#classVars : [
-		'SenderColors'
+		'SenderLabelColors'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -18,18 +18,18 @@ AbMessagePresenter class >> initialize [
 
 	| theme |
 	theme := Smalltalk ui theme.
-	SenderColors := Dictionary new.
-	SenderColors at: 'You' put: theme textColor.
-	SenderColors at: 'AI' put: theme lightSelectionColor.
-	SenderColors at: 'AI(think)' put: Color gray.
-	SenderColors at: 'System' put: theme ghostTextColor.
-	SenderColors at: 'default' put: theme ghostTextColor
+	SenderLabelColors := Dictionary new.
+	SenderLabelColors at: 'You' put: theme textColor.
+	SenderLabelColors at: 'AI' put: theme lightSelectionColor.
+	SenderLabelColors at: 'AI(think)' put: Color gray.
+	SenderLabelColors at: 'System' put: theme ghostTextColor.
+	SenderLabelColors at: 'default' put: theme ghostTextColor
 ]
 
 { #category : 'colors' }
 AbMessagePresenter class >> senderColors [
 
-	^ SenderColors
+	^ SenderLabelColors
 ]
 
 { #category : 'colors' }
@@ -47,7 +47,7 @@ AbMessagePresenter class >> senderLabelColorFor: anAbMessage [
 
 	| name |
 	name := self senderLabelFor: anAbMessage.
-	^ SenderColors at: name ifAbsent: [ SenderColors at: 'default' ]
+	^ SenderLabelColors at: name ifAbsent: [ SenderLabelColors at: 'default' ]
 ]
 
 { #category : 'initialization' }
