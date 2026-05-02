@@ -3,6 +3,7 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'messages',
+		'messagePresenters',
 		'messageList'
 	],
 	#category : 'AgenticBrowser-UI',
@@ -10,17 +11,9 @@ Class {
 }
 
 { #category : 'initialization' }
-AbMessagesPresenter >> initialize [
-
-	super initialize.
-	messages := OrderedCollection new
-]
-
-{ #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
-	messageList := self newList.
-	messageList display: [ :msg | self richTextFor: msg ]
+	messageList := self newComponentList
 ]
 
 { #category : 'layout' }
@@ -36,11 +29,18 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	"Add a new message or refresh an existing one (e.g. AI streaming chunk).
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
-	(messages includes: anAbMessage)
-		ifTrue: [ self messageList refresh ]
+	(self messages includes: anAbMessage)
+		ifTrue: [
+			| idx |
+			idx := self messages indexOf: anAbMessage.
+			(self messagePresenters at: idx) updateContent ]
 		ifFalse: [
-			messages add: anAbMessage.
-			self messageList items: messages.
+			| presenter |
+			self messages add: anAbMessage.
+			presenter := self instantiate: AbMessagePresenter.
+			presenter updateMessage: anAbMessage.
+			self messagePresenters add: presenter.
+			self messageList presenters: self messagePresenters.
 			self scrollToBottom ]
 ]
 
@@ -48,8 +48,13 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	self messages: aCollection asOrderedCollection.
-	self messageList items: messages.
+	self messages: aCollection asOrderedCollection copy.
+	self messagePresenters: (self messages collect: [ :m |
+		| p |
+		p := self instantiate: AbMessagePresenter.
+		p updateMessage: m.
+		p ]).
+	self messageList presenters: self messagePresenters.
 	self scrollToBottom
 ]
 
@@ -58,19 +63,32 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	self messageList refresh
+	self messages doWithIndex: [ :m :i |
+		(self messagePresenters at: i) updateMessage: m ]
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messages [
 
-	^ messages copy
+	^ messages ifNil: [ messages := OrderedCollection new ]
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messages: aCollection [
 
 	messages := aCollection
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messagePresenters [
+
+	^ messagePresenters ifNil: [ messagePresenters := OrderedCollection new ]
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messagePresenters: aCollection [
+
+	messagePresenters := aCollection
 ]
 
 { #category : 'accessing' }
@@ -82,54 +100,20 @@ AbMessagesPresenter >> messageList [
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
 
-	^ messages size
+	^ self messages size
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	messages ifEmpty: [ ^ self ].
+	self messagePresenters ifEmpty: [ ^ self ].
 	self defer: [ self performScrollToBottom ]
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
-	self messageList selectIndex: messages size.
-	self messageList unselectAll
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> richTextFor: anAbMessage [
-	"Build a richtext Text with the sender label colored and message text appended."
-
-	| senderPart senderLen fullStr richText |
-	senderPart := self senderLabelFor: anAbMessage.
-	senderLen := senderPart size.
-	fullStr := senderPart , anAbMessage text.
-	richText := fullStr asText.
-	richText
-		addAttribute: (TextColor color: (self senderColorFor: anAbMessage sender))
-		from: 1
-		to: senderLen.
-	^ richText
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> senderLabelFor: anAbMessage [
-	"Fixed-width sender prefix (padded to align the message text column)."
-
-	anAbMessage sender = #human ifTrue: [ ^ 'You      │ ' ].
-	anAbMessage sender = #ai ifTrue: [
-		anAbMessage isThink ifTrue: [ ^ 'AI(think)│ ' ].
-		anAbMessage isApprovalRequest ifTrue: [ ^ 'AI(⏸)   │ ' ].
-		^ 'AI       │ ' ].
-	^ 'System   │ '
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> senderColorFor: aSender [
-
-	^ AbMessagePresenter senderColorFor: aSender
+	self messageList isBuilt ifFalse: [ ^ self ].
+	self messageList scrollToIndex: self messagePresenters size
 ]
