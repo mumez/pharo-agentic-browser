@@ -81,32 +81,6 @@ AbMessagesPresenterTest >> testSetMessagesWithEmptyCollectionClearsAll [
 	self assert: presenter messageCount equals: 0
 ]
 
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextForHumanMessageContainsSenderLabel [
-
-	| msg richText |
-	msg := AbMessage sender: #human text: 'Hello'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'You')
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextForAiMessageContainsSenderLabel [
-
-	| msg richText |
-	msg := AbMessage sender: #ai text: 'Hi'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'AI')
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextContainsMessageText [
-
-	| msg richText |
-	msg := AbMessage sender: #human text: 'Hello world'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'Hello world')
-]
 
 { #category : 'tests' }
 AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
@@ -114,7 +88,7 @@ AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
-	self assert: presenter messageList items size equals: 1
+	self assert: presenter messageList presenters size equals: 1
 ]
 
 { #category : 'tests' }
@@ -122,7 +96,7 @@ AbMessagesPresenterTest >> testMessageListItemCountMatchesAfterMultipleAdds [
 
 	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
 	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
-	self assert: presenter messageList items size equals: 2
+	self assert: presenter messageList presenters size equals: 2
 ]
 
 { #category : 'tests' }
@@ -133,7 +107,7 @@ AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
 		with: (AbMessage sender: #human text: 'A')
 		with: (AbMessage sender: #ai text: 'B').
 	presenter setMessages: msgs.
-	self assert: presenter messageList items size equals: 2
+	self assert: presenter messageList presenters size equals: 2
 ]
 
 { #category : 'tests' }

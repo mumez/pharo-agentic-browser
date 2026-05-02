@@ -7,7 +7,7 @@ Class {
 		'contentText'
 	],
 	#classVars : [
-		'SenderColors'
+		'SenderLabelColors'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -18,22 +18,36 @@ AbMessagePresenter class >> initialize [
 
 	| theme |
 	theme := Smalltalk ui theme.
-	SenderColors := Dictionary new.
-	SenderColors at: #human put: theme textColor.
-	SenderColors at: #ai put: theme lightSelectionColor.
-	SenderColors at: #default put: theme ghostTextColor
+	SenderLabelColors := Dictionary new.
+	SenderLabelColors at: 'You' put: theme textColor.
+	SenderLabelColors at: 'AI' put: theme lightSelectionColor.
+	SenderLabelColors at: 'AI(think)' put: Color gray.
+	SenderLabelColors at: 'System' put: theme ghostTextColor.
+	SenderLabelColors at: 'default' put: theme ghostTextColor
 ]
 
 { #category : 'colors' }
 AbMessagePresenter class >> senderColors [
 
-	^ SenderColors
+	^ SenderLabelColors
 ]
 
 { #category : 'colors' }
-AbMessagePresenter class >> senderColorFor: aSender [
+AbMessagePresenter class >> senderLabelFor: anAbMessage [
 
-	^ SenderColors at: aSender ifAbsent: [ SenderColors at: #default ]
+	anAbMessage sender = #human ifTrue: [ ^ 'You' ].
+	anAbMessage sender = #ai ifTrue: [
+		anAbMessage isThink ifTrue: [ ^ 'AI(think)' ].
+		^ 'AI' ].
+	^ 'System'
+]
+
+{ #category : 'colors' }
+AbMessagePresenter class >> senderLabelColorFor: anAbMessage [
+
+	| name |
+	name := self senderLabelFor: anAbMessage.
+	^ SenderLabelColors at: name ifAbsent: [ SenderLabelColors at: 'default' ]
 ]
 
 { #category : 'initialization' }
@@ -99,18 +113,13 @@ AbMessagePresenter >> contentText [
 { #category : 'private' }
 AbMessagePresenter >> senderDisplayName [
 
-	self message sender = #human ifTrue: [ ^ 'You' ].
-	self message sender = #ai ifTrue: [
-		self message isThink ifTrue: [ ^ 'AI(think)' ].
-		self message isApprovalRequest ifTrue: [ ^ 'AI(⏸)' ].
-		^ 'AI' ].
-	^ 'System'
+	^ self class senderLabelFor: self message
 ]
 
 { #category : 'private' }
 AbMessagePresenter >> senderColor [
 
-	^ self class senderColorFor: self message sender
+	^ self class senderLabelColorFor: self message
 ]
 
 { #category : 'testing' }
