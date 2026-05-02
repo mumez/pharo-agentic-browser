@@ -110,7 +110,7 @@ AbMessagesPresenter >> richTextFor: anAbMessage [
 	fullStr := senderPart , anAbMessage text.
 	richText := fullStr asText.
 	richText
-		addAttribute: (TextColor color: (self senderColorFor: anAbMessage sender))
+		addAttribute: (TextColor color: (self senderLabelColorFor: anAbMessage))
 		from: 1
 		to: senderLen.
 	^ richText
@@ -132,4 +132,10 @@ AbMessagesPresenter >> senderLabelFor: anAbMessage [
 AbMessagesPresenter >> senderColorFor: aSender [
 
 	^ AbMessagePresenter senderColorFor: aSender
+]
+
+{ #category : 'private' }
+AbMessagesPresenter >> senderLabelColorFor: anAbMessage [
+
+	^ AbMessagePresenter senderLabelColorFor: anAbMessage
 ]

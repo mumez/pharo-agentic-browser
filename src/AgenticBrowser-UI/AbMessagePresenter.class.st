@@ -21,6 +21,9 @@ AbMessagePresenter class >> initialize [
 	SenderColors := Dictionary new.
 	SenderColors at: #human put: theme textColor.
 	SenderColors at: #ai put: theme lightSelectionColor.
+	SenderColors at: #aiThink put: Color gray.
+	SenderColors at: #aiApproval put: theme lightSelectionColor.
+	SenderColors at: #system put: theme ghostTextColor.
 	SenderColors at: #default put: theme ghostTextColor
 ]
 
@@ -34,6 +37,17 @@ AbMessagePresenter class >> senderColors [
 AbMessagePresenter class >> senderColorFor: aSender [
 
 	^ SenderColors at: aSender ifAbsent: [ SenderColors at: #default ]
+]
+
+{ #category : 'colors' }
+AbMessagePresenter class >> senderLabelColorFor: anAbMessage [
+
+	anAbMessage sender = #human ifTrue: [ ^ SenderColors at: #human ].
+	anAbMessage sender = #ai ifTrue: [
+		anAbMessage isThink ifTrue: [ ^ SenderColors at: #aiThink ].
+		anAbMessage isApprovalRequest ifTrue: [ ^ SenderColors at: #aiApproval ].
+		^ SenderColors at: #ai ].
+	^ SenderColors at: #system ifAbsent: [ SenderColors at: #default ]
 ]
 
 { #category : 'initialization' }
@@ -110,7 +124,7 @@ AbMessagePresenter >> senderDisplayName [
 { #category : 'private' }
 AbMessagePresenter >> senderColor [
 
-	^ self class senderColorFor: self message sender
+	^ self class senderLabelColorFor: self message
 ]
 
 { #category : 'testing' }
