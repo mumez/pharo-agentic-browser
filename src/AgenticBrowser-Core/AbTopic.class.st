@@ -11,6 +11,7 @@ Class {
 		'announcer',
 		'topicId',
 		'packagePrefixes',
+		'updatedExternalPackageNames',
 		'workingDirectory',
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
@@ -61,6 +62,12 @@ AbTopic >> addApprovalRequest: aDescription [
 AbTopic >> addPackagePrefix: aString [
 
 	packagePrefixes add: aString
+]
+
+{ #category : 'operations' }
+AbTopic >> addUpdatedExternalPackageName: aString [
+
+	updatedExternalPackageNames add: aString
 ]
 
 { #category : 'operations' }
@@ -184,6 +191,7 @@ AbTopic >> initialize [
 	agentArguments := #( 'claude-agent-acp' ).
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
+	updatedExternalPackageNames := Set new.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -236,6 +244,11 @@ AbTopic >> packagePrefixes [
 { #category : 'accessing' }
 AbTopic >> packagePrefixes: aCollection [
 	packagePrefixes := aCollection asSet
+]
+
+{ #category : 'accessing' }
+AbTopic >> updatedExternalPackageNames [
+	^ updatedExternalPackageNames
 ]
 
 { #category : 'operations' }

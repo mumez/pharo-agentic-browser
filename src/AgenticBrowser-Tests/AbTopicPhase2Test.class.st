@@ -39,6 +39,17 @@ AbTopicPhase2Test >> testAddSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicPhase2Test >> testAddUpdatedExternalPackageName [
+
+	| topic |
+	topic := AbTopic new.
+	topic addUpdatedExternalPackageName: 'External-UI'.
+	topic addUpdatedExternalPackageName: 'External-UI'.
+	self assert: topic updatedExternalPackageNames size equals: 1.
+	self assert: (topic updatedExternalPackageNames includes: 'External-UI')
+]
+
+{ #category : 'tests' }
 AbTopicPhase2Test >> testrelatedPackagesWatcherLazyInit [
 
 	| topic |
@@ -81,6 +92,13 @@ AbTopicPhase2Test >> testPackagePrefixesDefaultsToEmptySet [
 
 	self assert: AbTopic new packagePrefixes isEmpty.
 	self assert: (AbTopic new packagePrefixes isKindOf: Set)
+]
+
+{ #category : 'tests' }
+AbTopicPhase2Test >> testUpdatedExternalPackageNamesDefaultsToEmptySet [
+
+	self assert: AbTopic new updatedExternalPackageNames isEmpty.
+	self assert: (AbTopic new updatedExternalPackageNames isKindOf: Set)
 ]
 
 { #category : 'tests' }
