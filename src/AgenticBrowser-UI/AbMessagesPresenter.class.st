@@ -110,5 +110,6 @@ AbMessagesPresenter >> scrollToBottom [
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
+	messageList isBuilt ifFalse: [ ^ self ].
 	messageList scrollToIndex: messagePresenters size
 ]
