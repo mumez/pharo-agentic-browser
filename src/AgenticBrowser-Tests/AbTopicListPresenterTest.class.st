@@ -62,6 +62,24 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForAddsPrefixesAndClearsPendingList [
+
+	topic addUpdatedExternalPackageName: 'AgenticBrowser-Core'.
+	presenter applyUpdatedExternalPackagesFor: topic.
+	self assert: (topic hasPackagePrefix: 'AgenticBrowser-Core').
+	self assert: topic updatedExternalPackageNames isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForWithNoPendingPackagesAddsMessage [
+
+	presenter applyUpdatedExternalPackagesFor: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [
+			m text includesSubstring: 'No externally updated packages' ] ])
+]
+
+{ #category : 'tests' }
 AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
 
 	topic agentArguments: #(  ).
