@@ -118,20 +118,11 @@ AbMessagesPresenter >> richTextFor: anAbMessage [
 
 { #category : 'private' }
 AbMessagesPresenter >> senderLabelFor: anAbMessage [
-	"Fixed-width sender prefix (padded to align the message text column)."
+	"Fixed-width sender prefix (padded to 9 chars to align the message text column)."
 
-	anAbMessage sender = #human ifTrue: [ ^ 'You      │ ' ].
-	anAbMessage sender = #ai ifTrue: [
-		anAbMessage isThink ifTrue: [ ^ 'AI(think)│ ' ].
-		anAbMessage isApprovalRequest ifTrue: [ ^ 'AI(⏸)   │ ' ].
-		^ 'AI       │ ' ].
-	^ 'System   │ '
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> senderColorFor: aSender [
-
-	^ AbMessagePresenter senderColorFor: aSender
+	| name |
+	name := AbMessagePresenter senderDisplayNameFor: anAbMessage.
+	^ (name paddedWith: $  toLength: 9) , '│ '
 ]
 
 { #category : 'private' }
