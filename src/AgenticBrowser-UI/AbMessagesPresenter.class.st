@@ -56,7 +56,7 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	messages := aCollection asOrderedCollection.
+	messages := aCollection asOrderedCollection copy.
 	messagePresenters := messages collect: [ :m |
 		| p |
 		p := self instantiate: AbMessagePresenter.
