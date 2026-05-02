@@ -16,11 +16,28 @@ AbTopicListPresenter >> buildTopicContextMenu [
 	^ SpMenuPresenter new
 		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
 		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
+		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
 		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
 		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
 		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
 		  yourself
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
+
+	| packageNames |
+	packageNames := aTopic updatedExternalPackageNames asSortedCollection.
+	packageNames ifEmpty: [
+		aTopic addSystemMessage: 'No externally updated packages to apply.'.
+		^ self ].
+	packageNames do: [ :packageName | aTopic addPackagePrefix: packageName ].
+	aTopic clearUpdatedExternalPackageNames.
+	self onPackagePrefixSet: aTopic.
+	aTopic addSystemMessage:
+		'Added ' , packageNames size printString
+		, ' external package(s) to tracked prefixes.'
 ]
 
 { #category : 'initialization' }
@@ -75,6 +92,15 @@ AbTopicListPresenter >> onInspectTopicRequest [
 	selectedTopic := topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	selectedTopic inspect
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
+
+	| topic |
+	topic := topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	self applyUpdatedExternalPackagesFor: topic
 ]
 
 { #category : 'private' }

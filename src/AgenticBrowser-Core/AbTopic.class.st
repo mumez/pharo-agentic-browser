@@ -258,6 +258,12 @@ AbTopic >> removePackagePrefix: aString [
 ]
 
 { #category : 'operations' }
+AbTopic >> clearUpdatedExternalPackageNames [
+
+	updatedExternalPackageNames removeAll
+]
+
+{ #category : 'operations' }
 AbTopic >> resolveApproval: aUserText [
 
 	| pending response |
