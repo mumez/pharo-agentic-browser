@@ -57,7 +57,53 @@ AbMessagePresenter >> initializePresenters [
 	senderLabel label: ''.
 
 	contentText := self newText.
-	contentText beNotEditable
+	contentText beNotEditable.
+	contentText wrapWord: true.
+	contentText whenBuiltDo: [ :ann | ann widget scrollbarsShowNever ].
+
+	self whenDisplayDo: [ :ann | self adjustHeightAfterDisplay ]
+]
+
+{ #category : 'layout' }
+AbMessagePresenter >> build [
+	"Override to set initial row height before the component list queries widget height."
+
+	| morph |
+	morph := super build.
+	morph height: (self computeHeightForWidth: 400).
+	^ morph
+]
+
+{ #category : 'layout' }
+AbMessagePresenter >> adjustHeightAfterDisplay [
+	"Recalculate row height using the actual widget width after display."
+
+	| morph actualWidth newHeight |
+	self isBuilt ifFalse: [ ^ self ].
+	morph := self adapter widget.
+	actualWidth := morph width.
+	actualWidth <= 0 ifTrue: [ ^ self ].
+	newHeight := self computeHeightForWidth: actualWidth.
+	(newHeight - morph height) abs <= 2 ifTrue: [ ^ self ].
+	morph height: newHeight.
+	self owner ifNotNil: [ :owner |
+		(owner respondsTo: #messageList) ifTrue: [
+			owner messageList isBuilt ifTrue: [
+				owner messageList adapter widget refresh ] ] ]
+]
+
+{ #category : 'layout' }
+AbMessagePresenter >> computeHeightForWidth: aWidth [
+	"Compute row height for the given total widget width."
+
+	| tm contentWidth |
+	message ifNil: [ ^ 26 ].
+	contentWidth := aWidth - 74.
+	contentWidth <= 0 ifTrue: [ ^ 26 ].
+	tm := TextMorph new.
+	tm width: contentWidth.
+	tm contentsWrapped: message text.
+	^ tm height + 4
 ]
 
 { #category : 'layout' }
