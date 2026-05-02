@@ -81,32 +81,6 @@ AbMessagesPresenterTest >> testSetMessagesWithEmptyCollectionClearsAll [
 	self assert: presenter messageCount equals: 0
 ]
 
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextForHumanMessageContainsSenderLabel [
-
-	| msg richText |
-	msg := AbMessage sender: #human text: 'Hello'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'You')
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextForAiMessageContainsSenderLabel [
-
-	| msg richText |
-	msg := AbMessage sender: #ai text: 'Hi'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'AI')
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testRichTextContainsMessageText [
-
-	| msg richText |
-	msg := AbMessage sender: #human text: 'Hello world'.
-	richText := presenter richTextFor: msg.
-	self assert: (richText string includesSubstring: 'Hello world')
-]
 
 { #category : 'tests' }
 AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [

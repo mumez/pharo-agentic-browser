@@ -3,6 +3,7 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'messages',
+		'messagePresenters',
 		'messageList'
 	],
 	#category : 'AgenticBrowser-UI',
@@ -13,14 +14,14 @@ Class {
 AbMessagesPresenter >> initialize [
 
 	super initialize.
-	messages := OrderedCollection new
+	messages := OrderedCollection new.
+	messagePresenters := OrderedCollection new
 ]
 
 { #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
-	messageList := self newList.
-	messageList display: [ :msg | self richTextFor: msg ]
+	messageList := self newComponentList
 ]
 
 { #category : 'layout' }
@@ -37,10 +38,17 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
 	(messages includes: anAbMessage)
-		ifTrue: [ self messageList refresh ]
+		ifTrue: [
+			| idx |
+			idx := messages indexOf: anAbMessage.
+			(messagePresenters at: idx) updateContent ]
 		ifFalse: [
+			| presenter |
 			messages add: anAbMessage.
-			self messageList items: messages.
+			presenter := self instantiate: AbMessagePresenter.
+			presenter updateMessage: anAbMessage.
+			messagePresenters add: presenter.
+			messageList presenters: messagePresenters.
 			self scrollToBottom ]
 ]
 
@@ -48,8 +56,13 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	self messages: aCollection asOrderedCollection.
-	self messageList items: messages.
+	messages := aCollection asOrderedCollection.
+	messagePresenters := messages collect: [ :m |
+		| p |
+		p := self instantiate: AbMessagePresenter.
+		p updateMessage: m.
+		p ].
+	messageList presenters: messagePresenters.
 	self scrollToBottom
 ]
 
@@ -58,7 +71,8 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	self messageList refresh
+	messages doWithIndex: [ :m :i |
+		(messagePresenters at: i) updateMessage: m ]
 ]
 
 { #category : 'accessing' }
@@ -89,44 +103,12 @@ AbMessagesPresenter >> messageCount [
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	messages ifEmpty: [ ^ self ].
+	messagePresenters ifEmpty: [ ^ self ].
 	self defer: [ self performScrollToBottom ]
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
-	self messageList selectIndex: messages size.
-	self messageList unselectAll
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> richTextFor: anAbMessage [
-	"Build a richtext Text with the sender label colored and message text appended."
-
-	| senderPart senderLen fullStr richText |
-	senderPart := self senderLabelFor: anAbMessage.
-	senderLen := senderPart size.
-	fullStr := senderPart , anAbMessage text.
-	richText := fullStr asText.
-	richText
-		addAttribute: (TextColor color: (self senderLabelColorFor: anAbMessage))
-		from: 1
-		to: senderLen.
-	^ richText
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> senderLabelFor: anAbMessage [
-	"Fixed-width sender prefix (padded to 9 chars to align the message text column)."
-
-	| name |
-	name := AbMessagePresenter senderDisplayNameFor: anAbMessage.
-	^ (name paddedWith: $  toLength: 9) , '│ '
-]
-
-{ #category : 'private' }
-AbMessagesPresenter >> senderLabelColorFor: anAbMessage [
-
-	^ AbMessagePresenter senderLabelColorFor: anAbMessage
+	messageList scrollToIndex: messagePresenters size
 ]

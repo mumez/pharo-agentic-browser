@@ -33,7 +33,7 @@ AbMessagePresenter class >> senderColors [
 ]
 
 { #category : 'colors' }
-AbMessagePresenter class >> senderDisplayNameFor: anAbMessage [
+AbMessagePresenter class >> senderLabelFor: anAbMessage [
 
 	anAbMessage sender = #human ifTrue: [ ^ 'You' ].
 	anAbMessage sender = #ai ifTrue: [
@@ -46,7 +46,7 @@ AbMessagePresenter class >> senderDisplayNameFor: anAbMessage [
 AbMessagePresenter class >> senderLabelColorFor: anAbMessage [
 
 	| name |
-	name := self senderDisplayNameFor: anAbMessage.
+	name := self senderLabelFor: anAbMessage.
 	^ SenderColors at: name ifAbsent: [ SenderColors at: 'default' ]
 ]
 
@@ -113,7 +113,7 @@ AbMessagePresenter >> contentText [
 { #category : 'private' }
 AbMessagePresenter >> senderDisplayName [
 
-	^ self class senderDisplayNameFor: self message
+	^ self class senderLabelFor: self message
 ]
 
 { #category : 'private' }
