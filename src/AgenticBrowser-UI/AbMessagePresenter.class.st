@@ -81,7 +81,7 @@ AbMessagePresenter >> recomputeLayout [
 		  add: self contentText
 		  	 withConstraints: [ :c | 
 			 	c width: self computeRowWidth;
-				  height: self computeRowHeight;
+				  height: self computeRowHeight
 			];
 		  yourself
 ]
