@@ -110,7 +110,7 @@ AbMessagePresenter >> contentLineHeight [
 AbMessagePresenter >> computeRowHeight [
 	| lineCount |
 	message ifNil: [ ^ 40 ].
-	lineCount := (message text occurrencesOf: Character lf) + 1.
+	lineCount := message text lines size max: 1.
 	^ (lineCount * self contentLineHeight) + 12
 ]
 
