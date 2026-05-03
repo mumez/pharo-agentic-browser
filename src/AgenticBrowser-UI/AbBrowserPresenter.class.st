@@ -45,7 +45,8 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Agentic Browser';
 		initialExtent: 900 @ 600.
-	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
+	aWindowPresenter whenClosedDo: [ self onWindowClosed ].
+	aWindowPresenter whenResizingDo: [ :ann | self messagesPresenter windowResized: ann newSize]
 ]
 
 { #category : 'private' }
@@ -54,4 +55,16 @@ AbBrowserPresenter >> onWindowClosed [
 	| manager |
 	manager := AbTopicManager uniqueInstance.
 	manager cleanupAllTopics
+]
+
+{ #category : 'accessing' }
+AbBrowserPresenter >> chatPresenter [
+
+	^ chatPresenter
+]
+
+{ #category : 'accessing' }
+AbBrowserPresenter >> messagesPresenter [
+
+	^ self chatPresenter messagesPresenter
 ]

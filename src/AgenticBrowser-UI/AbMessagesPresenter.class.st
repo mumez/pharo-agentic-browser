@@ -97,3 +97,10 @@ AbMessagesPresenter >> performScrollToBottom [
 	self messageList isBuilt ifFalse: [ ^ self ].
 	self messageList adapter widget scrollToIndex: self messagePresenters size
 ]
+
+{ #category : 'events' }
+AbMessagesPresenter >> windowResized: newSize [
+
+	self messageList isBuilt ifFalse: [ ^ self ].
+	self messagePresenters do: [:each | each windowResized: newSize]
+]
