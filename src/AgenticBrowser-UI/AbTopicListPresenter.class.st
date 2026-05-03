@@ -67,6 +67,8 @@ AbTopicListPresenter >> initializePresenters [
 
 	topicList := self newList.
 	topicList display: [ :topic | self topicListLabelFor: topic ].
+	topicList displayIcon: [ :item |
+		Smalltalk ui icons iconNamed: (self iconFor: item) ].
 	newTopicButton := self newButton.
 	newTopicButton label: '+ New Topic'
 ]
@@ -211,22 +213,23 @@ AbTopicListPresenter >> refresh [
 ]
 
 { #category : 'private' }
-AbTopicListPresenter >> statusIconFor: aTopic [
-
-	aTopic status = #working ifTrue: [ ^ '●' ].
-	aTopic status = #waitingForHuman ifTrue: [ ^ '⏸' ].
-	aTopic status = #endTurn ifTrue: [ ^ '✓' ].
-	^ '○'
-]
-
-{ #category : 'private' }
 AbTopicListPresenter >> topicListLabelFor: aTopic [
 
 	| label |
-	label := (self statusIconFor: aTopic) , ' ' , aTopic title.
+	label := aTopic title.
 	aTopic agentArguments ifNotEmpty: [ :args |
 		label := label , ' (' , args first , ')' ].
 	^ label
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> iconFor: aTopic [
+
+	aTopic status = #initial ifTrue: [ ^ #radioButtonOff ].
+	aTopic status = #working ifTrue: [ ^ #pointersTo ].
+	aTopic status = #waitingForHuman ifTrue: [ ^ #flag ].
+	aTopic status = #endTurn ifTrue: [ ^ #accept ].
+	^ #radioButtonOff
 ]
 
 { #category : 'subscriptions' }
