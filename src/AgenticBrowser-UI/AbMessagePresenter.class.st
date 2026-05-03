@@ -95,12 +95,23 @@ AbMessagePresenter >> computeRowWidth [
 ]
 
 { #category : 'layout' }
+AbMessagePresenter >> contentLineHeight [
+	"Return line height in pixels from the owner's style font when available,
+	 falling back to the default font."
+
+	| result |
+	result := [
+		self owner adapter style font height ]
+		on: Error
+		do: [ :e | TextStyle defaultFont height ].
+	^ result + 4
+]
+
 AbMessagePresenter >> computeRowHeight [
-	| lineCount lineHeight |
+	| lineCount |
 	message ifNil: [ ^ 40 ].
 	lineCount := (message text occurrencesOf: Character lf) + 1.
-	lineHeight := TextStyle defaultFont height + 2.
-	^ (lineCount * lineHeight) + 12
+	^ (lineCount * self contentLineHeight) + 12
 ]
 
 { #category : 'accessing' }
