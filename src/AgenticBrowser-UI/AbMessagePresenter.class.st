@@ -88,7 +88,10 @@ AbMessagePresenter >> recomputeLayout [
 
 { #category : 'layout' }
 AbMessagePresenter >> computeRowWidth [
-	^ self application windows asArray first adapter widget width - 320
+	| windows |
+	windows := self application windows.
+	windows isEmpty ifTrue: [ ^ 800 ].
+	^ windows anyOne adapter widget width - 320
 ]
 
 { #category : 'layout' }
