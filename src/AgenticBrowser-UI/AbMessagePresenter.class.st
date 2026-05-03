@@ -96,8 +96,11 @@ AbMessagePresenter >> computeRowWidth [
 
 { #category : 'layout' }
 AbMessagePresenter >> computeRowHeight [
-	"TODO: compute height from message line count"
-	^ 500
+	| lineCount lineHeight |
+	message ifNil: [ ^ 40 ].
+	lineCount := (message text occurrencesOf: Character lf) + 1.
+	lineHeight := TextStyle defaultFont height + 2.
+	^ (lineCount * lineHeight) + 12
 ]
 
 { #category : 'accessing' }
