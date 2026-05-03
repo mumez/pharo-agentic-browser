@@ -46,6 +46,7 @@ AbMessagePresenter >> updateContent [
 { #category : 'private' }
 AbMessagePresenter >> senderDisplayName [
 
+	self message ifNil: [ ^ 'System' ].
 	^ self class senderLabelFor: self message
 ]
 
