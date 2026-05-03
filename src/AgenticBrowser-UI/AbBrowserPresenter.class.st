@@ -41,7 +41,7 @@ AbBrowserPresenter >> initializePresenters [
 
 { #category : 'initialization' }
 AbBrowserPresenter >> initializeWindow: aWindowPresenter [
-
+	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Agentic Browser';
 		initialExtent: 900 @ 600.
