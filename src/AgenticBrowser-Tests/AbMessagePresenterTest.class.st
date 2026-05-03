@@ -21,7 +21,7 @@ AbMessagePresenterTest >> testSenderLabelForHuman [
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter updateMessage: msg.
-	self assert: (presenter senderLabelText includesSubstring: 'You')
+	self assert: (presenter microdownTextString includesSubstring: '## You')
 ]
 
 { #category : 'tests' }
@@ -30,7 +30,7 @@ AbMessagePresenterTest >> testSenderLabelForAI [
 	| msg |
 	msg := AbMessage sender: #ai text: 'Hi'.
 	presenter updateMessage: msg.
-	self assert: (presenter senderLabelText includesSubstring: 'AI')
+	self assert: (presenter microdownTextString includesSubstring: '## AI')
 ]
 
 { #category : 'tests' }
@@ -39,7 +39,7 @@ AbMessagePresenterTest >> testSenderLabelForSystem [
 	| msg |
 	msg := AbMessage sender: #system text: 'Cancelled.'.
 	presenter updateMessage: msg.
-	self assert: (presenter senderLabelText includesSubstring: 'System')
+	self assert: (presenter microdownTextString includesSubstring: '## System')
 ]
 
 { #category : 'tests' }
@@ -48,7 +48,7 @@ AbMessagePresenterTest >> testContentTextMatchesMessageText [
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello world'.
 	presenter updateMessage: msg.
-	self assert: presenter contentTextString equals: 'Hello world'
+	self assert: (presenter microdownTextString includesSubstring: 'Hello world')
 ]
 
 { #category : 'tests' }
@@ -68,7 +68,7 @@ AbMessagePresenterTest >> testUpdateContentAfterAppend [
 	presenter updateMessage: msg.
 	msg appendText: ' world'.
 	presenter updateContent.
-	self assert: presenter contentTextString equals: 'Hello world'
+	self assert: (presenter microdownTextString includesSubstring: 'Hello world')
 ]
 
 { #category : 'tests' }
@@ -77,5 +77,5 @@ AbMessagePresenterTest >> testApprovalRequestLabel [
 	| msg |
 	msg := AbMessage approvalRequestText: 'Allow export?'.
 	presenter updateMessage: msg.
-	self assert: (presenter senderLabelText includesSubstring: 'AI')
+	self assert: (presenter microdownTextString includesSubstring: '## AI')
 ]
