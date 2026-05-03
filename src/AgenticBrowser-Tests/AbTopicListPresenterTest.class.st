@@ -99,14 +99,14 @@ AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForInitialTopic [
 
-	self assert: (presenter iconFor: topic) equals: #radioButtonOff
+	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForWorkingTopic [
 
 	topic stateMachine handleEvent: #promptSent.
-	self assert: (presenter iconFor: topic) equals: #pointersTo
+	self assert: (presenter iconNameFor: topic) equals: #pointersTo
 ]
 
 { #category : 'tests' }
@@ -114,7 +114,7 @@ AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	self assert: (presenter iconFor: topic) equals: #flag
+	self assert: (presenter iconNameFor: topic) equals: #flag
 ]
 
 { #category : 'tests' }
@@ -122,7 +122,7 @@ AbTopicListPresenterTest >> testIconForEndTurnTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
-	self assert: (presenter iconFor: topic) equals: #accept
+	self assert: (presenter iconNameFor: topic) equals: #accept
 ]
 
 { #category : 'tests' }

@@ -68,7 +68,7 @@ AbTopicListPresenter >> initializePresenters [
 	topicList := self newList.
 	topicList display: [ :topic | self topicListLabelFor: topic ].
 	topicList displayIcon: [ :item |
-		Smalltalk ui icons iconNamed: (self iconFor: item) ].
+		Smalltalk ui icons iconNamed: (self iconNameFor: item) ].
 	newTopicButton := self newButton.
 	newTopicButton label: '+ New Topic'
 ]
@@ -223,7 +223,7 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 ]
 
 { #category : 'private' }
-AbTopicListPresenter >> iconFor: aTopic [
+AbTopicListPresenter >> iconNameFor: aTopic [
 
 	aTopic status = #initial ifTrue: [ ^ #radioButtonOff ].
 	aTopic status = #working ifTrue: [ ^ #pointersTo ].
