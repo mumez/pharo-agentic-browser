@@ -11,71 +11,71 @@ Class {
 { #category : 'running' }
 AbMessagePresenterTest >> setUp [
 
-	presenter := AbMessagePresenter new.
-	presenter initializePresenters
+	presenter := AbMessagePresenter new
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testSenderLabelForHuman [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage sender: #human text: 'Hello'.
-	presenter updateMessage: msg.
-	self assert: (presenter microdownTextString includesSubstring: '## You')
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: '## You')
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testSenderLabelForAI [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage sender: #ai text: 'Hi'.
-	presenter updateMessage: msg.
-	self assert: (presenter microdownTextString includesSubstring: '## AI')
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: '## AI')
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testSenderLabelForSystem [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage sender: #system text: 'Cancelled.'.
-	presenter updateMessage: msg.
-	self assert: (presenter microdownTextString includesSubstring: '## System')
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: '## System')
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testContentTextMatchesMessageText [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage sender: #human text: 'Hello world'.
-	presenter updateMessage: msg.
-	self assert: (presenter microdownTextString includesSubstring: 'Hello world')
-]
-
-{ #category : 'tests' }
-AbMessagePresenterTest >> testMessageSetterOnlySetsMessage [
-
-	| msg |
-	msg := AbMessage sender: #human text: 'Hello'.
-	presenter message: msg.
-	self assert: presenter message equals: msg
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: 'Hello world')
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testUpdateContentAfterAppend [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage sender: #ai text: 'Hello'.
-	presenter updateMessage: msg.
 	msg appendText: ' world'.
-	presenter updateContent.
-	self assert: (presenter microdownTextString includesSubstring: 'Hello world')
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: 'Hello world')
 ]
 
 { #category : 'tests' }
 AbMessagePresenterTest >> testApprovalRequestLabel [
 
-	| msg |
+	| msg microdown |
 	msg := AbMessage approvalRequestText: 'Allow export?'.
-	presenter updateMessage: msg.
-	self assert: (presenter microdownTextString includesSubstring: '## AI')
+	microdown := presenter microdownTextFor: msg.
+	self assert: (microdown includesSubstring: '## AI')
+]
+
+{ #category : 'tests' }
+AbMessagePresenterTest >> testRichTextForReturnsText [
+
+	| msg rich |
+	msg := AbMessage sender: #human text: 'Hello world'.
+	rich := presenter richTextFor: msg.
+	self assert: rich class equals: Text.
+	self assert: (rich asString includesSubstring: 'You').
+	self assert: (rich asString includesSubstring: 'Hello world')
 ]

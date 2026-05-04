@@ -2,7 +2,8 @@ Class {
 	#name : 'AbMessagesPresenter',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'messageList'
+		'messageList',
+		'messages'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -11,7 +12,9 @@ Class {
 { #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
-	messageList := self newComponentList
+	messages := OrderedCollection new.
+	messageList := self newList.
+	messageList display: [ :msg | self richTextFor: msg ]
 ]
 
 { #category : 'layout' }
@@ -27,25 +30,18 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	"Add a new message or refresh an existing one (e.g. AI streaming chunk).
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
-	| existing |
-	existing := self messagePresenters
-		detect: [ :p | p message == anAbMessage ]
-		ifNone: [ nil ].
-	existing
-		ifNotNil: [ existing updateContent ]
-		ifNil: [
-			| presenter |
-			presenter := self instantiate: AbMessagePresenter.
-			presenter updateMessage: anAbMessage.
-			self messageList addPresenter: presenter.
-			self scrollToBottom ]
+	(messages includes: anAbMessage)
+		ifFalse: [ messages add: anAbMessage ].
+	self messageList items: messages asArray.
+	self scrollToBottom
 ]
 
 { #category : 'rendering' }
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	self messageList items: aCollection.
+	messages := aCollection asOrderedCollection.
+	self messageList items: messages asArray.
 	self scrollToBottom
 ]
 
@@ -54,21 +50,19 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	self messagePresenters do: [ :p | p updateContent ]
+	self messageList items: messages asArray
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messages [
 
-	^ self messagePresenters collect: [ :e | e message ]
+	^ messages
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messagePresenters [
 
-	^ self messageList model
-		ifNil: [ #() ]
-		ifNotNil: [ :m | m collection ]
+	^ #()
 ]
 
 { #category : 'accessing' }
@@ -80,14 +74,20 @@ AbMessagesPresenter >> messageList [
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
 
-	^ self messagePresenters size
+	^ messages size
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> richTextFor: anAbMessage [
+
+	^ AbMessagePresenter new richTextFor: anAbMessage
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	self messagePresenters ifEmpty: [ ^ self ].
+	messages ifEmpty: [ ^ self ].
 	self defer: [ self performScrollToBottom ]
 ]
 
@@ -95,12 +95,11 @@ AbMessagesPresenter >> scrollToBottom [
 AbMessagesPresenter >> performScrollToBottom [
 
 	self messageList isBuilt ifFalse: [ ^ self ].
-	self messageList adapter widget scrollToIndex: self messagePresenters size
+	self messageList adapter widget scrollToIndex: messages size
 ]
 
 { #category : 'events' }
 AbMessagesPresenter >> windowResized: newSize [
 
-	self messageList isBuilt ifFalse: [ ^ self ].
-	self messagePresenters do: [:each | each windowResized: newSize]
+	"newList + rich text display does not require per-item resize forwarding."
 ]

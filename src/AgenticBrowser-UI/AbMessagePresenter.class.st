@@ -1,9 +1,6 @@
 Class {
 	#name : 'AbMessagePresenter',
-	#superclass : 'MicrodownPresenter',
-	#instVars : [
-		'message'
-	],
+	#superclass : 'Object',
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
@@ -18,75 +15,37 @@ AbMessagePresenter class >> senderLabelFor: anAbMessage [
 	^ 'System'
 ]
 
-{ #category : 'accessing' }
-AbMessagePresenter >> message: anAbMessage [
+{ #category : 'rendering' }
+AbMessagePresenter >> richTextFor: anAbMessage [
 
-	message := anAbMessage
-]
-
-{ #category : 'accessing' }
-AbMessagePresenter >> message [
-
-	^ message
+	| senderText senderLen richText |
+	senderText := self class senderLabelFor: anAbMessage.
+	richText := Microdown asRichText: (self microdownTextFor: anAbMessage).
+	senderLen := senderText size.
+	senderLen > 0 ifTrue: [
+		richText
+			addAttribute: (TextColor color: (self senderColorFor: anAbMessage sender))
+			from: 1
+			to: senderLen ].
+	^ richText
 ]
 
 { #category : 'rendering' }
-AbMessagePresenter >> updateMessage: anAbMessage [
+AbMessagePresenter >> microdownTextFor: anAbMessage [
 
-	self message: anAbMessage.
-	self updateContent
-]
-
-{ #category : 'rendering' }
-AbMessagePresenter >> updateContent [
-
-	self text: self renderedMicrodownText
-]
-
-{ #category : 'private' }
-AbMessagePresenter >> senderDisplayName [
-
-	self message ifNil: [ ^ 'System' ].
-	^ self class senderLabelFor: self message
-]
-
-{ #category : 'testing' }
-AbMessagePresenter >> senderLabelText [
-
-	^ self senderDisplayName
-]
-
-{ #category : 'testing' }
-AbMessagePresenter >> contentTextString [
-
-	^ self message ifNil: [ '' ] ifNotNil: [ self message text ]
-]
-
-{ #category : 'testing' }
-AbMessagePresenter >> microdownTextString [
-
-	^ self text
-]
-
-{ #category : 'private' }
-AbMessagePresenter >> renderedMicrodownText [
-	"Use a heading for sender then the message body in a single Microdown document."
-
-	| body |
-	body := self message
-		        ifNil: [ '' ]
-		        ifNotNil: [ self message text ifNil: [ '' ] ].
 	^ String streamContents: [ :stream |
 		  stream
 			  nextPutAll: '## ';
-			  nextPutAll: self senderDisplayName;
+			  nextPutAll: (self class senderLabelFor: anAbMessage);
 			  cr;
 			  cr;
-			  nextPutAll: body ]
+			  nextPutAll: anAbMessage text ]
 ]
 
-{ #category : 'events' }
-AbMessagePresenter >> windowResized: newSize [
+{ #category : 'private' }
+AbMessagePresenter >> senderColorFor: aSenderSymbol [
 
-	"MicrodownPresenter handles text layout recalculation."
+	aSenderSymbol = #human ifTrue: [ ^ Smalltalk ui theme textColor ].
+	aSenderSymbol = #ai ifTrue: [ ^ Smalltalk ui theme lightSelectionColor ].
+	^ Smalltalk ui theme ghostTextColor
 ]

@@ -88,7 +88,7 @@ AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
-	self assert: presenter messageList presenters size equals: 1
+	self assert: presenter messageList items size equals: 1
 ]
 
 { #category : 'tests' }
@@ -96,7 +96,7 @@ AbMessagesPresenterTest >> testMessageListItemCountMatchesAfterMultipleAdds [
 
 	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
 	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
-	self assert: presenter messageList presenters size equals: 2
+	self assert: presenter messageList items size equals: 2
 ]
 
 { #category : 'tests' }
@@ -107,7 +107,18 @@ AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
 		with: (AbMessage sender: #human text: 'A')
 		with: (AbMessage sender: #ai text: 'B').
 	presenter setMessages: msgs.
-	self assert: presenter messageList presenters size equals: 2
+	self assert: presenter messageList items size equals: 2
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testRichTextForReturnsTextWithSenderAndBody [
+
+	| msg rich |
+	msg := AbMessage sender: #ai text: 'Hello world'.
+	rich := presenter richTextFor: msg.
+	self assert: rich class equals: Text.
+	self assert: (rich asString includesSubstring: 'AI').
+	self assert: (rich asString includesSubstring: 'Hello world')
 ]
 
 { #category : 'tests' }
