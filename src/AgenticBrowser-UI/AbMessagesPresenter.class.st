@@ -80,7 +80,7 @@ AbMessagesPresenter >> messageCount [
 { #category : 'rendering' }
 AbMessagesPresenter >> richTextFor: anAbMessage [
 
-	^ AbMessagePresenter new richTextFor: anAbMessage
+	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
 ]
 
 { #category : 'private' }

@@ -1,12 +1,12 @@
 Class {
-	#name : 'AbMessagePresenter',
+	#name : 'AbMessageRichTextBuilder',
 	#superclass : 'Object',
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
 
 { #category : 'colors' }
-AbMessagePresenter class >> senderLabelFor: anAbMessage [
+AbMessageRichTextBuilder class >> senderLabelFor: anAbMessage [
 
 	anAbMessage sender = #human ifTrue: [ ^ 'You' ].
 	anAbMessage sender = #ai ifTrue: [
@@ -16,7 +16,7 @@ AbMessagePresenter class >> senderLabelFor: anAbMessage [
 ]
 
 { #category : 'rendering' }
-AbMessagePresenter >> richTextFor: anAbMessage [
+AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 
 	| senderText senderLen richText |
 	senderText := self class senderLabelFor: anAbMessage.
@@ -31,7 +31,7 @@ AbMessagePresenter >> richTextFor: anAbMessage [
 ]
 
 { #category : 'rendering' }
-AbMessagePresenter >> microdownTextFor: anAbMessage [
+AbMessageRichTextBuilder >> microdownTextFor: anAbMessage [
 
 	^ String streamContents: [ :stream |
 		  stream
@@ -43,7 +43,7 @@ AbMessagePresenter >> microdownTextFor: anAbMessage [
 ]
 
 { #category : 'private' }
-AbMessagePresenter >> senderColorFor: aSenderSymbol [
+AbMessageRichTextBuilder >> senderColorFor: aSenderSymbol [
 
 	aSenderSymbol = #human ifTrue: [ ^ Smalltalk ui theme textColor ].
 	aSenderSymbol = #ai ifTrue: [ ^ Smalltalk ui theme lightSelectionColor ].
