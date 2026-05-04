@@ -18,9 +18,16 @@ AbMessageRichTextBuilder class >> senderLabelFor: anAbMessage [
 { #category : 'rendering' }
 AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 
-	| senderText senderLen richText |
+	| senderText senderLen body richText |
 	senderText := self class senderLabelFor: anAbMessage.
-	richText := Microdown asRichText: (self microdownTextFor: anAbMessage).
+	body := anAbMessage text ifNil: [ '' ].
+	richText := String streamContents: [ :stream |
+		            stream
+			            nextPutAll: senderText;
+			            cr;
+			            cr;
+			            nextPutAll: body ].
+	richText := richText asText.
 	senderLen := senderText size.
 	senderLen > 0 ifTrue: [
 		richText
@@ -28,18 +35,6 @@ AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 			from: 1
 			to: senderLen ].
 	^ richText
-]
-
-{ #category : 'rendering' }
-AbMessageRichTextBuilder >> microdownTextFor: anAbMessage [
-
-	^ String streamContents: [ :stream |
-		  stream
-			  nextPutAll: '## ';
-			  nextPutAll: (self class senderLabelFor: anAbMessage);
-			  cr;
-			  cr;
-			  nextPutAll: anAbMessage text ]
 ]
 
 { #category : 'private' }
