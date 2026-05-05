@@ -18,35 +18,50 @@ AbMessageRichTextBuilder class >> senderLabelFor: anAbMessage [
 { #category : 'rendering' }
 AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 
-	| senderText senderLen body richText |
-	senderText := self class senderLabelFor: anAbMessage.
-	body := anAbMessage text ifNil: [ '' ].
-	richText := String streamContents: [ :stream |
-		            stream
-			            nextPutAll: senderText;
-			            nextPutAll: ':';
-			            cr;
-			            cr;
-			            nextPutAll: body ].
-	richText := richText asText.
-	senderLen := senderText size + 1.
-	senderLen > 0 ifTrue: [
-		richText
-			addAttribute: (TextColor color: (self senderColorFor: anAbMessage))
-			from: 1
-			to: senderLen.
-		richText
-			addAttribute: TextEmphasis bold
-			from: 1
-			to: senderLen ].
-	(anAbMessage isThink and: [ body notEmpty ]) ifTrue: [
-		| bodyStart |
-		bodyStart := senderLen + 3.
-		richText
-			addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
-			from: bodyStart
-			to: richText size ].
+	| senderLen richText |
+	richText := (self buildStringFor: anAbMessage) asText.
+	senderLen := (self class senderLabelFor: anAbMessage) size + 1.
+	self applySenderAttributesTo: richText senderLen: senderLen message: anAbMessage.
+	anAbMessage isThink ifTrue: [
+		self applyThinkBodyAttributesTo: richText bodyStart: senderLen + 3 ].
 	^ richText
+]
+
+{ #category : 'private' }
+AbMessageRichTextBuilder >> buildStringFor: anAbMessage [
+
+	| body |
+	body := anAbMessage text ifNil: [ '' ].
+	^ String streamContents: [ :stream |
+		  stream
+			  nextPutAll: (self class senderLabelFor: anAbMessage);
+			  nextPutAll: ':';
+			  cr;
+			  cr;
+			  nextPutAll: body ]
+]
+
+{ #category : 'private' }
+AbMessageRichTextBuilder >> applySenderAttributesTo: richText senderLen: senderLen message: anAbMessage [
+
+	richText
+		addAttribute: (TextColor color: (self senderColorFor: anAbMessage))
+		from: 1
+		to: senderLen.
+	richText
+		addAttribute: TextEmphasis bold
+		from: 1
+		to: senderLen
+]
+
+{ #category : 'private' }
+AbMessageRichTextBuilder >> applyThinkBodyAttributesTo: richText bodyStart: bodyStart [
+
+	bodyStart > richText size ifTrue: [ ^ self ].
+	richText
+		addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
+		from: bodyStart
+		to: richText size
 ]
 
 { #category : 'private' }
