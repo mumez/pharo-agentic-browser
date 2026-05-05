@@ -124,8 +124,3 @@ AbMessagesPresenter >> performScrollToBottom [
 	messageTextPresenter adapter widget scrollToEnd
 ]
 
-{ #category : 'events' }
-AbMessagesPresenter >> windowResized: newSize [
-
-	"MicTextPresenter handles wrapping and relayout automatically."
-]

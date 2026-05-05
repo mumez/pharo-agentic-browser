@@ -28,6 +28,12 @@ AbMessagesPresenterTest >> testInitializeUsesMicTextPresenter [
 ]
 
 { #category : 'tests' }
+AbMessagesPresenterTest >> testDoesNotImplementWindowResizedHandler [
+
+	self deny: (AbMessagesPresenter includesSelector: #windowResized:)
+]
+
+{ #category : 'tests' }
 AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewMessage [
 
 	| msg |
