@@ -33,18 +33,23 @@ This project already loads `PharoSmalltalkInteropServer` as a baseline dependenc
 BUILD_DIR=$(ls -d /opt/smalltalkCI/_builds/*/ | head -1)
 PHARO="/opt/smalltalkCI/_cache/vms/Pharo64-13/pharo"
 
-# start server (default port 8086)
+# First, check whether SisServer is already reachable (usually auto-started)
+curl "http://localhost:8086/list-packages"
+
+# If curl fails, start it explicitly and retry
 "$PHARO" --headless "${BUILD_DIR}TravisCI.image" eval "SisServer current start"
+curl "http://localhost:8086/list-packages"
 
 # examples
-curl "http://localhost:8086/list-packages"
 curl "http://localhost:8086/search-classes-like?class_name_query=AbMessagesPresenter"
 curl -X POST "http://localhost:8086/eval/" \
   -H "Content-Type: application/json" \
   -d '{"code":"AbMessagesPresenter selectors"}'
 ```
 
-When done:
+Avoid calling `start` unconditionally; if the server is already running, unnecessary starts can trigger port conflicts.
+
+When done (only if you explicitly started it for this session):
 
 ```bash
 "$PHARO" --headless "${BUILD_DIR}TravisCI.image" eval "SisServer current stop"
