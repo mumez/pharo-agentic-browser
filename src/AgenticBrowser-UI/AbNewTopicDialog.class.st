@@ -95,7 +95,7 @@ AbNewTopicDialog >> initializePresenters [
 
 { #category : 'initialization' }
 AbNewTopicDialog >> initializeWindow: aWindowPresenter [
-
+	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'New Topic';
 		initialExtent: 580 @ 200

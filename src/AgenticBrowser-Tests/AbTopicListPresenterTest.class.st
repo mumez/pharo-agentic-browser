@@ -62,20 +62,67 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForAddsPrefixesAndClearsPendingList [
+
+	topic addUpdatedExternalPackageName: 'AgenticBrowser-Core'.
+	presenter applyUpdatedExternalPackagesFor: topic.
+	self assert: (topic hasPackagePrefix: 'AgenticBrowser-Core').
+	self assert: topic updatedExternalPackageNames isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForWithNoPendingPackagesAddsMessage [
+
+	presenter applyUpdatedExternalPackagesFor: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [
+			m text includesSubstring: 'No externally updated packages' ] ])
+]
+
+{ #category : 'tests' }
 AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
 
 	topic agentArguments: #(  ).
-	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic'
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic'
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 
 	topic agentArguments: #( 'opencode' ).
-	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (opencode)'.
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (opencode)'.
 
 	topic agentArguments: #( 'claude-agent-acp' ).
-	self assert: (presenter topicListLabelFor: topic) equals: '○ TestTopic (claude-agent-acp)'
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (claude-agent-acp)'
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForInitialTopic [
+
+	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForWorkingTopic [
+
+	topic stateMachine handleEvent: #promptSent.
+	self assert: (presenter iconNameFor: topic) equals: #pointersTo
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
+
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: (presenter iconNameFor: topic) equals: #flag
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForEndTurnTopic [
+
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: (presenter iconNameFor: topic) equals: #accept
 ]
 
 { #category : 'tests' }

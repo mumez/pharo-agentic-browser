@@ -140,6 +140,18 @@ AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprov
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTracksWithoutApproval [
+
+	watcher handlePackageChange: 'External-Changed'.
+	(Delay forMilliseconds: 100) wait.
+	self deny: topic hasPendingApprovalRequest.
+	self
+		assert: (topic messages select: [ :m | m isApprovalRequest ]) isEmpty.
+	self
+		assert: (topic updatedExternalPackageNames includes: 'External-Changed')
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:

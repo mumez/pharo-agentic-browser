@@ -41,7 +41,7 @@ AbBrowserPresenter >> initializePresenters [
 
 { #category : 'initialization' }
 AbBrowserPresenter >> initializeWindow: aWindowPresenter [
-
+	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Agentic Browser';
 		initialExtent: 900 @ 600.
@@ -54,4 +54,16 @@ AbBrowserPresenter >> onWindowClosed [
 	| manager |
 	manager := AbTopicManager uniqueInstance.
 	manager cleanupAllTopics
+]
+
+{ #category : 'accessing' }
+AbBrowserPresenter >> chatPresenter [
+
+	^ chatPresenter
+]
+
+{ #category : 'accessing' }
+AbBrowserPresenter >> messagesPresenter [
+
+	^ self chatPresenter messagesPresenter
 ]

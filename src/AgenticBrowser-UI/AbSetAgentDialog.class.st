@@ -50,7 +50,7 @@ AbSetAgentDialog >> initializePresenters [
 
 { #category : 'initialization' }
 AbSetAgentDialog >> initializeWindow: aWindowPresenter [
-
+	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Set Agent';
 		initialExtent: 400 @ 120

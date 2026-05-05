@@ -47,7 +47,7 @@ AbPackagePrefixesDialog >> initializePresenters [
 
 { #category : 'initialization' }
 AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
-
+	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Target Packages';
 		initialExtent: 500 @ 130

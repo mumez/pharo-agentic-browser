@@ -11,6 +11,7 @@ Class {
 		'announcer',
 		'topicId',
 		'packagePrefixes',
+		'updatedExternalPackageNames',
 		'workingDirectory',
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
@@ -42,7 +43,7 @@ AbTopic >> addAiChunk: aString think: aBoolean [
 					 messages last isThink = aBoolean ] ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
-			msg := AbMessage sender: #ai text: aString think: aBoolean.
+			msg := AbMessage sender: #ai text: aString isThink: aBoolean.
 			messages add: msg ].
 	self announceMessageAdded: messages last
 ]
@@ -61,6 +62,12 @@ AbTopic >> addApprovalRequest: aDescription [
 AbTopic >> addPackagePrefix: aString [
 
 	packagePrefixes add: aString
+]
+
+{ #category : 'operations' }
+AbTopic >> addUpdatedExternalPackageName: aString [
+
+	updatedExternalPackageNames add: aString
 ]
 
 { #category : 'operations' }
@@ -184,6 +191,7 @@ AbTopic >> initialize [
 	agentArguments := #( 'claude-agent-acp' ).
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
+	updatedExternalPackageNames := Set new.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -238,10 +246,21 @@ AbTopic >> packagePrefixes: aCollection [
 	packagePrefixes := aCollection asSet
 ]
 
+{ #category : 'accessing' }
+AbTopic >> updatedExternalPackageNames [
+	^ updatedExternalPackageNames
+]
+
 { #category : 'operations' }
 AbTopic >> removePackagePrefix: aString [
 
 	packagePrefixes remove: aString ifAbsent: []
+]
+
+{ #category : 'operations' }
+AbTopic >> clearUpdatedExternalPackageNames [
+
+	updatedExternalPackageNames removeAll
 ]
 
 { #category : 'operations' }

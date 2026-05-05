@@ -75,7 +75,15 @@ AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
 						 prefix match: aPackageName ].
 	matchesPrefix
 		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
-		ifFalse: [ self requestApprovalToTrackPackage: aPackageName ]
+		ifFalse: [ self trackExternalPackageChange: aPackageName ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
+
+	[
+	topic addUpdatedExternalPackageName: aPackageName ]
+		ensure: [ pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
 
 { #category : 'initialization' }
