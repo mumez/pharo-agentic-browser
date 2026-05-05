@@ -24,23 +24,37 @@ AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 	richText := String streamContents: [ :stream |
 		            stream
 			            nextPutAll: senderText;
+			            nextPutAll: ':';
 			            cr;
 			            cr;
 			            nextPutAll: body ].
 	richText := richText asText.
-	senderLen := senderText size.
+	senderLen := senderText size + 1.
 	senderLen > 0 ifTrue: [
 		richText
-			addAttribute: (TextColor color: (self senderColorFor: anAbMessage sender))
+			addAttribute: (TextColor color: (self senderColorFor: anAbMessage))
+			from: 1
+			to: senderLen.
+		richText
+			addAttribute: TextEmphasis bold
 			from: 1
 			to: senderLen ].
+	(anAbMessage isThink and: [ body notEmpty ]) ifTrue: [
+		| bodyStart |
+		bodyStart := senderLen + 3.
+		richText
+			addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
+			from: bodyStart
+			to: richText size ].
 	^ richText
 ]
 
 { #category : 'private' }
-AbMessageRichTextBuilder >> senderColorFor: aSenderSymbol [
+AbMessageRichTextBuilder >> senderColorFor: anAbMessage [
 
-	aSenderSymbol = #human ifTrue: [ ^ Smalltalk ui theme textColor ].
-	aSenderSymbol = #ai ifTrue: [ ^ Smalltalk ui theme lightSelectionColor ].
-	^ Smalltalk ui theme ghostTextColor
+	anAbMessage sender = #human ifTrue: [ ^ Smalltalk ui theme textColor ].
+	anAbMessage sender = #ai ifTrue: [
+		anAbMessage isThink ifTrue: [ ^ Smalltalk ui theme ghostTextColor ].
+		^ Smalltalk ui theme warningTextColor ].
+	^ Smalltalk ui theme textColor
 ]

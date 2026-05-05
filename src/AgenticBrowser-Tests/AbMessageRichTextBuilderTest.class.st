@@ -79,3 +79,60 @@ AbMessageRichTextBuilderTest >> testRichTextForReturnsText [
 	self assert: (rich asString includesSubstring: 'You').
 	self assert: (rich asString includesSubstring: 'Hello world')
 ]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testSenderColorForHumanIsTextColor [
+
+	| msg |
+	msg := AbMessage sender: #human text: 'Hello'.
+	self
+		assert: (builder senderColorFor: msg)
+		equals: Smalltalk ui theme textColor
+]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testSenderColorForAIIsWarningTextColor [
+
+	| msg |
+	msg := AbMessage sender: #ai text: 'Hi'.
+	self
+		assert: (builder senderColorFor: msg)
+		equals: Smalltalk ui theme warningTextColor
+]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testSenderColorForAIThinkIsGhostTextColor [
+
+	| msg |
+	msg := AbMessage sender: #ai text: 'Thinking...' think: true.
+	self
+		assert: (builder senderColorFor: msg)
+		equals: Smalltalk ui theme ghostTextColor
+]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testBodyColorForAIThinkIsGhostTextColor [
+
+	| msg rich senderLen bodyColor |
+	msg := AbMessage sender: #ai text: 'Thinking...' think: true.
+	rich := builder richTextFor: msg.
+	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.
+	bodyColor := (rich attributesAt: senderLen + 4)
+		             detect: [ :attr | attr isKindOf: TextColor ]
+		             ifNone: [ nil ].
+	self assert: bodyColor isNotNil.
+	self assert: bodyColor color equals: Smalltalk ui theme ghostTextColor
+]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testBodyColorForNonThinkAIIsUncolored [
+
+	| msg rich senderLen bodyColor |
+	msg := AbMessage sender: #ai text: 'Hello'.
+	rich := builder richTextFor: msg.
+	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.
+	bodyColor := (rich attributesAt: senderLen + 4)
+		             detect: [ :attr | attr isKindOf: TextColor ]
+		             ifNone: [ nil ].
+	self assert: bodyColor isNil
+]

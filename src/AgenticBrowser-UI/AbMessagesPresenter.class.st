@@ -121,6 +121,6 @@ AbMessagesPresenter >> scrollToBottom [
 AbMessagesPresenter >> performScrollToBottom [
 
 	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
-	self messageTextPresenter adapter widget scrollToEnd
+	self messageTextPresenter adapter widget scrollToEndOfText
 ]
 
