@@ -43,7 +43,7 @@ AbTopic >> addAiChunk: aString think: aBoolean [
 					 messages last isThink = aBoolean ] ] ])
 		ifTrue: [ messages last appendText: aString ]
 		ifFalse: [
-			msg := AbMessage sender: #ai text: aString think: aBoolean.
+			msg := AbMessage sender: #ai text: aString isThink: aBoolean.
 			messages add: msg ].
 	self announceMessageAdded: messages last
 ]

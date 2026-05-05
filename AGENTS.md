@@ -23,6 +23,40 @@ PHARO="/opt/smalltalkCI/_cache/vms/Pharo64-13/pharo"
 "$PHARO" --headless "${BUILD_DIR}TravisCI.image" eval "<your Smalltalk expression>"
 ```
 
+### Headless investigation via REST (PharoSmalltalkInteropServer / SisServer)
+
+For Cloud/headless debugging, it is often easier to inspect the image through REST endpoints than repeatedly running one-off `eval` snippets.
+
+This project already loads `PharoSmalltalkInteropServer` as a baseline dependency, so you can use `SisServer` directly:
+
+```bash
+BUILD_DIR=$(ls -d /opt/smalltalkCI/_builds/*/ | head -1)
+PHARO="/opt/smalltalkCI/_cache/vms/Pharo64-13/pharo"
+
+# First, check whether SisServer is already reachable (usually auto-started)
+curl "http://localhost:8086/list-packages"
+
+# If curl fails, start it explicitly and retry
+"$PHARO" --headless "${BUILD_DIR}TravisCI.image" eval "SisServer current start"
+curl "http://localhost:8086/list-packages"
+
+# examples
+curl "http://localhost:8086/search-classes-like?class_name_query=AbMessagesPresenter"
+curl -X POST "http://localhost:8086/eval/" \
+  -H "Content-Type: application/json" \
+  -d '{"code":"AbMessagesPresenter selectors"}'
+```
+
+Avoid calling `start` unconditionally; if the server is already running, unnecessary starts can trigger port conflicts.
+
+When done (only if you explicitly started it for this session):
+
+```bash
+"$PHARO" --headless "${BUILD_DIR}TravisCI.image" eval "SisServer current stop"
+```
+
+Reference: https://github.com/mumez/PharoSmalltalkInteropServer
+
 ### Key gotchas
 
 - **No `addHumanMessage:`** — to add a human message manually use `AbMessage sender: #human text: '...'` and add it to `topic messages`. The real entry point for sending a prompt is `topic sendPrompt:` which also connects to an ACP agent.

@@ -2,7 +2,8 @@ Class {
 	#name : 'AbMessagesPresenter',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'messageList'
+		'messageTextPresenter',
+		'messages'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -11,14 +12,16 @@ Class {
 { #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
-	messageList := self newComponentList
+	messages := OrderedCollection new.
+	messageTextPresenter := self instantiate: MicTextPresenter.
+	messageTextPresenter text: '' asText
 ]
 
 { #category : 'layout' }
 AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: self messageList;
+		  add: self messageTextPresenter;
 		  yourself
 ]
 
@@ -27,25 +30,18 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	"Add a new message or refresh an existing one (e.g. AI streaming chunk).
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
-	| existing |
-	existing := self messagePresenters
-		detect: [ :p | p message == anAbMessage ]
-		ifNone: [ nil ].
-	existing
-		ifNotNil: [ existing updateContent ]
-		ifNil: [
-			| presenter |
-			presenter := self instantiate: AbMessagePresenter.
-			presenter updateMessage: anAbMessage.
-			self messageList addPresenter: presenter.
-			self scrollToBottom ]
+	(self messages includes: anAbMessage)
+		ifFalse: [ self messages add: anAbMessage ].
+	self refreshCombinedText.
+	self scrollToBottom
 ]
 
-{ #category : 'rendering' }
+{ #category : 'accessing' }
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
-	self messageList items: aCollection.
+	messages := aCollection asOrderedCollection.
+	self refreshCombinedText.
 	self scrollToBottom
 ]
 
@@ -54,53 +50,77 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	self messagePresenters do: [ :p | p updateContent ]
+	self refreshCombinedText
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messages [
 
-	^ self messagePresenters collect: [ :e | e message ]
+	^ messages
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messagePresenters [
 
-	^ self messageList model
-		ifNil: [ #() ]
-		ifNotNil: [ :m | m collection ]
+	^ #()
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messageList [
 
-	^ messageList
+	^ self messageTextPresenter
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
 
-	^ self messagePresenters size
+	^ self messages size
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> richTextFor: anAbMessage [
+
+	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> combinedRichText [
+
+	| combined isFirst |
+	combined := '' asText.
+	isFirst := true.
+	self messages do: [ :msg |
+		isFirst
+			ifFalse: [ combined := combined , String crlf asText , String crlf asText ].
+		combined := combined , (self richTextFor: msg).
+		isFirst := false ].
+	^ combined
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> refreshCombinedText [
+
+	self messageTextPresenter text: self combinedRichText
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageTextPresenter [
+
+	^ messageTextPresenter
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	self messagePresenters ifEmpty: [ ^ self ].
+	self messages ifEmpty: [ ^ self ].
 	self defer: [ self performScrollToBottom ]
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
-	self messageList isBuilt ifFalse: [ ^ self ].
-	self messageList adapter widget scrollToIndex: self messagePresenters size
+	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
+	self messageTextPresenter adapter widget scrollToEndOfText
 ]
 
-{ #category : 'events' }
-AbMessagesPresenter >> windowResized: newSize [
-
-	self messageList isBuilt ifFalse: [ ^ self ].
-	self messagePresenters do: [:each | each windowResized: newSize]
-]

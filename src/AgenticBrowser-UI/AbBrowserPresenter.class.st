@@ -45,8 +45,7 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Agentic Browser';
 		initialExtent: 900 @ 600.
-	aWindowPresenter whenClosedDo: [ self onWindowClosed ].
-	aWindowPresenter whenResizingDo: [ :ann | self messagesPresenter windowResized: ann newSize]
+	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
 ]
 
 { #category : 'private' }

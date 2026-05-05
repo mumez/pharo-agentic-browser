@@ -35,19 +35,19 @@ AbMessageTest >> testApprovalRequestCreation [
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testDisplayStringAi [
+AbMessageTest >> testPrintStringIncludesSender [
 
 	| msg |
 	msg := AbMessage sender: #ai text: 'Hello'.
-	self assert: (msg displayText includesSubstring: 'AI')
+	self assert: (msg printString includesSubstring: 'ai')
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testDisplayStringHuman [
+AbMessageTest >> testPrintStringIncludesText [
 
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
-	self assert: (msg displayText includesSubstring: 'Human')
+	self assert: (msg printString includesSubstring: 'Hello')
 ]
 
 { #category : 'tests' }
@@ -64,17 +64,8 @@ AbMessageTest >> testHumanMessageCreation [
 AbMessageTest >> testThinkMessageCreation [
 
 	| msg |
-	msg := AbMessage sender: #ai text: 'Let me think...' think: true.
+	msg := AbMessage sender: #ai text: 'Let me think...' isThink: true.
 	self assert: msg sender equals: #ai.
 	self assert: msg text equals: 'Let me think...'.
 	self assert: msg isThink.
-	self assert: (msg displayText includesSubstring: 'AI(think)')
-]
-
-{ #category : 'tests' }
-AbMessageTest >> testDisplayStringAiThink [
-
-	| msg |
-	msg := AbMessage sender: #ai text: 'Planning steps' think: true.
-	self assert: msg displayText equals: '[AI(think)] Planning steps'
 ]

@@ -26,11 +26,11 @@ AbMessage class >> approvalRequestText: aString [
 { #category : 'instance creation' }
 AbMessage class >> sender: aSenderSymbol text: aString [
 
-	^ self sender: aSenderSymbol text: aString think: false
+	^ self sender: aSenderSymbol text: aString isThink: false
 ]
 
 { #category : 'instance creation' }
-AbMessage class >> sender: aSenderSymbol text: aString think: aBoolean [
+AbMessage class >> sender: aSenderSymbol text: aString isThink: aBoolean [
 
 	^ self new
 		  sender: aSenderSymbol;
@@ -54,23 +54,16 @@ AbMessage >> approvalResponse: aSymbol [
 	approvalResponse := aSymbol
 ]
 
-{ #category : 'displaying' }
-AbMessage >> displayText [
+{ #category : 'printing' }
+AbMessage >> printOn: aStream [
 
-	| prefix |
-	prefix := sender = #human
-				  ifTrue: [ '[Human] ' ]
-				  ifFalse: [
-					  sender = #ai
-						  ifTrue: [
-							  isApprovalRequest
-								  ifTrue: [ '[⏸ AI] ' ]
-								  ifFalse: [
-									  isThink
-									  	ifTrue: [ '[AI(think)] ' ]
-									  	ifFalse: [ '[AI] ' ] ] ]
-					  ifFalse: [ '[System] ' ] ].
-	^ prefix , text
+	super printOn: aStream.
+	aStream
+		nextPut: $(;
+		print: sender;
+		nextPutAll: ': ';
+		nextPutAll: (text ifNil: [ '' ]);
+		nextPut: $)
 ]
 
 { #category : 'initialization' }
