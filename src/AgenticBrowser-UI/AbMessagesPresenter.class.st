@@ -36,7 +36,7 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	self scrollToBottom
 ]
 
-{ #category : 'rendering' }
+{ #category : 'accessing' }
 AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 

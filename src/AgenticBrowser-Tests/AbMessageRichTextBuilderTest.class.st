@@ -104,7 +104,7 @@ AbMessageRichTextBuilderTest >> testSenderColorForAIIsWarningTextColor [
 AbMessageRichTextBuilderTest >> testSenderColorForAIThinkIsGhostTextColor [
 
 	| msg |
-	msg := AbMessage sender: #ai text: 'Thinking...' think: true.
+	msg := AbMessage sender: #ai text: 'Thinking...' isThink: true.
 	self
 		assert: (builder senderColorFor: msg)
 		equals: Smalltalk ui theme ghostTextColor
@@ -114,7 +114,7 @@ AbMessageRichTextBuilderTest >> testSenderColorForAIThinkIsGhostTextColor [
 AbMessageRichTextBuilderTest >> testBodyColorForAIThinkIsGhostTextColor [
 
 	| msg rich senderLen bodyColor |
-	msg := AbMessage sender: #ai text: 'Thinking...' think: true.
+	msg := AbMessage sender: #ai text: 'Thinking...' isThink: true.
 	rich := builder richTextFor: msg.
 	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.
 	bodyColor := (rich attributesAt: senderLen + 4)
