@@ -30,8 +30,8 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	"Add a new message or refresh an existing one (e.g. AI streaming chunk).
 	 AbTopic fires AbMessageAdded for both cases using object identity."
 
-	(messages includes: anAbMessage)
-		ifFalse: [ messages add: anAbMessage ].
+	(self messages includes: anAbMessage)
+		ifFalse: [ self messages add: anAbMessage ].
 	self refreshCombinedText.
 	self scrollToBottom
 ]
@@ -74,7 +74,7 @@ AbMessagesPresenter >> messageList [
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
 
-	^ messages size
+	^ self messages size
 ]
 
 { #category : 'rendering' }
@@ -89,7 +89,7 @@ AbMessagesPresenter >> combinedRichText [
 	| combined isFirst |
 	combined := '' asText.
 	isFirst := true.
-	messages do: [ :msg |
+	self messages do: [ :msg |
 		isFirst
 			ifFalse: [ combined := combined , String crlf asText , String crlf asText ].
 		combined := combined , (self richTextFor: msg).
@@ -100,7 +100,7 @@ AbMessagesPresenter >> combinedRichText [
 { #category : 'rendering' }
 AbMessagesPresenter >> refreshCombinedText [
 
-	messageTextPresenter text: self combinedRichText
+	self messageTextPresenter text: self combinedRichText
 ]
 
 { #category : 'accessing' }
@@ -113,14 +113,14 @@ AbMessagesPresenter >> messageTextPresenter [
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 
-	messages ifEmpty: [ ^ self ].
+	self messages ifEmpty: [ ^ self ].
 	self defer: [ self performScrollToBottom ]
 ]
 
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
-	messageTextPresenter isBuilt ifFalse: [ ^ self ].
-	messageTextPresenter adapter widget scrollToEnd
+	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
+	self messageTextPresenter adapter widget scrollToEnd
 ]
 
