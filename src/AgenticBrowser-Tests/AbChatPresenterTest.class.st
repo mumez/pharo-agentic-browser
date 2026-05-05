@@ -77,15 +77,15 @@ AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCancelButtonClickAddsSystemMessage [
+AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	presenter onCancelButtonClicked.
-	self assert: (topic messages anySatisfy: [ :m |
-			 m sender = #system and: [ m text includesSubstring: 'Cancelled' ] ])
+	self assert: topic status equals: #endTurn.
+	self assert: topic messages isEmpty
 ]
 
 { #category : 'tests' }

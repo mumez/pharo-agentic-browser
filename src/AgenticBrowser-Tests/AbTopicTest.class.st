@@ -81,6 +81,30 @@ AbTopicTest >> testDoneToWorkingOnNewPrompt [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
+
+	| topic mockClient |
+	topic := AbTopic new.
+	mockClient := MockObject new.
+	mockClient
+		on: #cancelBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPCancelParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1' ].
+	topic instVarNamed: #client put: mockClient.
+	topic instVarNamed: #sessionId put: 'session-1'.
+	topic stateMachine handleEvent: #promptSent.
+
+	topic cancelPrompt.
+
+	self verify: mockClient.
+	self assert: topic messages isEmpty.
+	self assert: topic status equals: #endTurn
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testEndedTransition [
 
 	| topic |
@@ -285,6 +309,40 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 	[ topic stateMachine handleEvent: #promptSent.
 	self assert: (statusChanges includes: #working) ]
 		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testStatusChangedAnnouncementUsesProvidedStatus [
+
+	| topic announcedStatus |
+	topic := AbTopic new.
+	topic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann | announcedStatus := ann status ]
+		for: self.
+	[ topic announceStatusChanged: #working.
+	self assert: announcedStatus equals: #working ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testStatusPredicates [
+
+	| topic |
+	topic := AbTopic new.
+	self assert: topic isInitial.
+	self deny: topic isWorking.
+
+	topic stateMachine handleEvent: #promptSent.
+	self deny: topic isInitial.
+	self assert: topic isWorking.
+
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic isWaitingForHuman.
+
+	topic stateMachine handleEvent: #humanResponded.
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic isEndTurn
 ]
 
 { #category : 'tests' }

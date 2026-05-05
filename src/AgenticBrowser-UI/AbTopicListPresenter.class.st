@@ -225,10 +225,10 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 { #category : 'private' }
 AbTopicListPresenter >> iconNameFor: aTopic [
 
-	aTopic status = #initial ifTrue: [ ^ #radioButtonOff ].
-	aTopic status = #working ifTrue: [ ^ #pointersTo ].
-	aTopic status = #waitingForHuman ifTrue: [ ^ #flag ].
-	aTopic status = #endTurn ifTrue: [ ^ #accept ].
+	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
+	aTopic isWorking ifTrue: [ ^ #pointersTo ].
+	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
+	aTopic isEndTurn ifTrue: [ ^ #accept ].
 	^ #radioButtonOff
 ]
 

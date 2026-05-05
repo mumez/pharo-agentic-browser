@@ -99,14 +99,14 @@ AbTopic >> announceMessageAdded: aMessage [
 ]
 
 { #category : 'private' }
-AbTopic >> announceStatusChanged [
+AbTopic >> announceStatusChanged: updatedStatus [
 
 	self logger debug: 'announceStatusChanged: topic='
 		, self title printString
 		, ' status='
-		, self status printString.
+		, updatedStatus printString.
 	self announcer announce:
-		(AbTopicStatusChanged new topic: self; status: self status; yourself)
+		(AbTopicStatusChanged new topic: self; status: updatedStatus; yourself)
 ]
 
 { #category : 'accessing' }
@@ -182,6 +182,30 @@ AbTopic >> hasPendingApprovalRequest [
 		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
 ]
 
+{ #category : 'testing' }
+AbTopic >> isEndTurn [
+
+	^ self status = #endTurn
+]
+
+{ #category : 'testing' }
+AbTopic >> isInitial [
+
+	^ self status = #initial
+]
+
+{ #category : 'testing' }
+AbTopic >> isWaitingForHuman [
+
+	^ self status = #waitingForHuman
+]
+
+{ #category : 'testing' }
+AbTopic >> isWorking [
+
+	^ self status = #working
+]
+
 
 
 { #category : 'initialization' }
@@ -205,14 +229,14 @@ AbTopic >> initializeStateMachine [
 		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
 	(stateMachine addStateNamed: #working)
-		entryAction: [ self announceStatusChanged ];
+		entryAction: [ self announceStatusChanged: #working ];
 		when: #permissionRequested to: #waitingForHuman;
 		when: #turnEnded to: #endTurn.
 	(stateMachine addStateNamed: #waitingForHuman)
-		entryAction: [ self announceStatusChanged ];
+		entryAction: [ self announceStatusChanged: #waitingForHuman ];
 		when: #humanResponded to: #working.
 	(stateMachine addStateNamed: #endTurn)
-		entryAction: [ self announceStatusChanged ];
+		entryAction: [ self announceStatusChanged: #endTurn ];
 		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
 	stateMachine setStartStateTo: #initial.
@@ -293,7 +317,7 @@ AbTopic >> resolveApproval: aUserText [
 AbTopic >> requestApproval: aDescription [
 
 	| msg waitSeconds wasInitial |
-	wasInitial := self status = #initial.
+	wasInitial := self isInitial.
 	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
 	self logger debug: 'requestApproval: status(before permissionRequested)='
 		, self status printString.
@@ -310,7 +334,7 @@ AbTopic >> requestApproval: aDescription [
 	msg approvalResponse ifNil: [
 		self logger debug: 'requestApproval: timeout reached, auto rejecting'.
 		msg approvalResponse: #rejectOnce.
-		self status = #waitingForHuman ifTrue: [
+		self isWaitingForHuman ifTrue: [
 			stateMachine handleEvent: #humanResponded ] ].
 
 	wasInitial ifTrue: [ stateMachine handleEvent: #turnEnded ].
@@ -325,8 +349,9 @@ AbTopic >> requestApproval: aDescription [
 { #category : 'operations' }
 AbTopic >> cancelPrompt [
 
-	self status = #working ifFalse: [ ^ self ].
-	self addSystemMessage: 'Cancelled by user.'.
+	self isWorking ifFalse: [ ^ self ].
+	client ifNotNil: [
+		client cancelBy: [ :params | params sessionId: sessionId ] ].
 	stateMachine handleEvent: #turnEnded
 ]
 
@@ -419,4 +444,3 @@ AbTopic >> workingDirectoryPath: aString [
 	workingDirectoryPath := aString.
 	workingDirectory := nil
 ]
-
