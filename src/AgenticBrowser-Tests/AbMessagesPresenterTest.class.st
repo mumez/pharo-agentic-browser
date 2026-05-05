@@ -22,6 +22,12 @@ AbMessagesPresenterTest >> testInitialMessageCountIsZero [
 ]
 
 { #category : 'tests' }
+AbMessagesPresenterTest >> testInitializeUsesMicTextPresenter [
+
+	self assert: presenter messageTextPresenter class equals: MicTextPresenter
+]
+
+{ #category : 'tests' }
 AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewMessage [
 
 	| msg |
@@ -88,7 +94,7 @@ AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
 	| msg |
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
-	self assert: presenter messageList items size equals: 1
+	self assert: (presenter combinedRichText asString includesSubstring: 'Hello')
 ]
 
 { #category : 'tests' }
@@ -96,7 +102,8 @@ AbMessagesPresenterTest >> testMessageListItemCountMatchesAfterMultipleAdds [
 
 	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
 	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
-	self assert: presenter messageList items size equals: 2
+	self assert: (presenter combinedRichText asString includesSubstring: 'Hi').
+	self assert: (presenter combinedRichText asString includesSubstring: 'Hello')
 ]
 
 { #category : 'tests' }
@@ -107,7 +114,8 @@ AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
 		with: (AbMessage sender: #human text: 'A')
 		with: (AbMessage sender: #ai text: 'B').
 	presenter setMessages: msgs.
-	self assert: presenter messageList items size equals: 2
+	self assert: (presenter combinedRichText asString includesSubstring: 'A').
+	self assert: (presenter combinedRichText asString includesSubstring: 'B')
 ]
 
 { #category : 'tests' }

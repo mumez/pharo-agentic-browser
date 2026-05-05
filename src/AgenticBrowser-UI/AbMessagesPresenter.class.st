@@ -2,7 +2,7 @@ Class {
 	#name : 'AbMessagesPresenter',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'messageList',
+		'messageTextPresenter',
 		'messages'
 	],
 	#category : 'AgenticBrowser-UI',
@@ -13,15 +13,15 @@ Class {
 AbMessagesPresenter >> initializePresenters [
 
 	messages := OrderedCollection new.
-	messageList := self newList.
-	messageList display: [ :msg | self richTextFor: msg ]
+	messageTextPresenter := self instantiate: MicTextPresenter.
+	messageTextPresenter text: '' asText
 ]
 
 { #category : 'layout' }
 AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: self messageList;
+		  add: self messageTextPresenter;
 		  yourself
 ]
 
@@ -32,7 +32,7 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 
 	(messages includes: anAbMessage)
 		ifFalse: [ messages add: anAbMessage ].
-	self messageList items: messages asArray.
+	self refreshCombinedText.
 	self scrollToBottom
 ]
 
@@ -41,7 +41,7 @@ AbMessagesPresenter >> setMessages: aCollection [
 	"Full replacement of the message list (e.g. on topic switch)."
 
 	messages := aCollection asOrderedCollection.
-	self messageList items: messages asArray.
+	self refreshCombinedText.
 	self scrollToBottom
 ]
 
@@ -50,7 +50,7 @@ AbMessagesPresenter >> refreshMessages [
 	"Refresh display of all messages without changing scroll position.
 	 Used when message state changes (e.g. approval resolved)."
 
-	self messageList items: messages asArray
+	self refreshCombinedText
 ]
 
 { #category : 'accessing' }
@@ -68,7 +68,7 @@ AbMessagesPresenter >> messagePresenters [
 { #category : 'accessing' }
 AbMessagesPresenter >> messageList [
 
-	^ messageList
+	^ self messageTextPresenter
 ]
 
 { #category : 'accessing' }
@@ -83,6 +83,32 @@ AbMessagesPresenter >> richTextFor: anAbMessage [
 	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
 ]
 
+{ #category : 'rendering' }
+AbMessagesPresenter >> combinedRichText [
+
+	| combined isFirst |
+	combined := '' asText.
+	isFirst := true.
+	messages do: [ :msg |
+		isFirst
+			ifFalse: [ combined := combined , String crlf asText , String crlf asText ].
+		combined := combined , (self richTextFor: msg).
+		isFirst := false ].
+	^ combined
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> refreshCombinedText [
+
+	messageTextPresenter text: self combinedRichText
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageTextPresenter [
+
+	^ messageTextPresenter
+]
+
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
@@ -94,12 +120,12 @@ AbMessagesPresenter >> scrollToBottom [
 { #category : 'private' }
 AbMessagesPresenter >> performScrollToBottom [
 
-	self messageList isBuilt ifFalse: [ ^ self ].
-	self messageList adapter widget scrollToIndex: messages size
+	messageTextPresenter isBuilt ifFalse: [ ^ self ].
+	messageTextPresenter adapter widget scrollToEnd
 ]
 
 { #category : 'events' }
 AbMessagesPresenter >> windowResized: newSize [
 
-	"newList + rich text display does not require per-item resize forwarding."
+	"MicTextPresenter handles wrapping and relayout automatically."
 ]
