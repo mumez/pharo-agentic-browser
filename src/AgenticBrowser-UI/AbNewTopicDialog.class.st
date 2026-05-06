@@ -27,27 +27,47 @@ AbNewTopicDialog >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  spacing: 8;
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
-				   add: titleField;
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
-				   add: agentDropList;
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
-				   add: workingDirField;
-				   add: selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   addLast: cancelButton withConstraints: [ :c | c width: 80 ];
-				   addLast: okButton withConstraints: [ :c | c width: 80 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
+		  add: self titleRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self agentRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self workingDirectoryRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self buttonsRowLayout withConstraints: [ :c | c height: 32 ];
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> titleRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
+		  add: titleField;
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> agentRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
+		  add: agentDropList;
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> workingDirectoryRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
+		  add: workingDirField;
+		  add: selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> buttonsRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  addLast: cancelButton withConstraints: [ :c | c width: 80 ];
+		  addLast: okButton withConstraints: [ :c | c width: 80 ];
 		  yourself
 ]
 
@@ -61,17 +81,21 @@ AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
 	srcDir := dir / 'src'.
 	srcDir exists ifFalse: [ ^ #() ].
 	srcDir directories do: [ :sub |
-		| name |
-		name := sub basename.
-		(name beginsWith: 'BaselineOf')
-			ifTrue: [ prefixes add: name ]
-			ifFalse: [
-				| hyphenPos base |
-				hyphenPos := name indexOf: $-.
-				hyphenPos > 1 ifTrue: [
-					base := name copyFrom: 1 to: hyphenPos - 1.
-					prefixes add: base , '-*' ] ] ].
+		self addDetectedPrefixForDirectoryName: sub basename into: prefixes ].
 	^ prefixes asArray
+]
+
+{ #category : 'private' }
+AbNewTopicDialog >> addDetectedPrefixForDirectoryName: name into: prefixes [
+
+	| hyphenPos base |
+	(name beginsWith: 'BaselineOf') ifTrue: [
+		prefixes add: name.
+		^ self ].
+	hyphenPos := name indexOf: $-.
+	hyphenPos > 1 ifFalse: [ ^ self ].
+	base := name copyFrom: 1 to: hyphenPos - 1.
+	prefixes add: base , '-*'
 ]
 
 { #category : 'initialization' }
