@@ -3,8 +3,7 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'messageTextPresenter',
-		'messages',
-		'statusLabel'
+		'messages'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -16,9 +15,7 @@ AbMessagesPresenter >> initializePresenters [
 	super initializePresenters.
 	messages := OrderedCollection new.
 	messageTextPresenter := self instantiate: MicTextPresenter.
-	messageTextPresenter text: '' asText.
-	statusLabel := self newLabel.
-	statusLabel label: ''
+	messageTextPresenter text: '' asText
 ]
 
 { #category : 'layout' }
@@ -26,7 +23,6 @@ AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  add: self messageTextPresenter;
-		  add: self statusLabel withConstraints: [ :c | c height: 20 ];
 		  yourself
 ]
 
@@ -114,30 +110,6 @@ AbMessagesPresenter >> messageTextPresenter [
 	^ messageTextPresenter
 ]
 
-{ #category : 'accessing' }
-AbMessagesPresenter >> statusLabel [
-
-	^ statusLabel
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> statusText [
-
-	^ self statusLabel label
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> statusText: aString [
-
-	self statusLabel label: aString
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> clearStatusText [
-
-	self statusText: ''
-]
-
 { #category : 'private' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
@@ -152,4 +124,3 @@ AbMessagesPresenter >> performScrollToBottom [
 	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
 	self messageTextPresenter adapter widget scrollToEndOfText
 ]
-

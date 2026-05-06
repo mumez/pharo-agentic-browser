@@ -233,7 +233,7 @@ AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	presenter onTopicStatusChanged: topic status: #endTurn.
-	self assert: presenter messagesPresenter statusText isEmpty
+	self assert: presenter statusText isEmpty
 ]
 
 { #category : 'tests' }
@@ -244,7 +244,7 @@ AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	presenter onTopicStatusChanged: topic status: #waitingForHuman.
-	self assert: presenter messagesPresenter statusText isEmpty
+	self assert: presenter statusText isEmpty
 ]
 
 { #category : 'tests' }
@@ -281,7 +281,7 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedUpdatesInput [
 		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
 		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
 	presenter onAvailableCommandsChanged: topic commands: commands.
-	self assert: presenter normalInputPresenter commandNames size equals: 2
+	self assert: presenter commandNames size equals: 2
 ]
 
 { #category : 'tests' }
@@ -291,5 +291,5 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands
 	topic := AbTopic new.
 	presenter topic: topic.
 	presenter onAvailableCommandsChanged: topic commands: OrderedCollection new.
-	self assert: presenter normalInputPresenter commandNames isEmpty
+	self assert: presenter commandNames isEmpty
 ]

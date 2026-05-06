@@ -8,7 +8,10 @@ Class {
 		'currentTopic',
 		'pendingApprovalMessage',
 		'logger',
-		'dotsAnimationProcess'
+		'dotsAnimationProcess',
+		'statusBarPresenter',
+		'statusLabel',
+		'commandsDropList'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -20,7 +23,21 @@ AbChatPresenter >> initializePresenters [
 	super initializePresenters.
 	messagesPresenter := self instantiate: AbMessagesPresenter.
 	normalInputPresenter := self instantiate: AbNormalInputPresenter.
-	confirmPresenter := self instantiate: AbConfirmPresenter
+	confirmPresenter := self instantiate: AbConfirmPresenter.
+	self initializeStatusBar
+]
+
+{ #category : 'initialization' }
+AbChatPresenter >> initializeStatusBar [
+
+	(statusBarPresenter := self instantiate: SpPresenter)
+		layout: (SpBoxLayout newLeftToRight
+				 borderWidth: 2;
+				 vAlignCenter;
+				 add: (commandsDropList := statusBarPresenter newDropList)
+				 withConstraints: [ :c | c width: 120 ];
+				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
+				 yourself)
 ]
 
 { #category : 'initialization' }
@@ -30,7 +47,9 @@ AbChatPresenter >> connectPresenters [
 	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
 	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
 	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
-	normalInputPresenter cancelEnabled: false
+	normalInputPresenter cancelEnabled: false.
+	commandsDropList whenSelectedItemChangedDo: [ :cmd |
+		cmd ifNotNil: [ normalInputPresenter inputField text: cmd , ' ' ] ]
 ]
 
 { #category : 'layout' }
@@ -38,6 +57,7 @@ AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  add: messagesPresenter;
+		  add: statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  add: normalInputPresenter withConstraints: [ :c | c height: 60 ];
 		  yourself
 ]
@@ -47,6 +67,7 @@ AbChatPresenter >> confirmModeLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  add: messagesPresenter;
+		  add: statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  add: confirmPresenter withConstraints: [ :c | c height: 90 ];
 		  yourself
 ]
@@ -120,9 +141,7 @@ AbChatPresenter >> onDenyButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
 
-	| names |
-	names := aCollection collect: [ :cmd | cmd name ].
-	normalInputPresenter commandNames: names
+	self commandNames: (aCollection collect: [ :cmd | cmd name ])
 ]
 
 { #category : 'event handling' }
@@ -137,6 +156,54 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
 	messagesPresenter refreshMessages
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText [
+
+	^ self statusLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText: aString [
+
+	self statusLabel label: aString
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> clearStatusText [
+
+	self statusText: ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames [
+
+	^ self commandsDropList items
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames: aCollection [
+
+	self commandsDropList items: aCollection asArray
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusBarPresenter [
+
+	^ statusBarPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusLabel [
+
+	^ statusLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandsDropList [
+
+	^ commandsDropList
 ]
 
 { #category : 'private' }
@@ -170,7 +237,7 @@ AbChatPresenter >> startDotsAnimation [
 		dots := ''.
 		[ true ] whileTrue: [
 			dots := self nextDotsTextAfter: dots.
-			self defer: [ messagesPresenter statusText: dots ].
+			self defer: [ self statusText: dots ].
 			500 milliSeconds wait ] ] newProcess.
 	process priority: Processor userBackgroundPriority.
 	process resume.
@@ -183,7 +250,7 @@ AbChatPresenter >> stopDotsAnimation [
 	self dotsAnimationProcess ifNotNil: [ :p |
 		p terminate.
 		self dotsAnimationProcess: nil ].
-	messagesPresenter clearStatusText
+	self clearStatusText
 ]
 
 { #category : 'private' }

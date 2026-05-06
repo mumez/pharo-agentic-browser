@@ -4,20 +4,11 @@ Class {
 	#instVars : [
 		'inputField',
 		'sendButton',
-		'cancelButton',
-		'commandsDropList',
-		'commandNames'
+		'cancelButton'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }
-
-{ #category : 'initialization' }
-AbNormalInputPresenter >> initialize [
-
-	super initialize.
-	commandNames := OrderedCollection new
-]
 
 { #category : 'initialization' }
 AbNormalInputPresenter >> initializePresenters [
@@ -30,20 +21,7 @@ AbNormalInputPresenter >> initializePresenters [
 	sendButton label: 'Send'.
 
 	cancelButton := self newButton.
-	cancelButton label: 'Cancel'.
-
-	commandsDropList := self newDropList.
-	commandsDropList
-		display: [ :each | each ];
-		items: #()
-]
-
-{ #category : 'initialization' }
-AbNormalInputPresenter >> connectPresenters [
-
-	commandsDropList whenSelectedItemChangedDo: [ :item |
-		item ifNotNil: [
-			self inputField text: item , ' ' ] ]
+	cancelButton label: 'Cancel'
 ]
 
 { #category : 'layout' }
@@ -51,7 +29,6 @@ AbNormalInputPresenter >> defaultLayout [
 
 	^ SpBoxLayout newLeftToRight
 		  add: self inputField;
-		  add: self commandsDropList withConstraints: [ :c | c width: 120 ];
 		  add: self sendButton withConstraints: [ :c | c width: 80 ];
 		  add: self cancelButton withConstraints: [ :c | c width: 60 ];
 		  yourself
@@ -127,23 +104,4 @@ AbNormalInputPresenter >> isCancelEnabled [
 AbNormalInputPresenter >> cancelEnabled: aBoolean [
 
 	self cancelButton enabled: aBoolean
-]
-
-{ #category : 'accessing' }
-AbNormalInputPresenter >> commandNames [
-
-	^ commandNames
-]
-
-{ #category : 'accessing' }
-AbNormalInputPresenter >> commandNames: aCollection [
-
-	commandNames := aCollection asOrderedCollection.
-	self commandsDropList items: commandNames
-]
-
-{ #category : 'accessing' }
-AbNormalInputPresenter >> commandsDropList [
-
-	^ commandsDropList
 ]
