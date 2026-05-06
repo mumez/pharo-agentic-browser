@@ -117,6 +117,14 @@ AbChatPresenter >> onDenyButtonClicked [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
+
+	| names |
+	names := aCollection collect: [ :cmd | cmd name ].
+	normalInputPresenter commandNames: names
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
 	self logger debug: 'onTopicStatusChanged: topic='
@@ -194,6 +202,10 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicStatusChanged
 		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic status: ann status ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicAvailableCommandsChanged
+		do: [ :ann | self defer: [ self onAvailableCommandsChanged: ann topic commands: ann commands ] ]
 		for: self
 ]
 

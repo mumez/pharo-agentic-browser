@@ -270,3 +270,26 @@ AbChatPresenterTest >> testNextDotsTextCyclesThreeDots [
 
 	self assert: (presenter nextDotsTextAfter: '...') equals: ''
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnAvailableCommandsChangedUpdatesInput [
+
+	| topic commands |
+	topic := AbTopic new.
+	presenter topic: topic.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
+	presenter onAvailableCommandsChanged: topic commands: commands.
+	self assert: presenter normalInputPresenter commandNames size equals: 2
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onAvailableCommandsChanged: topic commands: OrderedCollection new.
+	self assert: presenter normalInputPresenter commandNames isEmpty
+]
