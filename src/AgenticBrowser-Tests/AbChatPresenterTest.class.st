@@ -293,3 +293,44 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands
 	presenter onAvailableCommandsChanged: topic commands: OrderedCollection new.
 	self assert: presenter commandNames isEmpty
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnAvailableCommandsChangedDoesNotInsertIntoInputImmediately [
+
+	| topic commands |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'keep'.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself)).
+	presenter onAvailableCommandsChanged: topic commands: commands.
+	self assert: presenter normalInputPresenter inputText equals: 'keep'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCommandSelectionInitInsertsSlashCommand [
+
+	presenter commandNames: #( 'init' ).
+	presenter commandsDropList selectItem: 'init'.
+	self assert: presenter normalInputPresenter inputText equals: '/init '
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	presenter topic: topic.
+	self assert: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	presenter topic: topic.
+	self assert: presenter dotsAnimationProcess notNil
+]

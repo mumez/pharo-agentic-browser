@@ -11,7 +11,8 @@ Class {
 		'dotsAnimationProcess',
 		'statusBarPresenter',
 		'statusLabel',
-		'commandsDropList'
+		'commandsDropList',
+		'isUpdatingCommands'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -36,6 +37,7 @@ AbChatPresenter >> initializeStatusBar [
 				 vAlignCenter;
 				 add: (commandsDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
+				 add: statusBarPresenter newNullPresenter;
 				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
 				 yourself)
 ]
@@ -48,8 +50,10 @@ AbChatPresenter >> connectPresenters [
 	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
 	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
 	normalInputPresenter cancelEnabled: false.
+	commandsDropList startWithoutSelection.
 	commandsDropList whenSelectedItemChangedDo: [ :cmd |
-		cmd ifNotNil: [ normalInputPresenter inputField text: cmd , ' ' ] ]
+		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
+			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ]
 ]
 
 { #category : 'layout' }
@@ -141,7 +145,7 @@ AbChatPresenter >> onDenyButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
 
-	self commandNames: (aCollection collect: [ :cmd | cmd name ])
+	self commandNames: ((aCollection ifNil: [ #() ]) collect: [ :cmd | cmd name ])
 ]
 
 { #category : 'event handling' }
@@ -185,7 +189,16 @@ AbChatPresenter >> commandNames [
 { #category : 'accessing' }
 AbChatPresenter >> commandNames: aCollection [
 
-	self commandsDropList items: aCollection asArray
+	self isUpdatingCommands: true.
+	[ self commandsDropList items: aCollection asArray ] ensure: [
+		self isUpdatingCommands: false ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> inputTextForCommand: aString [
+
+	aString = 'init' ifTrue: [ ^ '/init ' ].
+	^ aString , ' '
 ]
 
 { #category : 'accessing' }
@@ -297,8 +310,27 @@ AbChatPresenter >> topic: anAbTopic [
 
 	self unsubscribeFromTopic: self currentTopic.
 	self currentTopic: anAbTopic.
+	anAbTopic ifNil: [
+		self commandNames: #().
+		normalInputPresenter cancelEnabled: false.
+		self stopDotsAnimation.
+		^ self ].
 	self subscribeToTopic: anAbTopic.
-	self rerenderMessages
+	self rerenderMessages.
+	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
+	self onTopicStatusChanged: anAbTopic status: anAbTopic status
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands [
+
+	^ isUpdatingCommands ifNil: [ false ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands: aBoolean [
+
+	isUpdatingCommands := aBoolean
 ]
 
 { #category : 'accessing' }
