@@ -3,7 +3,8 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'messageTextPresenter',
-		'messages'
+		'messages',
+		'statusLabel'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -14,7 +15,9 @@ AbMessagesPresenter >> initializePresenters [
 
 	messages := OrderedCollection new.
 	messageTextPresenter := self instantiate: MicTextPresenter.
-	messageTextPresenter text: '' asText
+	messageTextPresenter text: '' asText.
+	statusLabel := self newLabel.
+	statusLabel label: ''
 ]
 
 { #category : 'layout' }
@@ -22,6 +25,7 @@ AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  add: self messageTextPresenter;
+		  add: self statusLabel withConstraints: [ :c | c height: 20 ];
 		  yourself
 ]
 
@@ -107,6 +111,30 @@ AbMessagesPresenter >> refreshCombinedText [
 AbMessagesPresenter >> messageTextPresenter [
 
 	^ messageTextPresenter
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> statusLabel [
+
+	^ statusLabel
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> statusText [
+
+	^ self statusLabel label
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> statusText: aString [
+
+	self statusLabel label: aString
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> clearStatusText [
+
+	self statusText: ''
 ]
 
 { #category : 'private' }

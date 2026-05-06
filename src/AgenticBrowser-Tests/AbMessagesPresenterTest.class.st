@@ -147,3 +147,30 @@ AbMessagesPresenterTest >> testScrollToBottomDoesNotErrorWhenEmpty [
 
 	self shouldnt: [ presenter scrollToBottom ] raise: Error
 ]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testHasStatusLabel [
+
+	self assert: presenter statusLabel isNotNil
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testStatusTextInitiallyEmpty [
+
+	self assert: presenter statusText isEmpty
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testSetStatusTextUpdatesLabel [
+
+	presenter statusText: 'AI is thinking...'.
+	self assert: presenter statusText equals: 'AI is thinking...'
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testClearStatusTextSetsEmpty [
+
+	presenter statusText: 'thinking'.
+	presenter clearStatusText.
+	self assert: presenter statusText isEmpty
+]
