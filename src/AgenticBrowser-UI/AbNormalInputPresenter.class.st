@@ -92,3 +92,15 @@ AbNormalInputPresenter >> inputPlaceholder [
 
 	^ self inputField placeholder
 ]
+
+{ #category : 'testing' }
+AbNormalInputPresenter >> isCancelEnabled [
+
+	^ self cancelButton isEnabled
+]
+
+{ #category : 'actions' }
+AbNormalInputPresenter >> cancelEnabled: aBoolean [
+
+	self cancelButton enabled: aBoolean
+]
