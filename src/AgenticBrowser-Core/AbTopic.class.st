@@ -148,30 +148,30 @@ AbTopic >> client [
 { #category : 'operations' }
 AbTopic >> disconnect [
 
-	client ifNotNil: [
-		client disconnect.
-		client := nil.
-		sessionId := nil ]
+	self client ifNotNil: [
+		self client disconnect.
+		self client: nil.
+		self sessionId: nil ]
 ]
 
 { #category : 'private' }
 AbTopic >> doConnect [
 
 	| sessionResult |
-	client := ACPClient new.
-	client handler: (AbTopicHandler new topic: self; yourself).
-	client agentCommand: '/usr/bin/env' arguments: agentArguments.
-	client connect.
-	client initializeBy: [ :params | "use defaults" ].
-	sessionResult := client newSessionBy: [ :params |
+	self client: ACPClient new.
+	self client handler: (AbTopicHandler new topic: self; yourself).
+	self client agentCommand: '/usr/bin/env' arguments: self agentArguments.
+	self client connect.
+	self client initializeBy: [ :params | "use defaults" ].
+	sessionResult := self client newSessionBy: [ :params |
 						 params cwd: self ensureWorkingDirectoryForConnection ].
-	sessionId := sessionResult sessionId
+	self sessionId: sessionResult sessionId
 ]
 
 { #category : 'private' }
 AbTopic >> ensureConnected [
 
-	client isNil ifTrue: [ self doConnect ]
+	self client ifNil: [ self doConnect ]
 ]
 
 { #category : 'private' }
@@ -268,10 +268,10 @@ AbTopic >> initializeStateMachine [
 { #category : 'accessing' }
 AbTopic >> matchingPackageNames [
 
-	packagePrefixes isEmpty ifTrue: [ ^ #() ].
+	self packagePrefixes ifEmpty: [ ^ #() ].
 	^ (PackageOrganizer default packages
 			 select: [ :p |
-				 packagePrefixes anySatisfy: [ :prefix |
+				 self packagePrefixes anySatisfy: [ :prefix |
 					 prefix match: p name asString ] ]
 			 thenCollect: [ :p | p name asString ])
 		  asSortedCollection asArray
@@ -338,34 +338,63 @@ AbTopic >> resolveApproval: aUserText [
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
-	| msg waitSeconds wasInitial |
+	| msg wasInitial |
 	wasInitial := self isInitial.
+	self logRequestApprovalStart: aDescription.
+	msg := self addApprovalRequestAndWaitForHuman: aDescription.
+	self waitForApprovalResponseOf: msg.
+	self rejectApprovalOnTimeout: msg.
+	self finishApprovalRequestIfNeededForInitialState: wasInitial.
+	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'private' }
+AbTopic >> logRequestApprovalStart: aDescription [
+
 	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
 	self logger debug: 'requestApproval: status(before permissionRequested)='
-		, self status printString.
+		, self status printString
+]
+
+{ #category : 'private' }
+AbTopic >> addApprovalRequestAndWaitForHuman: aDescription [
+
+	| msg |
 	msg := self addApprovalRequest: aDescription.
 	stateMachine handleEvent: #permissionRequested.
 	self logger debug: 'requestApproval: status(after permissionRequested)='
 		, self status printString.
+	^ msg
+]
 
+{ #category : 'private' }
+AbTopic >> waitForApprovalResponseOf: aMessage [
+
+	| waitSeconds |
 	waitSeconds := 0.
-	[ msg approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
+	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
 		1 second wait.
-		waitSeconds := waitSeconds + 1 ].
+		waitSeconds := waitSeconds + 1 ]
+]
 
-	msg approvalResponse ifNil: [
-		self logger debug: 'requestApproval: timeout reached, auto rejecting'.
-		msg approvalResponse: #rejectOnce.
-		self isWaitingForHuman ifTrue: [
-			stateMachine handleEvent: #humanResponded ] ].
+{ #category : 'private' }
+AbTopic >> rejectApprovalOnTimeout: aMessage [
 
-	wasInitial ifTrue: [ stateMachine handleEvent: #turnEnded ].
-	wasInitial ifTrue: [
-		self logger debug: 'requestApproval: status(after turnEnded from initial)='
-			, self status printString ].
+	aMessage approvalResponse ifNotNil: [ ^ self ].
+	self logger debug: 'requestApproval: timeout reached, auto rejecting'.
+	aMessage approvalResponse: #rejectOnce.
+	self isWaitingForHuman ifTrue: [
+		stateMachine handleEvent: #humanResponded ]
+]
 
-	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ #rejectOnce ]
+{ #category : 'private' }
+AbTopic >> finishApprovalRequestIfNeededForInitialState: wasInitial [
+
+	wasInitial ifFalse: [ ^ self ].
+	stateMachine handleEvent: #turnEnded.
+	self logger debug: 'requestApproval: status(after turnEnded from initial)='
+		, self status printString
 ]
 
 { #category : 'operations' }
@@ -398,6 +427,18 @@ AbTopic >> sendPrompt: aString [
 { #category : 'accessing' }
 AbTopic >> sessionId [
 	^ sessionId
+]
+
+{ #category : 'accessing' }
+AbTopic >> sessionId: aString [
+
+	sessionId := aString
+]
+
+{ #category : 'accessing' }
+AbTopic >> client: anACPClient [
+
+	client := anACPClient
 ]
 
 { #category : 'operations' }

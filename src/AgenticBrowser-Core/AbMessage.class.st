@@ -41,7 +41,7 @@ AbMessage class >> sender: aSenderSymbol text: aString isThink: aBoolean [
 
 { #category : 'operations' }
 AbMessage >> appendText: aString [
-	text := text , aString
+	self text: self text , aString
 ]
 
 { #category : 'accessing' }

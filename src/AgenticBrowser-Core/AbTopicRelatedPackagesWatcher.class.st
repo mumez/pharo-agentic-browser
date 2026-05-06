@@ -89,7 +89,7 @@ AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
 { #category : 'initialization' }
 AbTopicRelatedPackagesWatcher >> initialize [
 
-	isWatching := false.
+	self isWatching: false.
 	pendingPackageApprovals := Set new.
 	lastAnnouncedAtByPackage := Dictionary new
 ]
@@ -105,10 +105,16 @@ AbTopicRelatedPackagesWatcher >> isWatching [
 	^ isWatching
 ]
 
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> isWatching: aBoolean [
+
+	isWatching := aBoolean
+]
+
 { #category : 'operations' }
 AbTopicRelatedPackagesWatcher >> start [
 
-	isWatching := true.
+	self isWatching: true.
 	SystemAnnouncer uniqueInstance
 		when: MethodAnnouncement
 		do: [ :ann | self handleMethodChange: ann ]
@@ -190,7 +196,7 @@ AbTopicRelatedPackagesWatcher >> shouldAnnouncePackageChangeFor: aPackageName at
 AbTopicRelatedPackagesWatcher >> stop [
 
 	SystemAnnouncer uniqueInstance unsubscribe: self.
-	isWatching := false
+	self isWatching: false
 ]
 
 { #category : 'accessing' }
@@ -207,5 +213,5 @@ AbTopicRelatedPackagesWatcher >> topic [
 AbTopicRelatedPackagesWatcher >> topic: anAbTopic [
 
 	topic := anAbTopic.
-	isWatching := false
+	self isWatching: false
 ]
