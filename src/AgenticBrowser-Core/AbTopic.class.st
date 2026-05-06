@@ -15,7 +15,8 @@ Class {
 		'workingDirectory',
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
-		'logger'
+		'logger',
+		'availableCommands'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -77,6 +78,26 @@ AbTopic >> addSystemMessage: aString [
 	msg := AbMessage sender: #system text: aString.
 	messages add: msg.
 	self announceMessageAdded: msg
+]
+
+{ #category : 'accessing' }
+AbTopic >> availableCommands [
+	^ availableCommands
+]
+
+{ #category : 'accessing' }
+AbTopic >> availableCommands: aCollection [
+	availableCommands := aCollection
+]
+
+{ #category : 'operations' }
+AbTopic >> updateAvailableCommands: aCollection [
+
+	self availableCommands: aCollection asOrderedCollection.
+	self announcer announce: (AbTopicAvailableCommandsChanged new
+			 topic: self;
+			 commands: self availableCommands;
+			 yourself)
 ]
 
 { #category : 'accessing' }
@@ -216,6 +237,7 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	updatedExternalPackageNames := Set new.
+	availableCommands := OrderedCollection new.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]

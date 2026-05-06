@@ -413,3 +413,38 @@ AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
 	                 / topic workingDirectory directoryName) fullName.
 	self assert: topic workingDirectoryPath equals: expectedPath
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testAvailableCommandsInitiallyEmpty [
+
+	self assert: AbTopic new availableCommands isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
+
+	| topic commands |
+	topic := AbTopic new.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
+	topic updateAvailableCommands: commands.
+	self assert: topic availableCommands size equals: 2
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateAvailableCommandsFiresAnnouncement [
+
+	| topic announced commands |
+	topic := AbTopic new.
+	announced := false.
+	topic announcer
+		when: AbTopicAvailableCommandsChanged
+		do: [ :ann | announced := true ]
+		for: self.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself)).
+	[ topic updateAvailableCommands: commands.
+	self assert: announced ]
+		ensure: [ topic announcer unsubscribe: self ]
+]

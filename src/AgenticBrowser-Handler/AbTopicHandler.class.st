@@ -33,7 +33,9 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 	aSessionUpdate isAgentMessageChunk
 		ifTrue: [ ^ topic addAiTextChunk: aSessionUpdate content text ].
 	aSessionUpdate isAgentThoughtChunk
-		ifTrue: [ ^ topic addAiThoughtChunk: aSessionUpdate content text ]
+		ifTrue: [ ^ topic addAiThoughtChunk: aSessionUpdate content text ].
+	aSessionUpdate isAvailableCommandsUpdate
+		ifTrue: [ ^ topic updateAvailableCommands: aSessionUpdate availableCommands ]
 ]
 
 { #category : 'accessing' }
