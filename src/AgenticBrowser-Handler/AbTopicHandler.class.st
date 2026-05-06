@@ -14,7 +14,7 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 
 	| response approvalResponse |
 	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
-	approvalResponse := topic requestApproval: anACPRequestPermission printString.
+	approvalResponse := self topic requestApproval: anACPRequestPermission printString.
 	self logger debug: 'requestPermission: got approvalResponse=' , approvalResponse printString.
 	response := anACPRequestPermission makeResponse.
 	approvalResponse = #rejectOnce ifTrue: [
@@ -31,11 +31,11 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 AbTopicHandler >> sessionUpdate: aSessionUpdate [
 
 	aSessionUpdate isAgentMessageChunk
-		ifTrue: [ ^ topic addAiTextChunk: aSessionUpdate content text ].
+		ifTrue: [ ^ self topic addAiTextChunk: aSessionUpdate content text ].
 	aSessionUpdate isAgentThoughtChunk
-		ifTrue: [ ^ topic addAiThoughtChunk: aSessionUpdate content text ].
+		ifTrue: [ ^ self topic addAiThoughtChunk: aSessionUpdate content text ].
 	aSessionUpdate isAvailableCommandsUpdate
-		ifTrue: [ ^ topic updateAvailableCommands: aSessionUpdate availableCommands ]
+		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ]
 ]
 
 { #category : 'accessing' }

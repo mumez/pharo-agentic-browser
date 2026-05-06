@@ -60,9 +60,9 @@ AbChatPresenter >> connectPresenters [
 AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messagesPresenter;
-		  add: normalInputPresenter withConstraints: [ :c | c height: 60 ];
-		  add: statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: self messagesPresenter;
+		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  yourself
 ]
 
@@ -70,9 +70,9 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> confirmModeLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messagesPresenter;
-		  add: confirmPresenter withConstraints: [ :c | c height: 90 ];
-		  add: statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: self messagesPresenter;
+		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  yourself
 ]
 
@@ -80,7 +80,7 @@ AbChatPresenter >> confirmModeLayout [
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	self pendingApprovalMessage: anAbMessage.
-	confirmPresenter confirmationText: anAbMessage text.
+	self confirmPresenter confirmationText: anAbMessage text.
 	self layout: self confirmModeLayout
 ]
 
@@ -100,7 +100,7 @@ AbChatPresenter >> isFirstMessageInTopic [
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
-	messagesPresenter addOrUpdateMessage: anAbMessage.
+	self messagesPresenter addOrUpdateMessage: anAbMessage.
 	anAbMessage isApprovalRequest ifTrue: [
 		self enterApprovalMode: anAbMessage ]
 ]
@@ -110,9 +110,9 @@ AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
 	self currentTopic ifNil: [ ^ self ].
-	text := normalInputPresenter inputText trimmed.
+	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
-	normalInputPresenter clearInput.
+	self normalInputPresenter clearInput.
 	promptText := self isFirstMessageInTopic
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
@@ -155,11 +155,11 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
-	normalInputPresenter cancelEnabled: aStatus = #working.
+	self normalInputPresenter cancelEnabled: aStatus = #working.
 	aStatus = #working
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
-	messagesPresenter refreshMessages
+	self messagesPresenter refreshMessages
 ]
 
 { #category : 'accessing' }
@@ -270,7 +270,7 @@ AbChatPresenter >> stopDotsAnimation [
 AbChatPresenter >> rerenderMessages [
 
 	self currentTopic ifNil: [ ^ self ].
-	messagesPresenter setMessages: self currentTopic messages
+	self messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'subscriptions' }

@@ -56,8 +56,8 @@ AbTopicListPresenter >> connectPresenters [
 AbTopicListPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: topicList;
-		  add: newTopicButton
+		  add: self topicList;
+		  add: self newTopicButton
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
 ]
@@ -78,7 +78,7 @@ AbTopicListPresenter >> initializePresenters [
 AbTopicListPresenter >> onDeleteTopicRequest [
 
 	| selectedTopic |
-	selectedTopic := topicList selectedItem.
+	selectedTopic := self topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	(UIManager default
 		 confirm: 'Delete topic "' , selectedTopic title , '"?'
@@ -92,7 +92,7 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 AbTopicListPresenter >> onInspectTopicRequest [
 
 	| selectedTopic |
-	selectedTopic := topicList selectedItem.
+	selectedTopic := self topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	selectedTopic inspect
 ]
@@ -101,7 +101,7 @@ AbTopicListPresenter >> onInspectTopicRequest [
 AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
 
 	| topic |
-	topic := topicList selectedItem.
+	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	self applyUpdatedExternalPackagesFor: topic
 ]
@@ -114,14 +114,14 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog openModal.
 	dialog topic ifNotNil: [ :topic |
 		AbTopicManager uniqueInstance addTopic: topic.
-		self defer: [ self refresh. topicList selectItem: topic ] ]
+		self defer: [ self refresh. self topicList selectItem: topic ] ]
 ]
 
 { #category : 'private' }
 AbTopicListPresenter >> onRenameTopicRequest [
 
 	| selectedTopic newTitle |
-	selectedTopic := topicList selectedItem.
+	selectedTopic := self topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	newTitle := UIManager default
 				    request: 'New title:'
@@ -153,7 +153,7 @@ AbTopicListPresenter >> onPackagePrefixSet: aTopic [
 AbTopicListPresenter >> onSetTargetPackagesRequest [
 
 	| topic dialog |
-	topic := topicList selectedItem.
+	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	dialog := AbPackagePrefixesDialog new.
 	dialog openModal.
@@ -168,7 +168,7 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 AbTopicListPresenter >> onSetAgentRequest [
 
 	| topic dialog |
-	topic := topicList selectedItem.
+	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	dialog := AbSetAgentDialog new.
 	dialog selectCurrentArguments: topic agentArguments.
@@ -187,7 +187,7 @@ AbTopicListPresenter >> onSetAgentRequest [
 AbTopicListPresenter >> onSetWorkingDirectoryRequest [
 
 	| topic directoryPath |
-	topic := topicList selectedItem.
+	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	directoryPath := UIManager default
 		request: 'Working directory path:'
@@ -210,7 +210,19 @@ AbTopicListPresenter >> refresh [
 
 	| items |
 	items := AbTopicManager uniqueInstance topics asArray.
-	topicList items: items
+	self topicList items: items
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicList [
+
+	^ topicList
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> newTopicButton [
+
+	^ newTopicButton
 ]
 
 { #category : 'private' }

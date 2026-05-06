@@ -39,7 +39,7 @@ AbNewTopicDialog >> titleRowLayout [
 
 	^ SpBoxLayout newLeftToRight
 		  add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
-		  add: titleField;
+		  add: self titleField;
 		  yourself
 ]
 
@@ -48,7 +48,7 @@ AbNewTopicDialog >> agentRowLayout [
 
 	^ SpBoxLayout newLeftToRight
 		  add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
-		  add: agentDropList;
+		  add: self agentDropList;
 		  yourself
 ]
 
@@ -57,8 +57,8 @@ AbNewTopicDialog >> workingDirectoryRowLayout [
 
 	^ SpBoxLayout newLeftToRight
 		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
-		  add: workingDirField;
-		  add: selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
+		  add: self workingDirField;
+		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
 		  yourself
 ]
 
@@ -66,8 +66,8 @@ AbNewTopicDialog >> workingDirectoryRowLayout [
 AbNewTopicDialog >> buttonsRowLayout [
 
 	^ SpBoxLayout newLeftToRight
-		  addLast: cancelButton withConstraints: [ :c | c width: 80 ];
-		  addLast: okButton withConstraints: [ :c | c width: 80 ];
+		  addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
+		  addLast: self okButton withConstraints: [ :c | c width: 80 ];
 		  yourself
 ]
 
@@ -134,25 +134,61 @@ AbNewTopicDialog >> onSelectWorkingDirClicked [
 		               chooseDirectory: 'Choose working directory'
 		               path: FileLocator home asFileReference.
 	selectedDir ifNil: [ ^ self ].
-	workingDirField text: selectedDir fullName
+	self workingDirField text: selectedDir fullName
 ]
 
 { #category : 'private' }
 AbNewTopicDialog >> onOkClicked [
 
 	| titleText dirPath detectedPrefixes |
-	titleText := titleField text trimmed.
+	titleText := self titleField text trimmed.
 	titleText ifEmpty: [ ^ self ].
 	self topic: (AbTopic new
 				 title: titleText;
-				 agentArguments: agentDropList selectedItem value;
+				 agentArguments: self agentDropList selectedItem value;
 				 yourself).
-	dirPath := workingDirField text trimmed.
+	dirPath := self workingDirField text trimmed.
 	dirPath ifNotEmpty: [
 		self topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
 		self topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> titleField [
+
+	^ titleField
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> agentDropList [
+
+	^ agentDropList
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> workingDirField [
+
+	^ workingDirField
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> selectWorkingDirButton [
+
+	^ selectWorkingDirButton
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> okButton [
+
+	^ okButton
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> cancelButton [
+
+	^ cancelButton
 ]
 
 { #category : 'accessing' }

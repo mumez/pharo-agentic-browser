@@ -25,11 +25,11 @@ AbPackagePrefixesDialog >> defaultLayout [
 		  spacing: 8;
 		  add: (self newLabel label: 'Package prefix patterns (comma-separated, * as wildcard):')
 		  withConstraints: [ :c | c height: 24 ];
-		  add: prefixField
+		  add: self prefixField
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
-				   addLast: cancelButton withConstraints: [ :c | c width: 80 ];
-				   addLast: okButton withConstraints: [ :c | c width: 80 ];
+				   addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
+				   addLast: self okButton withConstraints: [ :c | c width: 80 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
@@ -57,10 +57,28 @@ AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
 { #category : 'private' }
 AbPackagePrefixesDialog >> onOkClicked [
 
-	self prefixPatterns: ((prefixField text substrings: ',')
-		                       collect: [ :each | each trimmed ]
-		                       thenSelect: [ :each | each isNotEmpty ]).
+	self prefixPatterns: ((self prefixField text substrings: ',')
+						   collect: [ :each | each trimmed ]
+						   thenSelect: [ :each | each isNotEmpty ]).
 	self withWindowDo: [ :w | w close ]
+]
+
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> prefixField [
+
+	^ prefixField
+]
+
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> okButton [
+
+	^ okButton
+]
+
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> cancelButton [
+
+	^ cancelButton
 ]
 
 { #category : 'accessing' }

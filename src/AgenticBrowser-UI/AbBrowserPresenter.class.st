@@ -26,8 +26,8 @@ AbBrowserPresenter >> connectPresenters [
 AbBrowserPresenter >> defaultLayout [
 
 	^ SpBoxLayout newLeftToRight
-		  add: topicListPresenter withConstraints: [ :c | c width: 220 ];
-		  add: chatPresenter;
+		  add: self topicListPresenter withConstraints: [ :c | c width: 220 ];
+		  add: self chatPresenter;
 		  yourself
 ]
 
@@ -61,6 +61,12 @@ AbBrowserPresenter >> onWindowClosed [
 AbBrowserPresenter >> chatPresenter [
 
 	^ chatPresenter
+]
+
+{ #category : 'accessing' }
+AbBrowserPresenter >> topicListPresenter [
+
+	^ topicListPresenter
 ]
 
 { #category : 'accessing' }
