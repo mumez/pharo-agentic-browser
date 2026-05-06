@@ -7,7 +7,8 @@ Class {
 		'confirmPresenter',
 		'currentTopic',
 		'pendingApprovalMessage',
-		'logger'
+		'logger',
+		'dotsAnimationProcess'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -27,7 +28,8 @@ AbChatPresenter >> connectPresenters [
 	normalInputPresenter onSendAction: [ self onSendButtonClicked ].
 	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
 	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
-	confirmPresenter onDenyAction: [ self onDenyButtonClicked ]
+	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
+	normalInputPresenter cancelEnabled: false
 ]
 
 { #category : 'layout' }
@@ -121,7 +123,58 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
+	normalInputPresenter cancelEnabled: aStatus = #working.
+	aStatus = #working
+		ifTrue: [ self startDotsAnimation ]
+		ifFalse: [ self stopDotsAnimation ].
 	messagesPresenter refreshMessages
+]
+
+{ #category : 'private' }
+AbChatPresenter >> nextDotsTextAfter: aString [
+
+	aString = '' ifTrue: [ ^ '.' ].
+	aString = '.' ifTrue: [ ^ '..' ].
+	aString = '..' ifTrue: [ ^ '...' ].
+	^ ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess [
+
+	^ dotsAnimationProcess
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess: aProcess [
+
+	dotsAnimationProcess := aProcess
+]
+
+{ #category : 'private' }
+AbChatPresenter >> startDotsAnimation [
+
+	| process |
+	self stopDotsAnimation.
+	process := [
+		| dots |
+		dots := ''.
+		[ true ] whileTrue: [
+			dots := self nextDotsTextAfter: dots.
+			self defer: [ messagesPresenter statusText: dots ].
+			500 milliSeconds wait ] ] newProcess.
+	process priority: Processor userBackgroundPriority.
+	process resume.
+	self dotsAnimationProcess: process
+]
+
+{ #category : 'private' }
+AbChatPresenter >> stopDotsAnimation [
+
+	self dotsAnimationProcess ifNotNil: [ :p |
+		p terminate.
+		self dotsAnimationProcess: nil ].
+	messagesPresenter clearStatusText
 ]
 
 { #category : 'private' }
@@ -154,6 +207,7 @@ AbChatPresenter >> unsubscribeFromTopic: aTopic [
 { #category : 'initialization' }
 AbChatPresenter >> destroy [
 
+	self stopDotsAnimation.
 	self unsubscribeFromTopic: self currentTopic.
 	super destroy
 ]

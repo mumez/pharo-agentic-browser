@@ -187,3 +187,86 @@ AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
 	presenter onMessageAdded: msg.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledInitially [
+
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledWhenTopicEndTurn [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledWhenTopicWaitingForHuman [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #waitingForHuman.
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self assert: presenter messagesPresenter statusText isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #waitingForHuman.
+	self assert: presenter messagesPresenter statusText isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testNextDotsTextCyclesFromEmpty [
+
+	self assert: (presenter nextDotsTextAfter: '') equals: '.'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testNextDotsTextCyclesOneDot [
+
+	self assert: (presenter nextDotsTextAfter: '.') equals: '..'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testNextDotsTextCyclesTwoDots [
+
+	self assert: (presenter nextDotsTextAfter: '..') equals: '...'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testNextDotsTextCyclesThreeDots [
+
+	self assert: (presenter nextDotsTextAfter: '...') equals: ''
+]
