@@ -65,6 +65,7 @@ AbTopicListPresenter >> defaultLayout [
 { #category : 'initialization' }
 AbTopicListPresenter >> initializePresenters [
 
+	super initializePresenters.
 	topicList := self newList.
 	topicList display: [ :topic | self topicListLabelFor: topic ].
 	topicList displayIcon: [ :item |

@@ -13,6 +13,7 @@ Class {
 { #category : 'initialization' }
 AbConfirmPresenter >> initializePresenters [
 
+	super initializePresenters.
 	confirmationLabel := self newText.
 	confirmationLabel beNotEditable.
 

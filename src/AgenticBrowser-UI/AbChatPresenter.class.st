@@ -17,6 +17,7 @@ Class {
 { #category : 'initialization' }
 AbChatPresenter >> initializePresenters [
 
+	super initializePresenters.
 	messagesPresenter := self instantiate: AbMessagesPresenter.
 	normalInputPresenter := self instantiate: AbNormalInputPresenter.
 	confirmPresenter := self instantiate: AbConfirmPresenter

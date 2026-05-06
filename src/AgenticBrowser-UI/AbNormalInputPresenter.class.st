@@ -22,6 +22,7 @@ AbNormalInputPresenter >> initialize [
 { #category : 'initialization' }
 AbNormalInputPresenter >> initializePresenters [
 
+	super initializePresenters.
 	inputField := self newText.
 	inputField placeholder: 'Type your request...'.
 

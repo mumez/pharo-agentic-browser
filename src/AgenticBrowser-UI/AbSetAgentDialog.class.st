@@ -41,6 +41,7 @@ AbSetAgentDialog >> defaultLayout [
 { #category : 'initialization' }
 AbSetAgentDialog >> initializePresenters [
 
+	super initializePresenters.
 	agentDropList := self newDropList.
 	agentDropList items: self agentOptions.
 	agentDropList display: [ :opt | opt key ].

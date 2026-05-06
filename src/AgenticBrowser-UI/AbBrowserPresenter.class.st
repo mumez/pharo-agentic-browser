@@ -34,6 +34,7 @@ AbBrowserPresenter >> defaultLayout [
 { #category : 'initialization' }
 AbBrowserPresenter >> initializePresenters [
 
+	super initializePresenters.
 	topicListPresenter := self instantiate: AbTopicListPresenter.
 	chatPresenter := self instantiate: AbChatPresenter.
 	AbTopicManager uniqueInstance subscribeAllTopicsToSisServer

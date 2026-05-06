@@ -77,6 +77,7 @@ AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
 { #category : 'initialization' }
 AbNewTopicDialog >> initializePresenters [
 
+	super initializePresenters.
 	titleField := self newTextInput.
 	titleField placeholder: 'Topic title...'.
 

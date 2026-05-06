@@ -38,6 +38,7 @@ AbPackagePrefixesDialog >> defaultLayout [
 { #category : 'initialization' }
 AbPackagePrefixesDialog >> initializePresenters [
 
+	super initializePresenters.
 	prefixField := self newTextInput.
 	prefixField placeholder: 'e.g. ACP-*, BaselineOfACP'.
 

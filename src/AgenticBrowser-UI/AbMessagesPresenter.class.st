@@ -13,6 +13,7 @@ Class {
 { #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
+	super initializePresenters.
 	messages := OrderedCollection new.
 	messageTextPresenter := self instantiate: MicTextPresenter.
 	messageTextPresenter text: '' asText.
