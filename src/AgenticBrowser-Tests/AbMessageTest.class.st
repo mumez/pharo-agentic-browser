@@ -11,16 +11,31 @@ AbMessageTest >> testAiMessageCreation [
 	| msg |
 	msg := AbMessage sender: #ai text: 'Working on it'.
 	self assert: msg sender equals: #ai.
-	self assert: msg timestamp notNil
+	self assert: msg lastUpdated notNil
 ]
 
 { #category : 'tests' }
 AbMessageTest >> testAppendText [
 
-	| msg |
+	| msg before |
 	msg := AbMessage sender: #ai text: 'Starting '.
+	before := msg lastUpdated.
+	(Delay forMilliseconds: 1) wait.
 	msg appendText: 'work...'.
-	self assert: msg text equals: 'Starting work...'
+	self assert: msg text equals: 'Starting work...'.
+	self assert: msg lastUpdated > before
+]
+
+{ #category : 'tests' }
+AbMessageTest >> testTextUpdateRefreshesLastUpdated [
+
+	| msg before |
+	msg := AbMessage sender: #ai text: 'Draft'.
+	before := msg lastUpdated.
+	(Delay forMilliseconds: 1) wait.
+	msg text: 'Final'.
+	self assert: msg text equals: 'Final'.
+	self assert: msg lastUpdated > before
 ]
 
 { #category : 'tests' }

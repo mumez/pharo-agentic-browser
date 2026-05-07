@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'sender',
 		'text',
-		'timestamp',
+		'lastUpdated',
 		'isApprovalRequest',
 		'approvalResponse',
 		'isThink'
@@ -71,7 +71,7 @@ AbMessage >> initialize [
 
 	sender := #system.
 	text := ''.
-	timestamp := DateAndTime now.
+	lastUpdated := DateAndTime now.
 	isApprovalRequest := false.
 	isThink := false
 ]
@@ -115,10 +115,11 @@ AbMessage >> text [
 
 { #category : 'accessing' }
 AbMessage >> text: aString [
-	text := aString
+	text := aString.
+	lastUpdated := DateAndTime now
 ]
 
 { #category : 'accessing' }
-AbMessage >> timestamp [
-	^ timestamp
+AbMessage >> lastUpdated [
+	^ lastUpdated
 ]

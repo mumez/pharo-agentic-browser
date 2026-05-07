@@ -3,8 +3,10 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'topicList',
+		'sortDropList',
 		'newTopicButton',
-		'onTopicSelectedBlock'
+		'onTopicSelectedBlock',
+		'sortMode'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -47,6 +49,10 @@ AbTopicListPresenter >> connectPresenters [
 		selection selectedItem ifNotNil: [ :topic |
 			onTopicSelectedBlock ifNotNil: [ onTopicSelectedBlock value: topic ] ] ].
 	topicList contextMenu: [ topicList selectedItem ifNotNil: [ self buildTopicContextMenu ] ].
+	sortDropList whenSelectedItemChangedDo: [ :selected |
+		selected ifNotNil: [
+			self sortMode: selected value.
+			self refresh ] ].
 	newTopicButton action: [ self onNewTopicRequest ].
 	self subscribeToTopicManager.
 	self refresh
@@ -56,6 +62,12 @@ AbTopicListPresenter >> connectPresenters [
 AbTopicListPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
+		  add: (SpBoxLayout newLeftToRight
+				   vAlignCenter;
+				   add: (self newLabel label: 'Sort:') withConstraints: [ :c | c width: 40 ];
+				   add: self sortDropList;
+				   yourself)
+		  withConstraints: [ :c | c height: 32 ];
 		  add: self topicList;
 		  add: self newTopicButton
 		  withConstraints: [ :c | c height: 32 ];
@@ -70,6 +82,11 @@ AbTopicListPresenter >> initializePresenters [
 	topicList display: [ :topic | self topicListLabelFor: topic ].
 	topicList displayIcon: [ :item |
 		Smalltalk ui icons iconNamed: (self iconNameFor: item) ].
+	sortDropList := self newDropList.
+	sortDropList items: self sortOptions.
+	sortDropList display: [ :option | option key ].
+	sortMode := #lastUpdated.
+	sortDropList selectItem: self sortOptions second.
 	newTopicButton := self newButton.
 	newTopicButton label: '+ New Topic'
 ]
@@ -210,7 +227,60 @@ AbTopicListPresenter >> refresh [
 
 	| items |
 	items := AbTopicManager uniqueInstance topics asArray.
-	self topicList items: items
+	self topicList items: (self sortedTopics: items)
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> sortOptions [
+
+	^ {
+		  'Title (A-Z)' -> #title.
+		  'Last Updated (Newest)' -> #lastUpdated }
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> sortDropList [
+
+	^ sortDropList
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> sortMode [
+
+	^ sortMode ifNil: [ #lastUpdated ]
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> sortMode: aSymbol [
+
+	sortMode := aSymbol
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> sortedTopics: aCollection [
+
+	self sortMode = #title ifTrue: [
+		^ aCollection asSortedCollection: [ :a :b |
+			  self titleSorts: a before: b ] ].
+	^ aCollection asSortedCollection: [ :a :b |
+		  | aTime bTime |
+		  aTime := a lastUpdated.
+		  bTime := b lastUpdated.
+		  aTime ifNil: [
+			  bTime ifNil: [ self titleSorts: a before: b ] ifNotNil: [ false ] ]
+		  ifNotNil: [
+			  bTime ifNil: [ true ] ifNotNil: [
+				  aTime = bTime
+					  ifTrue: [ self titleSorts: a before: b ]
+					  ifFalse: [ aTime > bTime ] ] ] ]
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> titleSorts: aTopic before: anotherTopic [
+
+	(aTopic title asLowercase = anotherTopic title asLowercase)
+		ifTrue: [ ^ aTopic topicId < anotherTopic topicId ].
+	^ aTopic title asLowercase < anotherTopic title asLowercase
 ]
 
 { #category : 'accessing' }

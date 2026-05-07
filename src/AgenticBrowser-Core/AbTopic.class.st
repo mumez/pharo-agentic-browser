@@ -283,6 +283,15 @@ AbTopic >> messages [
 ]
 
 { #category : 'accessing' }
+AbTopic >> lastUpdated [
+
+	messages ifEmpty: [ ^ nil ].
+	^ messages
+		  inject: messages first lastUpdated
+		  into: [ :latest :each | latest max: each lastUpdated ]
+]
+
+{ #category : 'accessing' }
 AbTopic >> packagePrefixes [
 	^ packagePrefixes
 ]

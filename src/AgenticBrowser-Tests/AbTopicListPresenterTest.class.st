@@ -133,3 +133,38 @@ AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
 	topic workingDirectoryPath: testPath.
 	self assert: topic workingDirectoryPath equals: testPath
 ]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testSortedTopicsByTitle [
+
+	| alpha beta sorted |
+	alpha := AbTopic new.
+	alpha title: 'Alpha'.
+	beta := AbTopic new.
+	beta title: 'Beta'.
+	presenter sortMode: #title.
+	sorted := presenter sortedTopics: {
+			          beta.
+			          alpha }.
+	self assert: sorted first equals: alpha.
+	self assert: sorted second equals: beta
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testSortedTopicsByLastUpdatedNewestFirst [
+
+	| older newer sorted |
+	older := AbTopic new.
+	older title: 'Older'.
+	older addSystemMessage: 'first'.
+	(Delay forMilliseconds: 1) wait.
+	newer := AbTopic new.
+	newer title: 'Newer'.
+	newer addSystemMessage: 'second'.
+	presenter sortMode: #lastUpdated.
+	sorted := presenter sortedTopics: {
+			          older.
+			          newer }.
+	self assert: sorted first equals: newer.
+	self assert: sorted second equals: older
+]

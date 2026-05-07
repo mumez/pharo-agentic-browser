@@ -421,6 +421,29 @@ AbTopicTest >> testAvailableCommandsInitiallyEmpty [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testLastUpdatedIsNilWhenNoMessages [
+
+	self assert: AbTopic new lastUpdated isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testLastUpdatedUsesNewestMessageUpdateTime [
+
+	| topic firstMessage secondMessage |
+	topic := AbTopic new.
+	firstMessage := AbMessage sender: #ai text: 'First'.
+	topic messages add: firstMessage.
+	(Delay forMilliseconds: 1) wait.
+	secondMessage := AbMessage sender: #ai text: 'Second'.
+	topic messages add: secondMessage.
+	(Delay forMilliseconds: 1) wait.
+	firstMessage appendText: ' updated'.
+
+	self assert: topic lastUpdated equals: firstMessage lastUpdated.
+	self assert: topic lastUpdated > secondMessage lastUpdated
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 
 	| topic commands |
