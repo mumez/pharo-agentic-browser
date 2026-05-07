@@ -1,5 +1,7 @@
 .superpowers/
+.agent/
 .agents/
+.cursor/
 .opencode/
 CLAUDE.md
 CLAUDE.local.md
