@@ -441,7 +441,8 @@ AbTopic >> sendPrompt: aString [
 				  params sessionId: sessionId.
 				  params textPrompt: aString ].
 		result stopReason = 'end_turn' ifTrue: [
-			stateMachine handleEvent: #turnEnded ] ] fork
+			self checkGoalAchievement ifFalse: [
+				stateMachine handleEvent: #turnEnded ] ] ] fork
 ]
 
 { #category : 'accessing' }
@@ -536,6 +537,34 @@ AbTopic >> topicGoal [
 { #category : 'accessing' }
 AbTopic >> topicGoal: anAbTopicGoal [
 	topicGoal := anAbTopicGoal
+]
+
+{ #category : 'operations' }
+AbTopic >> goalDescription: aString [
+
+	self topicGoal: (AbTopicGoal on: self).
+	self topicGoal description: aString.
+	self sendPrompt: self topicGoal notificationPrompt
+]
+
+{ #category : 'operations' }
+AbTopic >> checkGoalAchievement [
+
+	self topicGoal ifNil: [ ^ false ].
+	self topicGoal checkAchievement ifFalse: [ ^ false ].
+	self stateMachine handleEvent: #goalReached.
+	self announceGoalAchieved.
+	self topicGoal runWhenAchievedBlock.
+	^ true
+]
+
+{ #category : 'private' }
+AbTopic >> announceGoalAchieved [
+
+	self announcer announce: (AbTopicGoalAchieved new
+			 topic: self;
+			 goal: self topicGoal;
+			 yourself)
 ]
 
 { #category : 'operations' }

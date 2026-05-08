@@ -64,3 +64,48 @@ AbTopicGoalStateTest >> testResetFromGoalAchievedTransitionsToInitial [
 	topic resetFromGoalAchieved.
 	self assert: topic status equals: #initial
 ]
+
+{ #category : 'tests' }
+AbTopicGoalStateTest >> testGoalDescriptionCreatesAbTopicGoal [
+
+	| topic |
+	topic := AbTopic new.
+	topic goalDescription: 'all tests pass'.
+	self assert: (topic topicGoal isKindOf: AbTopicGoal).
+	self assert: topic topicGoal description equals: 'all tests pass'
+]
+
+{ #category : 'tests' }
+AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenNoGoal [
+
+	| topic |
+	topic := AbTopic new.
+	self deny: topic checkGoalAchievement
+]
+
+{ #category : 'tests' }
+AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenFileAbsent [
+
+	| topic |
+	topic := AbTopic new.
+	topic goalDescription: 'all tests pass'.
+	self deny: topic checkGoalAchievement
+]
+
+{ #category : 'tests' }
+AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFilePresent [
+
+	| topic resultFile |
+	topic := AbTopic new.
+	topic goalDescription: 'all tests pass'.
+	"State is already #working because goalDescription: called sendPrompt: which fired #promptSent"
+	resultFile := topic topicGoal resultFile.
+	resultFile parent ensureCreateDirectory.
+	resultFile writeStreamDo: [ :s | s nextPutAll: 'Done.' ].
+	[
+		self assert: topic checkGoalAchievement.
+		self assert: topic isGoalAchieved.
+		self deny: resultFile exists ]
+	ensure: [
+		resultFile exists ifTrue: [ resultFile delete ] ]
+]
