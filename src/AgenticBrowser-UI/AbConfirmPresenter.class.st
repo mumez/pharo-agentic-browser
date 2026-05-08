@@ -4,7 +4,9 @@ Class {
 	#instVars : [
 		'confirmationLabel',
 		'confirmButton',
-		'denyButton'
+		'denyButton',
+		'optionDropList',
+		'approvalOptions'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -16,12 +18,15 @@ AbConfirmPresenter >> initializePresenters [
 	super initializePresenters.
 	confirmationLabel := self newText.
 	confirmationLabel beNotEditable.
+	optionDropList := self newDropList.
+	optionDropList startWithoutSelection.
 
 	confirmButton := self newButton.
 	confirmButton label: 'Confirm'.
 
 	denyButton := self newButton.
-	denyButton label: 'Deny'
+	denyButton label: 'Deny'.
+	self approvalOptions: self defaultApprovalOptions
 ]
 
 { #category : 'layout' }
@@ -32,6 +37,7 @@ AbConfirmPresenter >> defaultLayout [
 		  spacing: 4;
 		  add: self confirmationLabel;
 		  add: (SpBoxLayout newLeftToRight
+				   add: self optionDropList;
 				   addLast: self confirmButton withConstraints: [ :c | c width: 100 ];
 				   addLast: self denyButton withConstraints: [ :c | c width: 80 ];
 				   yourself)
@@ -85,4 +91,61 @@ AbConfirmPresenter >> confirmButtonLabel [
 AbConfirmPresenter >> denyButtonLabel [
 
 	^ self denyButton label
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> optionDropList [
+
+	^ optionDropList
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> approvalOptions [
+
+	^ approvalOptions ifNil: [ OrderedCollection new ]
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> approvalOptions: aCollection [
+
+	| labels |
+	approvalOptions := (aCollection ifNil: [ #() ]) asOrderedCollection.
+	labels := approvalOptions collect: [ :assoc | assoc key ].
+	self optionDropList items: labels asArray.
+	labels
+		ifEmpty: [ self optionDropList startWithoutSelection ]
+		ifNotEmpty: [ self optionDropList selectItem: labels first ]
+]
+
+{ #category : 'private' }
+AbConfirmPresenter >> defaultApprovalOptions [
+
+	^ OrderedCollection
+		  with: ('Confirm' -> #allowAlways)
+		  with: ('Deny' -> #rejectOnce)
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> selectedOptionId [
+
+	| selectedLabel selectedOption |
+	self approvalOptions ifEmpty: [ ^ #allowAlways ].
+	selectedLabel := self optionDropList selectedItem
+		                 ifNil: [ self approvalOptions first key ].
+	selectedOption := self approvalOptions
+		                  detect: [ :assoc | assoc key = selectedLabel ]
+		                  ifNone: [ self approvalOptions first ].
+	^ selectedOption value
+]
+
+{ #category : 'testing' }
+AbConfirmPresenter >> optionLabels [
+
+	^ self approvalOptions collect: [ :assoc | assoc key ]
+]
+
+{ #category : 'testing' }
+AbConfirmPresenter >> selectOptionNamed: aString [
+
+	self optionDropList selectItem: aString
 ]

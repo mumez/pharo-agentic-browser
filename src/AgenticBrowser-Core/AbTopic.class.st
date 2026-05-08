@@ -53,8 +53,18 @@ AbTopic >> addAiChunk: aString think: aBoolean [
 { #category : 'operations' }
 AbTopic >> addApprovalRequest: aDescription [
 
+	^ self
+		  addApprovalRequest: aDescription
+		  options: self defaultApprovalOptions
+]
+
+{ #category : 'operations' }
+AbTopic >> addApprovalRequest: aDescription options: approvalOptions [
+
 	| msg |
-	msg := AbMessage approvalRequestText: aDescription.
+	msg := AbMessage
+		       approvalRequestText: aDescription
+		       options: approvalOptions.
 	self messages add: msg.
 	self announceMessageAdded: msg.
 	^ msg
@@ -348,7 +358,16 @@ AbTopic >> resolveApproval: aUserText [
 		^ self ].
 	response := self approvalResponseForUserText: aUserText.
 	self logger debug: 'resolveApproval: response=' , response printString.
-	pending approvalResponse: response.
+	self resolveApprovalWithOptionId: response
+]
+
+{ #category : 'operations' }
+AbTopic >> resolveApprovalWithOptionId: anOptionId [
+
+	| pending |
+	pending := self pendingApprovalMessage.
+	pending ifNil: [ ^ self ].
+	pending approvalResponse: anOptionId.
 	self stateMachine handleEvent: #humanResponded.
 	self logger debug: 'resolveApproval: status(after humanResponded)='
 		, self status printString.
@@ -376,10 +395,18 @@ AbTopic >> approvalResponseForUserText: aUserText [
 { #category : 'operations' }
 AbTopic >> requestApproval: aDescription [
 
+	^ self requestApproval: aDescription options: self defaultApprovalOptions
+]
+
+{ #category : 'operations' }
+AbTopic >> requestApproval: aDescription options: approvalOptions [
+
 	| msg wasInitial |
 	wasInitial := self isInitial.
 	self logRequestApprovalStart: aDescription.
-	msg := self addApprovalRequestAndWaitForHuman: aDescription.
+	msg := self
+		       addApprovalRequestAndWaitForHuman: aDescription
+		       options: approvalOptions.
 	self waitForApprovalResponseOf: msg.
 	self rejectApprovalOnTimeout: msg.
 	self finishApprovalRequestIfNeededForInitialState: wasInitial.
@@ -396,14 +423,22 @@ AbTopic >> logRequestApprovalStart: aDescription [
 ]
 
 { #category : 'private' }
-AbTopic >> addApprovalRequestAndWaitForHuman: aDescription [
+AbTopic >> addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions [
 
 	| msg |
-	msg := self addApprovalRequest: aDescription.
+	msg := self addApprovalRequest: aDescription options: approvalOptions.
 	self stateMachine handleEvent: #permissionRequested.
 	self logger debug: 'requestApproval: status(after permissionRequested)='
 		, self status printString.
 	^ msg
+]
+
+{ #category : 'private' }
+AbTopic >> defaultApprovalOptions [
+
+	^ OrderedCollection
+		  with: ('Confirm' -> #allowAlways)
+		  with: ('Deny' -> #rejectOnce)
 ]
 
 { #category : 'private' }

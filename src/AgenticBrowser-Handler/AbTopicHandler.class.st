@@ -12,19 +12,117 @@ Class {
 { #category : 'agent-callbacks' }
 AbTopicHandler >> requestPermission: anACPRequestPermission [
 
-	| response approvalResponse |
+	| response approvalOptionId |
 	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
-	approvalResponse := self topic requestApproval: anACPRequestPermission printString.
-	self logger debug: 'requestPermission: got approvalResponse=' , approvalResponse printString.
+	approvalOptionId := self topic
+		                  requestApproval: (self permissionPromptTextFor: anACPRequestPermission)
+		                  options: (self permissionOptionsFor: anACPRequestPermission).
+	self logger debug: 'requestPermission: got approvalResponse='
+		, approvalOptionId printString.
 	response := anACPRequestPermission makeResponse.
-	approvalResponse = #rejectOnce ifTrue: [
-		response rejectOnce.
-		^ response ].
-	approvalResponse = #rejectAlways ifTrue: [
-		response rejectAlways.
-		^ response ].
-	response allowAlways.
+	self applyApprovalOptionId: approvalOptionId toResponse: response.
 	^ response
+]
+
+{ #category : 'private' }
+AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
+
+	| canonicalOptionId |
+	canonicalOptionId := self canonicalApprovalOptionId: anOptionId.
+	canonicalOptionId = #reject_once ifTrue: [
+		aResponse rejectOnce.
+		^ self ].
+	canonicalOptionId = #reject_always ifTrue: [
+		aResponse rejectAlways.
+		^ self ].
+	canonicalOptionId = #allow_once ifTrue: [
+		aResponse allowOnce.
+		^ self ].
+	aResponse allowAlways
+]
+
+{ #category : 'private' }
+AbTopicHandler >> canonicalApprovalOptionId: anOptionId [
+
+	| normalized |
+	anOptionId ifNil: [ ^ #allow_always ].
+	normalized := anOptionId asString asLowercase.
+	normalized := normalized copyReplaceAll: '-' with: '_'.
+	normalized := normalized copyReplaceAll: ' ' with: ''.
+	normalized = 'allowonce' ifTrue: [ ^ #allow_once ].
+	normalized = 'allow_once' ifTrue: [ ^ #allow_once ].
+	normalized = 'allowalways' ifTrue: [ ^ #allow_always ].
+	normalized = 'allow_always' ifTrue: [ ^ #allow_always ].
+	normalized = 'rejectonce' ifTrue: [ ^ #reject_once ].
+	normalized = 'reject_once' ifTrue: [ ^ #reject_once ].
+	normalized = 'rejectalways' ifTrue: [ ^ #reject_always ].
+	normalized = 'reject_always' ifTrue: [ ^ #reject_always ].
+	^ normalized asSymbol
+]
+
+{ #category : 'private' }
+AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
+
+	| options rawOptions |
+	rawOptions := anACPRequestPermission options ifNil: [ #() ].
+	options := (rawOptions collect: [ :option |
+		            self permissionOptionAssociationFor: option ])
+		           reject: [ :assoc | assoc isNil ].
+	options ifNotEmpty: [ ^ options asOrderedCollection ].
+	^ OrderedCollection
+		  with: ('Allow once' -> #allow_once)
+		  with: ('Always allow' -> #allow_always)
+		  with: ('Deny' -> #reject_once)
+]
+
+{ #category : 'private' }
+AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
+
+	| label optionId |
+	label := anACPPermissionOption name.
+	optionId := anACPPermissionOption optionId.
+	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
+	^ label asString -> (self canonicalApprovalOptionId: optionId)
+]
+
+{ #category : 'private' }
+AbTopicHandler >> permissionPromptTextFor: anACPRequestPermission [
+
+	| title packageName |
+	title := self toolCallTitleFor: anACPRequestPermission toolCall.
+	packageName := self packageNameFor: anACPRequestPermission toolCall.
+	title ifNil: [ ^ 'AI requested permission' ].
+	packageName ifNil: [ ^ 'AI requested permission: ' , title ].
+	^ 'AI requested permission: ' , title , ' (' , packageName , ')'
+]
+
+{ #category : 'private' }
+AbTopicHandler >> toolCallTitleFor: anACPToolCall [
+
+	| rawInput |
+	anACPToolCall ifNil: [ ^ nil ].
+	anACPToolCall title ifNotNil: [ :value | ^ value asString ].
+	rawInput := self rawInputForToolCall: anACPToolCall.
+	^ (rawInput at: 'title' ifAbsent: [ nil ]) ifNotNil: [ :value | value asString ]
+]
+
+{ #category : 'private' }
+AbTopicHandler >> packageNameFor: anACPToolCall [
+
+	| rawInput |
+	anACPToolCall ifNil: [ ^ nil ].
+	rawInput := self rawInputForToolCall: anACPToolCall.
+	^ (rawInput at: 'package_name' ifAbsent: [ nil ]) ifNotNil: [ :value | value asString ]
+]
+
+{ #category : 'private' }
+AbTopicHandler >> rawInputForToolCall: anACPToolCall [
+
+	| toolCallDictionary rawInput |
+	anACPToolCall ifNil: [ ^ Dictionary new ].
+	toolCallDictionary := anACPToolCall asDictionary.
+	rawInput := toolCallDictionary at: 'rawInput' ifAbsent: [ Dictionary new ].
+	^ rawInput ifNil: [ Dictionary new ]
 ]
 
 { #category : 'agent-callbacks' }

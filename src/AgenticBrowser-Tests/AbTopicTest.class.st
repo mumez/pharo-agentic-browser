@@ -225,6 +225,24 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithOptionId [
+
+	| topic msg |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #permissionRequested.
+	msg := AbMessage
+		       approvalRequestText: 'Choose an option'
+		       options: (OrderedCollection
+				        with: ('Allow once' -> #allow_once)
+				        with: ('Deny' -> #reject_once)).
+	topic messages add: msg.
+	topic resolveApprovalWithOptionId: #allow_once.
+	self assert: msg approvalResponse equals: #allow_once.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 
 	| topic response done |

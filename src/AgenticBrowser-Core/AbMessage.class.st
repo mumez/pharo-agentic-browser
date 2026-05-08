@@ -7,7 +7,8 @@ Class {
 		'lastUpdated',
 		'isApprovalRequest',
 		'approvalResponse',
-		'isThink'
+		'isThink',
+		'approvalOptions'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -16,10 +17,17 @@ Class {
 { #category : 'instance creation' }
 AbMessage class >> approvalRequestText: aString [
 
+	^ self approvalRequestText: aString options: #()
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> approvalRequestText: aString options: aCollection [
+
 	^ self new
 		  sender: #ai;
 		  text: aString;
 		  isApprovalRequest: true;
+		  approvalOptions: aCollection;
 		  yourself
 ]
 
@@ -73,7 +81,8 @@ AbMessage >> initialize [
 	text := ''.
 	lastUpdated := DateAndTime now.
 	isApprovalRequest := false.
-	isThink := false
+	isThink := false.
+	approvalOptions := OrderedCollection new
 ]
 
 { #category : 'accessing' }
@@ -96,6 +105,16 @@ AbMessage >> isApprovalRequest [
 { #category : 'accessing' }
 AbMessage >> isApprovalRequest: aBoolean [
 	isApprovalRequest := aBoolean
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalOptions [
+	^ approvalOptions
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalOptions: aCollection [
+	approvalOptions := (aCollection ifNil: [ #() ]) asOrderedCollection
 ]
 
 { #category : 'accessing' }
