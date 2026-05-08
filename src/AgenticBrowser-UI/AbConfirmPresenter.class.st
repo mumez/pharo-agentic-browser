@@ -81,13 +81,13 @@ AbConfirmPresenter >> denyButton [
 	^ denyButton
 ]
 
-{ #category : 'testing' }
+{ #category : 'accessing' }
 AbConfirmPresenter >> confirmButtonLabel [
 
 	^ self confirmButton label
 ]
 
-{ #category : 'testing' }
+{ #category : 'accessing' }
 AbConfirmPresenter >> denyButtonLabel [
 
 	^ self denyButton label
@@ -102,7 +102,7 @@ AbConfirmPresenter >> optionDropList [
 { #category : 'accessing' }
 AbConfirmPresenter >> approvalOptions [
 
-	^ approvalOptions ifNil: [ #() ]
+	^ approvalOptions
 ]
 
 { #category : 'accessing' }
@@ -111,7 +111,7 @@ AbConfirmPresenter >> approvalOptions: aCollection [
 	| labels |
 	approvalOptions := (aCollection ifNil: [ #() ]) asArray.
 	labels := approvalOptions collect: [ :assoc | assoc key ].
-	self optionDropList items: labels asArray.
+	self optionDropList items: labels.
 	labels
 		ifEmpty: [ self optionDropList startWithoutSelection ]
 		ifNotEmpty: [ self optionDropList selectItem: labels first ]
@@ -128,23 +128,20 @@ AbConfirmPresenter >> defaultApprovalOptions [
 { #category : 'accessing' }
 AbConfirmPresenter >> selectedOptionId [
 
-	| selectedLabel selectedOption |
+	| idx |
 	self approvalOptions ifEmpty: [ ^ #allowOnce ].
-	selectedLabel := self optionDropList selectedItem
-		                 ifNil: [ self approvalOptions first key ].
-	selectedOption := self approvalOptions
-		                  detect: [ :assoc | assoc key = selectedLabel ]
-		                  ifNone: [ self approvalOptions first ].
-	^ selectedOption value
+	idx := self optionDropList selectedIndex.
+	idx = 0 ifTrue: [ ^ self approvalOptions first value ].
+	^ (self approvalOptions at: idx) value
 ]
 
-{ #category : 'testing' }
+{ #category : 'accessing' }
 AbConfirmPresenter >> optionLabels [
 
 	^ self approvalOptions collect: [ :assoc | assoc key ]
 ]
 
-{ #category : 'testing' }
+{ #category : 'actions' }
 AbConfirmPresenter >> selectOptionNamed: aString [
 
 	self optionDropList selectItem: aString

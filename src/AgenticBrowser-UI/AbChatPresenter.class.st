@@ -150,9 +150,7 @@ AbChatPresenter >> denyOptionIdForPendingApproval [
 	| rejectOption |
 	self pendingApprovalMessage ifNil: [ ^ #rejectOnce ].
 	rejectOption := self pendingApprovalMessage approvalOptions
-		                detect: [ :assoc |
-			                (assoc value asString asLowercase includesSubstring: 'reject')
-				                or: [ assoc key asString asLowercase includesSubstring: 'deny' ] ]
+		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
 		                ifNone: [ nil ].
 	^ rejectOption
 		  ifNil: [ #rejectOnce ]

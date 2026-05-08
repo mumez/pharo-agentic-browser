@@ -38,7 +38,10 @@ AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 	canonicalOptionId = #allowOnce ifTrue: [
 		aResponse allowOnce.
 		^ self ].
-	aResponse allowAlways
+	canonicalOptionId = #allowAlways ifTrue: [
+		aResponse allowAlways.
+		^ self ].
+	aResponse allowOnce
 ]
 
 { #category : 'private' }
@@ -88,31 +91,17 @@ AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
 { #category : 'private' }
 AbTopicHandler >> permissionPromptTextFor: anACPRequestPermission [
 
-	| title packageName |
-	title := self toolCallTitleFor: anACPRequestPermission toolCall.
-	packageName := self packageNameFor: anACPRequestPermission toolCall.
+	| toolCall rawInput title packageName |
+	toolCall := anACPRequestPermission toolCall.
+	rawInput := self rawInputForToolCall: toolCall.
+	title := toolCall ifNil: [ nil ] ifNotNil: [
+		         toolCall title
+			         ifNotNil: [ :v | v asString ]
+			         ifNil: [ (rawInput at: 'title' ifAbsent: [ nil ]) ifNotNil: [ :v | v asString ] ] ].
+	packageName := (rawInput at: 'package_name' ifAbsent: [ nil ]) ifNotNil: [ :v | v asString ].
 	title ifNil: [ ^ 'AI requested permission' ].
 	packageName ifNil: [ ^ 'AI requested permission: ' , title ].
 	^ 'AI requested permission: ' , title , ' (' , packageName , ')'
-]
-
-{ #category : 'private' }
-AbTopicHandler >> toolCallTitleFor: anACPToolCall [
-
-	| rawInput |
-	anACPToolCall ifNil: [ ^ nil ].
-	anACPToolCall title ifNotNil: [ :value | ^ value asString ].
-	rawInput := self rawInputForToolCall: anACPToolCall.
-	^ (rawInput at: 'title' ifAbsent: [ nil ]) ifNotNil: [ :value | value asString ]
-]
-
-{ #category : 'private' }
-AbTopicHandler >> packageNameFor: anACPToolCall [
-
-	| rawInput |
-	anACPToolCall ifNil: [ ^ nil ].
-	rawInput := self rawInputForToolCall: anACPToolCall.
-	^ (rawInput at: 'package_name' ifAbsent: [ nil ]) ifNotNil: [ :value | value asString ]
 ]
 
 { #category : 'private' }
