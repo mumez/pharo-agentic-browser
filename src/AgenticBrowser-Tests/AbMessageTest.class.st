@@ -54,9 +54,9 @@ AbMessageTest >> testApprovalRequestCreation [
 AbMessageTest >> testApprovalRequestCreationWithOptions [
 
 	| options msg |
-	options := OrderedCollection
-		           with: ('Allow once' -> #allow_once)
-		           with: ('Deny' -> #reject_once).
+	options := {
+		           'Allow once' -> #allowOnce.
+		           'Deny' -> #rejectOnce }.
 	msg := AbMessage
 		       approvalRequestText: 'Select permission option'
 		       options: options.

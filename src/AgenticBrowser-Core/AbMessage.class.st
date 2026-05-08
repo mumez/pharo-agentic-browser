@@ -82,7 +82,7 @@ AbMessage >> initialize [
 	lastUpdated := DateAndTime now.
 	isApprovalRequest := false.
 	isThink := false.
-	approvalOptions := OrderedCollection new
+	approvalOptions := #()
 ]
 
 { #category : 'accessing' }
@@ -114,7 +114,7 @@ AbMessage >> approvalOptions [
 
 { #category : 'accessing' }
 AbMessage >> approvalOptions: aCollection [
-	approvalOptions := (aCollection ifNil: [ #() ]) asOrderedCollection
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray
 ]
 
 { #category : 'accessing' }

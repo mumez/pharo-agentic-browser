@@ -41,9 +41,9 @@ AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPrese
 	| approvalMessage |
 	approvalMessage := AbMessage
 		                   approvalRequestText: 'Pick an option'
-		                   options: (OrderedCollection
-						                    with: ('Allow once' -> #allow_once)
-						                    with: ('Always allow' -> #allow_always)).
+		                   options: {
+						                   'Allow once' -> #allowOnce.
+						                   'Always allow' -> #allowAlways }.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter confirmPresenter optionLabels asArray equals: #( 'Allow once' 'Always allow' )
 ]
@@ -110,7 +110,7 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #allowAlways.
+	self assert: approvalMessage approvalResponse equals: #allowOnce.
 	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
 	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
 	self assert: presenter pendingApprovalMessage isNil
@@ -124,13 +124,13 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 	presenter topic: topic.
 	approvalMessage := topic
 		                   addApprovalRequest: 'Pick an option'
-		                   options: (OrderedCollection
-						                    with: ('Allow once' -> #allow_once)
-						                    with: ('Always allow' -> #allow_always)).
+		                   options: {
+						                   'Allow once' -> #allowOnce.
+						                   'Always allow' -> #allowAlways }.
 	presenter enterApprovalMode: approvalMessage.
 	presenter confirmPresenter selectOptionNamed: 'Allow once'.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #allow_once
+	self assert: approvalMessage approvalResponse equals: #allowOnce
 ]
 
 { #category : 'tests' }

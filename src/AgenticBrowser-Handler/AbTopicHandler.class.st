@@ -29,13 +29,13 @@ AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 
 	| canonicalOptionId |
 	canonicalOptionId := self canonicalApprovalOptionId: anOptionId.
-	canonicalOptionId = #reject_once ifTrue: [
+	canonicalOptionId = #rejectOnce ifTrue: [
 		aResponse rejectOnce.
 		^ self ].
-	canonicalOptionId = #reject_always ifTrue: [
+	canonicalOptionId = #rejectAlways ifTrue: [
 		aResponse rejectAlways.
 		^ self ].
-	canonicalOptionId = #allow_once ifTrue: [
+	canonicalOptionId = #allowOnce ifTrue: [
 		aResponse allowOnce.
 		^ self ].
 	aResponse allowAlways
@@ -45,18 +45,18 @@ AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 AbTopicHandler >> canonicalApprovalOptionId: anOptionId [
 
 	| normalized |
-	anOptionId ifNil: [ ^ #allow_always ].
+	anOptionId ifNil: [ ^ #allowOnce ].
 	normalized := anOptionId asString asLowercase.
 	normalized := normalized copyReplaceAll: '-' with: '_'.
 	normalized := normalized copyReplaceAll: ' ' with: ''.
-	normalized = 'allowonce' ifTrue: [ ^ #allow_once ].
-	normalized = 'allow_once' ifTrue: [ ^ #allow_once ].
-	normalized = 'allowalways' ifTrue: [ ^ #allow_always ].
-	normalized = 'allow_always' ifTrue: [ ^ #allow_always ].
-	normalized = 'rejectonce' ifTrue: [ ^ #reject_once ].
-	normalized = 'reject_once' ifTrue: [ ^ #reject_once ].
-	normalized = 'rejectalways' ifTrue: [ ^ #reject_always ].
-	normalized = 'reject_always' ifTrue: [ ^ #reject_always ].
+	normalized = 'allowonce' ifTrue: [ ^ #allowOnce ].
+	normalized = 'allow_once' ifTrue: [ ^ #allowOnce ].
+	normalized = 'allowalways' ifTrue: [ ^ #allowAlways ].
+	normalized = 'allow_always' ifTrue: [ ^ #allowAlways ].
+	normalized = 'rejectonce' ifTrue: [ ^ #rejectOnce ].
+	normalized = 'reject_once' ifTrue: [ ^ #rejectOnce ].
+	normalized = 'rejectalways' ifTrue: [ ^ #rejectAlways ].
+	normalized = 'reject_always' ifTrue: [ ^ #rejectAlways ].
 	^ normalized asSymbol
 ]
 
@@ -68,11 +68,11 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 	options := (rawOptions collect: [ :option |
 		            self permissionOptionAssociationFor: option ])
 		           reject: [ :assoc | assoc isNil ].
-	options ifNotEmpty: [ ^ options asOrderedCollection ].
-	^ OrderedCollection
-		  with: ('Allow once' -> #allow_once)
-		  with: ('Always allow' -> #allow_always)
-		  with: ('Deny' -> #reject_once)
+	options ifNotEmpty: [ ^ options asArray ].
+	^ {
+		  'Allow once' -> #allowOnce.
+		  'Always allow' -> #allowAlways.
+		  'Deny' -> #rejectOnce }
 ]
 
 { #category : 'private' }

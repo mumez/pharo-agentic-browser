@@ -389,7 +389,7 @@ AbTopic >> approvalResponseForUserText: aUserText [
 		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
 		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
 			ifTrue: [ #rejectOnce ]
-			ifFalse: [ #allowAlways ]
+			ifFalse: [ #allowOnce ]
 ]
 
 { #category : 'operations' }
@@ -436,9 +436,9 @@ AbTopic >> addApprovalRequestAndWaitForHuman: aDescription options: approvalOpti
 { #category : 'private' }
 AbTopic >> defaultApprovalOptions [
 
-	^ OrderedCollection
-		  with: ('Confirm' -> #allowAlways)
-		  with: ('Deny' -> #rejectOnce)
+	^ {
+		  'Confirm' -> #allowOnce.
+		  'Deny' -> #rejectOnce }
 ]
 
 { #category : 'private' }

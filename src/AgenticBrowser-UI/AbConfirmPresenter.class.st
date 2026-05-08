@@ -102,14 +102,14 @@ AbConfirmPresenter >> optionDropList [
 { #category : 'accessing' }
 AbConfirmPresenter >> approvalOptions [
 
-	^ approvalOptions ifNil: [ OrderedCollection new ]
+	^ approvalOptions ifNil: [ #() ]
 ]
 
 { #category : 'accessing' }
 AbConfirmPresenter >> approvalOptions: aCollection [
 
 	| labels |
-	approvalOptions := (aCollection ifNil: [ #() ]) asOrderedCollection.
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray.
 	labels := approvalOptions collect: [ :assoc | assoc key ].
 	self optionDropList items: labels asArray.
 	labels
@@ -120,16 +120,16 @@ AbConfirmPresenter >> approvalOptions: aCollection [
 { #category : 'private' }
 AbConfirmPresenter >> defaultApprovalOptions [
 
-	^ OrderedCollection
-		  with: ('Confirm' -> #allowAlways)
-		  with: ('Deny' -> #rejectOnce)
+	^ {
+		  'Confirm' -> #allowOnce.
+		  'Deny' -> #rejectOnce }
 ]
 
 { #category : 'accessing' }
 AbConfirmPresenter >> selectedOptionId [
 
 	| selectedLabel selectedOption |
-	self approvalOptions ifEmpty: [ ^ #allowAlways ].
+	self approvalOptions ifEmpty: [ ^ #allowOnce ].
 	selectedLabel := self optionDropList selectedItem
 		                 ifNil: [ self approvalOptions first key ].
 	selectedOption := self approvalOptions

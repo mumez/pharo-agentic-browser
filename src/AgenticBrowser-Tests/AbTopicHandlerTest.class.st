@@ -11,7 +11,7 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdAllowOnce [
 	| response outcome |
 	response := ACPRequestPermissionResponse new.
 	AbTopicHandler new
-		applyApprovalOptionId: #allow_once
+		applyApprovalOptionId: #allowOnce
 		toResponse: response.
 	outcome := response asDictionary at: 'outcome'.
 	self assert: (outcome at: 'optionId') equals: 'allow_once'
@@ -23,7 +23,7 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
 	| response outcome |
 	response := ACPRequestPermissionResponse new.
 	AbTopicHandler new
-		applyApprovalOptionId: #reject_always
+		applyApprovalOptionId: #rejectAlways
 		toResponse: response.
 	outcome := response asDictionary at: 'outcome'.
 	self assert: (outcome at: 'optionId') equals: 'reject_always'
@@ -37,11 +37,11 @@ AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
 	options := AbTopicHandler new permissionOptionsFor: request.
 	self assert: options size equals: 3.
 	self assert: options first key equals: 'Allow once'.
-	self assert: options first value equals: #allow_once.
+	self assert: options first value equals: #allowOnce.
 	self assert: options second key equals: 'Always allow'.
-	self assert: options second value equals: #allow_always.
+	self assert: options second value equals: #allowAlways.
 	self assert: options third key equals: 'Deny'.
-	self assert: options third value equals: #reject_once
+	self assert: options third value equals: #rejectOnce
 ]
 
 { #category : 'tests' }

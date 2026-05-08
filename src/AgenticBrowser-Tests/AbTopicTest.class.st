@@ -206,7 +206,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage approvalRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApproval: 'yes'.
-	self assert: msg approvalResponse equals: #allowAlways.
+	self assert: msg approvalResponse equals: #allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -233,12 +233,12 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage
 		       approvalRequestText: 'Choose an option'
-		       options: (OrderedCollection
-				        with: ('Allow once' -> #allow_once)
-				        with: ('Deny' -> #reject_once)).
+		       options: {
+				       'Allow once' -> #allowOnce.
+				       'Deny' -> #rejectOnce }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: #allow_once.
-	self assert: msg approvalResponse equals: #allow_once.
+	topic resolveApprovalWithOptionId: #allowOnce.
+	self assert: msg approvalResponse equals: #allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -255,7 +255,7 @@ AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways
+	self assert: response equals: #allowOnce
 ]
 
 { #category : 'tests' }
@@ -271,7 +271,7 @@ AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways.
+	self assert: response equals: #allowOnce.
 	self assert: topic status equals: #endTurn
 ]
 
@@ -290,7 +290,7 @@ AbTopicTest >> testRequestApprovalFromDoneTransitionsToWorking [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways.
+	self assert: response equals: #allowOnce.
 	self assert: topic status equals: #working
 ]
 
