@@ -121,8 +121,7 @@ AbTopic >> currentModel [
 AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
 
 	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ nil ].
-	modelOption ifNil: [ ^ self ].
+	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
 	currentModel := modelOption currentValue.
 	self announcer announce: (AbTopicCurrentModelChanged new
 			 topic: self;
@@ -196,7 +195,8 @@ AbTopic >> doConnect [
 	sessionResult := self client newSessionBy: [ :params |
 						 params cwd: self ensureWorkingDirectoryForConnection ].
 	self sessionId: sessionResult sessionId.
-	sessionResult configOptions ifNotEmpty: [ :rawOptions |
+	"ifNotNil: guards against ACPBaseSessionResponse>>configOptions returning nil for absent key; remove once fixed in ACP library"
+	sessionResult configOptions ifNotNil: [ :rawOptions |
 		self updateCurrentModelFromConfigOptions:
 			(rawOptions collect: [ :each | ACPConfigOption fromDictionary: each ]) ]
 ]
