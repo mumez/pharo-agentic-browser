@@ -14,7 +14,7 @@ Allow users to define a completion condition (goal) for a topic. When set, the A
 
 1. User right-clicks a topic in the topic list → "Set Goal..." context menu item.
 2. A `UIManager request:` modal appears; user types the goal description (e.g., `all tests pass`).
-3. AgenticBrowser sets `topic goal:` and sends the goal notification prompt to the AI:
+3. AgenticBrowser calls `topic goalDescription:` and sends the goal notification prompt to the AI:
    ```
    Goal has been set: <description>. When the goal is achieved, summarize and
    report in result-<topic-id>.md. Keep retrying until the goal is achieved.
@@ -44,7 +44,7 @@ checkAchievement          "checks result file, reads, deletes, sets achieved; re
 whenAchieved: aBlock      "optional callback block"
 
 "AbTopic"
-goal: aString             "creates AbTopicGoal on: self, stores it, sends notification prompt"
+goalDescription: aString  "creates AbTopicGoal on: self, stores description, sends notification prompt"
 topicGoal                 "getter for the AbTopicGoal instance (nil if not set)"
 checkGoalAchievement      "delegates to topicGoal checkAchievement"
 resetFromGoalAchieved     "transitions #goalAchieved → #initial"

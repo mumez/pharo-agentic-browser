@@ -16,7 +16,7 @@
 |------|--------|----------------|
 | `src/AgenticBrowser-Core/AbTopicGoal.class.st` | Create | Goal state: description, achieved text, callback block, result file |
 | `src/AgenticBrowser-Core/AbTopicGoalAchieved.class.st` | Create | Announcement class for goal achievement event |
-| `src/AgenticBrowser-Core/AbTopic.class.st` | Modify | Add `topicGoal` instVar, `goal:`, `checkGoalAchievement`, `resetFromGoalAchieved`, `#goalAchieved` state |
+| `src/AgenticBrowser-Core/AbTopic.class.st` | Modify | Add `topicGoal` instVar, `goalDescription:`, `checkGoalAchievement`, `resetFromGoalAchieved`, `#goalAchieved` state |
 | `src/AgenticBrowser-UI/AbTopicListPresenter.class.st` | Modify | Add "Set Goal..." context menu item and `onSetGoalRequest` handler |
 | `src/AgenticBrowser-Tests/AbTopicGoalTest.class.st` | Create | Unit tests for AbTopicGoal |
 | `src/AgenticBrowser-Tests/AbTopicGoalStateTest.class.st` | Create | State machine tests for #goalAchieved transitions |
@@ -506,7 +506,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 ---
 
-## Task 4: Implement `goal:` on AbTopic and goal achievement check in `sendPrompt:`
+## Task 4: Implement `goalDescription:` on AbTopic and goal achievement check in `sendPrompt:`
 
 **Files:**
 - Modify: `src/AgenticBrowser-Core/AbTopic.class.st`
@@ -518,11 +518,11 @@ Append to `src/AgenticBrowser-Tests/AbTopicGoalStateTest.class.st`:
 
 ```smalltalk
 { #category : 'tests' }
-AbTopicGoalStateTest >> testGoalSetterCreatesAbTopicGoal [
+AbTopicGoalStateTest >> testGoalDescriptionCreatesAbTopicGoal [
 
 	| topic |
 	topic := AbTopic new.
-	topic goal: 'all tests pass'.
+	topic goalDescription: 'all tests pass'.
 	self assert: (topic topicGoal isKindOf: AbTopicGoal).
 	self assert: topic topicGoal description equals: 'all tests pass'
 ]
@@ -540,7 +540,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenFileAbsent [
 
 	| topic |
 	topic := AbTopic new.
-	topic goal: 'all tests pass'.
+	topic goalDescription: 'all tests pass'.
 	self deny: topic checkGoalAchievement
 ]
 
@@ -549,7 +549,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFil
 
 	| topic resultFile |
 	topic := AbTopic new.
-	topic goal: 'all tests pass'.
+	topic goalDescription: 'all tests pass'.
 	topic stateMachine handleEvent: #promptSent.
 	resultFile := topic topicGoal resultFile.
 	resultFile parent ensureCreateDirectory.
@@ -569,15 +569,15 @@ AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFil
 mcp: import_package AgenticBrowser-Tests
 mcp: run_class_test AbTopicGoalStateTest
 ```
-Expected: FAIL — `goal:` and `checkGoalAchievement` undefined on AbTopic.
+Expected: FAIL — `goalDescription:` undefined on AbTopic.
 
-- [ ] **Step 3: Add `goal:` and `checkGoalAchievement` to AbTopic**
+- [ ] **Step 3: Add `goalDescription:` and `checkGoalAchievement` to AbTopic**
 
 Add to `src/AgenticBrowser-Core/AbTopic.class.st`:
 
 ```smalltalk
 { #category : 'operations' }
-AbTopic >> goal: aString [
+AbTopic >> goalDescription: aString [
 
 	topicGoal := AbTopicGoal on: self.
 	topicGoal description: aString.
@@ -773,7 +773,7 @@ AbTopicListPresenter >> onSetGoalRequest [
 		initialAnswer: (topic topicGoal ifNotNil: [ :g | g description ] ifNil: [ '' ])
 		title: 'Set Goal'.
 	(goalText isNil or: [ goalText trimmed isEmpty ]) ifTrue: [ ^ self ].
-	topic goal: goalText trimmed
+	topic goalDescription: goalText trimmed
 ]
 ```
 
@@ -810,7 +810,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 | Requirement | Task |
 |-------------|------|
-| `goal:` sets goal and sends notification prompt | Task 4 |
+| `goalDescription:` sets goal and sends notification prompt | Task 4 |
 | Notification prompt text includes description and result filename | Task 2 (notificationPrompt) |
 | `result-<topicId>.md` detection after end_turn | Task 4 (checkGoalAchievement + sendPrompt:) |
 | File read, delete, store in `achieved` | Task 2 (AbTopicGoal checkAchievement) |
@@ -825,7 +825,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 No TBDs or "similar to Task N" references found. All code blocks are complete.
 
 ### Type consistency
-- `AbTopicGoal on: topic` used in Task 2 (class side), Task 4 (`goal:` method) — consistent.
-- `topicGoal` instVar name consistent across Task 3 (instVars, accessor) and Task 4 (goal:, checkGoalAchievement).
+- `AbTopicGoal on: topic` used in Task 2 (class side), Task 4 (`goalDescription:` method) — consistent.
+- `topicGoal` instVar name consistent across Task 3 (instVars, accessor) and Task 4 (`goalDescription:`, `checkGoalAchievement`).
 - `AbTopicGoalAchieved` carrying `topic` + `goal` fields consistent between Task 1 (class) and Task 4 (`announceGoalAchieved`).
 - `stateMachine handleEvent: #goalReached` in Task 3 (state definition) and Task 4 (checkGoalAchievement) — consistent.
