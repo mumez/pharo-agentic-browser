@@ -16,7 +16,8 @@ Class {
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
 		'logger',
-		'availableCommands'
+		'availableCommands',
+		'topicGoal'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -222,6 +223,12 @@ AbTopic >> isWaitingForHuman [
 ]
 
 { #category : 'testing' }
+AbTopic >> isGoalAchieved [
+
+	^ self status = #goalAchieved
+]
+
+{ #category : 'testing' }
 AbTopic >> isWorking [
 
 	^ self status = #working
@@ -253,7 +260,8 @@ AbTopic >> initializeStateMachine [
 	(stateMachine addStateNamed: #working)
 		entryAction: [ self announceStatusChanged: #working ];
 		when: #permissionRequested to: #waitingForHuman;
-		when: #turnEnded to: #endTurn.
+		when: #turnEnded to: #endTurn;
+		when: #goalReached to: #goalAchieved.
 	(stateMachine addStateNamed: #waitingForHuman)
 		entryAction: [ self announceStatusChanged: #waitingForHuman ];
 		when: #humanResponded to: #working.
@@ -261,6 +269,9 @@ AbTopic >> initializeStateMachine [
 		entryAction: [ self announceStatusChanged: #endTurn ];
 		when: #permissionRequested to: #waitingForHuman;
 		when: #promptSent to: #working.
+	(stateMachine addStateNamed: #goalAchieved)
+		entryAction: [ self announceStatusChanged: #goalAchieved ];
+		when: #reset to: #initial.
 	stateMachine setStartStateTo: #initial.
 	stateMachine start
 ]
@@ -515,4 +526,20 @@ AbTopic >> workingDirectoryPath: aString [
 		previousWorkingDirectory unsubscribeFromSisServerImportEvents ].
 	workingDirectoryPath := aString.
 	workingDirectory := nil
+]
+
+{ #category : 'accessing' }
+AbTopic >> topicGoal [
+	^ topicGoal
+]
+
+{ #category : 'accessing' }
+AbTopic >> topicGoal: anAbTopicGoal [
+	topicGoal := anAbTopicGoal
+]
+
+{ #category : 'operations' }
+AbTopic >> resetFromGoalAchieved [
+
+	self stateMachine handleEvent: #reset
 ]
