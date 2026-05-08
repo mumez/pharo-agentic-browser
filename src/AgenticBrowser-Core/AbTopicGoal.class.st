@@ -58,13 +58,20 @@ AbTopicGoal >> notificationPrompt [
 
 	^ 'Goal has been set: ' , description
 		, '. When the goal is achieved, summarize and report in result-'
-		, topic topicId , '.md. Keep retrying until the goal is achieved.'
+		, self resultFileBasename
+		, '. Keep retrying until the goal is achieved.'
 ]
 
 { #category : 'accessing' }
 AbTopicGoal >> resultFile [
 
-	^ topic workingDirectory path / ('result-' , topic topicId , '.md')
+	^ topic workingDirectory path / self resultFileBasename
+]
+
+{ #category : 'accessing' }
+AbTopicGoal >> resultFileBasename [
+
+	^ 'result-' , topic topicId , '.md'
 ]
 
 { #category : 'operations' }

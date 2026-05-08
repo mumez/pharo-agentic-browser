@@ -84,6 +84,15 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 ]
 
 { #category : 'tests' }
+AbTopicGoalTest >> testResultFileBasenameMatchesTopicId [
+
+	| goal topic |
+	topic := AbTopic new.
+	goal := AbTopicGoal on: topic.
+	self assert: goal resultFileBasename equals: 'result-' , topic topicId , '.md'
+]
+
+{ #category : 'tests' }
 AbTopicGoalTest >> testWhenAchievedBlockIsCalledAfterCheckAchievement [
 
 	| goal topic resultFile called |
