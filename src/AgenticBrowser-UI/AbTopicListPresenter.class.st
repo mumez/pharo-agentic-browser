@@ -326,7 +326,7 @@ AbTopicListPresenter >> iconNameFor: aTopic [
 	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
 	aTopic isWorking ifTrue: [ ^ #pointersTo ].
 	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
-	aTopic isGoalAchieved ifTrue: [ ^ #glamorousCheckboxSelected ].
+	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
 	aTopic isEndTurn ifTrue: [ ^ #accept ].
 	^ #radioButtonOff
 ]
