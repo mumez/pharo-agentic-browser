@@ -550,7 +550,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFil
 	| topic resultFile |
 	topic := AbTopic new.
 	topic goalDescription: 'all tests pass'.
-	topic stateMachine handleEvent: #promptSent.
+	"State is already #working because goalDescription: called sendPrompt: which fired #promptSent"
 	resultFile := topic topicGoal resultFile.
 	resultFile parent ensureCreateDirectory.
 	resultFile writeStreamDo: [ :s | s nextPutAll: 'Done.' ].
