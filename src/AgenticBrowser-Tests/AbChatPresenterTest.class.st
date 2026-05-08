@@ -364,3 +364,29 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
 	presenter topic: topic.
 	self assert: presenter dotsAnimationProcess notNil
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelTextInitiallyEmpty [
+
+	self assert: presenter modelText isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelText [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicCurrentModelChanged: topic model: 'claude-opus-4'.
+	self assert: presenter modelText equals: 'claude-opus-4'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
+
+	| topic |
+	topic := AbTopic new.
+	topic instVarNamed: #currentModel put: 'claude-sonnet-4'.
+	presenter topic: topic.
+	self assert: presenter modelText equals: 'claude-sonnet-4'
+]

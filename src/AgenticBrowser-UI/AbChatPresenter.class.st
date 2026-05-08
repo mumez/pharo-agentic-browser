@@ -12,7 +12,8 @@ Class {
 		'statusBarPresenter',
 		'statusLabel',
 		'commandsDropList',
-		'isUpdatingCommands'
+		'isUpdatingCommands',
+		'modelLabel'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -37,6 +38,7 @@ AbChatPresenter >> initializeStatusBar [
 				 vAlignCenter;
 				 add: (commandsDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
+				 add: (modelLabel := statusBarPresenter newLabel) expand: false;
 				 add: statusBarPresenter newNullPresenter;
 				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
 				 yourself)
@@ -177,6 +179,12 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 	self messagesPresenter refreshMessages
 ]
 
+{ #category : 'event handling' }
+AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+
+	self modelText: (aModelString ifNil: [ '' ])
+]
+
 { #category : 'accessing' }
 AbChatPresenter >> statusText [
 
@@ -193,6 +201,24 @@ AbChatPresenter >> statusText: aString [
 AbChatPresenter >> clearStatusText [
 
 	self statusText: ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelLabel [
+
+	^ modelLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText [
+
+	^ self modelLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText: aString [
+
+	self modelLabel label: aString
 ]
 
 { #category : 'accessing' }
@@ -302,6 +328,10 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicAvailableCommandsChanged
 		do: [ :ann | self defer: [ self onAvailableCommandsChanged: ann topic commands: ann commands ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicCurrentModelChanged
+		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic model: ann model ] ]
 		for: self
 ]
 
@@ -333,6 +363,7 @@ AbChatPresenter >> topic: anAbTopic [
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages.
 	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
+	self onTopicCurrentModelChanged: anAbTopic model: anAbTopic currentModel.
 	self onTopicStatusChanged: anAbTopic status: anAbTopic status
 ]
 

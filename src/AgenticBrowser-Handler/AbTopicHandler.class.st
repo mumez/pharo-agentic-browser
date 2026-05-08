@@ -122,7 +122,9 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 	aSessionUpdate isAgentThoughtChunk
 		ifTrue: [ ^ self topic addAiThoughtChunk: aSessionUpdate content text ].
 	aSessionUpdate isAvailableCommandsUpdate
-		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ]
+		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ].
+	aSessionUpdate isConfigOptionUpdate
+		ifTrue: [ ^ self topic updateCurrentModelFromConfigOptions: aSessionUpdate configOptions ]
 ]
 
 { #category : 'accessing' }
