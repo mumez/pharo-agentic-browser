@@ -46,7 +46,22 @@ AbMessageTest >> testApprovalRequestCreation [
 	self assert: msg sender equals: #ai.
 	self assert: msg text equals: 'May I modify DBAdapter?'.
 	self assert: msg isApprovalRequest.
+	self assert: msg approvalOptions isEmpty.
 	self assert: msg approvalResponse isNil
+]
+
+{ #category : 'tests' }
+AbMessageTest >> testApprovalRequestCreationWithOptions [
+
+	| options msg |
+	options := {
+		           'Allow once' -> #allowOnce.
+		           'Deny' -> #rejectOnce }.
+	msg := AbMessage
+		       approvalRequestText: 'Select permission option'
+		       options: options.
+	self assert: msg isApprovalRequest.
+	self assert: msg approvalOptions equals: options
 ]
 
 { #category : 'tests' }

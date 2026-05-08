@@ -81,6 +81,7 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	self pendingApprovalMessage: anAbMessage.
 	self confirmPresenter confirmationText: anAbMessage text.
+	self confirmPresenter approvalOptions: anAbMessage approvalOptions.
 	self layout: self confirmModeLayout
 ]
 
@@ -130,7 +131,8 @@ AbChatPresenter >> onCancelButtonClicked [
 AbChatPresenter >> onConfirmButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
-	self currentTopic resolveApproval: 'yes'.
+	self currentTopic
+		resolveApprovalWithOptionId: self confirmPresenter selectedOptionId.
 	self exitApprovalMode
 ]
 
@@ -138,8 +140,21 @@ AbChatPresenter >> onConfirmButtonClicked [
 AbChatPresenter >> onDenyButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
-	self currentTopic resolveApproval: 'no'.
+	self currentTopic resolveApprovalWithOptionId: self denyOptionIdForPendingApproval.
 	self exitApprovalMode
+]
+
+{ #category : 'private' }
+AbChatPresenter >> denyOptionIdForPendingApproval [
+
+	| rejectOption |
+	self pendingApprovalMessage ifNil: [ ^ #rejectOnce ].
+	rejectOption := self pendingApprovalMessage approvalOptions
+		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
+		                ifNone: [ nil ].
+	^ rejectOption
+		  ifNil: [ #rejectOnce ]
+		  ifNotNil: [ rejectOption value ]
 ]
 
 { #category : 'event handling' }

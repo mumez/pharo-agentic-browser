@@ -152,7 +152,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
 
-	^ aResponseSymbol = #allowAlways
+	^ aResponseSymbol = #allowOnce
 ]
 
 { #category : 'private' }

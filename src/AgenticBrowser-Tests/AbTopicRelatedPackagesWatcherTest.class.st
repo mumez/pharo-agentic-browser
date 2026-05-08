@@ -155,7 +155,7 @@ AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTr
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:
-		(watcher shouldProceedWithExportForApprovalResponse: #allowAlways).
+		(watcher shouldProceedWithExportForApprovalResponse: #allowOnce).
 	self deny:
 		(watcher shouldProceedWithExportForApprovalResponse: #rejectOnce)
 ]

@@ -36,6 +36,19 @@ AbChatPresenterTest >> testEnterApprovalModeSetsConfirmationText [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPresenter [
+
+	| approvalMessage |
+	approvalMessage := AbMessage
+		                   approvalRequestText: 'Pick an option'
+		                   options: {
+						                   'Allow once' -> #allowOnce.
+						                   'Always allow' -> #allowAlways }.
+	presenter enterApprovalMode: approvalMessage.
+	self assert: presenter confirmPresenter optionLabels asArray equals: #( 'Allow once' 'Always allow' )
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testExitApprovalModeRestoresNormalPresenter [
 
 	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow package export?').
@@ -97,10 +110,27 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #allowAlways.
+	self assert: approvalMessage approvalResponse equals: #allowOnce.
 	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
 	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
 	self assert: presenter pendingApprovalMessage isNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic
+		                   addApprovalRequest: 'Pick an option'
+		                   options: {
+						                   'Allow once' -> #allowOnce.
+						                   'Always allow' -> #allowAlways }.
+	presenter enterApprovalMode: approvalMessage.
+	presenter confirmPresenter selectOptionNamed: 'Allow once'.
+	presenter onConfirmButtonClicked.
+	self assert: approvalMessage approvalResponse equals: #allowOnce
 ]
 
 { #category : 'tests' }
