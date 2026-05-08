@@ -17,6 +17,7 @@ AbTopicListPresenter >> buildTopicContextMenu [
 
 	^ SpMenuPresenter new
 		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
+		  addItem: [ :item | item name: 'Set Goal...'; action: [ self onSetGoalRequest ] ];
 		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
@@ -201,6 +202,20 @@ AbTopicListPresenter >> onSetAgentRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onSetGoalRequest [
+
+	| topic goalText |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	goalText := UIManager default
+		request: 'Goal (completion condition):'
+		initialAnswer: (topic topicGoal ifNotNil: [ :g | g description ] ifNil: [ '' ])
+		title: 'Set Goal'.
+	(goalText isNil or: [ goalText trimmed isEmpty ]) ifTrue: [ ^ self ].
+	topic goalDescription: goalText trimmed
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onSetWorkingDirectoryRequest [
 
 	| topic directoryPath |
@@ -311,6 +326,7 @@ AbTopicListPresenter >> iconNameFor: aTopic [
 	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
 	aTopic isWorking ifTrue: [ ^ #pointersTo ].
 	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
+	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
 	aTopic isEndTurn ifTrue: [ ^ #accept ].
 	^ #radioButtonOff
 ]
