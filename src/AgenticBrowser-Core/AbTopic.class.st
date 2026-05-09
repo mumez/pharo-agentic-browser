@@ -17,7 +17,8 @@ Class {
 		'workingDirectoryPath',
 		'logger',
 		'availableCommands',
-		'topicGoal'
+		'topicGoal',
+		'currentModel'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -112,6 +113,23 @@ AbTopic >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'accessing' }
+AbTopic >> currentModel [
+	^ currentModel
+]
+
+{ #category : 'operations' }
+AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
+
+	| modelOption |
+	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
+	currentModel := modelOption currentValue.
+	self announcer announce: (AbTopicCurrentModelChanged new
+			 topic: self;
+			 model: currentModel;
+			 yourself)
+]
+
+{ #category : 'accessing' }
 AbTopic >> agentArguments [
 	^ agentArguments
 ]
@@ -176,7 +194,8 @@ AbTopic >> doConnect [
 	self client initializeBy: [ :params | "use defaults" ].
 	sessionResult := self client newSessionBy: [ :params |
 						 params cwd: self ensureWorkingDirectoryForConnection ].
-	self sessionId: sessionResult sessionId
+	self sessionId: sessionResult sessionId.
+	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
 { #category : 'private' }

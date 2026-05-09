@@ -489,3 +489,54 @@ AbTopicTest >> testUpdateAvailableCommandsFiresAnnouncement [
 	self assert: announced ]
 		ensure: [ topic announcer unsubscribe: self ]
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testCurrentModelInitiallyNil [
+
+	self assert: AbTopic new currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+
+	| topic options modelOption |
+	topic := AbTopic new.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
+	self assert: topic currentModel equals: 'claude-opus-4'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
+
+	| topic options modeOption |
+	topic := AbTopic new.
+	modeOption := ACPConfigOption new beModeCategory.
+	modeOption rawValues at: 'currentValue' put: 'ask'.
+	options := OrderedCollection with: modeOption.
+	topic updateCurrentModelFromConfigOptions: options.
+	self assert: topic currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
+
+	| topic announced announcedModel options modelOption |
+	topic := AbTopic new.
+	announced := false.
+	topic announcer
+		when: AbTopicCurrentModelChanged
+		do: [ :ann |
+			announced := true.
+			announcedModel := ann model ]
+		for: self.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection with: modelOption.
+	[ topic updateCurrentModelFromConfigOptions: options.
+	self assert: announced.
+	self assert: announcedModel equals: 'claude-sonnet-4' ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
