@@ -438,6 +438,14 @@ AbTopic >> rejectPermissionOnTimeout: aMessage [
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ]
 ]
 
+{ #category : 'approval-private' }
+AbTopic >> rejectExportOnTimeout: aMessage [
+
+	aMessage approvalResponse ifNotNil: [ ^ self ].
+	self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
+	aMessage approvalResponse: #rejectOnce
+]
+
 { #category : 'accessing' }
 AbTopic >> relatedPackagesWatcher [
 
@@ -481,16 +489,11 @@ AbTopic >> requestApproval: aDescription options: approvalOptions [
 { #category : 'operations' }
 AbTopic >> requestPackageExport: aDescription [
 
-	| msg waitSeconds |
+	| msg |
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
 	msg := self addApprovalRequest: aDescription options: self defaultApprovalOptions.
-	waitSeconds := 0.
-	[ msg approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
-		1 second wait.
-		waitSeconds := waitSeconds + 1 ].
-	msg approvalResponse isNil ifTrue: [
-		self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
-		msg approvalResponse: #rejectOnce ].
+	self waitForApprovalResponseOf: msg.
+	self rejectExportOnTimeout: msg.
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
@@ -659,7 +662,8 @@ AbTopic >> waitForApprovalResponseOf: aMessage [
 	waitSeconds := 0.
 	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
 		1 second wait.
-		waitSeconds := waitSeconds + 1 ]
+		waitSeconds := waitSeconds + 1 ].
+	^ aMessage approvalResponse
 ]
 
 { #category : 'approval-private' }
