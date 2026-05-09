@@ -195,8 +195,7 @@ AbTopic >> doConnect [
 	sessionResult := self client newSessionBy: [ :params |
 						 params cwd: self ensureWorkingDirectoryForConnection ].
 	self sessionId: sessionResult sessionId.
-	self updateCurrentModelFromConfigOptions:
-		(sessionResult configOptions collect: [ :each | ACPConfigOption fromDictionary: each ])
+	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
 { #category : 'private' }
