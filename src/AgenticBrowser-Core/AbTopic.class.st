@@ -195,10 +195,8 @@ AbTopic >> doConnect [
 	sessionResult := self client newSessionBy: [ :params |
 						 params cwd: self ensureWorkingDirectoryForConnection ].
 	self sessionId: sessionResult sessionId.
-	"ifNotNil: guards against ACPBaseSessionResponse>>configOptions returning nil for absent key; remove once fixed in ACP library"
-	sessionResult configOptions ifNotNil: [ :rawOptions |
-		self updateCurrentModelFromConfigOptions:
-			(rawOptions collect: [ :each | ACPConfigOption fromDictionary: each ]) ]
+	self updateCurrentModelFromConfigOptions:
+		(sessionResult configOptions collect: [ :each | ACPConfigOption fromDictionary: each ])
 ]
 
 { #category : 'private' }
