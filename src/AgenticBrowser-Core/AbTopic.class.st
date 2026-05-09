@@ -24,18 +24,6 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
-{ #category : 'operations' }
-AbTopic >> addAiTextChunk: aString [
-
-	self addAiChunk: aString think: false
-]
-
-{ #category : 'operations' }
-AbTopic >> addAiThoughtChunk: aString [
-
-	self addAiChunk: aString think: true
-]
-
 { #category : 'private' }
 AbTopic >> addAiChunk: aString think: aBoolean [
 
@@ -49,6 +37,18 @@ AbTopic >> addAiChunk: aString think: aBoolean [
 			msg := AbMessage sender: #ai text: aString isThink: aBoolean.
 			self messages add: msg ].
 	self announceMessageAdded: self messages last
+]
+
+{ #category : 'operations' }
+AbTopic >> addAiTextChunk: aString [
+
+	self addAiChunk: aString think: false
+]
+
+{ #category : 'operations' }
+AbTopic >> addAiThoughtChunk: aString [
+
+	self addAiChunk: aString think: true
 ]
 
 { #category : 'operations' }
@@ -71,16 +71,21 @@ AbTopic >> addApprovalRequest: aDescription options: approvalOptions [
 	^ msg
 ]
 
+{ #category : 'private' }
+AbTopic >> addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions [
+
+	| msg |
+	msg := self addApprovalRequest: aDescription options: approvalOptions.
+	self stateMachine handleEvent: #permissionRequested.
+	self logger debug: 'requestApproval: status(after permissionRequested)='
+		, self status printString.
+	^ msg
+]
+
 { #category : 'operations' }
 AbTopic >> addPackagePrefix: aString [
 
 	self packagePrefixes add: aString
-]
-
-{ #category : 'operations' }
-AbTopic >> addUpdatedExternalPackageName: aString [
-
-	self updatedExternalPackageNames add: aString
 ]
 
 { #category : 'operations' }
@@ -92,41 +97,10 @@ AbTopic >> addSystemMessage: aString [
 	self announceMessageAdded: msg
 ]
 
-{ #category : 'accessing' }
-AbTopic >> availableCommands [
-	^ availableCommands
-]
-
-{ #category : 'accessing' }
-AbTopic >> availableCommands: aCollection [
-	availableCommands := aCollection
-]
-
 { #category : 'operations' }
-AbTopic >> updateAvailableCommands: aCollection [
+AbTopic >> addUpdatedExternalPackageName: aString [
 
-	self availableCommands: aCollection asOrderedCollection.
-	self announcer announce: (AbTopicAvailableCommandsChanged new
-			 topic: self;
-			 commands: self availableCommands;
-			 yourself)
-]
-
-{ #category : 'accessing' }
-AbTopic >> currentModel [
-	^ currentModel
-]
-
-{ #category : 'operations' }
-AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
-
-	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	currentModel := modelOption currentValue.
-	self announcer announce: (AbTopicCurrentModelChanged new
-			 topic: self;
-			 model: currentModel;
-			 yourself)
+	self updatedExternalPackageNames add: aString
 ]
 
 { #category : 'accessing' }
@@ -137,6 +111,15 @@ AbTopic >> agentArguments [
 { #category : 'accessing' }
 AbTopic >> agentArguments: anArray [
 	agentArguments := anArray
+]
+
+{ #category : 'private' }
+AbTopic >> announceGoalAchieved [
+
+	self announcer announce: (AbTopicGoalAchieved new
+			 topic: self;
+			 goal: self topicGoal;
+			 yourself)
 ]
 
 { #category : 'private' }
@@ -164,14 +147,81 @@ AbTopic >> announcer [
 	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
+{ #category : 'private' }
+AbTopic >> approvalResponseForUserText: aUserText [
+
+	^ (aUserText trimmed asLowercase includesSubstring: 'no')
+		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
+		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
+			ifTrue: [ #rejectOnce ]
+			ifFalse: [ #allowOnce ]
+]
+
 { #category : 'accessing' }
-AbTopic >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
+AbTopic >> availableCommands [
+	^ availableCommands
+]
+
+{ #category : 'accessing' }
+AbTopic >> availableCommands: aCollection [
+	availableCommands := aCollection
+]
+
+{ #category : 'operations' }
+AbTopic >> cancelPrompt [
+
+	self isWorking ifFalse: [ ^ self ].
+	self client ifNotNil: [
+		self client cancelBy: [ :params | params sessionId: self sessionId ] ].
+	self stateMachine handleEvent: #turnEnded
+]
+
+{ #category : 'operations' }
+AbTopic >> checkGoalAchievement [
+
+	self topicGoal ifNil: [ ^ false ].
+	self topicGoal checkAchievement ifFalse: [ ^ false ].
+	self stateMachine handleEvent: #goalReached.
+	self announceGoalAchieved.
+	self topicGoal runWhenAchievedBlock.
+	^ true
+]
+
+{ #category : 'operations' }
+AbTopic >> clearUpdatedExternalPackageNames [
+
+	self updatedExternalPackageNames removeAll
 ]
 
 { #category : 'accessing' }
 AbTopic >> client [
 	^ client
+]
+
+{ #category : 'accessing' }
+AbTopic >> client: anACPClient [
+
+	client := anACPClient
+]
+
+{ #category : 'accessing' }
+AbTopic >> currentModel [
+	^ currentModel
+]
+
+{ #category : 'private' }
+AbTopic >> defaultApprovalOptions [
+
+	^ {
+		  'Confirm' -> #allowOnce.
+		  'Deny' -> #rejectOnce }
+]
+
+{ #category : 'accessing' }
+AbTopic >> defaultWorkingDirectoryPath [
+
+	^ (Smalltalk imageDirectory / 'agentic-browser'
+	   / self workingDirectory directoryName) fullName
 ]
 
 { #category : 'operations' }
@@ -213,17 +263,21 @@ AbTopic >> ensureWorkingDirectoryForConnection [
 	^ self workingDirectory path fullName
 ]
 
+{ #category : 'private' }
+AbTopic >> finishApprovalRequestIfNeededForInitialState: wasInitial [
 
-{ #category : 'accessing' }
-AbTopic >> relatedPackagesWatcher [
-
-	^ relatedPackagesWatcher ifNil: [ relatedPackagesWatcher := AbTopicRelatedPackagesWatcher forTopic: self ]
+	wasInitial ifFalse: [ ^ self ].
+	self stateMachine handleEvent: #turnEnded.
+	self logger debug: 'requestApproval: status(after turnEnded from initial)='
+		, self status printString
 ]
 
-{ #category : 'accessing' }
-AbTopic >> relatedPackagesWatcherIfPresent [
+{ #category : 'operations' }
+AbTopic >> goalDescription: aString [
 
-	^ relatedPackagesWatcher
+	self topicGoal: (AbTopicGoal on: self).
+	self topicGoal description: aString.
+	self sendPrompt: self topicGoal notificationPrompt
 ]
 
 { #category : 'accessing' }
@@ -239,38 +293,6 @@ AbTopic >> hasPendingApprovalRequest [
 		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
 ]
 
-{ #category : 'testing' }
-AbTopic >> isEndTurn [
-
-	^ self status = #endTurn
-]
-
-{ #category : 'testing' }
-AbTopic >> isInitial [
-
-	^ self status = #initial
-]
-
-{ #category : 'testing' }
-AbTopic >> isWaitingForHuman [
-
-	^ self status = #waitingForHuman
-]
-
-{ #category : 'testing' }
-AbTopic >> isGoalAchieved [
-
-	^ self status = #goalAchieved
-]
-
-{ #category : 'testing' }
-AbTopic >> isWorking [
-
-	^ self status = #working
-]
-
-
-
 { #category : 'initialization' }
 AbTopic >> initialize [
 
@@ -283,7 +305,6 @@ AbTopic >> initialize [
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
-
 
 { #category : 'initialization' }
 AbTopic >> initializeStateMachine [
@@ -311,6 +332,58 @@ AbTopic >> initializeStateMachine [
 	stateMachine start
 ]
 
+{ #category : 'testing' }
+AbTopic >> isEndTurn [
+
+	^ self status = #endTurn
+]
+
+{ #category : 'testing' }
+AbTopic >> isGoalAchieved [
+
+	^ self status = #goalAchieved
+]
+
+{ #category : 'testing' }
+AbTopic >> isInitial [
+
+	^ self status = #initial
+]
+
+{ #category : 'testing' }
+AbTopic >> isWaitingForHuman [
+
+	^ self status = #waitingForHuman
+]
+
+{ #category : 'testing' }
+AbTopic >> isWorking [
+
+	^ self status = #working
+]
+
+{ #category : 'accessing' }
+AbTopic >> lastUpdated [
+
+	self messages ifEmpty: [ ^ nil ].
+	^ self messages
+		  inject: self messages first lastUpdated
+		  into: [ :latest :each | latest max: each lastUpdated ]
+]
+
+{ #category : 'private' }
+AbTopic >> logRequestApprovalStart: aDescription [
+
+	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
+	self logger debug: 'requestApproval: status(before permissionRequested)='
+		, self status printString
+]
+
+{ #category : 'accessing' }
+AbTopic >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
 { #category : 'accessing' }
 AbTopic >> matchingPackageNames [
 
@@ -329,15 +402,6 @@ AbTopic >> messages [
 ]
 
 { #category : 'accessing' }
-AbTopic >> lastUpdated [
-
-	self messages ifEmpty: [ ^ nil ].
-	^ self messages
-		  inject: self messages first lastUpdated
-		  into: [ :latest :each | latest max: each lastUpdated ]
-]
-
-{ #category : 'accessing' }
 AbTopic >> packagePrefixes [
 	^ packagePrefixes
 ]
@@ -347,9 +411,34 @@ AbTopic >> packagePrefixes: aCollection [
 	packagePrefixes := aCollection asSet
 ]
 
+{ #category : 'private' }
+AbTopic >> pendingApprovalMessage [
+
+	^ self messages
+		detect: [ :m | m isApprovalRequest and: [ m approvalResponse isNil ] ]
+		ifNone: [ nil ]
+]
+
+{ #category : 'private' }
+AbTopic >> rejectApprovalOnTimeout: aMessage [
+
+	aMessage approvalResponse ifNotNil: [ ^ self ].
+	self logger debug: 'requestApproval: timeout reached, auto rejecting'.
+	aMessage approvalResponse: #rejectOnce.
+	self isWaitingForHuman ifTrue: [
+		self stateMachine handleEvent: #humanResponded ]
+]
+
 { #category : 'accessing' }
-AbTopic >> updatedExternalPackageNames [
-	^ updatedExternalPackageNames
+AbTopic >> relatedPackagesWatcher [
+
+	^ relatedPackagesWatcher ifNil: [ relatedPackagesWatcher := AbTopicRelatedPackagesWatcher forTopic: self ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> relatedPackagesWatcherIfPresent [
+
+	^ relatedPackagesWatcher
 ]
 
 { #category : 'operations' }
@@ -359,9 +448,51 @@ AbTopic >> removePackagePrefix: aString [
 ]
 
 { #category : 'operations' }
-AbTopic >> clearUpdatedExternalPackageNames [
+AbTopic >> requestApproval: aDescription [
 
-	self updatedExternalPackageNames removeAll
+	^ self requestApproval: aDescription options: self defaultApprovalOptions
+]
+
+{ #category : 'operations' }
+AbTopic >> requestApproval: aDescription options: approvalOptions [
+
+	| msg wasInitial |
+	wasInitial := self isInitial.
+	self logRequestApprovalStart: aDescription.
+	msg := self
+		       addApprovalRequestAndWaitForHuman: aDescription
+		       options: approvalOptions.
+	self waitForApprovalResponseOf: msg.
+	self rejectApprovalOnTimeout: msg.
+	self finishApprovalRequestIfNeededForInitialState: wasInitial.
+	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'approval' }
+AbTopic >> requestPermission: aDescription [
+
+	^ self requestPermission: aDescription options: self defaultApprovalOptions
+]
+
+{ #category : 'approval' }
+AbTopic >> requestPermission: aDescription options: approvalOptions [
+
+	| msg permissionResponse |
+	msg := self addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions.
+	permissionResponse := self waitForPermissionResponseOf: msg.
+	permissionResponse ifNil: [
+		self logger debug: 'requestPermission: timeout reached, auto rejecting'.
+		msg approvalResponse: #rejectOnce.
+		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
+	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'operations' }
+AbTopic >> resetFromGoalAchieved [
+
+	self stateMachine handleEvent: #reset
 ]
 
 { #category : 'operations' }
@@ -393,111 +524,6 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 	self logger debug: 'resolveApproval: done'
 ]
 
-{ #category : 'private' }
-AbTopic >> pendingApprovalMessage [
-
-	^ self messages
-		detect: [ :m | m isApprovalRequest and: [ m approvalResponse isNil ] ]
-		ifNone: [ nil ]
-]
-
-{ #category : 'private' }
-AbTopic >> approvalResponseForUserText: aUserText [
-
-	^ (aUserText trimmed asLowercase includesSubstring: 'no')
-		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
-		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
-			ifTrue: [ #rejectOnce ]
-			ifFalse: [ #allowOnce ]
-]
-
-{ #category : 'operations' }
-AbTopic >> requestApproval: aDescription [
-
-	^ self requestApproval: aDescription options: self defaultApprovalOptions
-]
-
-{ #category : 'operations' }
-AbTopic >> requestApproval: aDescription options: approvalOptions [
-
-	| msg wasInitial |
-	wasInitial := self isInitial.
-	self logRequestApprovalStart: aDescription.
-	msg := self
-		       addApprovalRequestAndWaitForHuman: aDescription
-		       options: approvalOptions.
-	self waitForApprovalResponseOf: msg.
-	self rejectApprovalOnTimeout: msg.
-	self finishApprovalRequestIfNeededForInitialState: wasInitial.
-	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ #rejectOnce ]
-]
-
-{ #category : 'private' }
-AbTopic >> logRequestApprovalStart: aDescription [
-
-	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
-	self logger debug: 'requestApproval: status(before permissionRequested)='
-		, self status printString
-]
-
-{ #category : 'private' }
-AbTopic >> addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions [
-
-	| msg |
-	msg := self addApprovalRequest: aDescription options: approvalOptions.
-	self stateMachine handleEvent: #permissionRequested.
-	self logger debug: 'requestApproval: status(after permissionRequested)='
-		, self status printString.
-	^ msg
-]
-
-{ #category : 'private' }
-AbTopic >> defaultApprovalOptions [
-
-	^ {
-		  'Confirm' -> #allowOnce.
-		  'Deny' -> #rejectOnce }
-]
-
-{ #category : 'private' }
-AbTopic >> waitForApprovalResponseOf: aMessage [
-
-	| waitSeconds |
-	waitSeconds := 0.
-	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
-		1 second wait.
-		waitSeconds := waitSeconds + 1 ]
-]
-
-{ #category : 'private' }
-AbTopic >> rejectApprovalOnTimeout: aMessage [
-
-	aMessage approvalResponse ifNotNil: [ ^ self ].
-	self logger debug: 'requestApproval: timeout reached, auto rejecting'.
-	aMessage approvalResponse: #rejectOnce.
-	self isWaitingForHuman ifTrue: [
-		self stateMachine handleEvent: #humanResponded ]
-]
-
-{ #category : 'private' }
-AbTopic >> finishApprovalRequestIfNeededForInitialState: wasInitial [
-
-	wasInitial ifFalse: [ ^ self ].
-	self stateMachine handleEvent: #turnEnded.
-	self logger debug: 'requestApproval: status(after turnEnded from initial)='
-		, self status printString
-]
-
-{ #category : 'operations' }
-AbTopic >> cancelPrompt [
-
-	self isWorking ifFalse: [ ^ self ].
-	self client ifNotNil: [
-		self client cancelBy: [ :params | params sessionId: self sessionId ] ].
-	self stateMachine handleEvent: #turnEnded
-]
-
 { #category : 'operations' }
 AbTopic >> sendPrompt: aString [
 
@@ -526,12 +552,6 @@ AbTopic >> sessionId [
 AbTopic >> sessionId: aString [
 
 	sessionId := aString
-]
-
-{ #category : 'accessing' }
-AbTopic >> client: anACPClient [
-
-	client := anACPClient
 ]
 
 { #category : 'operations' }
@@ -567,15 +587,66 @@ AbTopic >> title: aString [
 ]
 
 { #category : 'accessing' }
+AbTopic >> topicGoal [
+	^ topicGoal
+]
+
+{ #category : 'accessing' }
+AbTopic >> topicGoal: anAbTopicGoal [
+	topicGoal := anAbTopicGoal
+]
+
+{ #category : 'accessing' }
 AbTopic >> topicId [
 	^ topicId
 ]
 
-{ #category : 'accessing' }
-AbTopic >> defaultWorkingDirectoryPath [
+{ #category : 'operations' }
+AbTopic >> updateAvailableCommands: aCollection [
 
-	^ (Smalltalk imageDirectory / 'agentic-browser'
-	   / self workingDirectory directoryName) fullName
+	self availableCommands: aCollection asOrderedCollection.
+	self announcer announce: (AbTopicAvailableCommandsChanged new
+			 topic: self;
+			 commands: self availableCommands;
+			 yourself)
+]
+
+{ #category : 'operations' }
+AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
+
+	| modelOption |
+	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
+	currentModel := modelOption currentValue.
+	self announcer announce: (AbTopicCurrentModelChanged new
+			 topic: self;
+			 model: currentModel;
+			 yourself)
+]
+
+{ #category : 'accessing' }
+AbTopic >> updatedExternalPackageNames [
+	^ updatedExternalPackageNames
+]
+
+{ #category : 'private' }
+AbTopic >> waitForApprovalResponseOf: aMessage [
+
+	| waitSeconds |
+	waitSeconds := 0.
+	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
+		1 second wait.
+		waitSeconds := waitSeconds + 1 ]
+]
+
+{ #category : 'approval-private' }
+AbTopic >> waitForPermissionResponseOf: aMessage [
+
+	| waitSeconds |
+	waitSeconds := 0.
+	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default permissionWaitTimeoutSeconds ] ] whileTrue: [
+		1 second wait.
+		waitSeconds := waitSeconds + 1 ].
+	^ aMessage approvalResponse
 ]
 
 { #category : 'accessing' }
@@ -599,48 +670,4 @@ AbTopic >> workingDirectoryPath: aString [
 		previousWorkingDirectory unsubscribeFromSisServerImportEvents ].
 	workingDirectoryPath := aString.
 	workingDirectory := nil
-]
-
-{ #category : 'accessing' }
-AbTopic >> topicGoal [
-	^ topicGoal
-]
-
-{ #category : 'accessing' }
-AbTopic >> topicGoal: anAbTopicGoal [
-	topicGoal := anAbTopicGoal
-]
-
-{ #category : 'operations' }
-AbTopic >> goalDescription: aString [
-
-	self topicGoal: (AbTopicGoal on: self).
-	self topicGoal description: aString.
-	self sendPrompt: self topicGoal notificationPrompt
-]
-
-{ #category : 'operations' }
-AbTopic >> checkGoalAchievement [
-
-	self topicGoal ifNil: [ ^ false ].
-	self topicGoal checkAchievement ifFalse: [ ^ false ].
-	self stateMachine handleEvent: #goalReached.
-	self announceGoalAchieved.
-	self topicGoal runWhenAchievedBlock.
-	^ true
-]
-
-{ #category : 'private' }
-AbTopic >> announceGoalAchieved [
-
-	self announcer announce: (AbTopicGoalAchieved new
-			 topic: self;
-			 goal: self topicGoal;
-			 yourself)
-]
-
-{ #category : 'operations' }
-AbTopic >> resetFromGoalAchieved [
-
-	self stateMachine handleEvent: #reset
 ]

@@ -12,18 +12,6 @@ AbTopicTest >> setUp [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
-
-	| topic |
-	topic := AbTopic new.
-	topic addAiThoughtChunk: 'Let me think...'.
-	self assert: topic messages size equals: 1.
-	self assert: topic messages last sender equals: #ai.
-	self assert: topic messages last text equals: 'Let me think...'.
-	self assert: topic messages last isThink
-]
-
-{ #category : 'tests' }
 AbTopicTest >> testAddAiTextChunkAppendsToExistingAiMessage [
 
 	| topic |
@@ -32,6 +20,17 @@ AbTopicTest >> testAddAiTextChunkAppendsToExistingAiMessage [
 	topic addAiTextChunk: ' world'.
 	self assert: topic messages size equals: 1.
 	self assert: topic messages last text equals: 'Hello world'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAddAiTextChunkCreatesMessage [
+
+	| topic |
+	topic := AbTopic new.
+	topic addAiTextChunk: 'Hello'.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #ai.
+	self assert: topic messages last text equals: 'Hello'
 ]
 
 { #category : 'tests' }
@@ -49,14 +48,15 @@ AbTopicTest >> testAddAiTextChunkDoesNotAppendToThinkMessage [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAddAiTextChunkCreatesMessage [
+AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
 
 	| topic |
 	topic := AbTopic new.
-	topic addAiTextChunk: 'Hello'.
+	topic addAiThoughtChunk: 'Let me think...'.
 	self assert: topic messages size equals: 1.
 	self assert: topic messages last sender equals: #ai.
-	self assert: topic messages last text equals: 'Hello'
+	self assert: topic messages last text equals: 'Let me think...'.
+	self assert: topic messages last isThink
 ]
 
 { #category : 'tests' }
@@ -70,14 +70,9 @@ AbTopicTest >> testAddApprovalRequestAddsMessage [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testDoneToWorkingOnNewPrompt [
+AbTopicTest >> testAvailableCommandsInitiallyEmpty [
 
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #turnEnded.
-	topic stateMachine handleEvent: #promptSent.
-	self assert: topic status equals: #working
+	self assert: AbTopic new availableCommands isEmpty
 ]
 
 { #category : 'tests' }
@@ -105,6 +100,23 @@ AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testCurrentModelInitiallyNil [
+
+	self assert: AbTopic new currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDoneToWorkingOnNewPrompt [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	topic stateMachine handleEvent: #promptSent.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testEndedTransition [
 
 	| topic |
@@ -112,23 +124,6 @@ AbTopicTest >> testEndedTransition [
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
 	self assert: topic status equals: #endTurn
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testHumanRespondedTransition [
-
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #permissionRequested.
-	topic stateMachine handleEvent: #humanResponded.
-	self assert: topic status equals: #working
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testInitialStatus [
-
-	self assert: AbTopic new status equals: #initial
 ]
 
 { #category : 'tests' }
@@ -142,33 +137,14 @@ AbTopicTest >> testHasPendingApprovalRequest [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testPermissionRequestedTransition [
+AbTopicTest >> testHumanRespondedTransition [
 
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	self assert: topic status equals: #waitingForHuman
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testPermissionRequestedTransitionFromIdle [
-
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #permissionRequested.
-	self assert: topic status equals: #waitingForHuman
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testPermissionRequestedTransitionFromDone [
-
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #turnEnded.
-	topic stateMachine handleEvent: #permissionRequested.
-	self assert: topic status equals: #waitingForHuman
+	topic stateMachine handleEvent: #humanResponded.
+	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
@@ -188,12 +164,126 @@ AbTopicTest >> testImportGuardNestingCounter [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testInitialStatus [
+
+	self assert: AbTopic new status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testLastUpdatedIsNilWhenNoMessages [
+
+	self assert: AbTopic new lastUpdated isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testLastUpdatedUsesNewestMessageUpdateTime [
+
+	| topic firstMessage secondMessage |
+	topic := AbTopic new.
+	firstMessage := AbMessage sender: #ai text: 'First'.
+	topic messages add: firstMessage.
+	(Delay forMilliseconds: 1) wait.
+	secondMessage := AbMessage sender: #ai text: 'Second'.
+	topic messages add: secondMessage.
+	(Delay forMilliseconds: 1) wait.
+	firstMessage appendText: ' updated'.
+
+	self assert: topic lastUpdated equals: firstMessage lastUpdated.
+	self assert: topic lastUpdated > secondMessage lastUpdated
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransition [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransitionFromDone [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPermissionRequestedTransitionFromIdle [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testPromptSentTransition [
 
 	| topic |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestApprovalTimesOutAndRejects [
+
+	| topic response done timedOut |
+	topic := AbTopic new.
+	AbSettings default approvalWaitTimeoutSeconds: 0.
+	topic stateMachine handleEvent: #promptSent.
+	done := Semaphore new.
+	[
+	response := topic requestApproval: 'Approve this action?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	timedOut ifTrue: [
+		topic resolveApproval: 'no'.
+		done waitTimeoutMilliseconds: 200 ].
+	self deny: timedOut.
+	self assert: response equals: #rejectOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
+
+	| topic response done |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	done := Semaphore new.
+	[
+	response := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
+
+	| topic response done |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowOnce
 ]
 
 { #category : 'tests' }
@@ -239,78 +329,6 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: #allowOnce.
 	self assert: msg approvalResponse equals: #allowOnce.
-	self assert: topic status equals: #working
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
-
-	| topic response done |
-	topic := AbTopic new.
-	done := Semaphore new.
-	[
-	response := topic requestApproval: 'Approve this action?'.
-	done signal ] fork.
-	[ topic hasPendingApprovalRequest ] whileFalse: [
-		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
-	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
-
-	| topic response done |
-	topic := AbTopic new.
-	done := Semaphore new.
-	[
-	response := topic requestApproval: 'Approve this action?'.
-	done signal ] fork.
-	[ topic hasPendingApprovalRequest ] whileFalse: [
-		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
-	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce.
-	self assert: topic status equals: #endTurn
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testRequestApprovalFromDoneTransitionsToWorking [
-
-	| topic response done |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #turnEnded.
-	done := Semaphore new.
-	[
-	response := topic requestApproval: 'Approve this action?'.
-	done signal ] fork.
-	[ topic hasPendingApprovalRequest ] whileFalse: [
-		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
-	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce.
-	self assert: topic status equals: #working
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testRequestApprovalTimesOutAndRejects [
-
-	| topic response done timedOut |
-	topic := AbTopic new.
-	AbSettings default approvalWaitTimeoutSeconds: 0.
-	topic stateMachine handleEvent: #promptSent.
-	done := Semaphore new.
-	[
-	response := topic requestApproval: 'Approve this action?'.
-	done signal ] fork.
-	timedOut := done waitTimeoutMilliseconds: 200.
-	timedOut ifTrue: [
-		topic resolveApproval: 'no'.
-		done waitTimeoutMilliseconds: 200 ].
-	self deny: timedOut.
-	self assert: response equals: #rejectOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -364,116 +382,6 @@ AbTopicTest >> testStatusPredicates [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
-
-	| topic customPath |
-	topic := AbTopic new.
-	customPath := (FileLocator temp / ('ab-topic-custom-' , UUID new asString36))
-		              fullName.
-	topic workingDirectoryPath: customPath.
-	self assert: topic workingDirectoryPath equals: customPath
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testWorkingDirectoryPathLoadsSrcDirectoryFromProject [
-
-	| topic dir |
-	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
-	dir ensureCreateDirectory.
-	(dir / '.project') writeStreamDo: [ :s |
-		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
-	[
-		topic := AbTopic new.
-		topic workingDirectoryPath: dir fullName.
-		self assert: topic workingDirectory srcDirectory equals: 'source'.
-		self
-			assert: topic workingDirectory sourcePath fullName
-			equals: dir fullName , '/source' ]
-		ensure: [ dir deleteAll ]
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
-
-	| topic dir |
-	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
-	dir ensureCreateDirectory.
-	[
-		topic := AbTopic new.
-		topic workingDirectoryPath: dir fullName.
-		self assert: topic workingDirectory srcDirectory equals: 'src' ]
-		ensure: [ dir deleteAll ]
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testWorkingDirectoryPathResetsWorkingDirectoryInstance [
-
-	| topic firstWorkDir dir |
-	topic := AbTopic new.
-	firstWorkDir := topic workingDirectory.
-	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
-	dir ensureCreateDirectory.
-	(dir / '.project') writeStreamDo: [ :s |
-		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
-	[
-		topic workingDirectoryPath: dir fullName.
-		self deny: topic workingDirectory == firstWorkDir.
-		self assert: topic workingDirectory srcDirectory equals: 'source' ]
-		ensure: [ dir deleteAll ]
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
-
-	| topic expectedPath |
-	topic := AbTopic new title: 'Topic Name'.
-	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
-	                 / topic workingDirectory directoryName) fullName.
-	self assert: topic workingDirectoryPath equals: expectedPath
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testAvailableCommandsInitiallyEmpty [
-
-	self assert: AbTopic new availableCommands isEmpty
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testLastUpdatedIsNilWhenNoMessages [
-
-	self assert: AbTopic new lastUpdated isNil
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testLastUpdatedUsesNewestMessageUpdateTime [
-
-	| topic firstMessage secondMessage |
-	topic := AbTopic new.
-	firstMessage := AbMessage sender: #ai text: 'First'.
-	topic messages add: firstMessage.
-	(Delay forMilliseconds: 1) wait.
-	secondMessage := AbMessage sender: #ai text: 'Second'.
-	topic messages add: secondMessage.
-	(Delay forMilliseconds: 1) wait.
-	firstMessage appendText: ' updated'.
-
-	self assert: topic lastUpdated equals: firstMessage lastUpdated.
-	self assert: topic lastUpdated > secondMessage lastUpdated
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
-
-	| topic commands |
-	topic := AbTopic new.
-	commands := OrderedCollection
-		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
-		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
-	topic updateAvailableCommands: commands.
-	self assert: topic availableCommands size equals: 2
-]
-
-{ #category : 'tests' }
 AbTopicTest >> testUpdateAvailableCommandsFiresAnnouncement [
 
 	| topic announced commands |
@@ -491,9 +399,15 @@ AbTopicTest >> testUpdateAvailableCommandsFiresAnnouncement [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testCurrentModelInitiallyNil [
+AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 
-	self assert: AbTopic new currentModel isNil
+	| topic commands |
+	topic := AbTopic new.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
+	topic updateAvailableCommands: commands.
+	self assert: topic availableCommands size equals: 2
 ]
 
 { #category : 'tests' }
@@ -506,18 +420,6 @@ AbTopicTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue 
 	options := OrderedCollection with: modelOption.
 	topic updateCurrentModelFromConfigOptions: options.
 	self assert: topic currentModel equals: 'claude-opus-4'
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
-
-	| topic options modeOption |
-	topic := AbTopic new.
-	modeOption := ACPConfigOption new beModeCategory.
-	modeOption rawValues at: 'currentValue' put: 'ask'.
-	options := OrderedCollection with: modeOption.
-	topic updateCurrentModelFromConfigOptions: options.
-	self assert: topic currentModel isNil
 ]
 
 { #category : 'tests' }
@@ -539,4 +441,85 @@ AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
 	self assert: announced.
 	self assert: announcedModel equals: 'claude-sonnet-4' ]
 		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
+
+	| topic options modeOption |
+	topic := AbTopic new.
+	modeOption := ACPConfigOption new beModeCategory.
+	modeOption rawValues at: 'currentValue' put: 'ask'.
+	options := OrderedCollection with: modeOption.
+	topic updateCurrentModelFromConfigOptions: options.
+	self assert: topic currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathLoadsSrcDirectoryFromProject [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'source'.
+		self
+			assert: topic workingDirectory sourcePath fullName
+			equals: dir fullName , '/source' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathResetsWorkingDirectoryInstance [
+
+	| topic firstWorkDir dir |
+	topic := AbTopic new.
+	firstWorkDir := topic workingDirectory.
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.project') writeStreamDo: [ :s |
+		s nextPutAll: '{''srcDirectory'' : ''source''}' ].
+	[
+		topic workingDirectoryPath: dir fullName.
+		self deny: topic workingDirectory == firstWorkDir.
+		self assert: topic workingDirectory srcDirectory equals: 'source' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
+
+	| topic dir |
+	dir := FileLocator temp / ('ab-topic-src-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	[
+		topic := AbTopic new.
+		topic workingDirectoryPath: dir fullName.
+		self assert: topic workingDirectory srcDirectory equals: 'src' ]
+		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
+
+	| topic expectedPath |
+	topic := AbTopic new title: 'Topic Name'.
+	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
+	                 / topic workingDirectory directoryName) fullName.
+	self assert: topic workingDirectoryPath equals: expectedPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
+
+	| topic customPath |
+	topic := AbTopic new.
+	customPath := (FileLocator temp / ('ab-topic-custom-' , UUID new asString36))
+		              fullName.
+	topic workingDirectoryPath: customPath.
+	self assert: topic workingDirectoryPath equals: customPath
 ]

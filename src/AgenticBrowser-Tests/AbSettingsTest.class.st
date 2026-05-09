@@ -12,6 +12,19 @@ AbSettingsTest >> setUp [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testApprovalWaitTimeoutSecondsDefault [
+
+	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 30
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testApprovalWaitTimeoutSecondsSettable [
+
+	AbSettings default approvalWaitTimeoutSeconds: 5.
+	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 5
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testDefaultCopiedDoesNotMutateDefault [
 
 	| copied |
@@ -27,6 +40,12 @@ AbSettingsTest >> testDefaultReturnsSingletonInstance [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testPermissionWaitTimeoutSecondsDefault [
+
+	self assert: AbSettings default permissionWaitTimeoutSeconds equals: 1800
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testWatcherMessageThrottleDurationDefault [
 
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 2 seconds
@@ -37,17 +56,4 @@ AbSettingsTest >> testWatcherMessageThrottleDurationSettable [
 
 	AbSettings default watcherMessageThrottleDuration: 7 seconds.
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 7 seconds
-]
-
-{ #category : 'tests' }
-AbSettingsTest >> testApprovalWaitTimeoutSecondsDefault [
-
-	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 30
-]
-
-{ #category : 'tests' }
-AbSettingsTest >> testApprovalWaitTimeoutSecondsSettable [
-
-	AbSettings default approvalWaitTimeoutSeconds: 5.
-	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 5
 ]
