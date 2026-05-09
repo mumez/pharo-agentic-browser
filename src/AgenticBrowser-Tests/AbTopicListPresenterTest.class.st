@@ -15,50 +15,12 @@ AbTopicListPresenterTest >> presenter: aPresenter [
 	presenter := aPresenter
 ]
 
-{ #category : 'accessing' }
-AbTopicListPresenterTest >> topic: anAbTopic [
-
-	topic := anAbTopic
-]
-
 { #category : 'running' }
 AbTopicListPresenterTest >> setUp [
 
 	super setUp.
 	self presenter: AbTopicListPresenter new.
 	self topic: (AbTopic new title: 'TestTopic').
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testAutoExportPreconditionsForNewTopic [
-
-	"Verifies the preconditions for the auto-export path in onPackagePrefixSet:.
-	 A freshly-created topic with a matching prefix has:
-	   - at least one matching package
-	   - no existing working directory on disk
-	 The actual export (SisServer call) is verified in the integration smoke test."
-
-	topic addPackagePrefix: 'AgenticBrowser-*'.
-	self assert: topic matchingPackageNames notEmpty.
-	self deny: topic workingDirectory path exists
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessage [
-
-	topic packagePrefixes: Set new.
-	presenter onPackagePrefixSet: topic.
-	self assert: (topic messages anySatisfy: [ :m |
-		m sender = #system and: [ m text includesSubstring: 'new project' ] ])
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
-
-	topic addPackagePrefix: 'NonExistentXYZ99-*'.
-	presenter onPackagePrefixSet: topic.
-	self assert: (topic messages anySatisfy: [ :m |
-		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])
 ]
 
 { #category : 'tests' }
@@ -80,41 +42,17 @@ AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForWithNoPendingPack
 ]
 
 { #category : 'tests' }
-AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
+AbTopicListPresenterTest >> testAutoExportPreconditionsForNewTopic [
 
-	topic agentArguments: #(  ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic'
-]
+	"Verifies the preconditions for the auto-export path in onPackagePrefixSet:.
+	 A freshly-created topic with a matching prefix has:
+	   - at least one matching package
+	   - no existing working directory on disk
+	 The actual export (SisServer call) is verified in the integration smoke test."
 
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
-
-	topic agentArguments: #( 'opencode' ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (opencode)'.
-
-	topic agentArguments: #( 'claude-agent-acp' ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (claude-agent-acp)'
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testIconForInitialTopic [
-
-	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testIconForWorkingTopic [
-
-	topic stateMachine handleEvent: #promptSent.
-	self assert: (presenter iconNameFor: topic) equals: #pointersTo
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
-
-	topic stateMachine handleEvent: #promptSent.
-	topic stateMachine handleEvent: #permissionRequested.
-	self assert: (presenter iconNameFor: topic) equals: #flag
+	topic addPackagePrefix: 'AgenticBrowser-*'.
+	self assert: topic matchingPackageNames notEmpty.
+	self deny: topic workingDirectory path exists
 ]
 
 { #category : 'tests' }
@@ -126,28 +64,51 @@ AbTopicListPresenterTest >> testIconForEndTurnTopic [
 ]
 
 { #category : 'tests' }
+AbTopicListPresenterTest >> testIconForInitialTopic [
+
+	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
+
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: (presenter iconNameFor: topic) equals: #flag
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testIconForWorkingTopic [
+
+	topic stateMachine handleEvent: #promptSent.
+	self assert: (presenter iconNameFor: topic) equals: #pointersTo
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessage [
+
+	topic packagePrefixes: Set new.
+	presenter onPackagePrefixSet: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [ m text includesSubstring: 'new project' ] ])
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
+
+	topic addPackagePrefix: 'NonExistentXYZ99-*'.
+	presenter onPackagePrefixSet: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])
+]
+
+{ #category : 'tests' }
 AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
 
 	| testPath |
 	testPath := '/tmp/test-working-dir'.
 	topic workingDirectoryPath: testPath.
 	self assert: topic workingDirectoryPath equals: testPath
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testSortedTopicsByTitle [
-
-	| alpha beta sorted |
-	alpha := AbTopic new.
-	alpha title: 'Alpha'.
-	beta := AbTopic new.
-	beta title: 'Beta'.
-	presenter sortMode: #title.
-	sorted := presenter sortedTopics: {
-			          beta.
-			          alpha }.
-	self assert: sorted first equals: alpha.
-	self assert: sorted second equals: beta
 ]
 
 { #category : 'tests' }
@@ -167,4 +128,43 @@ AbTopicListPresenterTest >> testSortedTopicsByLastUpdatedNewestFirst [
 			          newer }.
 	self assert: sorted first equals: newer.
 	self assert: sorted second equals: older
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testSortedTopicsByTitle [
+
+	| alpha beta sorted |
+	alpha := AbTopic new.
+	alpha title: 'Alpha'.
+	beta := AbTopic new.
+	beta title: 'Beta'.
+	presenter sortMode: #title.
+	sorted := presenter sortedTopics: {
+			          beta.
+			          alpha }.
+	self assert: sorted first equals: alpha.
+	self assert: sorted second equals: beta
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
+
+	topic agentArguments: #( 'opencode' ).
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (opencode)'.
+
+	topic agentArguments: #( 'claude-agent-acp' ).
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (claude-agent-acp)'
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
+
+	topic agentArguments: #(  ).
+	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic'
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenterTest >> topic: anAbTopic [
+
+	topic := anAbTopic
 ]

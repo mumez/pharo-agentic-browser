@@ -15,6 +15,12 @@ AbBrowserPresenter class >> open [
 	^ self new open
 ]
 
+{ #category : 'accessing' }
+AbBrowserPresenter >> chatPresenter [
+
+	^ chatPresenter
+]
+
 { #category : 'initialization' }
 AbBrowserPresenter >> connectPresenters [
 
@@ -49,6 +55,12 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
 ]
 
+{ #category : 'accessing' }
+AbBrowserPresenter >> messagesPresenter [
+
+	^ self chatPresenter messagesPresenter
+]
+
 { #category : 'private' }
 AbBrowserPresenter >> onWindowClosed [
 
@@ -58,19 +70,7 @@ AbBrowserPresenter >> onWindowClosed [
 ]
 
 { #category : 'accessing' }
-AbBrowserPresenter >> chatPresenter [
-
-	^ chatPresenter
-]
-
-{ #category : 'accessing' }
 AbBrowserPresenter >> topicListPresenter [
 
 	^ topicListPresenter
-]
-
-{ #category : 'accessing' }
-AbBrowserPresenter >> messagesPresenter [
-
-	^ self chatPresenter messagesPresenter
 ]

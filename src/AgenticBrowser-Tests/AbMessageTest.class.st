@@ -27,18 +27,6 @@ AbMessageTest >> testAppendText [
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testTextUpdateRefreshesLastUpdated [
-
-	| msg before |
-	msg := AbMessage sender: #ai text: 'Draft'.
-	before := msg lastUpdated.
-	(Delay forMilliseconds: 1) wait.
-	msg text: 'Final'.
-	self assert: msg text equals: 'Final'.
-	self assert: msg lastUpdated > before
-]
-
-{ #category : 'tests' }
 AbMessageTest >> testApprovalRequestCreation [
 
 	| msg |
@@ -65,6 +53,16 @@ AbMessageTest >> testApprovalRequestCreationWithOptions [
 ]
 
 { #category : 'tests' }
+AbMessageTest >> testHumanMessageCreation [
+
+	| msg |
+	msg := AbMessage sender: #human text: 'Fix the N+1 issue'.
+	self assert: msg sender equals: #human.
+	self assert: msg text equals: 'Fix the N+1 issue'.
+	self deny: msg isApprovalRequest.
+]
+
+{ #category : 'tests' }
 AbMessageTest >> testPrintStringIncludesSender [
 
 	| msg |
@@ -81,13 +79,15 @@ AbMessageTest >> testPrintStringIncludesText [
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testHumanMessageCreation [
+AbMessageTest >> testTextUpdateRefreshesLastUpdated [
 
-	| msg |
-	msg := AbMessage sender: #human text: 'Fix the N+1 issue'.
-	self assert: msg sender equals: #human.
-	self assert: msg text equals: 'Fix the N+1 issue'.
-	self deny: msg isApprovalRequest.
+	| msg before |
+	msg := AbMessage sender: #ai text: 'Draft'.
+	before := msg lastUpdated.
+	(Delay forMilliseconds: 1) wait.
+	msg text: 'Final'.
+	self assert: msg text equals: 'Final'.
+	self assert: msg lastUpdated > before
 ]
 
 { #category : 'tests' }

@@ -16,21 +16,11 @@ AbMessagesPresenterTest >> setUp [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testInitialMessageCountIsZero [
+AbMessagesPresenterTest >> testAddMultipleDistinctMessages [
 
-	self assert: presenter messageCount equals: 0
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testInitializeUsesMicTextPresenter [
-
-	self assert: presenter messageTextPresenter class equals: MicTextPresenter
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testDoesNotImplementWindowResizedHandler [
-
-	self deny: (AbMessagesPresenter includesSelector: #windowResized:)
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
+	self assert: presenter messageCount equals: 2
 ]
 
 { #category : 'tests' }
@@ -40,15 +30,6 @@ AbMessagesPresenterTest >> testAddOrUpdateMessageAddsNewMessage [
 	msg := AbMessage sender: #human text: 'Hello'.
 	presenter addOrUpdateMessage: msg.
 	self assert: presenter messageCount equals: 1
-]
-
-{ #category : 'tests' }
-AbMessagesPresenterTest >> testAddOrUpdateMessageStoresMessage [
-
-	| msg |
-	msg := AbMessage sender: #human text: 'Hello'.
-	presenter addOrUpdateMessage: msg.
-	self assert: (presenter messages includes: msg)
 ]
 
 { #category : 'tests' }
@@ -65,34 +46,31 @@ AbMessagesPresenterTest >> testAddOrUpdateMessageDoesNotDuplicateExistingMessage
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testAddMultipleDistinctMessages [
+AbMessagesPresenterTest >> testAddOrUpdateMessageStoresMessage [
 
-	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
-	presenter addOrUpdateMessage: (AbMessage sender: #ai text: 'Hello').
-	self assert: presenter messageCount equals: 2
+	| msg |
+	msg := AbMessage sender: #human text: 'Hello'.
+	presenter addOrUpdateMessage: msg.
+	self assert: (presenter messages includes: msg)
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testSetMessagesReplacesAll [
+AbMessagesPresenterTest >> testDoesNotImplementWindowResizedHandler [
 
-	| newMsgs |
-	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Old').
-	newMsgs := OrderedCollection
-		with: (AbMessage sender: #human text: 'New1')
-		with: (AbMessage sender: #ai text: 'New2').
-	presenter setMessages: newMsgs.
-	self assert: presenter messageCount equals: 2.
-	self assert: (presenter messages first text) equals: 'New1'
+	self deny: (AbMessagesPresenter includesSelector: #windowResized:)
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testSetMessagesWithEmptyCollectionClearsAll [
+AbMessagesPresenterTest >> testInitialMessageCountIsZero [
 
-	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
-	presenter setMessages: #().
 	self assert: presenter messageCount equals: 0
 ]
 
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testInitializeUsesMicTextPresenter [
+
+	self assert: presenter messageTextPresenter class equals: MicTextPresenter
+]
 
 { #category : 'tests' }
 AbMessagesPresenterTest >> testMessageListHasItemAfterAdd [
@@ -125,6 +103,13 @@ AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
 ]
 
 { #category : 'tests' }
+AbMessagesPresenterTest >> testPerformScrollToBottomDoesNotError [
+
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	self shouldnt: [ presenter performScrollToBottom ] raise: Error
+]
+
+{ #category : 'tests' }
 AbMessagesPresenterTest >> testRichTextForReturnsTextWithSenderAndBody [
 
 	| msg rich |
@@ -136,14 +121,28 @@ AbMessagesPresenterTest >> testRichTextForReturnsTextWithSenderAndBody [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testPerformScrollToBottomDoesNotError [
-
-	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
-	self shouldnt: [ presenter performScrollToBottom ] raise: Error
-]
-
-{ #category : 'tests' }
 AbMessagesPresenterTest >> testScrollToBottomDoesNotErrorWhenEmpty [
 
 	self shouldnt: [ presenter scrollToBottom ] raise: Error
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testSetMessagesReplacesAll [
+
+	| newMsgs |
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Old').
+	newMsgs := OrderedCollection
+		with: (AbMessage sender: #human text: 'New1')
+		with: (AbMessage sender: #ai text: 'New2').
+	presenter setMessages: newMsgs.
+	self assert: presenter messageCount equals: 2.
+	self assert: (presenter messages first text) equals: 'New1'
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testSetMessagesWithEmptyCollectionClearsAll [
+
+	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
+	presenter setMessages: #().
+	self assert: presenter messageCount equals: 0
 ]

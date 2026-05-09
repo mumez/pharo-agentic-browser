@@ -219,4 +219,3 @@ AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
 	self topic addUpdatedExternalPackageName: aPackageName ]
 		ensure: [ self pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]
-

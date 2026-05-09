@@ -15,32 +15,14 @@ AbMessageRichTextBuilder class >> senderLabelFor: anAbMessage [
 	^ 'System'
 ]
 
-{ #category : 'rendering' }
-AbMessageRichTextBuilder >> richTextFor: anAbMessage [
-
-	| senderLen richText |
-	richText := (self buildStringFor: anAbMessage) asText.
-	senderLen := (self class senderLabelFor: anAbMessage) size + 1.
-	self applySenderAttributesTo: richText senderLen: senderLen message: anAbMessage.
-	anAbMessage isThink ifTrue: [
-		self applyThinkBodyAttributesTo: richText bodyStart: senderLen + 3 ].
-	anAbMessage isApprovalRequest ifTrue: [
-		self applyApprovalRequestBodyAttributesTo: richText bodyStart: senderLen + 3 ].
-	^ richText
-]
-
 { #category : 'private' }
-AbMessageRichTextBuilder >> buildStringFor: anAbMessage [
+AbMessageRichTextBuilder >> applyApprovalRequestBodyAttributesTo: richText bodyStart: bodyStart [
 
-	| body |
-	body := anAbMessage text ifNil: [ '' ].
-	^ String streamContents: [ :stream |
-		  stream
-			  nextPutAll: (self class senderLabelFor: anAbMessage);
-			  nextPutAll: ':';
-			  cr;
-			  cr;
-			  nextPutAll: body ]
+	bodyStart > richText size ifTrue: [ ^ self ].
+	richText
+		addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
+		from: bodyStart
+		to: richText size
 ]
 
 { #category : 'private' }
@@ -67,13 +49,31 @@ AbMessageRichTextBuilder >> applyThinkBodyAttributesTo: richText bodyStart: body
 ]
 
 { #category : 'private' }
-AbMessageRichTextBuilder >> applyApprovalRequestBodyAttributesTo: richText bodyStart: bodyStart [
+AbMessageRichTextBuilder >> buildStringFor: anAbMessage [
 
-	bodyStart > richText size ifTrue: [ ^ self ].
-	richText
-		addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
-		from: bodyStart
-		to: richText size
+	| body |
+	body := anAbMessage text ifNil: [ '' ].
+	^ String streamContents: [ :stream |
+		  stream
+			  nextPutAll: (self class senderLabelFor: anAbMessage);
+			  nextPutAll: ':';
+			  cr;
+			  cr;
+			  nextPutAll: body ]
+]
+
+{ #category : 'rendering' }
+AbMessageRichTextBuilder >> richTextFor: anAbMessage [
+
+	| senderLen richText |
+	richText := (self buildStringFor: anAbMessage) asText.
+	senderLen := (self class senderLabelFor: anAbMessage) size + 1.
+	self applySenderAttributesTo: richText senderLen: senderLen message: anAbMessage.
+	anAbMessage isThink ifTrue: [
+		self applyThinkBodyAttributesTo: richText bodyStart: senderLen + 3 ].
+	anAbMessage isApprovalRequest ifTrue: [
+		self applyApprovalRequestBodyAttributesTo: richText bodyStart: senderLen + 3 ].
+	^ richText
 ]
 
 { #category : 'private' }

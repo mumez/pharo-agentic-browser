@@ -35,31 +35,6 @@ AbWorkingDirectoryTest >> testEnsureExists [
 	workDir path deleteAll
 ]
 
-
-{ #category : 'tests' }
-AbWorkingDirectoryTest >> testNewTopicWorkingDirectoryDoesNotExist [
-
-	"A freshly-created topic must have no working directory on disk yet.
-	 This is the precondition for auto-export when a package prefix is first set."
-
-	| topic workDir |
-	topic := AbTopic new title: 'Brand-New-Topic'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	self deny: workDir path exists
-]
-
-{ #category : 'tests' }
-AbWorkingDirectoryTest >> testPathIsInsideAgenticBrowserSubdir [
-
-	| topic workDir |
-	topic := AbTopic new title: 'My Feature'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	self
-		assert: workDir path parent fullName
-		equals: (Smalltalk imageDirectory / 'agentic-browser') fullName
-]
-
-
 { #category : 'tests' }
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementBeginImport [
 
@@ -129,6 +104,47 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresOtherUrls [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesSourcePath [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'Test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path='
+		         , path , '/src'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	self deny: workDir isImportingFromSource.
+	workDir handleSisRequestAnnouncement: ann.
+	self assert: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testNewTopicWorkingDirectoryDoesNotExist [
+
+	"A freshly-created topic must have no working directory on disk yet.
+	 This is the precondition for auto-export when a package prefix is first set."
+
+	| topic workDir |
+	topic := AbTopic new title: 'Brand-New-Topic'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self deny: workDir path exists
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testPathIsInsideAgenticBrowserSubdir [
+
+	| topic workDir |
+	topic := AbTopic new title: 'My Feature'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	self
+		assert: workDir path parent fullName
+		equals: (Smalltalk imageDirectory / 'agentic-browser') fullName
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testSafeTopicNameEmptyFallback [
 
 	| topic workDir |
@@ -147,15 +163,6 @@ AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
 ]
 
 { #category : 'tests' }
-AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
-
-	| topic workDir |
-	topic := AbTopic new title: 'Test'.
-	workDir := AbWorkingDirectory forTopic: topic.
-	self assert: workDir srcDirectory equals: 'src'
-]
-
-{ #category : 'tests' }
 AbWorkingDirectoryTest >> testSourcePathAppendsSrcDirectory [
 
 	| topic workDir |
@@ -167,19 +174,10 @@ AbWorkingDirectoryTest >> testSourcePathAppendsSrcDirectory [
 ]
 
 { #category : 'tests' }
-AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesSourcePath [
+AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
 
-	| topic workDir path znReq teaReq ann |
+	| topic workDir |
 	topic := AbTopic new title: 'Test'.
-	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
-	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
-	znReq := ZnRequest get:
-		         'http://localhost:1234/import-package?package_name=Foo&path='
-		         , path , '/src'.
-	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
-	ann := SisRequestAnnouncement before: teaReq.
-	self deny: workDir isImportingFromSource.
-	workDir handleSisRequestAnnouncement: ann.
-	self assert: workDir isImportingFromSource
+	self assert: workDir srcDirectory equals: 'src'
 ]

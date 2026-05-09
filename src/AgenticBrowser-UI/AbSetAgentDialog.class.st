@@ -11,6 +11,18 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
+{ #category : 'accessing' }
+AbSetAgentDialog >> agentDropList [
+
+	^ agentDropList
+]
+
+{ #category : 'accessing' }
+AbSetAgentDialog >> cancelButton [
+
+	^ cancelButton
+]
+
 { #category : 'initialization' }
 AbSetAgentDialog >> connectPresenters [
 
@@ -38,24 +50,6 @@ AbSetAgentDialog >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'accessing' }
-AbSetAgentDialog >> agentDropList [
-
-	^ agentDropList
-]
-
-{ #category : 'accessing' }
-AbSetAgentDialog >> okButton [
-
-	^ okButton
-]
-
-{ #category : 'accessing' }
-AbSetAgentDialog >> cancelButton [
-
-	^ cancelButton
-]
-
 { #category : 'initialization' }
 AbSetAgentDialog >> initializePresenters [
 
@@ -73,6 +67,12 @@ AbSetAgentDialog >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Set Agent';
 		initialExtent: 400 @ 120
+]
+
+{ #category : 'accessing' }
+AbSetAgentDialog >> okButton [
+
+	^ okButton
 ]
 
 { #category : 'accessing' }

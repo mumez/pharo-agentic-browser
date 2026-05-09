@@ -22,15 +22,6 @@ AbNewTopicDialogTest >> testDetectPrefixesFromDirectoryWithSrc [
 ]
 
 { #category : 'tests' }
-AbNewTopicDialogTest >> testDetectPrefixesReturnsEmptyForNonExistentDir [
-
-	| dialog prefixes |
-	dialog := AbNewTopicDialog new.
-	prefixes := dialog detectPackagePrefixesFromDirectory: '/nonexistent/path'.
-	self assert: prefixes isEmpty
-]
-
-{ #category : 'tests' }
 AbNewTopicDialogTest >> testDetectPrefixesReturnsEmptyForNoSrcDir [
 
 	| dialog dir prefixes |
@@ -41,4 +32,13 @@ AbNewTopicDialogTest >> testDetectPrefixesReturnsEmptyForNoSrcDir [
 	prefixes := dialog detectPackagePrefixesFromDirectory: dir fullName.
 	self assert: prefixes isEmpty ]
 		ensure: [ dir deleteAll ]
+]
+
+{ #category : 'tests' }
+AbNewTopicDialogTest >> testDetectPrefixesReturnsEmptyForNonExistentDir [
+
+	| dialog prefixes |
+	dialog := AbNewTopicDialog new.
+	prefixes := dialog detectPackagePrefixesFromDirectory: '/nonexistent/path'.
+	self assert: prefixes isEmpty
 ]
