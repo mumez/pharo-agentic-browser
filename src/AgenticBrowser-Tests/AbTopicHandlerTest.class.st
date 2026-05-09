@@ -5,6 +5,39 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'private' }
+AbTopicHandlerTest >> samplePermissionRequest [
+
+	| rawValues toolCall |
+	toolCall := Dictionary new
+		            at: 'title' put: 'run_package_test';
+		            at: 'rawInput' put: (Dictionary new
+				             at: 'package_name' put: 'MoneyCalc';
+				             yourself);
+		            yourself.
+	rawValues := Dictionary new
+		             at: 'options' put: {
+				             (Dictionary new
+					              at: 'kind' put: 'allow_once';
+					              at: 'name' put: 'Allow once';
+					              at: 'optionId' put: 'allow_once';
+					              yourself).
+				             (Dictionary new
+					              at: 'kind' put: 'allow_always';
+					              at: 'name' put: 'Always allow';
+					              at: 'optionId' put: 'allow_always';
+					              yourself).
+				             (Dictionary new
+					              at: 'kind' put: 'reject_once';
+					              at: 'name' put: 'Deny';
+					              at: 'optionId' put: 'reject_once';
+					              yourself) };
+		             at: 'sessionId' put: 'session-1';
+		             at: 'toolCall' put: toolCall;
+		             yourself.
+	^ ACPRequestPermission new rawValues: rawValues
+]
+
 { #category : 'tests' }
 AbTopicHandlerTest >> testApplyApprovalOptionIdAllowOnce [
 
@@ -52,37 +85,4 @@ AbTopicHandlerTest >> testPermissionPromptTextForIncludesToolCallContext [
 	promptText := AbTopicHandler new permissionPromptTextFor: request.
 	self assert: (promptText includesSubstring: 'run_package_test').
 	self assert: (promptText includesSubstring: 'MoneyCalc')
-]
-
-{ #category : 'private' }
-AbTopicHandlerTest >> samplePermissionRequest [
-
-	| rawValues toolCall |
-	toolCall := Dictionary new
-		            at: 'title' put: 'run_package_test';
-		            at: 'rawInput' put: (Dictionary new
-				             at: 'package_name' put: 'MoneyCalc';
-				             yourself);
-		            yourself.
-	rawValues := Dictionary new
-		             at: 'options' put: {
-				             (Dictionary new
-					              at: 'kind' put: 'allow_once';
-					              at: 'name' put: 'Allow once';
-					              at: 'optionId' put: 'allow_once';
-					              yourself).
-				             (Dictionary new
-					              at: 'kind' put: 'allow_always';
-					              at: 'name' put: 'Always allow';
-					              at: 'optionId' put: 'allow_always';
-					              yourself).
-				             (Dictionary new
-					              at: 'kind' put: 'reject_once';
-					              at: 'name' put: 'Deny';
-					              at: 'optionId' put: 'reject_once';
-					              yourself) };
-		             at: 'sessionId' put: 'session-1';
-		             at: 'toolCall' put: toolCall;
-		             yourself.
-	^ ACPRequestPermission new rawValues: rawValues
 ]

@@ -13,21 +13,6 @@ Class {
 }
 
 { #category : 'private' }
-AbTopicListPresenter >> buildTopicContextMenu [
-
-	^ SpMenuPresenter new
-		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
-		  addItem: [ :item | item name: 'Set Goal...'; action: [ self onSetGoalRequest ] ];
-		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
-		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
-		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
-		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
-		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
-		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
-		  yourself
-]
-
-{ #category : 'private' }
 AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
 
 	| packageNames |
@@ -41,6 +26,21 @@ AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
 	aTopic addSystemMessage:
 		'Added ' , packageNames size printString
 		, ' external package(s) to tracked prefixes.'
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> buildTopicContextMenu [
+
+	^ SpMenuPresenter new
+		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
+		  addItem: [ :item | item name: 'Set Goal...'; action: [ self onSetGoalRequest ] ];
+		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
+		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
+		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
+		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
+		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
+		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
+		  yourself
 ]
 
 { #category : 'initialization' }
@@ -76,6 +76,24 @@ AbTopicListPresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
+AbTopicListPresenter >> destroy [
+
+	self unsubscribeFromTopicManager.
+	super destroy
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> iconNameFor: aTopic [
+
+	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
+	aTopic isWorking ifTrue: [ ^ #pointersTo ].
+	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
+	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
+	aTopic isEndTurn ifTrue: [ ^ #accept ].
+	^ #radioButtonOff
+]
+
+{ #category : 'initialization' }
 AbTopicListPresenter >> initializePresenters [
 
 	super initializePresenters.
@@ -90,6 +108,21 @@ AbTopicListPresenter >> initializePresenters [
 	sortDropList selectItem: self sortOptions second.
 	newTopicButton := self newButton.
 	newTopicButton label: '+ New Topic'
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> newTopicButton [
+
+	^ newTopicButton
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	self applyUpdatedExternalPackagesFor: topic
 ]
 
 { #category : 'private' }
@@ -116,15 +149,6 @@ AbTopicListPresenter >> onInspectTopicRequest [
 ]
 
 { #category : 'private' }
-AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
-
-	| topic |
-	topic := self topicList selectedItem.
-	topic ifNil: [ ^ self ].
-	self applyUpdatedExternalPackagesFor: topic
-]
-
-{ #category : 'private' }
 AbTopicListPresenter >> onNewTopicRequest [
 
 	| dialog |
@@ -133,21 +157,6 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog topic ifNotNil: [ :topic |
 		AbTopicManager uniqueInstance addTopic: topic.
 		self defer: [ self refresh. self topicList selectItem: topic ] ]
-]
-
-{ #category : 'private' }
-AbTopicListPresenter >> onRenameTopicRequest [
-
-	| selectedTopic newTitle |
-	selectedTopic := self topicList selectedItem.
-	selectedTopic ifNil: [ ^ self ].
-	newTitle := UIManager default
-				    request: 'New title:'
-				    initialAnswer: selectedTopic title
-				    title: 'Rename Topic'.
-	(newTitle isNil or: [ newTitle trimmed isEmpty ]) ifTrue: [ ^ self ].
-	selectedTopic title: newTitle trimmed.
-	self defer: [ self refresh ]
 ]
 
 { #category : 'private' }
@@ -168,18 +177,18 @@ AbTopicListPresenter >> onPackagePrefixSet: aTopic [
 ]
 
 { #category : 'private' }
-AbTopicListPresenter >> onSetTargetPackagesRequest [
+AbTopicListPresenter >> onRenameTopicRequest [
 
-	| topic dialog |
-	topic := self topicList selectedItem.
-	topic ifNil: [ ^ self ].
-	dialog := AbPackagePrefixesDialog new.
-	dialog openModal.
-	dialog prefixPatterns
-		ifEmpty: [ topic packagePrefixes: Set new ]
-		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
-			topic addPackagePrefix: pattern ] ].
-	self onPackagePrefixSet: topic
+	| selectedTopic newTitle |
+	selectedTopic := self topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	newTitle := UIManager default
+				    request: 'New title:'
+				    initialAnswer: selectedTopic title
+				    title: 'Rename Topic'.
+	(newTitle isNil or: [ newTitle trimmed isEmpty ]) ifTrue: [ ^ self ].
+	selectedTopic title: newTitle trimmed.
+	self defer: [ self refresh ]
 ]
 
 { #category : 'private' }
@@ -216,6 +225,21 @@ AbTopicListPresenter >> onSetGoalRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onSetTargetPackagesRequest [
+
+	| topic dialog |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	dialog := AbPackagePrefixesDialog new.
+	dialog openModal.
+	dialog prefixPatterns
+		ifEmpty: [ topic packagePrefixes: Set new ]
+		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
+			topic addPackagePrefix: pattern ] ].
+	self onPackagePrefixSet: topic
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onSetWorkingDirectoryRequest [
 
 	| topic directoryPath |
@@ -245,14 +269,6 @@ AbTopicListPresenter >> refresh [
 	self topicList items: (self sortedTopics: items)
 ]
 
-{ #category : 'private' }
-AbTopicListPresenter >> sortOptions [
-
-	^ {
-		  'Title (A-Z)' -> #title.
-		  'Last Updated (Newest)' -> #lastUpdated }
-]
-
 { #category : 'accessing' }
 AbTopicListPresenter >> sortDropList [
 
@@ -269,6 +285,14 @@ AbTopicListPresenter >> sortMode [
 AbTopicListPresenter >> sortMode: aSymbol [
 
 	sortMode := aSymbol
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> sortOptions [
+
+	^ {
+		  'Title (A-Z)' -> #title.
+		  'Last Updated (Newest)' -> #lastUpdated }
 ]
 
 { #category : 'private' }
@@ -290,47 +314,6 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 					  ifFalse: [ aTime > bTime ] ] ] ]
 ]
 
-{ #category : 'private' }
-AbTopicListPresenter >> titleSorts: aTopic before: anotherTopic [
-
-	(aTopic title asLowercase = anotherTopic title asLowercase)
-		ifTrue: [ ^ aTopic topicId < anotherTopic topicId ].
-	^ aTopic title asLowercase < anotherTopic title asLowercase
-]
-
-{ #category : 'accessing' }
-AbTopicListPresenter >> topicList [
-
-	^ topicList
-]
-
-{ #category : 'accessing' }
-AbTopicListPresenter >> newTopicButton [
-
-	^ newTopicButton
-]
-
-{ #category : 'private' }
-AbTopicListPresenter >> topicListLabelFor: aTopic [
-
-	| label |
-	label := aTopic title.
-	aTopic agentArguments ifNotEmpty: [ :args |
-		label := label , ' (' , args first , ')' ].
-	^ label
-]
-
-{ #category : 'private' }
-AbTopicListPresenter >> iconNameFor: aTopic [
-
-	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
-	aTopic isWorking ifTrue: [ ^ #pointersTo ].
-	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
-	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
-	aTopic isEndTurn ifTrue: [ ^ #accept ].
-	^ #radioButtonOff
-]
-
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
@@ -349,17 +332,34 @@ AbTopicListPresenter >> subscribeToTopicManager [
 		for: self
 ]
 
+{ #category : 'private' }
+AbTopicListPresenter >> titleSorts: aTopic before: anotherTopic [
+
+	(aTopic title asLowercase = anotherTopic title asLowercase)
+		ifTrue: [ ^ aTopic topicId < anotherTopic topicId ].
+	^ aTopic title asLowercase < anotherTopic title asLowercase
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicList [
+
+	^ topicList
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> topicListLabelFor: aTopic [
+
+	| label |
+	label := aTopic title.
+	aTopic agentArguments ifNotEmpty: [ :args |
+		label := label , ' (' , args first , ')' ].
+	^ label
+]
+
 { #category : 'subscriptions' }
 AbTopicListPresenter >> unsubscribeFromTopicManager [
 
 	AbTopicManager uniqueInstance topicsDo: [ :t |
 		t announcer unsubscribe: self ].
 	AbTopicManager uniqueInstance announcer unsubscribe: self
-]
-
-{ #category : 'initialization' }
-AbTopicListPresenter >> destroy [
-
-	self unsubscribeFromTopicManager.
-	super destroy
 ]

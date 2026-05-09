@@ -12,21 +12,54 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
-{ #category : 'initialization' }
-AbConfirmPresenter >> initializePresenters [
+{ #category : 'accessing' }
+AbConfirmPresenter >> approvalOptions [
 
-	super initializePresenters.
-	confirmationLabel := self newText.
-	confirmationLabel beNotEditable.
-	optionDropList := self newDropList.
-	optionDropList startWithoutSelection.
+	^ approvalOptions
+]
 
-	confirmButton := self newButton.
-	confirmButton label: 'Confirm'.
+{ #category : 'accessing' }
+AbConfirmPresenter >> approvalOptions: aCollection [
 
-	denyButton := self newButton.
-	denyButton label: 'Deny'.
-	self approvalOptions: self defaultApprovalOptions
+	| labels |
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray.
+	labels := approvalOptions collect: [ :assoc | assoc key ].
+	self optionDropList items: labels.
+	labels
+		ifEmpty: [ self optionDropList startWithoutSelection ]
+		ifNotEmpty: [ self optionDropList selectItem: labels first ]
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> confirmButton [
+
+	^ confirmButton
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> confirmButtonLabel [
+
+	^ self confirmButton label
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> confirmationLabel [
+
+	^ confirmationLabel
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> confirmationText: aString [
+
+	self confirmationLabel text: aString
+]
+
+{ #category : 'private' }
+AbConfirmPresenter >> defaultApprovalOptions [
+
+	^ {
+		  'Confirm' -> #allowOnce.
+		  'Deny' -> #rejectOnce }
 ]
 
 { #category : 'layout' }
@@ -46,9 +79,32 @@ AbConfirmPresenter >> defaultLayout [
 ]
 
 { #category : 'accessing' }
-AbConfirmPresenter >> confirmationText: aString [
+AbConfirmPresenter >> denyButton [
 
-	self confirmationLabel text: aString
+	^ denyButton
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> denyButtonLabel [
+
+	^ self denyButton label
+]
+
+{ #category : 'initialization' }
+AbConfirmPresenter >> initializePresenters [
+
+	super initializePresenters.
+	confirmationLabel := self newText.
+	confirmationLabel beNotEditable.
+	optionDropList := self newDropList.
+	optionDropList startWithoutSelection.
+
+	confirmButton := self newButton.
+	confirmButton label: 'Confirm'.
+
+	denyButton := self newButton.
+	denyButton label: 'Deny'.
+	self approvalOptions: self defaultApprovalOptions
 ]
 
 { #category : 'actions' }
@@ -64,75 +120,9 @@ AbConfirmPresenter >> onDenyAction: aBlock [
 ]
 
 { #category : 'accessing' }
-AbConfirmPresenter >> confirmationLabel [
-
-	^ confirmationLabel
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> confirmButton [
-
-	^ confirmButton
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> denyButton [
-
-	^ denyButton
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> confirmButtonLabel [
-
-	^ self confirmButton label
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> denyButtonLabel [
-
-	^ self denyButton label
-]
-
-{ #category : 'accessing' }
 AbConfirmPresenter >> optionDropList [
 
 	^ optionDropList
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> approvalOptions [
-
-	^ approvalOptions
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> approvalOptions: aCollection [
-
-	| labels |
-	approvalOptions := (aCollection ifNil: [ #() ]) asArray.
-	labels := approvalOptions collect: [ :assoc | assoc key ].
-	self optionDropList items: labels.
-	labels
-		ifEmpty: [ self optionDropList startWithoutSelection ]
-		ifNotEmpty: [ self optionDropList selectItem: labels first ]
-]
-
-{ #category : 'private' }
-AbConfirmPresenter >> defaultApprovalOptions [
-
-	^ {
-		  'Confirm' -> #allowOnce.
-		  'Deny' -> #rejectOnce }
-]
-
-{ #category : 'accessing' }
-AbConfirmPresenter >> selectedOptionId [
-
-	| idx |
-	self approvalOptions ifEmpty: [ ^ #allowOnce ].
-	idx := self optionDropList selectedIndex.
-	idx = 0 ifTrue: [ ^ self approvalOptions first value ].
-	^ (self approvalOptions at: idx) value
 ]
 
 { #category : 'accessing' }
@@ -145,4 +135,14 @@ AbConfirmPresenter >> optionLabels [
 AbConfirmPresenter >> selectOptionNamed: aString [
 
 	self optionDropList selectItem: aString
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> selectedOptionId [
+
+	| idx |
+	self approvalOptions ifEmpty: [ ^ #allowOnce ].
+	idx := self optionDropList selectedIndex.
+	idx = 0 ifTrue: [ ^ self approvalOptions first value ].
+	^ (self approvalOptions at: idx) value
 ]

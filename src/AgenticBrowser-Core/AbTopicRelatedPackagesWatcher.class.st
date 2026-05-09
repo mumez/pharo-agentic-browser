@@ -21,20 +21,30 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
+AbTopicRelatedPackagesWatcher >> cleanupPendingApprovalFor: aPackageName in: aSelectorName [
 
-	| shouldAnnounce |
-	shouldAnnounce := self
-		                  shouldAnnouncePackageChangeFor: aPackageName
-		                  at: DateAndTime now.
-	shouldAnnounce
-		ifTrue: [
-			self topic addSystemMessage:
-				aPackageName , ' was modified; .st files have been updated' ]
-		ifFalse: [
-			self logger debug: 'postSystemMessageAndExport: system message suppressed for '
-				, aPackageName ].
-	self topic workingDirectory exportPackageNamed: aPackageName.
+	self logger debug: aSelectorName , ' ensure cleanup for ' , aPackageName.
+	self pendingPackageApprovals remove: aPackageName ifAbsent: []
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
+
+	| matchesPrefix |
+	matchesPrefix := self topic packagePrefixes anySatisfy: [ :prefix |
+						 prefix match: aPackageName ].
+	matchesPrefix
+		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
+		ifFalse: [ self trackExternalPackageChange: aPackageName ]
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
+
+	^ 'Package ''' , aPackageName
+	  , ''' was modified.'
+	  , String cr
+	  , 'Export .st files now? (yes/no)'
 ]
 
 { #category : 'event handling' }
@@ -46,6 +56,17 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 		^ self ].
 	pkgName := anAnnouncement classAffected package name asString.
 	self handlePackageChange: pkgName
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalResponse packageName: aPackageName [
+
+	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalResponse printString.
+	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
+		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
+		ifFalse: [
+			self topic addSystemMessage:
+				'Skipped export for ' , aPackageName , ' (approval denied).' ]
 ]
 
 { #category : 'event handling' }
@@ -67,37 +88,12 @@ AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 	[ self doHandlePackageChange: aPackageName ] fork
 ]
 
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
-
-	| matchesPrefix |
-	matchesPrefix := self topic packagePrefixes anySatisfy: [ :prefix |
-						 prefix match: aPackageName ].
-	matchesPrefix
-		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
-		ifFalse: [ self trackExternalPackageChange: aPackageName ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
-
-	[
-	self topic addUpdatedExternalPackageName: aPackageName ]
-		ensure: [ self pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
-]
-
 { #category : 'initialization' }
 AbTopicRelatedPackagesWatcher >> initialize [
 
 	self isWatching: false.
 	pendingPackageApprovals := Set new.
 	lastAnnouncedAtByPackage := Dictionary new
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
-
-	^ AbSettings default watcherMessageThrottleDuration
 ]
 
 { #category : 'accessing' }
@@ -111,30 +107,44 @@ AbTopicRelatedPackagesWatcher >> isWatching: aBoolean [
 	isWatching := aBoolean
 ]
 
-{ #category : 'operations' }
-AbTopicRelatedPackagesWatcher >> start [
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> lastAnnouncedAtByPackage [
 
-	self isWatching: true.
-	SystemAnnouncer uniqueInstance
-		when: MethodAnnouncement
-		do: [ :ann | self handleMethodChange: ann ]
-		for: self.
-	SystemAnnouncer uniqueInstance
-		when: ClassAnnouncement
-		do: [ :ann | self handleClassChange: ann ]
-		for: self
+	^ lastAnnouncedAtByPackage
+]
+
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> requestApprovalToTrackPackage: aPackageName [
+AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
 
-	| approvalResponse |
-	self logger debug: 'requestApprovalToTrackPackage: ' , aPackageName.
-	[
-	approvalResponse := self topic requestApproval:
-		                    (self trackPackageApprovalPromptFor: aPackageName).
-	self handleTrackPackageApprovalResponse: approvalResponse packageName: aPackageName ]
-		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToTrackPackage:' ]
+	^ AbSettings default watcherMessageThrottleDuration
+]
+
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> pendingPackageApprovals [
+
+	^ pendingPackageApprovals
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
+
+	| shouldAnnounce |
+	shouldAnnounce := self
+		                  shouldAnnouncePackageChangeFor: aPackageName
+		                  at: DateAndTime now.
+	shouldAnnounce
+		ifTrue: [
+			self topic addSystemMessage:
+				aPackageName , ' was modified; .st files have been updated' ]
+		ifFalse: [
+			self logger debug: 'postSystemMessageAndExport: system message suppressed for '
+				, aPackageName ].
+	self topic workingDirectory exportPackageNamed: aPackageName.
 ]
 
 { #category : 'private' }
@@ -143,16 +153,10 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 	| approvalResponse |
 	self logger debug: 'requestApprovalToExportPackage: ' , aPackageName.
 	[
-	approvalResponse := self topic requestApproval:
+	approvalResponse := self topic requestPackageExport:
 		                    (self exportPackageApprovalPromptFor: aPackageName).
 	self handleExportPackageApprovalResponse: approvalResponse packageName: aPackageName ]
 		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToExportPackage:' ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
-
-	^ aResponseSymbol = #allowOnce
 ]
 
 { #category : 'private' }
@@ -170,65 +174,23 @@ AbTopicRelatedPackagesWatcher >> shouldAnnouncePackageChangeFor: aPackageName at
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> cleanupPendingApprovalFor: aPackageName in: aSelectorName [
+AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
 
-	self logger debug: aSelectorName , ' ensure cleanup for ' , aPackageName.
-	self pendingPackageApprovals remove: aPackageName ifAbsent: []
+	^ aResponseSymbol = #allowOnce
 ]
 
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
+{ #category : 'operations' }
+AbTopicRelatedPackagesWatcher >> start [
 
-	^ 'Package ''' , aPackageName
-	  , ''' was modified.'
-	  , String cr
-	  , 'Export .st files now? (yes/no)'
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalResponse packageName: aPackageName [
-
-	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalResponse printString.
-	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
-		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
-		ifFalse: [
-			self topic addSystemMessage:
-				'Skipped export for ' , aPackageName , ' (approval denied).' ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> handleTrackPackageApprovalResponse: approvalResponse packageName: aPackageName [
-
-	self logger debug: 'requestApprovalToTrackPackage: got response=' , approvalResponse printString.
-	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
-		ifTrue: [
-			self topic addPackagePrefix: aPackageName.
-			self postSystemMessageAndExport: aPackageName ]
-		ifFalse: [
-			self topic addSystemMessage:
-				'Ignored package change for ' , aPackageName
-				, ' (not added to tracked prefixes).' ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> trackPackageApprovalPromptFor: aPackageName [
-
-	^ 'Package ''' , aPackageName
-	  , ''' was modified but does not match any tracked prefix.'
-	  , String cr
-	  , 'Add this package to tracked prefixes and export? (yes/no)'
-]
-
-{ #category : 'accessing' }
-AbTopicRelatedPackagesWatcher >> pendingPackageApprovals [
-
-	^ pendingPackageApprovals
-]
-
-{ #category : 'accessing' }
-AbTopicRelatedPackagesWatcher >> lastAnnouncedAtByPackage [
-
-	^ lastAnnouncedAtByPackage
+	self isWatching: true.
+	SystemAnnouncer uniqueInstance
+		when: MethodAnnouncement
+		do: [ :ann | self handleMethodChange: ann ]
+		for: self.
+	SystemAnnouncer uniqueInstance
+		when: ClassAnnouncement
+		do: [ :ann | self handleClassChange: ann ]
+		for: self
 ]
 
 { #category : 'operations' }
@@ -236,11 +198,6 @@ AbTopicRelatedPackagesWatcher >> stop [
 
 	SystemAnnouncer uniqueInstance unsubscribe: self.
 	self isWatching: false
-]
-
-{ #category : 'accessing' }
-AbTopicRelatedPackagesWatcher >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }
@@ -253,4 +210,12 @@ AbTopicRelatedPackagesWatcher >> topic: anAbTopic [
 
 	topic := anAbTopic.
 	self isWatching: false
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
+
+	[
+	self topic addUpdatedExternalPackageName: aPackageName ]
+		ensure: [ self pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
 ]

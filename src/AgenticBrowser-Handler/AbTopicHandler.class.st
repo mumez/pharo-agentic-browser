@@ -9,21 +9,6 @@ Class {
 	#package : 'AgenticBrowser-Handler'
 }
 
-{ #category : 'agent-callbacks' }
-AbTopicHandler >> requestPermission: anACPRequestPermission [
-
-	| response approvalOptionId |
-	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
-	approvalOptionId := self topic
-		                  requestApproval: (self permissionPromptTextFor: anACPRequestPermission)
-		                  options: (self permissionOptionsFor: anACPRequestPermission).
-	self logger debug: 'requestPermission: got approvalResponse='
-		, approvalOptionId printString.
-	response := anACPRequestPermission makeResponse.
-	self applyApprovalOptionId: approvalOptionId toResponse: response.
-	^ response
-]
-
 { #category : 'private' }
 AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 
@@ -63,6 +48,21 @@ AbTopicHandler >> canonicalApprovalOptionId: anOptionId [
 	^ normalized asSymbol
 ]
 
+{ #category : 'accessing' }
+AbTopicHandler >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
+{ #category : 'private' }
+AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
+
+	| label optionId |
+	label := anACPPermissionOption name.
+	optionId := anACPPermissionOption optionId.
+	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
+	^ label asString -> (self canonicalApprovalOptionId: optionId)
+]
+
 { #category : 'private' }
 AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 
@@ -76,16 +76,6 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 		  'Allow once' -> #allowOnce.
 		  'Always allow' -> #allowAlways.
 		  'Deny' -> #rejectOnce }
-]
-
-{ #category : 'private' }
-AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
-
-	| label optionId |
-	label := anACPPermissionOption name.
-	optionId := anACPPermissionOption optionId.
-	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
-	^ label asString -> (self canonicalApprovalOptionId: optionId)
 ]
 
 { #category : 'private' }
@@ -115,6 +105,21 @@ AbTopicHandler >> rawInputForToolCall: anACPToolCall [
 ]
 
 { #category : 'agent-callbacks' }
+AbTopicHandler >> requestPermission: anACPRequestPermission [
+
+	| response approvalOptionId |
+	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
+	approvalOptionId := self topic
+		                  requestPermission: (self permissionPromptTextFor: anACPRequestPermission)
+		                  options: (self permissionOptionsFor: anACPRequestPermission).
+	self logger debug: 'requestPermission: got approvalResponse='
+		, approvalOptionId printString.
+	response := anACPRequestPermission makeResponse.
+	self applyApprovalOptionId: approvalOptionId toResponse: response.
+	^ response
+]
+
+{ #category : 'agent-callbacks' }
 AbTopicHandler >> sessionUpdate: aSessionUpdate [
 
 	aSessionUpdate isAgentMessageChunk
@@ -125,11 +130,6 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ].
 	aSessionUpdate isConfigOptionUpdate
 		ifTrue: [ ^ self topic updateCurrentModelFromConfigOptions: aSessionUpdate configOptions ]
-]
-
-{ #category : 'accessing' }
-AbTopicHandler >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }

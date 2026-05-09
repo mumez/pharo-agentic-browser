@@ -53,6 +53,16 @@ AbMessage >> appendText: aString [
 ]
 
 { #category : 'accessing' }
+AbMessage >> approvalOptions [
+	^ approvalOptions
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalOptions: aCollection [
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray
+]
+
+{ #category : 'accessing' }
 AbMessage >> approvalResponse [
 	^ approvalResponse
 ]
@@ -60,18 +70,6 @@ AbMessage >> approvalResponse [
 { #category : 'accessing' }
 AbMessage >> approvalResponse: aSymbol [
 	approvalResponse := aSymbol
-]
-
-{ #category : 'printing' }
-AbMessage >> printOn: aStream [
-
-	super printOn: aStream.
-	aStream
-		nextPut: $(;
-		print: sender;
-		nextPutAll: ': ';
-		nextPutAll: (text ifNil: [ '' ]);
-		nextPut: $)
 ]
 
 { #category : 'initialization' }
@@ -83,6 +81,16 @@ AbMessage >> initialize [
 	isApprovalRequest := false.
 	isThink := false.
 	approvalOptions := #()
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest [
+	^ isApprovalRequest
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest: aBoolean [
+	isApprovalRequest := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -98,23 +106,20 @@ AbMessage >> isThink: aBoolean [
 ]
 
 { #category : 'accessing' }
-AbMessage >> isApprovalRequest [
-	^ isApprovalRequest
+AbMessage >> lastUpdated [
+	^ lastUpdated
 ]
 
-{ #category : 'accessing' }
-AbMessage >> isApprovalRequest: aBoolean [
-	isApprovalRequest := aBoolean
-]
+{ #category : 'printing' }
+AbMessage >> printOn: aStream [
 
-{ #category : 'accessing' }
-AbMessage >> approvalOptions [
-	^ approvalOptions
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalOptions: aCollection [
-	approvalOptions := (aCollection ifNil: [ #() ]) asArray
+	super printOn: aStream.
+	aStream
+		nextPut: $(;
+		print: sender;
+		nextPutAll: ': ';
+		nextPutAll: (text ifNil: [ '' ]);
+		nextPut: $)
 ]
 
 { #category : 'accessing' }
@@ -136,9 +141,4 @@ AbMessage >> text [
 AbMessage >> text: aString [
 	text := aString.
 	lastUpdated := DateAndTime now
-]
-
-{ #category : 'accessing' }
-AbMessage >> lastUpdated [
-	^ lastUpdated
 ]

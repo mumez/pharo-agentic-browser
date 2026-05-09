@@ -18,77 +18,10 @@ AbWorkingDirectory class >> forTopic: anAbTopic [
 		  yourself
 ]
 
-{ #category : 'accessing' }
-AbWorkingDirectory >> directoryName [
-
-	^ self safeTopicName , '-' , (topic topicId copyFrom: 1 to: 8)
-]
-
 { #category : 'operations' }
 AbWorkingDirectory >> beginImportFromSource [
 
 	self importNestingCount: self importNestingCount + 1
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> endImportFromSource [
-
-	self importNestingCount: ((self importNestingCount - 1) max: 0)
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> ensureExists [
-
-	self path ensureCreateDirectory
-]
-
-{ #category : 'initialization' }
-AbWorkingDirectory >> initialize [
-
-	importNestingCount := 0
-]
-
-{ #category : 'accessing' }
-AbWorkingDirectory >> isImportingFromSource [
-
-	^ self importNestingCount > 0
-]
-
-{ #category : 'private' }
-AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
-
-	| urlPath sourcePath |
-	urlPath := ann teapotRequest url pathPrintString.
-	urlPath = '/import-package' ifFalse: [ ^ self ].
-	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
-	self sourcePath fullName = sourcePath ifFalse: [ ^ self ].
-	ann type = #before
-		ifTrue: [ self beginImportFromSource ]
-		ifFalse: [ self endImportFromSource ]
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> subscribeToSisServerImportEvents [
-
-	| server |
-	server := SisServer current.
-	server unsubscribe: self.
-	server
-		subscribeOnRequest: [ :ann | self handleSisRequestAnnouncement: ann ]
-		for: self
-]
-
-{ #category : 'operations' }
-AbWorkingDirectory >> unsubscribeFromSisServerImportEvents [
-
-	SisServer current unsubscribe: self
-]
-
-
-{ #category : 'accessing' }
-AbWorkingDirectory >> path [
-
-	^ topic workingDirectoryPath asFileReference
 ]
 
 { #category : 'private' }
@@ -112,6 +45,45 @@ AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
 ]
 
 { #category : 'accessing' }
+AbWorkingDirectory >> directoryName [
+
+	^ self safeTopicName , '-' , (topic topicId copyFrom: 1 to: 8)
+]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> endImportFromSource [
+
+	self importNestingCount: ((self importNestingCount - 1) max: 0)
+]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> ensureExists [
+
+	self path ensureCreateDirectory
+]
+
+{ #category : 'exporting' }
+AbWorkingDirectory >> exportPackageNamed: aPackageName [
+    self ensureExists.
+    SisServer current handleExportPackage: {
+		  'package_name' -> aPackageName.
+		  'path' -> self sourcePath fullName } asDictionary
+]
+
+{ #category : 'private' }
+AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
+
+	| urlPath sourcePath |
+	urlPath := ann teapotRequest url pathPrintString.
+	urlPath = '/import-package' ifFalse: [ ^ self ].
+	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
+	self sourcePath fullName = sourcePath ifFalse: [ ^ self ].
+	ann type = #before
+		ifTrue: [ self beginImportFromSource ]
+		ifFalse: [ self endImportFromSource ]
+]
+
+{ #category : 'accessing' }
 AbWorkingDirectory >> importNestingCount [
 
 	^ importNestingCount
@@ -123,22 +95,22 @@ AbWorkingDirectory >> importNestingCount: anInteger [
 	importNestingCount := anInteger
 ]
 
-{ #category : 'accessing' }
-AbWorkingDirectory >> srcDirectory [
+{ #category : 'initialization' }
+AbWorkingDirectory >> initialize [
 
-	^ srcDirectory ifNil: [ self detectSrcDirectoryFromProjectMetafile ]
+	importNestingCount := 0
 ]
 
 { #category : 'accessing' }
-AbWorkingDirectory >> srcDirectory: aString [
+AbWorkingDirectory >> isImportingFromSource [
 
-	srcDirectory := aString
+	^ self importNestingCount > 0
 ]
 
 { #category : 'accessing' }
-AbWorkingDirectory >> sourcePath [
+AbWorkingDirectory >> path [
 
-	^ self path / self srcDirectory
+	^ topic workingDirectoryPath asFileReference
 ]
 
 { #category : 'accessing' }
@@ -154,6 +126,35 @@ AbWorkingDirectory >> safeTopicName [
 ]
 
 { #category : 'accessing' }
+AbWorkingDirectory >> sourcePath [
+
+	^ self path / self srcDirectory
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory [
+
+	^ srcDirectory ifNil: [ self detectSrcDirectoryFromProjectMetafile ]
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> srcDirectory: aString [
+
+	srcDirectory := aString
+]
+
+{ #category : 'operations' }
+AbWorkingDirectory >> subscribeToSisServerImportEvents [
+
+	| server |
+	server := SisServer current.
+	server unsubscribe: self.
+	server
+		subscribeOnRequest: [ :ann | self handleSisRequestAnnouncement: ann ]
+		for: self
+]
+
+{ #category : 'accessing' }
 AbWorkingDirectory >> topic [
 	^ topic
 ]
@@ -163,10 +164,8 @@ AbWorkingDirectory >> topic: anAbTopic [
 	topic := anAbTopic
 ]
 
-{ #category : 'exporting' }
-AbWorkingDirectory >> exportPackageNamed: aPackageName [
-    self ensureExists.
-    SisServer current handleExportPackage: {
-		  'package_name' -> aPackageName.
-		  'path' -> self sourcePath fullName } asDictionary
+{ #category : 'operations' }
+AbWorkingDirectory >> unsubscribeFromSisServerImportEvents [
+
+	SisServer current unsubscribe: self
 ]

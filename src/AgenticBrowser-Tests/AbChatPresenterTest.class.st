@@ -17,79 +17,6 @@ AbChatPresenterTest >> setUp [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testEnterApprovalModeShowsConfirmPresenter [
-
-	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
-	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
-	self assert: presenter confirmPresenter denyButtonLabel equals: 'Deny'
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testEnterApprovalModeSetsConfirmationText [
-
-	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
-	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter pendingApprovalMessage equals: approvalMessage
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPresenter [
-
-	| approvalMessage |
-	approvalMessage := AbMessage
-		                   approvalRequestText: 'Pick an option'
-		                   options: {
-						                   'Allow once' -> #allowOnce.
-						                   'Always allow' -> #allowAlways }.
-	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter confirmPresenter optionLabels asArray equals: #( 'Allow once' 'Always allow' )
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testExitApprovalModeRestoresNormalPresenter [
-
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow package export?').
-	presenter exitApprovalMode.
-	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
-	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
-	self assert: presenter normalInputPresenter inputPlaceholder equals: 'Type your request...'.
-	self assert: presenter pendingApprovalMessage isNil
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testNormalInputHasCancelButton [
-
-	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
-
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
-	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
-
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
-	presenter onTopicStatusChanged: topic status: #endTurn.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
-]
-
-{ #category : 'tests' }
 AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 
 	| topic |
@@ -99,6 +26,51 @@ AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 	presenter onCancelButtonClicked.
 	self assert: topic status equals: #endTurn.
 	self assert: topic messages isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledInitially [
+
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledWhenTopicEndTurn [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonDisabledWhenTopicWaitingForHuman [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #waitingForHuman.
+	self deny: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testCommandSelectionInitInsertsSlashCommand [
+
+	presenter commandNames: #( 'init' ).
+	presenter commandsDropList selectItem: 'init'.
+	self assert: presenter normalInputPresenter inputText equals: '/init '
 ]
 
 { #category : 'tests' }
@@ -134,41 +106,6 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
-
-	| topic approvalMessage |
-	topic := AbTopic new.
-	presenter topic: topic.
-	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
-	presenter enterApprovalMode: approvalMessage.
-	presenter onDenyButtonClicked.
-	self assert: presenter pendingApprovalMessage isNil
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testInitialAnswerPresenterIsNormalInput [
-
-	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
-
-	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow?'.
-	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testExitApprovalModeSwitchesToNormalInputPresenter [
-
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
-	presenter exitApprovalMode.
-	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
-]
-
-{ #category : 'tests' }
 AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
@@ -178,6 +115,18 @@ AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
+	presenter enterApprovalMode: approvalMessage.
+	presenter onDenyButtonClicked.
+	self assert: presenter pendingApprovalMessage isNil
 ]
 
 { #category : 'tests' }
@@ -193,88 +142,85 @@ AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
+AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPresenter [
 
-	| msg |
-	msg := AbMessage sender: #human text: 'Hello'.
-	presenter onMessageAdded: msg.
-	self assert: presenter messagesPresenter messageCount equals: 1
+	| approvalMessage |
+	approvalMessage := AbMessage
+		                   approvalRequestText: 'Pick an option'
+		                   options: {
+						                   'Allow once' -> #allowOnce.
+						                   'Always allow' -> #allowAlways }.
+	presenter enterApprovalMode: approvalMessage.
+	self assert: presenter confirmPresenter optionLabels asArray equals: #( 'Allow once' 'Always allow' )
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testOnMessageAddedWithAiMessageUpdatesCount [
+AbChatPresenterTest >> testEnterApprovalModeSetsConfirmationText [
 
-	presenter onMessageAdded: (AbMessage sender: #human text: 'Hi').
-	presenter onMessageAdded: (AbMessage sender: #ai text: 'Hello').
-	self assert: presenter messagesPresenter messageCount equals: 2
+	| approvalMessage |
+	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
+	presenter enterApprovalMode: approvalMessage.
+	self assert: presenter pendingApprovalMessage equals: approvalMessage
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
+AbChatPresenterTest >> testEnterApprovalModeShowsConfirmPresenter [
 
-	| msg |
-	msg := AbMessage approvalRequestText: 'Allow?'.
-	presenter onMessageAdded: msg.
+	| approvalMessage |
+	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
+	presenter enterApprovalMode: approvalMessage.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	self assert: presenter confirmPresenter denyButtonLabel equals: 'Deny'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
+
+	| approvalMessage |
+	approvalMessage := AbMessage approvalRequestText: 'Allow?'.
+	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCancelButtonDisabledInitially [
+AbChatPresenterTest >> testExitApprovalModeRestoresNormalPresenter [
 
-	self deny: presenter normalInputPresenter isCancelEnabled
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow package export?').
+	presenter exitApprovalMode.
+	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
+	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
+	self assert: presenter normalInputPresenter inputPlaceholder equals: 'Type your request...'.
+	self assert: presenter pendingApprovalMessage isNil
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
+AbChatPresenterTest >> testExitApprovalModeSwitchesToNormalInputPresenter [
 
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter normalInputPresenter isCancelEnabled
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	presenter exitApprovalMode.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCancelButtonDisabledWhenTopicEndTurn [
+AbChatPresenterTest >> testInitialAnswerPresenterIsNormalInput [
 
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter onTopicStatusChanged: topic status: #working.
-	presenter onTopicStatusChanged: topic status: #endTurn.
-	self deny: presenter normalInputPresenter isCancelEnabled
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCancelButtonDisabledWhenTopicWaitingForHuman [
+AbChatPresenterTest >> testModelTextInitiallyEmpty [
 
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter onTopicStatusChanged: topic status: #waitingForHuman.
-	self deny: presenter normalInputPresenter isCancelEnabled
+	self assert: presenter modelText isEmpty
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
+AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
 
 	| topic |
 	topic := AbTopic new.
+	topic instVarNamed: #currentModel put: 'claude-sonnet-4'.
 	presenter topic: topic.
-	presenter onTopicStatusChanged: topic status: #working.
-	presenter onTopicStatusChanged: topic status: #endTurn.
-	self assert: presenter statusText isEmpty
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
-
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter onTopicStatusChanged: topic status: #working.
-	presenter onTopicStatusChanged: topic status: #waitingForHuman.
-	self assert: presenter statusText isEmpty
+	self assert: presenter modelText equals: 'claude-sonnet-4'
 ]
 
 { #category : 'tests' }
@@ -290,15 +236,34 @@ AbChatPresenterTest >> testNextDotsTextCyclesOneDot [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testNextDotsTextCyclesThreeDots [
+
+	self assert: (presenter nextDotsTextAfter: '...') equals: ''
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testNextDotsTextCyclesTwoDots [
 
 	self assert: (presenter nextDotsTextAfter: '..') equals: '...'
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testNextDotsTextCyclesThreeDots [
+AbChatPresenterTest >> testNormalInputHasCancelButton [
 
-	self assert: (presenter nextDotsTextAfter: '...') equals: ''
+	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnAvailableCommandsChangedDoesNotInsertIntoInputImmediately [
+
+	| topic commands |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'keep'.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself)).
+	presenter onAvailableCommandsChanged: topic commands: commands.
+	self assert: presenter normalInputPresenter inputText equals: 'keep'
 ]
 
 { #category : 'tests' }
@@ -325,50 +290,29 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testOnAvailableCommandsChangedDoesNotInsertIntoInputImmediately [
+AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
 
-	| topic commands |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter normalInputPresenter inputField text: 'keep'.
-	commands := OrderedCollection
-		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself)).
-	presenter onAvailableCommandsChanged: topic commands: commands.
-	self assert: presenter normalInputPresenter inputText equals: 'keep'
+	| msg |
+	msg := AbMessage approvalRequestText: 'Allow?'.
+	presenter onMessageAdded: msg.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testCommandSelectionInitInsertsSlashCommand [
+AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
 
-	presenter commandNames: #( 'init' ).
-	presenter commandsDropList selectItem: 'init'.
-	self assert: presenter normalInputPresenter inputText equals: '/init '
+	| msg |
+	msg := AbMessage sender: #human text: 'Hello'.
+	presenter onMessageAdded: msg.
+	self assert: presenter messagesPresenter messageCount equals: 1
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
+AbChatPresenterTest >> testOnMessageAddedWithAiMessageUpdatesCount [
 
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	presenter topic: topic.
-	self assert: presenter normalInputPresenter isCancelEnabled
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
-
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	presenter topic: topic.
-	self assert: presenter dotsAnimationProcess notNil
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testModelTextInitiallyEmpty [
-
-	self assert: presenter modelText isEmpty
+	presenter onMessageAdded: (AbMessage sender: #human text: 'Hi').
+	presenter onMessageAdded: (AbMessage sender: #ai text: 'Hello').
+	self assert: presenter messagesPresenter messageCount equals: 2
 ]
 
 { #category : 'tests' }
@@ -382,11 +326,67 @@ AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelText [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
+AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
 
 	| topic |
 	topic := AbTopic new.
-	topic instVarNamed: #currentModel put: 'claude-sonnet-4'.
 	presenter topic: topic.
-	self assert: presenter modelText equals: 'claude-sonnet-4'
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self assert: presenter statusText isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	presenter onTopicStatusChanged: topic status: #waitingForHuman.
+	self assert: presenter statusText isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	presenter topic: topic.
+	self assert: presenter dotsAnimationProcess notNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	presenter topic: topic.
+	self assert: presenter normalInputPresenter isCancelEnabled
 ]

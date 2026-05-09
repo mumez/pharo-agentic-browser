@@ -1,7 +1,6 @@
 Class {
 	#name : 'AbDialog',
 	#superclass : 'SpPresenter',
-	#instVars : [],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
 }

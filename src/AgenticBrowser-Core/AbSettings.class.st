@@ -29,6 +29,29 @@ AbSettings class >> initialize [
 	default := nil
 ]
 
+{ #category : 'accessing' }
+AbSettings >> approvalWaitTimeoutSeconds [
+
+	^ self
+		  at: #approvalWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultApprovalWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> approvalWaitTimeoutSeconds: anInteger [
+
+	self at: #approvalWaitTimeoutSeconds put: anInteger
+]
+
+{ #category : 'converting' }
+AbSettings >> asDictionary [
+
+	^ self keys inject: Dictionary new into: [ :dict :key |
+		  dict
+			  at: key put: (self perform: key);
+			  yourself ]
+]
+
 { #category : 'actions-dictionary' }
 AbSettings >> at: aKey ifAbsentPut: aBlock [
 
@@ -41,25 +64,22 @@ AbSettings >> at: aKey put: aValue [
 	^ self settingsDict at: aKey put: aValue
 ]
 
-{ #category : 'converting' }
-AbSettings >> asDictionary [
+{ #category : 'defaults' }
+AbSettings >> defaultApprovalWaitTimeoutSeconds [
 
-	^ self keys inject: Dictionary new into: [ :dict :key |
-		  dict
-			  at: key put: (self perform: key);
-			  yourself ]
+	^ 30
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultPermissionWaitTimeoutSeconds [
+
+	^ 1800
 ]
 
 { #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleDuration [
 
 	^ 2 seconds
-]
-
-{ #category : 'defaults' }
-AbSettings >> defaultApprovalWaitTimeoutSeconds [
-
-	^ 30
 ]
 
 { #category : 'initialization' }
@@ -81,6 +101,20 @@ AbSettings >> initialize [
 AbSettings >> keys [
 
 	^ self settingsDict keys
+]
+
+{ #category : 'accessing' }
+AbSettings >> permissionWaitTimeoutSeconds [
+
+	^ self
+		  at: #permissionWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultPermissionWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> permissionWaitTimeoutSeconds: anInteger [
+
+	self at: #permissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'private' }
@@ -106,18 +140,4 @@ AbSettings >> watcherMessageThrottleDuration [
 AbSettings >> watcherMessageThrottleDuration: aDuration [
 
 	self at: #watcherMessageThrottleDuration put: aDuration
-]
-
-{ #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds [
-
-	^ self
-		  at: #approvalWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultApprovalWaitTimeoutSeconds ]
-]
-
-{ #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds: anInteger [
-
-	self at: #approvalWaitTimeoutSeconds put: anInteger
 ]

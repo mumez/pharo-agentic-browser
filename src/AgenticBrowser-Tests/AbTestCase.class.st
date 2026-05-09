@@ -1,7 +1,6 @@
 Class {
 	#name : 'AbTestCase',
 	#superclass : 'TestCase',
-	#instVars : [],
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }

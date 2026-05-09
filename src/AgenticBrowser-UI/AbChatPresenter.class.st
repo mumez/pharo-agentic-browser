@@ -19,6 +19,143 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
+{ #category : 'accessing' }
+AbChatPresenter >> clearStatusText [
+
+	self statusText: ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames [
+
+	^ self commandsDropList items
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames: aCollection [
+
+	self isUpdatingCommands: true.
+	[ self commandsDropList items: aCollection asArray ] ensure: [
+		self isUpdatingCommands: false ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandsDropList [
+
+	^ commandsDropList
+]
+
+{ #category : 'layout' }
+AbChatPresenter >> confirmModeLayout [
+
+	^ SpBoxLayout newTopToBottom
+		  add: self messagesPresenter;
+		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  yourself
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> confirmPresenter [
+
+	^ confirmPresenter
+]
+
+{ #category : 'initialization' }
+AbChatPresenter >> connectPresenters [
+
+	normalInputPresenter onSendAction: [ self onSendButtonClicked ].
+	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
+	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
+	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
+	normalInputPresenter cancelEnabled: false.
+	commandsDropList startWithoutSelection.
+	commandsDropList whenSelectedItemChangedDo: [ :cmd |
+		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
+			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentAnswerAreaPresenter [
+	"Returns the currently active answer area presenter: confirmPresenter in approval mode,
+	 normalInputPresenter otherwise."
+
+	^ pendingApprovalMessage
+		  ifNil: [ normalInputPresenter ]
+		  ifNotNil: [ confirmPresenter ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentTopic [
+
+	^ currentTopic
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> currentTopic: aTopic [
+
+	currentTopic := aTopic
+]
+
+{ #category : 'layout' }
+AbChatPresenter >> defaultLayout [
+
+	^ SpBoxLayout newTopToBottom
+		  add: self messagesPresenter;
+		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  yourself
+]
+
+{ #category : 'private' }
+AbChatPresenter >> denyOptionIdForPendingApproval [
+
+	| rejectOption |
+	self pendingApprovalMessage ifNil: [ ^ #rejectOnce ].
+	rejectOption := self pendingApprovalMessage approvalOptions
+		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
+		                ifNone: [ nil ].
+	^ rejectOption
+		  ifNil: [ #rejectOnce ]
+		  ifNotNil: [ rejectOption value ]
+]
+
+{ #category : 'initialization' }
+AbChatPresenter >> destroy [
+
+	self stopDotsAnimation.
+	self unsubscribeFromTopic: self currentTopic.
+	super destroy
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess [
+
+	^ dotsAnimationProcess
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess: aProcess [
+
+	dotsAnimationProcess := aProcess
+]
+
+{ #category : 'private' }
+AbChatPresenter >> enterApprovalMode: anAbMessage [
+
+	self pendingApprovalMessage: anAbMessage.
+	self confirmPresenter confirmationText: anAbMessage text.
+	self confirmPresenter approvalOptions: anAbMessage approvalOptions.
+	self layout: self confirmModeLayout
+]
+
+{ #category : 'private' }
+AbChatPresenter >> exitApprovalMode [
+
+	self pendingApprovalMessage: nil.
+	self layout: self defaultLayout
+]
+
 { #category : 'initialization' }
 AbChatPresenter >> initializePresenters [
 
@@ -44,54 +181,11 @@ AbChatPresenter >> initializeStatusBar [
 				 yourself)
 ]
 
-{ #category : 'initialization' }
-AbChatPresenter >> connectPresenters [
-
-	normalInputPresenter onSendAction: [ self onSendButtonClicked ].
-	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
-	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
-	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
-	normalInputPresenter cancelEnabled: false.
-	commandsDropList startWithoutSelection.
-	commandsDropList whenSelectedItemChangedDo: [ :cmd |
-		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
-			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ]
-]
-
-{ #category : 'layout' }
-AbChatPresenter >> defaultLayout [
-
-	^ SpBoxLayout newTopToBottom
-		  add: self messagesPresenter;
-		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
-		  yourself
-]
-
-{ #category : 'layout' }
-AbChatPresenter >> confirmModeLayout [
-
-	^ SpBoxLayout newTopToBottom
-		  add: self messagesPresenter;
-		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
-		  yourself
-]
-
 { #category : 'private' }
-AbChatPresenter >> enterApprovalMode: anAbMessage [
+AbChatPresenter >> inputTextForCommand: aString [
 
-	self pendingApprovalMessage: anAbMessage.
-	self confirmPresenter confirmationText: anAbMessage text.
-	self confirmPresenter approvalOptions: anAbMessage approvalOptions.
-	self layout: self confirmModeLayout
-]
-
-{ #category : 'private' }
-AbChatPresenter >> exitApprovalMode [
-
-	self pendingApprovalMessage: nil.
-	self layout: self defaultLayout
+	aString = 'init' ifTrue: [ ^ '/init ' ].
+	^ aString , ' '
 ]
 
 { #category : 'private' }
@@ -100,26 +194,67 @@ AbChatPresenter >> isFirstMessageInTopic [
 	^ self currentTopic messages noneSatisfy: [ :m | m sender = #human ]
 ]
 
-{ #category : 'event handling' }
-AbChatPresenter >> onMessageAdded: anAbMessage [
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands [
 
-	self messagesPresenter addOrUpdateMessage: anAbMessage.
-	anAbMessage isApprovalRequest ifTrue: [
-		self enterApprovalMode: anAbMessage ]
+	^ isUpdatingCommands ifNil: [ false ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands: aBoolean [
+
+	isUpdatingCommands := aBoolean
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> logger [
+
+	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> messagesPresenter [
+
+	^ messagesPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelLabel [
+
+	^ modelLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText [
+
+	^ self modelLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText: aString [
+
+	self modelLabel label: aString
+]
+
+{ #category : 'private' }
+AbChatPresenter >> nextDotsTextAfter: aString [
+
+	aString = '' ifTrue: [ ^ '.' ].
+	aString = '.' ifTrue: [ ^ '..' ].
+	aString = '..' ifTrue: [ ^ '...' ].
+	^ ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> normalInputPresenter [
+
+	^ normalInputPresenter
 ]
 
 { #category : 'event handling' }
-AbChatPresenter >> onSendButtonClicked [
+AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
 
-	| text promptText |
-	self currentTopic ifNil: [ ^ self ].
-	text := self normalInputPresenter inputText trimmed.
-	text ifEmpty: [ ^ self ].
-	self normalInputPresenter clearInput.
-	promptText := self isFirstMessageInTopic
-		              ifTrue: [ '/st-buddy ' , text ]
-		              ifFalse: [ text ].
-	self currentTopic sendPrompt: promptText
+	self commandNames: ((aCollection ifNil: [ #() ]) collect: [ :cmd | cmd name ])
 ]
 
 { #category : 'event handling' }
@@ -146,23 +281,32 @@ AbChatPresenter >> onDenyButtonClicked [
 	self exitApprovalMode
 ]
 
-{ #category : 'private' }
-AbChatPresenter >> denyOptionIdForPendingApproval [
+{ #category : 'event handling' }
+AbChatPresenter >> onMessageAdded: anAbMessage [
 
-	| rejectOption |
-	self pendingApprovalMessage ifNil: [ ^ #rejectOnce ].
-	rejectOption := self pendingApprovalMessage approvalOptions
-		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
-		                ifNone: [ nil ].
-	^ rejectOption
-		  ifNil: [ #rejectOnce ]
-		  ifNotNil: [ rejectOption value ]
+	self messagesPresenter addOrUpdateMessage: anAbMessage.
+	anAbMessage isApprovalRequest ifTrue: [
+		self enterApprovalMode: anAbMessage ]
 ]
 
 { #category : 'event handling' }
-AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
+AbChatPresenter >> onSendButtonClicked [
 
-	self commandNames: ((aCollection ifNil: [ #() ]) collect: [ :cmd | cmd name ])
+	| text promptText |
+	self currentTopic ifNil: [ ^ self ].
+	text := self normalInputPresenter inputText trimmed.
+	text ifEmpty: [ ^ self ].
+	self normalInputPresenter clearInput.
+	promptText := self isFirstMessageInTopic
+		              ifTrue: [ '/st-buddy ' , text ]
+		              ifFalse: [ text ].
+	self currentTopic sendPrompt: promptText
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+
+	self modelText: (aModelString ifNil: [ '' ])
 ]
 
 { #category : 'event handling' }
@@ -179,106 +323,23 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 	self messagesPresenter refreshMessages
 ]
 
-{ #category : 'event handling' }
-AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+{ #category : 'accessing' }
+AbChatPresenter >> pendingApprovalMessage [
 
-	self modelText: (aModelString ifNil: [ '' ])
+	^ pendingApprovalMessage
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> statusText [
+AbChatPresenter >> pendingApprovalMessage: aMessage [
 
-	^ self statusLabel label
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> statusText: aString [
-
-	self statusLabel label: aString
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> clearStatusText [
-
-	self statusText: ''
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> modelLabel [
-
-	^ modelLabel
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> modelText [
-
-	^ self modelLabel label
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> modelText: aString [
-
-	self modelLabel label: aString
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> commandNames [
-
-	^ self commandsDropList items
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> commandNames: aCollection [
-
-	self isUpdatingCommands: true.
-	[ self commandsDropList items: aCollection asArray ] ensure: [
-		self isUpdatingCommands: false ]
+	pendingApprovalMessage := aMessage
 ]
 
 { #category : 'private' }
-AbChatPresenter >> inputTextForCommand: aString [
+AbChatPresenter >> rerenderMessages [
 
-	aString = 'init' ifTrue: [ ^ '/init ' ].
-	^ aString , ' '
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> statusBarPresenter [
-
-	^ statusBarPresenter
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> statusLabel [
-
-	^ statusLabel
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> commandsDropList [
-
-	^ commandsDropList
-]
-
-{ #category : 'private' }
-AbChatPresenter >> nextDotsTextAfter: aString [
-
-	aString = '' ifTrue: [ ^ '.' ].
-	aString = '.' ifTrue: [ ^ '..' ].
-	aString = '..' ifTrue: [ ^ '...' ].
-	^ ''
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> dotsAnimationProcess [
-
-	^ dotsAnimationProcess
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> dotsAnimationProcess: aProcess [
-
-	dotsAnimationProcess := aProcess
+	self currentTopic ifNil: [ ^ self ].
+	self messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'private' }
@@ -298,6 +359,30 @@ AbChatPresenter >> startDotsAnimation [
 	self dotsAnimationProcess: process
 ]
 
+{ #category : 'accessing' }
+AbChatPresenter >> statusBarPresenter [
+
+	^ statusBarPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusLabel [
+
+	^ statusLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText [
+
+	^ self statusLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText: aString [
+
+	self statusLabel label: aString
+]
+
 { #category : 'private' }
 AbChatPresenter >> stopDotsAnimation [
 
@@ -305,13 +390,6 @@ AbChatPresenter >> stopDotsAnimation [
 		p terminate.
 		self dotsAnimationProcess: nil ].
 	self clearStatusText
-]
-
-{ #category : 'private' }
-AbChatPresenter >> rerenderMessages [
-
-	self currentTopic ifNil: [ ^ self ].
-	self messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'subscriptions' }
@@ -335,21 +413,6 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 		for: self
 ]
 
-{ #category : 'subscriptions' }
-AbChatPresenter >> unsubscribeFromTopic: aTopic [
-
-	aTopic ifNil: [ ^ self ].
-	aTopic announcer unsubscribe: self
-]
-
-{ #category : 'initialization' }
-AbChatPresenter >> destroy [
-
-	self stopDotsAnimation.
-	self unsubscribeFromTopic: self currentTopic.
-	super destroy
-]
-
 { #category : 'accessing' }
 AbChatPresenter >> topic: anAbTopic [
 
@@ -367,72 +430,9 @@ AbChatPresenter >> topic: anAbTopic [
 	self onTopicStatusChanged: anAbTopic status: anAbTopic status
 ]
 
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingCommands [
+{ #category : 'subscriptions' }
+AbChatPresenter >> unsubscribeFromTopic: aTopic [
 
-	^ isUpdatingCommands ifNil: [ false ]
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingCommands: aBoolean [
-
-	isUpdatingCommands := aBoolean
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> logger [
-
-	^ logger ifNil: [ logger := AbLocalLogger new ]
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> currentTopic [
-
-	^ currentTopic
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> currentTopic: aTopic [
-
-	currentTopic := aTopic
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> messagesPresenter [
-
-	^ messagesPresenter
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> normalInputPresenter [
-
-	^ normalInputPresenter
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> confirmPresenter [
-
-	^ confirmPresenter
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> pendingApprovalMessage [
-
-	^ pendingApprovalMessage
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> pendingApprovalMessage: aMessage [
-
-	pendingApprovalMessage := aMessage
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> currentAnswerAreaPresenter [
-	"Returns the currently active answer area presenter: confirmPresenter in approval mode,
-	 normalInputPresenter otherwise."
-
-	^ pendingApprovalMessage
-		  ifNil: [ normalInputPresenter ]
-		  ifNotNil: [ confirmPresenter ]
+	aTopic ifNil: [ ^ self ].
+	aTopic announcer unsubscribe: self
 ]
