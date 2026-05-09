@@ -479,6 +479,23 @@ AbTopic >> requestApproval: aDescription options: approvalOptions [
 ]
 
 { #category : 'operations' }
+AbTopic >> requestPackageExport: aDescription [
+
+	| msg waitSeconds |
+	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
+	msg := self addApprovalRequest: aDescription options: self defaultApprovalOptions.
+	waitSeconds := 0.
+	[ msg approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
+		1 second wait.
+		waitSeconds := waitSeconds + 1 ].
+	msg approvalResponse isNil ifTrue: [
+		self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
+		msg approvalResponse: #rejectOnce ].
+	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
+	^ msg approvalResponse ifNil: [ #rejectOnce ]
+]
+
+{ #category : 'operations' }
 AbTopic >> requestPermission: aDescription [
 
 	^ self requestPermission: aDescription options: self defaultApprovalOptions
@@ -525,7 +542,7 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 	pending := self pendingApprovalMessage.
 	pending ifNil: [ ^ self ].
 	pending approvalResponse: anOptionId.
-	self stateMachine handleEvent: #humanResponded.
+	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)='
 		, self status printString.
 	self logger debug: 'resolveApproval: done'

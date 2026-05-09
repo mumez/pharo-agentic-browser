@@ -232,23 +232,36 @@ AbTopicTest >> testPromptSentTransition [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testRequestApprovalTimesOutAndRejects [
+AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
+
+	| topic response done |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic resolveApproval: 'yes'.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #allowOnce.
+	self assert: topic status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 
 	| topic response done timedOut |
 	topic := AbTopic new.
 	AbSettings default approvalWaitTimeoutSeconds: 0.
-	topic stateMachine handleEvent: #promptSent.
 	done := Semaphore new.
 	[
-	response := topic requestApproval: 'Approve this action?'.
+	response := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
-	timedOut ifTrue: [
-		topic resolveApproval: 'no'.
-		done waitTimeoutMilliseconds: 200 ].
 	self deny: timedOut.
 	self assert: response equals: #rejectOnce.
-	self assert: topic status equals: #working
+	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
@@ -312,6 +325,17 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic resolveApproval: 'no'.
 	self assert: msg approvalResponse equals: #rejectOnce.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
+
+	| topic msg |
+	topic := AbTopic new.
+	msg := AbMessage approvalRequestText: 'Export?'.
+	topic messages add: msg.
+	topic resolveApproval: 'yes'.
+	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
