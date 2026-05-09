@@ -27,13 +27,13 @@ AbWorkingDirectory >> directoryName [
 { #category : 'operations' }
 AbWorkingDirectory >> beginImportFromSource [
 
-	importNestingCount := importNestingCount + 1
+	self importNestingCount: self importNestingCount + 1
 ]
 
 { #category : 'operations' }
 AbWorkingDirectory >> endImportFromSource [
 
-	importNestingCount := (importNestingCount - 1) max: 0
+	self importNestingCount: ((self importNestingCount - 1) max: 0)
 ]
 
 { #category : 'operations' }
@@ -51,7 +51,7 @@ AbWorkingDirectory >> initialize [
 { #category : 'accessing' }
 AbWorkingDirectory >> isImportingFromSource [
 
-	^ importNestingCount > 0
+	^ self importNestingCount > 0
 ]
 
 { #category : 'private' }
@@ -105,9 +105,22 @@ AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
 		at: 'srcDirectory'
 		ifAbsent: [
 			projectDefinition at: #srcDirectory ifAbsent: [ ^ defaultSrcDirectory ] ].
-	^ srcDirectory := (configuredSrcDirectory isString and: [ configuredSrcDirectory isNotEmpty ])
+	self srcDirectory: ((configuredSrcDirectory isString and: [ configuredSrcDirectory isNotEmpty ])
 		ifTrue: [ configuredSrcDirectory ]
-		ifFalse: [ defaultSrcDirectory ]
+		ifFalse: [ defaultSrcDirectory ]).
+	^ self srcDirectory
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> importNestingCount [
+
+	^ importNestingCount
+]
+
+{ #category : 'accessing' }
+AbWorkingDirectory >> importNestingCount: anInteger [
+
+	importNestingCount := anInteger
 ]
 
 { #category : 'accessing' }

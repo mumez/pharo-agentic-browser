@@ -7,7 +7,13 @@ Class {
 		'confirmPresenter',
 		'currentTopic',
 		'pendingApprovalMessage',
-		'logger'
+		'logger',
+		'dotsAnimationProcess',
+		'statusBarPresenter',
+		'statusLabel',
+		'commandsDropList',
+		'isUpdatingCommands',
+		'modelLabel'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -16,9 +22,26 @@ Class {
 { #category : 'initialization' }
 AbChatPresenter >> initializePresenters [
 
+	super initializePresenters.
 	messagesPresenter := self instantiate: AbMessagesPresenter.
 	normalInputPresenter := self instantiate: AbNormalInputPresenter.
-	confirmPresenter := self instantiate: AbConfirmPresenter
+	confirmPresenter := self instantiate: AbConfirmPresenter.
+	self initializeStatusBar
+]
+
+{ #category : 'initialization' }
+AbChatPresenter >> initializeStatusBar [
+
+	(statusBarPresenter := self instantiate: SpPresenter)
+		layout: (SpBoxLayout newLeftToRight
+				 borderWidth: 2;
+				 vAlignCenter;
+				 add: (commandsDropList := statusBarPresenter newDropList)
+				 withConstraints: [ :c | c width: 120 ];
+				 add: (modelLabel := statusBarPresenter newLabel) expand: false;
+				 add: statusBarPresenter newNullPresenter;
+				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
+				 yourself)
 ]
 
 { #category : 'initialization' }
@@ -27,15 +50,21 @@ AbChatPresenter >> connectPresenters [
 	normalInputPresenter onSendAction: [ self onSendButtonClicked ].
 	normalInputPresenter onCancelAction: [ self onCancelButtonClicked ].
 	confirmPresenter onConfirmAction: [ self onConfirmButtonClicked ].
-	confirmPresenter onDenyAction: [ self onDenyButtonClicked ]
+	confirmPresenter onDenyAction: [ self onDenyButtonClicked ].
+	normalInputPresenter cancelEnabled: false.
+	commandsDropList startWithoutSelection.
+	commandsDropList whenSelectedItemChangedDo: [ :cmd |
+		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
+			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ]
 ]
 
 { #category : 'layout' }
 AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messagesPresenter;
-		  add: normalInputPresenter withConstraints: [ :c | c height: 60 ];
+		  add: self messagesPresenter;
+		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  yourself
 ]
 
@@ -43,8 +72,9 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> confirmModeLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: messagesPresenter;
-		  add: confirmPresenter withConstraints: [ :c | c height: 90 ];
+		  add: self messagesPresenter;
+		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
 		  yourself
 ]
 
@@ -52,7 +82,8 @@ AbChatPresenter >> confirmModeLayout [
 AbChatPresenter >> enterApprovalMode: anAbMessage [
 
 	self pendingApprovalMessage: anAbMessage.
-	confirmPresenter confirmationText: anAbMessage text.
+	self confirmPresenter confirmationText: anAbMessage text.
+	self confirmPresenter approvalOptions: anAbMessage approvalOptions.
 	self layout: self confirmModeLayout
 ]
 
@@ -72,7 +103,7 @@ AbChatPresenter >> isFirstMessageInTopic [
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
-	messagesPresenter addOrUpdateMessage: anAbMessage.
+	self messagesPresenter addOrUpdateMessage: anAbMessage.
 	anAbMessage isApprovalRequest ifTrue: [
 		self enterApprovalMode: anAbMessage ]
 ]
@@ -82,9 +113,9 @@ AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText |
 	self currentTopic ifNil: [ ^ self ].
-	text := normalInputPresenter inputText trimmed.
+	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
-	normalInputPresenter clearInput.
+	self normalInputPresenter clearInput.
 	promptText := self isFirstMessageInTopic
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
@@ -102,7 +133,8 @@ AbChatPresenter >> onCancelButtonClicked [
 AbChatPresenter >> onConfirmButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
-	self currentTopic resolveApproval: 'yes'.
+	self currentTopic
+		resolveApprovalWithOptionId: self confirmPresenter selectedOptionId.
 	self exitApprovalMode
 ]
 
@@ -110,8 +142,27 @@ AbChatPresenter >> onConfirmButtonClicked [
 AbChatPresenter >> onDenyButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
-	self currentTopic resolveApproval: 'no'.
+	self currentTopic resolveApprovalWithOptionId: self denyOptionIdForPendingApproval.
 	self exitApprovalMode
+]
+
+{ #category : 'private' }
+AbChatPresenter >> denyOptionIdForPendingApproval [
+
+	| rejectOption |
+	self pendingApprovalMessage ifNil: [ ^ #rejectOnce ].
+	rejectOption := self pendingApprovalMessage approvalOptions
+		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
+		                ifNone: [ nil ].
+	^ rejectOption
+		  ifNil: [ #rejectOnce ]
+		  ifNotNil: [ rejectOption value ]
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onAvailableCommandsChanged: aTopic commands: aCollection [
+
+	self commandNames: ((aCollection ifNil: [ #() ]) collect: [ :cmd | cmd name ])
 ]
 
 { #category : 'event handling' }
@@ -121,14 +172,146 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, aTopic title printString
 		, ' status='
 		, aStatus printString.
-	messagesPresenter refreshMessages
+	self normalInputPresenter cancelEnabled: aStatus = #working.
+	aStatus = #working
+		ifTrue: [ self startDotsAnimation ]
+		ifFalse: [ self stopDotsAnimation ].
+	self messagesPresenter refreshMessages
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+
+	self modelText: (aModelString ifNil: [ '' ])
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText [
+
+	^ self statusLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusText: aString [
+
+	self statusLabel label: aString
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> clearStatusText [
+
+	self statusText: ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelLabel [
+
+	^ modelLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText [
+
+	^ self modelLabel label
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelText: aString [
+
+	self modelLabel label: aString
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames [
+
+	^ self commandsDropList items
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandNames: aCollection [
+
+	self isUpdatingCommands: true.
+	[ self commandsDropList items: aCollection asArray ] ensure: [
+		self isUpdatingCommands: false ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> inputTextForCommand: aString [
+
+	aString = 'init' ifTrue: [ ^ '/init ' ].
+	^ aString , ' '
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusBarPresenter [
+
+	^ statusBarPresenter
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> statusLabel [
+
+	^ statusLabel
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> commandsDropList [
+
+	^ commandsDropList
+]
+
+{ #category : 'private' }
+AbChatPresenter >> nextDotsTextAfter: aString [
+
+	aString = '' ifTrue: [ ^ '.' ].
+	aString = '.' ifTrue: [ ^ '..' ].
+	aString = '..' ifTrue: [ ^ '...' ].
+	^ ''
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess [
+
+	^ dotsAnimationProcess
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> dotsAnimationProcess: aProcess [
+
+	dotsAnimationProcess := aProcess
+]
+
+{ #category : 'private' }
+AbChatPresenter >> startDotsAnimation [
+
+	| process |
+	self stopDotsAnimation.
+	process := [
+		| dots |
+		dots := ''.
+		[ true ] whileTrue: [
+			dots := self nextDotsTextAfter: dots.
+			self defer: [ self statusText: dots ].
+			500 milliSeconds wait ] ] newProcess.
+	process priority: Processor userBackgroundPriority.
+	process resume.
+	self dotsAnimationProcess: process
+]
+
+{ #category : 'private' }
+AbChatPresenter >> stopDotsAnimation [
+
+	self dotsAnimationProcess ifNotNil: [ :p |
+		p terminate.
+		self dotsAnimationProcess: nil ].
+	self clearStatusText
 ]
 
 { #category : 'private' }
 AbChatPresenter >> rerenderMessages [
 
 	self currentTopic ifNil: [ ^ self ].
-	messagesPresenter setMessages: self currentTopic messages
+	self messagesPresenter setMessages: self currentTopic messages
 ]
 
 { #category : 'subscriptions' }
@@ -141,6 +324,14 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicStatusChanged
 		do: [ :ann | self defer: [ self onTopicStatusChanged: ann topic status: ann status ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicAvailableCommandsChanged
+		do: [ :ann | self defer: [ self onAvailableCommandsChanged: ann topic commands: ann commands ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicCurrentModelChanged
+		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic model: ann model ] ]
 		for: self
 ]
 
@@ -154,6 +345,7 @@ AbChatPresenter >> unsubscribeFromTopic: aTopic [
 { #category : 'initialization' }
 AbChatPresenter >> destroy [
 
+	self stopDotsAnimation.
 	self unsubscribeFromTopic: self currentTopic.
 	super destroy
 ]
@@ -163,8 +355,28 @@ AbChatPresenter >> topic: anAbTopic [
 
 	self unsubscribeFromTopic: self currentTopic.
 	self currentTopic: anAbTopic.
+	anAbTopic ifNil: [
+		self commandNames: #().
+		normalInputPresenter cancelEnabled: false.
+		self stopDotsAnimation.
+		^ self ].
 	self subscribeToTopic: anAbTopic.
-	self rerenderMessages
+	self rerenderMessages.
+	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
+	self onTopicCurrentModelChanged: anAbTopic model: anAbTopic currentModel.
+	self onTopicStatusChanged: anAbTopic status: anAbTopic status
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands [
+
+	^ isUpdatingCommands ifNil: [ false ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingCommands: aBoolean [
+
+	isUpdatingCommands := aBoolean
 ]
 
 { #category : 'accessing' }

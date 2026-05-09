@@ -13,6 +13,7 @@ Class {
 { #category : 'initialization' }
 AbNormalInputPresenter >> initializePresenters [
 
+	super initializePresenters.
 	inputField := self newText.
 	inputField placeholder: 'Type your request...'.
 
@@ -91,4 +92,16 @@ AbNormalInputPresenter >> cancelButtonLabel [
 AbNormalInputPresenter >> inputPlaceholder [
 
 	^ self inputField placeholder
+]
+
+{ #category : 'testing' }
+AbNormalInputPresenter >> isCancelEnabled [
+
+	^ self cancelButton isEnabled
+]
+
+{ #category : 'actions' }
+AbNormalInputPresenter >> cancelEnabled: aBoolean [
+
+	self cancelButton enabled: aBoolean
 ]

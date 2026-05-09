@@ -4,6 +4,64 @@ Candidate features for the next phase, noted after Phase 2 completion (2026-04-2
 
 ---
 
+## 0. Goal Setting (Primary Feature)
+
+Allow users to define a completion condition (goal) for a topic. When set, the AI agent works autonomously until the goal is achieved, then reports back in a structured result file.
+
+**Motivation:** Without a goal, the user must manually judge task completion after each AI turn. Goal setting shifts the loop to the AI: "keep retrying until done" — enabling truly autonomous multi-step tasks.
+
+**User flow:**
+
+1. User right-clicks a topic in the topic list → "Set Goal..." context menu item.
+2. A `UIManager request:` modal appears; user types the goal description (e.g., `all tests pass`).
+3. AgenticBrowser calls `topic goalDescription:` and sends the goal notification prompt to the AI:
+   ```
+   Goal has been set: <description>. When the goal is achieved, summarize and
+   report in result-<topic-id>.md. Keep retrying until the goal is achieved.
+   ```
+4. The AI works autonomously, retrying as needed.
+5. When the AI creates `result-<topic-id>.md` in the working directory, AgenticBrowser detects it on `end_turn`, reads the content, deletes the file, stores it in `topic goalAchieved`, and transitions to `#goalAchieved`.
+6. The `#goalAchieved` state fires an `AbTopicGoalAchieved` announcement and runs the optional `whenGoalAchievedBlock`.
+7. From `#goalAchieved`, only `#reset` (→ `#initial`) is allowed; the topic is effectively archived.
+
+**State machine additions:**
+
+```
+#working       --[#goalReached]-->  #goalAchieved
+#goalAchieved  --[#reset]-------->  #initial
+```
+
+**Key methods:**
+
+```smalltalk
+"AbTopicGoal (new class) — created via AbTopicGoal on: aTopic"
+description               "goal text set by user"
+achieved                  "result text once achieved (nil until then)"
+isAchieved                "true after goal is met"
+resultFile                "FileReference: workingDir/result-<topicId>.md (uses internal topic ref)"
+notificationPrompt        "goal notification prompt string"
+checkAchievement          "checks result file, reads, deletes, sets achieved; returns boolean"
+whenAchieved: aBlock      "optional callback block"
+
+"AbTopic"
+goalDescription: aString  "creates AbTopicGoal on: self, stores description, sends notification prompt"
+topicGoal                 "getter for the AbTopicGoal instance (nil if not set)"
+checkGoalAchievement      "delegates to topicGoal checkAchievement"
+resetFromGoalAchieved     "transitions #goalAchieved → #initial"
+
+"AbTopicListPresenter"
+onSetGoalRequest          "handles 'Set Goal...' context menu action"
+```
+
+**New classes:**
+- `AbTopicGoal` — holds `topic` (back-ref), `description`, `achieved` (result text), `whenAchievedBlock`; created via `AbTopicGoal on: aTopic`
+- `AbTopicGoalAchieved` — `Announcement` subclass carrying `topic` and `goal` (AbTopicGoal)
+
+**instVar additions to AbTopic:**
+- `topicGoal` — `AbTopicGoal` instance or nil
+
+---
+
 ## 1. Session Persistence
 
 Save and restore topic sessions to a file, independent of Pharo image save.

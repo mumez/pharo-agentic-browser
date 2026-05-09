@@ -4,6 +4,8 @@ A GUI application inside the Pharo image for managing multiple AI agent work ses
 
 ## Overview
 
+![Agentic Browser](docs/screenshots/agentic-browser.png)
+
 ```
 +---------------------+-------------------------------------------+
 |   Topics            |  [Human] /st-buddy Add pagination to      |
@@ -102,6 +104,8 @@ Watching starts automatically when a topic first connects (on the first **Send**
 | GitHub Copilot CLI | `copilot --acp --stdio` |
 | Codex | `codex-acp` |
 
+> **Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and slash commands (e.g. `/st-buddy`, `/st-import`, `/st-test`) that agents can use to work directly with Pharo packages inside the session.
+
 ## Package Structure
 
 | Package | Contents |
@@ -150,6 +154,7 @@ You can also set a custom working directory path when creating a topic from an e
 - [pharo-acp](https://github.com/mumez/pharo-acp) — ACP client library for Pharo
 - [SState](https://github.com/mumez/SState) — Simple state machine library for Pharo
 - [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer) — HTTP API server for Pharo package import/export/test
+- [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) — AI agents plugin providing Smalltalk-aware skills and slash commands
 
 ## License
 

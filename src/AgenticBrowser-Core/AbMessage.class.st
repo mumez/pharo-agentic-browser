@@ -4,10 +4,11 @@ Class {
 	#instVars : [
 		'sender',
 		'text',
-		'timestamp',
+		'lastUpdated',
 		'isApprovalRequest',
 		'approvalResponse',
-		'isThink'
+		'isThink',
+		'approvalOptions'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -16,10 +17,17 @@ Class {
 { #category : 'instance creation' }
 AbMessage class >> approvalRequestText: aString [
 
+	^ self approvalRequestText: aString options: #()
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> approvalRequestText: aString options: aCollection [
+
 	^ self new
 		  sender: #ai;
 		  text: aString;
 		  isApprovalRequest: true;
+		  approvalOptions: aCollection;
 		  yourself
 ]
 
@@ -41,7 +49,7 @@ AbMessage class >> sender: aSenderSymbol text: aString isThink: aBoolean [
 
 { #category : 'operations' }
 AbMessage >> appendText: aString [
-	text := text , aString
+	self text: self text , aString
 ]
 
 { #category : 'accessing' }
@@ -71,9 +79,10 @@ AbMessage >> initialize [
 
 	sender := #system.
 	text := ''.
-	timestamp := DateAndTime now.
+	lastUpdated := DateAndTime now.
 	isApprovalRequest := false.
-	isThink := false
+	isThink := false.
+	approvalOptions := #()
 ]
 
 { #category : 'accessing' }
@@ -99,6 +108,16 @@ AbMessage >> isApprovalRequest: aBoolean [
 ]
 
 { #category : 'accessing' }
+AbMessage >> approvalOptions [
+	^ approvalOptions
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalOptions: aCollection [
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray
+]
+
+{ #category : 'accessing' }
 AbMessage >> sender [
 	^ sender
 ]
@@ -115,10 +134,11 @@ AbMessage >> text [
 
 { #category : 'accessing' }
 AbMessage >> text: aString [
-	text := aString
+	text := aString.
+	lastUpdated := DateAndTime now
 ]
 
 { #category : 'accessing' }
-AbMessage >> timestamp [
-	^ timestamp
+AbMessage >> lastUpdated [
+	^ lastUpdated
 ]

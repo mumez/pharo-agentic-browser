@@ -27,27 +27,47 @@ AbNewTopicDialog >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  spacing: 8;
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
-				   add: titleField;
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
-				   add: agentDropList;
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
-				   add: workingDirField;
-				   add: selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
-		  add: (SpBoxLayout newLeftToRight
-				   addLast: cancelButton withConstraints: [ :c | c width: 80 ];
-				   addLast: okButton withConstraints: [ :c | c width: 80 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 32 ];
+		  add: self titleRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self agentRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self workingDirectoryRowLayout withConstraints: [ :c | c height: 32 ];
+		  add: self buttonsRowLayout withConstraints: [ :c | c height: 32 ];
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> titleRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
+		  add: self titleField;
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> agentRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
+		  add: self agentDropList;
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> workingDirectoryRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
+		  add: self workingDirField;
+		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> buttonsRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
+		  addLast: self okButton withConstraints: [ :c | c width: 80 ];
 		  yourself
 ]
 
@@ -61,22 +81,27 @@ AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
 	srcDir := dir / 'src'.
 	srcDir exists ifFalse: [ ^ #() ].
 	srcDir directories do: [ :sub |
-		| name |
-		name := sub basename.
-		(name beginsWith: 'BaselineOf')
-			ifTrue: [ prefixes add: name ]
-			ifFalse: [
-				| hyphenPos base |
-				hyphenPos := name indexOf: $-.
-				hyphenPos > 1 ifTrue: [
-					base := name copyFrom: 1 to: hyphenPos - 1.
-					prefixes add: base , '-*' ] ] ].
+		self addDetectedPrefixForDirectoryName: sub basename into: prefixes ].
 	^ prefixes asArray
+]
+
+{ #category : 'private' }
+AbNewTopicDialog >> addDetectedPrefixForDirectoryName: name into: prefixes [
+
+	| hyphenPos base |
+	(name beginsWith: 'BaselineOf') ifTrue: [
+		prefixes add: name.
+		^ self ].
+	hyphenPos := name indexOf: $-.
+	hyphenPos > 1 ifFalse: [ ^ self ].
+	base := name copyFrom: 1 to: hyphenPos - 1.
+	prefixes add: base , '-*'
 ]
 
 { #category : 'initialization' }
 AbNewTopicDialog >> initializePresenters [
 
+	super initializePresenters.
 	titleField := self newTextInput.
 	titleField placeholder: 'Topic title...'.
 
@@ -109,25 +134,61 @@ AbNewTopicDialog >> onSelectWorkingDirClicked [
 		               chooseDirectory: 'Choose working directory'
 		               path: FileLocator home asFileReference.
 	selectedDir ifNil: [ ^ self ].
-	workingDirField text: selectedDir fullName
+	self workingDirField text: selectedDir fullName
 ]
 
 { #category : 'private' }
 AbNewTopicDialog >> onOkClicked [
 
 	| titleText dirPath detectedPrefixes |
-	titleText := titleField text trimmed.
+	titleText := self titleField text trimmed.
 	titleText ifEmpty: [ ^ self ].
 	self topic: (AbTopic new
 				 title: titleText;
-				 agentArguments: agentDropList selectedItem value;
+				 agentArguments: self agentDropList selectedItem value;
 				 yourself).
-	dirPath := workingDirField text trimmed.
+	dirPath := self workingDirField text trimmed.
 	dirPath ifNotEmpty: [
 		self topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.
 		self topic packagePrefixes: detectedPrefixes ].
 	self withWindowDo: [ :w | w close ]
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> titleField [
+
+	^ titleField
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> agentDropList [
+
+	^ agentDropList
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> workingDirField [
+
+	^ workingDirField
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> selectWorkingDirButton [
+
+	^ selectWorkingDirButton
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> okButton [
+
+	^ okButton
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> cancelButton [
+
+	^ cancelButton
 ]
 
 { #category : 'accessing' }

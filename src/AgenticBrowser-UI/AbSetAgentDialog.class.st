@@ -27,20 +27,39 @@ AbSetAgentDialog >> defaultLayout [
 		  spacing: 8;
 		  add: (SpBoxLayout newLeftToRight
 				   add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
-				   add: agentDropList;
+				   add: self agentDropList;
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
-				   addLast: cancelButton withConstraints: [ :c | c width: 80 ];
-				   addLast: okButton withConstraints: [ :c | c width: 80 ];
+				   addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
+				   addLast: self okButton withConstraints: [ :c | c width: 80 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
 ]
 
+{ #category : 'accessing' }
+AbSetAgentDialog >> agentDropList [
+
+	^ agentDropList
+]
+
+{ #category : 'accessing' }
+AbSetAgentDialog >> okButton [
+
+	^ okButton
+]
+
+{ #category : 'accessing' }
+AbSetAgentDialog >> cancelButton [
+
+	^ cancelButton
+]
+
 { #category : 'initialization' }
 AbSetAgentDialog >> initializePresenters [
 
+	super initializePresenters.
 	agentDropList := self newDropList.
 	agentDropList items: self agentOptions.
 	agentDropList display: [ :opt | opt key ].

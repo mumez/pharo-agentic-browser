@@ -12,6 +12,7 @@ Class {
 { #category : 'initialization' }
 AbMessagesPresenter >> initializePresenters [
 
+	super initializePresenters.
 	messages := OrderedCollection new.
 	messageTextPresenter := self instantiate: MicTextPresenter.
 	messageTextPresenter text: '' asText
@@ -123,4 +124,3 @@ AbMessagesPresenter >> performScrollToBottom [
 	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
 	self messageTextPresenter adapter widget scrollToEndOfText
 ]
-

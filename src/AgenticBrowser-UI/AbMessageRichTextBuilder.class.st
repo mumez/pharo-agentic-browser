@@ -24,6 +24,8 @@ AbMessageRichTextBuilder >> richTextFor: anAbMessage [
 	self applySenderAttributesTo: richText senderLen: senderLen message: anAbMessage.
 	anAbMessage isThink ifTrue: [
 		self applyThinkBodyAttributesTo: richText bodyStart: senderLen + 3 ].
+	anAbMessage isApprovalRequest ifTrue: [
+		self applyApprovalRequestBodyAttributesTo: richText bodyStart: senderLen + 3 ].
 	^ richText
 ]
 
@@ -56,6 +58,16 @@ AbMessageRichTextBuilder >> applySenderAttributesTo: richText senderLen: senderL
 
 { #category : 'private' }
 AbMessageRichTextBuilder >> applyThinkBodyAttributesTo: richText bodyStart: bodyStart [
+
+	bodyStart > richText size ifTrue: [ ^ self ].
+	richText
+		addAttribute: (TextColor color: Smalltalk ui theme ghostTextColor)
+		from: bodyStart
+		to: richText size
+]
+
+{ #category : 'private' }
+AbMessageRichTextBuilder >> applyApprovalRequestBodyAttributesTo: richText bodyStart: bodyStart [
 
 	bodyStart > richText size ifTrue: [ ^ self ].
 	richText

@@ -86,7 +86,12 @@ AbSettings >> keys [
 { #category : 'private' }
 AbSettings >> settingsDict [
 
-	^ settingsDict ifNil: [ settingsDict := Dictionary new ]
+	| current |
+	current := self instVarNamed: #settingsDict.
+	current ifNil: [
+		current := Dictionary new.
+		self instVarNamed: #settingsDict put: current ].
+	^ current
 ]
 
 { #category : 'accessing' }

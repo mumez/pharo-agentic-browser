@@ -136,3 +136,19 @@ AbMessageRichTextBuilderTest >> testBodyColorForNonThinkAIIsUncolored [
 		             ifNone: [ nil ].
 	self assert: bodyColor isNil
 ]
+
+{ #category : 'tests' }
+AbMessageRichTextBuilderTest >> testBodyColorForApprovalRequestIsGhostTextColor [
+
+	| msg rich senderLen bodyColor |
+	msg := AbMessage
+		       approvalRequestText: 'Permission requested'
+		       options: { 'Allow once' -> #allowOnce }.
+	rich := builder richTextFor: msg.
+	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.
+	bodyColor := (rich attributesAt: senderLen + 4)
+		             detect: [ :attr | attr isKindOf: TextColor ]
+		             ifNone: [ nil ].
+	self assert: bodyColor isNotNil.
+	self assert: bodyColor color equals: Smalltalk ui theme ghostTextColor
+]

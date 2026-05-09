@@ -81,6 +81,30 @@ AbTopicTest >> testDoneToWorkingOnNewPrompt [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
+
+	| topic mockClient |
+	topic := AbTopic new.
+	mockClient := MockObject new.
+	mockClient
+		on: #cancelBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPCancelParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1' ].
+	topic instVarNamed: #client put: mockClient.
+	topic instVarNamed: #sessionId put: 'session-1'.
+	topic stateMachine handleEvent: #promptSent.
+
+	topic cancelPrompt.
+
+	self verify: mockClient.
+	self assert: topic messages isEmpty.
+	self assert: topic status equals: #endTurn
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testEndedTransition [
 
 	| topic |
@@ -182,7 +206,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage approvalRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApproval: 'yes'.
-	self assert: msg approvalResponse equals: #allowAlways.
+	self assert: msg approvalResponse equals: #allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -201,6 +225,24 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithOptionId [
+
+	| topic msg |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #permissionRequested.
+	msg := AbMessage
+		       approvalRequestText: 'Choose an option'
+		       options: {
+				       'Allow once' -> #allowOnce.
+				       'Deny' -> #rejectOnce }.
+	topic messages add: msg.
+	topic resolveApprovalWithOptionId: #allowOnce.
+	self assert: msg approvalResponse equals: #allowOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 
 	| topic response done |
@@ -213,7 +255,7 @@ AbTopicTest >> testRequestApprovalReturnsResolvedResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways
+	self assert: response equals: #allowOnce
 ]
 
 { #category : 'tests' }
@@ -229,7 +271,7 @@ AbTopicTest >> testRequestApprovalFromIdleTransitionsToDone [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways.
+	self assert: response equals: #allowOnce.
 	self assert: topic status equals: #endTurn
 ]
 
@@ -248,7 +290,7 @@ AbTopicTest >> testRequestApprovalFromDoneTransitionsToWorking [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowAlways.
+	self assert: response equals: #allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -285,6 +327,40 @@ AbTopicTest >> testStatusChangedAnnouncementFired [
 	[ topic stateMachine handleEvent: #promptSent.
 	self assert: (statusChanges includes: #working) ]
 		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testStatusChangedAnnouncementUsesProvidedStatus [
+
+	| topic announcedStatus |
+	topic := AbTopic new.
+	topic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann | announcedStatus := ann status ]
+		for: self.
+	[ topic announceStatusChanged: #working.
+	self assert: announcedStatus equals: #working ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testStatusPredicates [
+
+	| topic |
+	topic := AbTopic new.
+	self assert: topic isInitial.
+	self deny: topic isWorking.
+
+	topic stateMachine handleEvent: #promptSent.
+	self deny: topic isInitial.
+	self assert: topic isWorking.
+
+	topic stateMachine handleEvent: #permissionRequested.
+	self assert: topic isWaitingForHuman.
+
+	topic stateMachine handleEvent: #humanResponded.
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic isEndTurn
 ]
 
 { #category : 'tests' }
@@ -354,4 +430,113 @@ AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
 	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
 	                 / topic workingDirectory directoryName) fullName.
 	self assert: topic workingDirectoryPath equals: expectedPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAvailableCommandsInitiallyEmpty [
+
+	self assert: AbTopic new availableCommands isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testLastUpdatedIsNilWhenNoMessages [
+
+	self assert: AbTopic new lastUpdated isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testLastUpdatedUsesNewestMessageUpdateTime [
+
+	| topic firstMessage secondMessage |
+	topic := AbTopic new.
+	firstMessage := AbMessage sender: #ai text: 'First'.
+	topic messages add: firstMessage.
+	(Delay forMilliseconds: 1) wait.
+	secondMessage := AbMessage sender: #ai text: 'Second'.
+	topic messages add: secondMessage.
+	(Delay forMilliseconds: 1) wait.
+	firstMessage appendText: ' updated'.
+
+	self assert: topic lastUpdated equals: firstMessage lastUpdated.
+	self assert: topic lastUpdated > secondMessage lastUpdated
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
+
+	| topic commands |
+	topic := AbTopic new.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/status'; at: 'description' put: 'Show status'; yourself)).
+	topic updateAvailableCommands: commands.
+	self assert: topic availableCommands size equals: 2
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateAvailableCommandsFiresAnnouncement [
+
+	| topic announced commands |
+	topic := AbTopic new.
+	announced := false.
+	topic announcer
+		when: AbTopicAvailableCommandsChanged
+		do: [ :ann | announced := true ]
+		for: self.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself)).
+	[ topic updateAvailableCommands: commands.
+	self assert: announced ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testCurrentModelInitiallyNil [
+
+	self assert: AbTopic new currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+
+	| topic options modelOption |
+	topic := AbTopic new.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
+	self assert: topic currentModel equals: 'claude-opus-4'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
+
+	| topic options modeOption |
+	topic := AbTopic new.
+	modeOption := ACPConfigOption new beModeCategory.
+	modeOption rawValues at: 'currentValue' put: 'ask'.
+	options := OrderedCollection with: modeOption.
+	topic updateCurrentModelFromConfigOptions: options.
+	self assert: topic currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
+
+	| topic announced announcedModel options modelOption |
+	topic := AbTopic new.
+	announced := false.
+	topic announcer
+		when: AbTopicCurrentModelChanged
+		do: [ :ann |
+			announced := true.
+			announcedModel := ann model ]
+		for: self.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection with: modelOption.
+	[ topic updateCurrentModelFromConfigOptions: options.
+	self assert: announced.
+	self assert: announcedModel equals: 'claude-sonnet-4' ]
+		ensure: [ topic announcer unsubscribe: self ]
 ]
