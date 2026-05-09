@@ -263,15 +263,6 @@ AbTopic >> ensureWorkingDirectoryForConnection [
 	^ self workingDirectory path fullName
 ]
 
-{ #category : 'private' }
-AbTopic >> finishApprovalRequestIfNeededForInitialState: wasInitial [
-
-	wasInitial ifFalse: [ ^ self ].
-	self stateMachine handleEvent: #turnEnded.
-	self logger debug: 'requestApproval: status(after turnEnded from initial)='
-		, self status printString
-]
-
 { #category : 'operations' }
 AbTopic >> goalDescription: aString [
 
@@ -371,14 +362,6 @@ AbTopic >> lastUpdated [
 		  into: [ :latest :each | latest max: each lastUpdated ]
 ]
 
-{ #category : 'private' }
-AbTopic >> logRequestApprovalStart: aDescription [
-
-	self logger debug: 'requestApproval: waiting for human approval. description=' , aDescription printString.
-	self logger debug: 'requestApproval: status(before permissionRequested)='
-		, self status printString
-]
-
 { #category : 'accessing' }
 AbTopic >> logger [
 	^ logger ifNil: [ logger := AbLocalLogger new ]
@@ -419,14 +402,12 @@ AbTopic >> pendingApprovalMessage [
 		ifNone: [ nil ]
 ]
 
-{ #category : 'private' }
-AbTopic >> rejectApprovalOnTimeout: aMessage [
+{ #category : 'approval-private' }
+AbTopic >> rejectExportOnTimeout: aMessage [
 
 	aMessage approvalResponse ifNotNil: [ ^ self ].
-	self logger debug: 'requestApproval: timeout reached, auto rejecting'.
-	aMessage approvalResponse: #rejectOnce.
-	self isWaitingForHuman ifTrue: [
-		self stateMachine handleEvent: #humanResponded ]
+	self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
+	aMessage approvalResponse: #rejectOnce
 ]
 
 { #category : 'approval-private' }
@@ -436,14 +417,6 @@ AbTopic >> rejectPermissionOnTimeout: aMessage [
 	self logger debug: 'requestPermission: timeout reached, auto rejecting'.
 	aMessage approvalResponse: #rejectOnce.
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ]
-]
-
-{ #category : 'approval-private' }
-AbTopic >> rejectExportOnTimeout: aMessage [
-
-	aMessage approvalResponse ifNotNil: [ ^ self ].
-	self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
-	aMessage approvalResponse: #rejectOnce
 ]
 
 { #category : 'accessing' }
@@ -462,28 +435,6 @@ AbTopic >> relatedPackagesWatcherIfPresent [
 AbTopic >> removePackagePrefix: aString [
 
 	self packagePrefixes remove: aString ifAbsent: []
-]
-
-{ #category : 'operations' }
-AbTopic >> requestApproval: aDescription [
-
-	^ self requestApproval: aDescription options: self defaultApprovalOptions
-]
-
-{ #category : 'operations' }
-AbTopic >> requestApproval: aDescription options: approvalOptions [
-
-	| msg wasInitial |
-	wasInitial := self isInitial.
-	self logRequestApprovalStart: aDescription.
-	msg := self
-		       addApprovalRequestAndWaitForHuman: aDescription
-		       options: approvalOptions.
-	self waitForApprovalResponseOf: msg.
-	self rejectApprovalOnTimeout: msg.
-	self finishApprovalRequestIfNeededForInitialState: wasInitial.
-	self logger debug: 'requestApproval: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 
 { #category : 'operations' }
