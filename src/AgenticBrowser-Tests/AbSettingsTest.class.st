@@ -46,6 +46,13 @@ AbSettingsTest >> testPermissionWaitTimeoutSecondsDefault [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testPermissionWaitTimeoutSecondsSettable [
+
+	AbSettings default permissionWaitTimeoutSeconds: 999.
+	self assert: AbSettings default permissionWaitTimeoutSeconds equals: 999
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testWatcherMessageThrottleDurationDefault [
 
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 2 seconds

@@ -429,6 +429,15 @@ AbTopic >> rejectApprovalOnTimeout: aMessage [
 		self stateMachine handleEvent: #humanResponded ]
 ]
 
+{ #category : 'approval-private' }
+AbTopic >> rejectPermissionOnTimeout: aMessage [
+
+	aMessage approvalResponse ifNotNil: [ ^ self ].
+	self logger debug: 'requestPermission: timeout reached, auto rejecting'.
+	aMessage approvalResponse: #rejectOnce.
+	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ]
+]
+
 { #category : 'accessing' }
 AbTopic >> relatedPackagesWatcher [
 
@@ -469,22 +478,20 @@ AbTopic >> requestApproval: aDescription options: approvalOptions [
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
 
-{ #category : 'approval' }
+{ #category : 'operations' }
 AbTopic >> requestPermission: aDescription [
 
 	^ self requestPermission: aDescription options: self defaultApprovalOptions
 ]
 
-{ #category : 'approval' }
+{ #category : 'operations' }
 AbTopic >> requestPermission: aDescription options: approvalOptions [
 
-	| msg permissionResponse |
+	| msg |
+	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions.
-	permissionResponse := self waitForPermissionResponseOf: msg.
-	permissionResponse ifNil: [
-		self logger debug: 'requestPermission: timeout reached, auto rejecting'.
-		msg approvalResponse: #rejectOnce.
-		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
+	self waitForPermissionResponseOf: msg.
+	self rejectPermissionOnTimeout: msg.
 	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
 ]
