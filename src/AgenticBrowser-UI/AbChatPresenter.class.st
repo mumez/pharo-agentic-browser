@@ -292,7 +292,7 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 { #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText |
+	| text promptText mentions resources |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
@@ -300,7 +300,9 @@ AbChatPresenter >> onSendButtonClicked [
 	promptText := self isFirstMessageInTopic
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
-	self currentTopic sendPrompt: promptText
+	mentions := AbCodeMentionParser parseFrom: text.
+	resources := AbCodeMentionEmbedder resourcesFor: mentions.
+	self currentTopic sendPrompt: promptText withResources: resources
 ]
 
 { #category : 'event handling' }
