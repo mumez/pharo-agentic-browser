@@ -443,7 +443,7 @@ AbTopic >> requestPackageExport: aDescription [
 	| msg |
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
 	msg := self addApprovalRequest: aDescription options: self defaultApprovalOptions.
-	self waitForApprovalResponseOf: msg.
+	self waitForExportApprovalOf: msg.
 	self rejectExportOnTimeout: msg.
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
@@ -461,7 +461,7 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 	| msg |
 	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addApprovalRequestAndWaitForHuman: aDescription options: approvalOptions.
-	self waitForPermissionResponseOf: msg.
+	self waitForAiPermissionOf: msg.
 	self rejectPermissionOnTimeout: msg.
 	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
 	^ msg approvalResponse ifNil: [ #rejectOnce ]
@@ -606,8 +606,8 @@ AbTopic >> updatedExternalPackageNames [
 	^ updatedExternalPackageNames
 ]
 
-{ #category : 'private' }
-AbTopic >> waitForApprovalResponseOf: aMessage [
+{ #category : 'approval-private' }
+AbTopic >> waitForExportApprovalOf: aMessage [
 
 	| waitSeconds |
 	waitSeconds := 0.
@@ -618,7 +618,7 @@ AbTopic >> waitForApprovalResponseOf: aMessage [
 ]
 
 { #category : 'approval-private' }
-AbTopic >> waitForPermissionResponseOf: aMessage [
+AbTopic >> waitForAiPermissionOf: aMessage [
 
 	| waitSeconds |
 	waitSeconds := 0.
