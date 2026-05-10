@@ -246,7 +246,18 @@ AbTopic >> disconnect [
 	self client ifNotNil: [
 		self client disconnect.
 		self client: nil.
-		self sessionId: nil ]
+		self sessionId: nil ].
+	self abortPendingApprovals
+]
+
+{ #category : 'approval-private' }
+AbTopic >> abortPendingApprovals [
+
+	self pendingAiPermissionMessage ifNotNil: [ :msg |
+		msg approvalResponse: #disconnected.
+		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
+	self pendingExportApprovalMessage ifNotNil: [ :msg |
+		msg approvalResponse: #disconnected ]
 ]
 
 { #category : 'private' }
