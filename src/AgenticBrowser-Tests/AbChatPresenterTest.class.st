@@ -79,7 +79,7 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 	| topic approvalMessage |
 	topic := AbTopic new.
 	presenter topic: topic.
-	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
+	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
 	self assert: approvalMessage approvalResponse equals: #allowOnce.
@@ -95,7 +95,7 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 	topic := AbTopic new.
 	presenter topic: topic.
 	approvalMessage := topic
-		                   addApprovalRequest: 'Pick an option'
+		                   addAiPermissionRequest: 'Pick an option'
 		                   options: {
 						                   'Allow once' -> #allowOnce.
 						                   'Always allow' -> #allowAlways }.
@@ -111,7 +111,7 @@ AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 	| topic approvalMessage |
 	topic := AbTopic new.
 	presenter topic: topic.
-	approvalMessage := topic addApprovalRequest: 'Allow?'.
+	approvalMessage := topic addAiPermissionRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
@@ -123,7 +123,7 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 	| topic approvalMessage |
 	topic := AbTopic new.
 	presenter topic: topic.
-	approvalMessage := topic addApprovalRequest: 'Allow package export?'.
+	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
 	self assert: presenter pendingApprovalMessage isNil
@@ -135,7 +135,7 @@ AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 	| topic approvalMessage |
 	topic := AbTopic new.
 	presenter topic: topic.
-	approvalMessage := topic addApprovalRequest: 'Allow?'.
+	approvalMessage := topic addAiPermissionRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
@@ -146,7 +146,7 @@ AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPrese
 
 	| approvalMessage |
 	approvalMessage := AbMessage
-		                   approvalRequestText: 'Pick an option'
+		                   aiPermissionRequestText: 'Pick an option'
 		                   options: {
 						                   'Allow once' -> #allowOnce.
 						                   'Always allow' -> #allowAlways }.
@@ -158,7 +158,7 @@ AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPrese
 AbChatPresenterTest >> testEnterApprovalModeSetsConfirmationText [
 
 	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
+	approvalMessage := AbMessage aiPermissionRequestText: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter pendingApprovalMessage equals: approvalMessage
 ]
@@ -167,7 +167,7 @@ AbChatPresenterTest >> testEnterApprovalModeSetsConfirmationText [
 AbChatPresenterTest >> testEnterApprovalModeShowsConfirmPresenter [
 
 	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow package export?'.
+	approvalMessage := AbMessage aiPermissionRequestText: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
 	self assert: presenter confirmPresenter denyButtonLabel equals: 'Deny'
@@ -177,7 +177,7 @@ AbChatPresenterTest >> testEnterApprovalModeShowsConfirmPresenter [
 AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
 
 	| approvalMessage |
-	approvalMessage := AbMessage approvalRequestText: 'Allow?'.
+	approvalMessage := AbMessage aiPermissionRequestText: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
@@ -185,7 +185,7 @@ AbChatPresenterTest >> testEnterApprovalModeSwitchesToConfirmPresenter [
 { #category : 'tests' }
 AbChatPresenterTest >> testExitApprovalModeRestoresNormalPresenter [
 
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow package export?').
+	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow package export?').
 	presenter exitApprovalMode.
 	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
 	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
@@ -196,7 +196,7 @@ AbChatPresenterTest >> testExitApprovalModeRestoresNormalPresenter [
 { #category : 'tests' }
 AbChatPresenterTest >> testExitApprovalModeSwitchesToNormalInputPresenter [
 
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
 	presenter exitApprovalMode.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
@@ -293,7 +293,7 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands
 AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
 
 	| msg |
-	msg := AbMessage approvalRequestText: 'Allow?'.
+	msg := AbMessage aiPermissionRequestText: 'Allow?'.
 	presenter onMessageAdded: msg.
 	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
 ]
@@ -353,7 +353,7 @@ AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 	| topic |
 	topic := AbTopic new.
 	presenter topic: topic.
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
 	presenter onTopicStatusChanged: topic status: #endTurn.
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
@@ -365,7 +365,7 @@ AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 	| topic |
 	topic := AbTopic new.
 	presenter topic: topic.
-	presenter enterApprovalMode: (AbMessage approvalRequestText: 'Allow?').
+	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
 	presenter onTopicStatusChanged: topic status: #working.
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'

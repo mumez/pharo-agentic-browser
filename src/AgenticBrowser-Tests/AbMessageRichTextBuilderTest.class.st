@@ -18,7 +18,7 @@ AbMessageRichTextBuilderTest >> setUp [
 AbMessageRichTextBuilderTest >> testApprovalRequestLabel [
 
 	| msg rich |
-	msg := AbMessage approvalRequestText: 'Allow export?'.
+	msg := AbMessage aiPermissionRequestText: 'Allow export?'.
 	rich := builder richTextFor: msg.
 	self assert: (rich asString includesSubstring: 'AI')
 ]
@@ -42,7 +42,7 @@ AbMessageRichTextBuilderTest >> testBodyColorForApprovalRequestIsGhostTextColor 
 
 	| msg rich senderLen bodyColor |
 	msg := AbMessage
-		       approvalRequestText: 'Permission requested'
+		       aiPermissionRequestText: 'Permission requested'
 		       options: { 'Allow once' -> #allowOnce }.
 	rich := builder richTextFor: msg.
 	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.

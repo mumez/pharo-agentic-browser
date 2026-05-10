@@ -12,6 +12,17 @@ AbTopicTest >> setUp [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testAddAiPermissionRequestAddsMessage [
+
+	| topic msg |
+	topic := AbTopic new.
+	msg := topic addAiPermissionRequest: 'May I delete files?'.
+	self assert: topic messages size equals: 1.
+	self assert: msg isAiPermission.
+	self assert: msg isApprovalRequest
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testAddAiTextChunkAppendsToExistingAiMessage [
 
 	| topic |
@@ -60,13 +71,14 @@ AbTopicTest >> testAddAiThoughtChunkCreatesThinkMessage [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAddApprovalRequestAddsMessage [
+AbTopicTest >> testAddExportApprovalRequestAddsMessage [
 
 	| topic msg |
 	topic := AbTopic new.
-	msg := topic addApprovalRequest: 'May I delete files?'.
+	msg := topic addExportApprovalRequest: 'Export package Foo?'.
 	self assert: topic messages size equals: 1.
-	self assert: msg isApprovalRequest.
+	self assert: msg isExportApproval.
+	self assert: msg isApprovalRequest
 ]
 
 { #category : 'tests' }
@@ -132,7 +144,7 @@ AbTopicTest >> testHasPendingApprovalRequest [
 	| topic |
 	topic := AbTopic new.
 	self deny: topic hasPendingApprovalRequest.
-	topic addApprovalRequest: 'Approve?'.
+	topic addAiPermissionRequest: 'Approve?'.
 	self assert: topic hasPendingApprovalRequest
 ]
 
@@ -190,6 +202,34 @@ AbTopicTest >> testLastUpdatedUsesNewestMessageUpdateTime [
 
 	self assert: topic lastUpdated equals: firstMessage lastUpdated.
 	self assert: topic lastUpdated > secondMessage lastUpdated
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPendingAiPermissionMessage [
+
+	| topic msg |
+	topic := AbTopic new.
+	msg := topic addAiPermissionRequest: 'Approve AI action?'.
+	self assert: topic pendingAiPermissionMessage equals: msg
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPendingApprovalMessagePrefersAiPermission [
+
+	| topic exportMsg permMsg |
+	topic := AbTopic new.
+	exportMsg := topic addExportApprovalRequest: 'Export Foo?'.
+	permMsg := topic addAiPermissionRequest: 'Allow AI action?'.
+	self assert: topic pendingApprovalMessage equals: permMsg
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPendingExportApprovalMessage [
+
+	| topic msg |
+	topic := AbTopic new.
+	msg := topic addExportApprovalRequest: 'Export package Foo?'.
+	self assert: topic pendingExportApprovalMessage equals: msg
 ]
 
 { #category : 'tests' }
@@ -306,7 +346,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	msg := AbMessage approvalRequestText: 'May I modify DBAdapter?'.
+	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApproval: 'yes'.
 	self assert: msg approvalResponse equals: #allowOnce.
@@ -320,7 +360,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	msg := AbMessage approvalRequestText: 'May I delete files?'.
+	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
 	topic resolveApproval: 'no'.
 	self assert: msg approvalResponse equals: #rejectOnce.
@@ -332,7 +372,7 @@ AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 
 	| topic msg |
 	topic := AbTopic new.
-	msg := AbMessage approvalRequestText: 'Export?'.
+	msg := AbMessage aiPermissionRequestText: 'Export?'.
 	topic messages add: msg.
 	topic resolveApproval: 'yes'.
 	self assert: topic status equals: #initial
@@ -346,7 +386,7 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage
-		       approvalRequestText: 'Choose an option'
+		       aiPermissionRequestText: 'Choose an option'
 		       options: {
 				       'Allow once' -> #allowOnce.
 				       'Deny' -> #rejectOnce }.
