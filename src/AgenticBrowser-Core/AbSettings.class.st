@@ -30,17 +30,17 @@ AbSettings class >> initialize [
 ]
 
 { #category : 'accessing' }
-AbSettings >> exportApprovalWaitTimeoutSeconds [
+AbSettings >> aiPermissionWaitTimeoutSeconds [
 
 	^ self
-		  at: #exportApprovalWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultExportApprovalWaitTimeoutSeconds ]
+		  at: #aiPermissionWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultAiPermissionWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> exportApprovalWaitTimeoutSeconds: anInteger [
+AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 
-	self at: #exportApprovalWaitTimeoutSeconds put: anInteger
+	self at: #aiPermissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'converting' }
@@ -65,21 +65,35 @@ AbSettings >> at: aKey put: aValue [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
-
-	^ 30
-]
-
-{ #category : 'defaults' }
 AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 
 	^ 1800
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
+
+	^ 30
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleDuration [
 
 	^ 2 seconds
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalWaitTimeoutSeconds [
+
+	^ self
+		  at: #exportApprovalWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultExportApprovalWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalWaitTimeoutSeconds: anInteger [
+
+	self at: #exportApprovalWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'initialization' }
@@ -101,20 +115,6 @@ AbSettings >> initialize [
 AbSettings >> keys [
 
 	^ self settingsDict keys
-]
-
-{ #category : 'accessing' }
-AbSettings >> aiPermissionWaitTimeoutSeconds [
-
-	^ self
-		  at: #aiPermissionWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultAiPermissionWaitTimeoutSeconds ]
-]
-
-{ #category : 'accessing' }
-AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
-
-	self at: #aiPermissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'private' }
