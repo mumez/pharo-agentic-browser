@@ -29,7 +29,7 @@ AbCodeMentionEmbedder class >> classResourceFor: mention [
 	| className cls url tonel |
 	className := mention className.
 	cls := Smalltalk globals at: className asSymbol.
-	url := 'http://localhost:8086/get-class-source?class_name=' , className.
+ 	url := 'http://localhost:8086/get-class-source?class_name={1}' format: { className }.
 	tonel := TonelWriter sourceCodeOf: cls.
 	^ url -> tonel
 ]
@@ -43,9 +43,7 @@ AbCodeMentionEmbedder class >> methodResourceFor: mention [
 	isClassSide := mention isClassSide.
 	cls := Smalltalk globals at: className asSymbol.
 	isClassSide ifTrue: [ cls := cls class ].
-	url := 'http://localhost:8086/get-method-source?class_name=' , className
-		, '&method_name=' , methodName
-		, '&is_class_method=' , isClassSide printString.
+ 	url := 'http://localhost:8086/get-method-source?class_name={1}&method_name={2}&is_class_method={3}' format: { className. methodName. isClassSide printString }.
 	tonel := String streamContents: [ :str |
 		TonelWriter new
 			writeMethodDefinition: ((cls >> methodName asSymbol) asMCMethodDefinition)
