@@ -176,7 +176,7 @@ AbTopicRelatedPackagesWatcher >> shouldAnnouncePackageChangeFor: aPackageName at
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
 
-	^ aResponseSymbol = #allowOnce
+	^ aResponseSymbol = #allow_once
 ]
 
 { #category : 'operations' }

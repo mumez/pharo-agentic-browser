@@ -30,7 +30,7 @@ AbMessageTest >> testAiPermissionRequestCreation [
 { #category : 'tests' }
 AbMessageTest >> testAiPermissionRequestCreationWithOptions [
 	| options msg |
-	options := { 'Allow once' -> #allowOnce. 'Deny' -> #rejectOnce }.
+	options := { 'Allow once' -> #allow_once. 'Deny' -> #reject_once }.
 	msg := AbMessage aiPermissionRequestText: 'Select permission option' options: options.
 	self assert: msg isAiPermission.
 	self assert: msg approvalOptions equals: options.
@@ -66,7 +66,7 @@ AbMessageTest >> testExportApprovalRequestCreation [
 { #category : 'tests' }
 AbMessageTest >> testExportApprovalRequestCreationWithOptions [
 	| options msg |
-	options := { 'Allow once' -> #allowOnce. 'Deny' -> #rejectOnce }.
+	options := { 'Allow once' -> #allow_once. 'Deny' -> #reject_once }.
 	msg := AbMessage exportApprovalRequestText: 'Export package Foo?' options: options.
 	self assert: msg isExportApproval.
 	self assert: msg approvalOptions equals: options.

@@ -43,7 +43,7 @@ AbMessageRichTextBuilderTest >> testBodyColorForApprovalRequestIsGhostTextColor 
 	| msg rich senderLen bodyColor |
 	msg := AbMessage
 		       aiPermissionRequestText: 'Permission requested'
-		       options: { 'Allow once' -> #allowOnce }.
+		       options: { 'Allow once' -> #allow_once }.
 	rich := builder richTextFor: msg.
 	senderLen := (AbMessageRichTextBuilder senderLabelFor: msg) size.
 	bodyColor := (rich attributesAt: senderLen + 4)

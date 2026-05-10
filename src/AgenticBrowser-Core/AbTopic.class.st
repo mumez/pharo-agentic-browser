@@ -169,8 +169,8 @@ AbTopic >> approvalResponseForUserText: aUserText [
 	^ (aUserText trimmed asLowercase includesSubstring: 'no')
 		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
 		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
-			ifTrue: [ #rejectOnce ]
-			ifFalse: [ #allowOnce ]
+			ifTrue: [ #reject_once ]
+			ifFalse: [ #allow_once ]
 ]
 
 { #category : 'accessing' }
@@ -229,8 +229,8 @@ AbTopic >> currentModel [
 AbTopic >> defaultApprovalOptions [
 
 	^ {
-		  'Confirm' -> #allowOnce.
-		  'Deny' -> #rejectOnce }
+		  'Confirm' -> #allow_once.
+		  'Deny' -> #reject_once }
 ]
 
 { #category : 'accessing' }
@@ -448,7 +448,7 @@ AbTopic >> rejectAiPermissionOnTimeout: aMessage [
 
 	aMessage approvalResponse ifNotNil: [ ^ self ].
 	self logger debug: 'requestPermission: timeout reached, auto rejecting'.
-	aMessage approvalResponse: #rejectOnce.
+	aMessage approvalResponse: #reject_once.
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ]
 ]
 
@@ -457,7 +457,7 @@ AbTopic >> rejectExportOnTimeout: aMessage [
 
 	aMessage approvalResponse ifNotNil: [ ^ self ].
 	self logger debug: 'requestPackageExport: timeout reached, auto rejecting'.
-	aMessage approvalResponse: #rejectOnce
+	aMessage approvalResponse: #reject_once
 ]
 
 { #category : 'accessing' }
@@ -487,7 +487,7 @@ AbTopic >> requestPackageExport: aDescription [
 	self waitForExportApprovalOf: msg.
 	self rejectExportOnTimeout: msg.
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ #rejectOnce ]
+	^ msg approvalResponse ifNil: [ #reject_once ]
 ]
 
 { #category : 'operations' }
@@ -505,7 +505,7 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 	self waitForAiPermissionOf: msg.
 	self rejectAiPermissionOnTimeout: msg.
 	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ #rejectOnce ]
+	^ msg approvalResponse ifNil: [ #reject_once ]
 ]
 
 { #category : 'operations' }
