@@ -111,12 +111,12 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> denyOptionIdForPendingApproval [
 
 	| rejectOption |
-	self pendingApprovalMessage ifNil: [ ^ #reject_once ].
+	self pendingApprovalMessage ifNil: [ ^ AbConstants rejectOnce ].
 	rejectOption := self pendingApprovalMessage approvalOptions
 		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
 		                ifNone: [ nil ].
 	^ rejectOption
-		  ifNil: [ #reject_once ]
+		  ifNil: [ AbConstants rejectOnce ]
 		  ifNotNil: [ rejectOption value ]
 ]
 

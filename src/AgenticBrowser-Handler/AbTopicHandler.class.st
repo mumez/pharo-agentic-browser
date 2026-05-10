@@ -40,9 +40,9 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 		           reject: [ :assoc | assoc isNil ].
 	options ifNotEmpty: [ ^ options asArray ].
 	^ {
-		  'Allow once' -> #allow_once.
+		  'Allow once' -> AbConstants allowOnce.
 		  'Always allow' -> #allow_always.
-		  'Deny' -> #reject_once }
+		  'Deny' -> AbConstants rejectOnce }
 ]
 
 { #category : 'private' }

@@ -57,9 +57,7 @@ AbConfirmPresenter >> confirmationText: aString [
 { #category : 'private' }
 AbConfirmPresenter >> defaultApprovalOptions [
 
-	^ {
-		  'Confirm' -> #allow_once.
-		  'Deny' -> #reject_once }
+	^ AbConstants defaultApprovalOptions copy
 ]
 
 { #category : 'layout' }
@@ -141,7 +139,7 @@ AbConfirmPresenter >> selectOptionNamed: aString [
 AbConfirmPresenter >> selectedOptionId [
 
 	| idx |
-	self approvalOptions ifEmpty: [ ^ #allow_once ].
+	self approvalOptions ifEmpty: [ ^ AbConstants allowOnce ].
 	idx := self optionDropList selectedIndex.
 	idx = 0 ifTrue: [ ^ self approvalOptions first value ].
 	^ (self approvalOptions at: idx) value
