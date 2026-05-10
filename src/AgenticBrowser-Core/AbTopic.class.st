@@ -611,7 +611,7 @@ AbTopic >> waitForExportApprovalOf: aMessage [
 
 	| waitSeconds |
 	waitSeconds := 0.
-	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default approvalWaitTimeoutSeconds ] ] whileTrue: [
+	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default exportApprovalWaitTimeoutSeconds ] ] whileTrue: [
 		1 second wait.
 		waitSeconds := waitSeconds + 1 ].
 	^ aMessage approvalResponse
@@ -622,7 +622,7 @@ AbTopic >> waitForAiPermissionOf: aMessage [
 
 	| waitSeconds |
 	waitSeconds := 0.
-	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default permissionWaitTimeoutSeconds ] ] whileTrue: [
+	[ aMessage approvalResponse isNil and: [ waitSeconds < AbSettings default aiPermissionWaitTimeoutSeconds ] ] whileTrue: [
 		1 second wait.
 		waitSeconds := waitSeconds + 1 ].
 	^ aMessage approvalResponse

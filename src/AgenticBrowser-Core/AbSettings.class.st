@@ -30,17 +30,17 @@ AbSettings class >> initialize [
 ]
 
 { #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds [
+AbSettings >> exportApprovalWaitTimeoutSeconds [
 
 	^ self
-		  at: #approvalWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultApprovalWaitTimeoutSeconds ]
+		  at: #exportApprovalWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultExportApprovalWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds: anInteger [
+AbSettings >> exportApprovalWaitTimeoutSeconds: anInteger [
 
-	self at: #approvalWaitTimeoutSeconds put: anInteger
+	self at: #exportApprovalWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'converting' }
@@ -65,13 +65,13 @@ AbSettings >> at: aKey put: aValue [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultApprovalWaitTimeoutSeconds [
+AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
 
 	^ 30
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultPermissionWaitTimeoutSeconds [
+AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 
 	^ 1800
 ]
@@ -104,17 +104,17 @@ AbSettings >> keys [
 ]
 
 { #category : 'accessing' }
-AbSettings >> permissionWaitTimeoutSeconds [
+AbSettings >> aiPermissionWaitTimeoutSeconds [
 
 	^ self
-		  at: #permissionWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultPermissionWaitTimeoutSeconds ]
+		  at: #aiPermissionWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultAiPermissionWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> permissionWaitTimeoutSeconds: anInteger [
+AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 
-	self at: #permissionWaitTimeoutSeconds put: anInteger
+	self at: #aiPermissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'private' }

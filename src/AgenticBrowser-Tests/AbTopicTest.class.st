@@ -253,7 +253,7 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 
 	| topic response done timedOut |
 	topic := AbTopic new.
-	AbSettings default approvalWaitTimeoutSeconds: 0.
+	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
 	done := Semaphore new.
 	[
 	response := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.

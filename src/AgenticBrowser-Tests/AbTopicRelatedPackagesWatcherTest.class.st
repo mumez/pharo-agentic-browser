@@ -87,7 +87,7 @@ AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTr
 { #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
 
-	AbSettings default approvalWaitTimeoutSeconds: 0.
+	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
 	topic packagePrefixes: #( 'MyPkg' ).
 	watcher handlePackageChange: 'MyPkg'.
 	watcher handlePackageChange: 'MyPkg'.
