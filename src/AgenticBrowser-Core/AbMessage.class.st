@@ -5,7 +5,8 @@ Class {
 		'sender',
 		'text',
 		'lastUpdated',
-		'isApprovalRequest',
+		'isAiPermission',
+		'isExportApproval',
 		'approvalResponse',
 		'isThink',
 		'approvalOptions'
@@ -15,18 +16,31 @@ Class {
 }
 
 { #category : 'instance creation' }
-AbMessage class >> approvalRequestText: aString [
-
-	^ self approvalRequestText: aString options: #()
+AbMessage class >> aiPermissionRequestText: aString [
+	^ self aiPermissionRequestText: aString options: #()
 ]
 
 { #category : 'instance creation' }
-AbMessage class >> approvalRequestText: aString options: aCollection [
-
+AbMessage class >> aiPermissionRequestText: aString options: aCollection [
 	^ self new
 		  sender: #ai;
 		  text: aString;
-		  isApprovalRequest: true;
+		  isAiPermission: true;
+		  approvalOptions: aCollection;
+		  yourself
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> exportApprovalRequestText: aString [
+	^ self exportApprovalRequestText: aString options: #()
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> exportApprovalRequestText: aString options: aCollection [
+	^ self new
+		  sender: #ai;
+		  text: aString;
+		  isExportApproval: true;
 		  approvalOptions: aCollection;
 		  yourself
 ]
@@ -78,19 +92,35 @@ AbMessage >> initialize [
 	sender := #system.
 	text := ''.
 	lastUpdated := DateAndTime now.
-	isApprovalRequest := false.
+	isAiPermission := false.
+	isExportApproval := false.
 	isThink := false.
 	approvalOptions := #()
 ]
 
 { #category : 'accessing' }
-AbMessage >> isApprovalRequest [
-	^ isApprovalRequest
+AbMessage >> isAiPermission [
+	^ isAiPermission
 ]
 
 { #category : 'accessing' }
-AbMessage >> isApprovalRequest: aBoolean [
-	isApprovalRequest := aBoolean
+AbMessage >> isAiPermission: aBoolean [
+	isAiPermission := aBoolean
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest [
+	^ isAiPermission or: [ isExportApproval ]
+]
+
+{ #category : 'accessing' }
+AbMessage >> isExportApproval [
+	^ isExportApproval
+]
+
+{ #category : 'accessing' }
+AbMessage >> isExportApproval: aBoolean [
+	isExportApproval := aBoolean
 ]
 
 { #category : 'accessing' }
