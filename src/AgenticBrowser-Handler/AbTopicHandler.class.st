@@ -26,7 +26,7 @@ AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 	canonicalOptionId = #allowAlways ifTrue: [
 		aResponse allowAlways.
 		^ self ].
-	aResponse rejectOnce
+	aResponse selectOptionId: anOptionId asString
 ]
 
 { #category : 'private' }

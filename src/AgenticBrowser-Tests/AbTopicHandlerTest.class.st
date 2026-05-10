@@ -63,6 +63,18 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
 ]
 
 { #category : 'tests' }
+AbTopicHandlerTest >> testApplyApprovalOptionIdPassesThroughCustomOptionId [
+
+	| response outcome |
+	response := ACPRequestPermissionResponse new.
+	AbTopicHandler new
+		applyApprovalOptionId: #yes_please
+		toResponse: response.
+	outcome := response asDictionary at: 'outcome'.
+	self assert: (outcome at: 'optionId') equals: 'yes_please'
+]
+
+{ #category : 'tests' }
 AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
 
 	| options request |
