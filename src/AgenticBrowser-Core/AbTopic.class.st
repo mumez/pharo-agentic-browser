@@ -552,6 +552,12 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 { #category : 'operations' }
 AbTopic >> sendPrompt: aString [
 
+	self sendPrompt: aString withResources: #()
+]
+
+{ #category : 'operations' }
+AbTopic >> sendPrompt: aString withResources: aCollection [
+
 	| msg |
 	msg := AbMessage sender: #human text: aString.
 	self messages add: msg.
@@ -562,7 +568,9 @@ AbTopic >> sendPrompt: aString [
 	self ensureConnected.
 		result := self client promptBy: [ :params |
 				  params sessionId: self sessionId.
-				  params textPrompt: aString ].
+				  params textPrompt: aString.
+				  aCollection do: [ :assoc |
+				      params resourcePrompt: assoc key text: assoc value ] ].
 		result stopReason = 'end_turn' ifTrue: [
 			self checkGoalAchievement ifFalse: [
 				self stateMachine handleEvent: #turnEnded ] ] ] fork

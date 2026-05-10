@@ -638,3 +638,24 @@ AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #disconnected
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendPromptWithResourcesAddsHumanMessage [
+
+	| topic |
+	topic := AbTopic new.
+	topic sendPrompt: 'hello' withResources: #().
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first sender equals: #human.
+	self assert: topic messages first text equals: 'hello'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
+
+	| topic |
+	topic := AbTopic new.
+	topic sendPrompt: 'hi'.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first text equals: 'hi'
+]
