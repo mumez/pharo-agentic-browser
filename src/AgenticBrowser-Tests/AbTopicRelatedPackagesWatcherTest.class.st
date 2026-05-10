@@ -140,9 +140,9 @@ AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWi
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:
-		(watcher shouldProceedWithExportForApprovalResponse: #allowOnce).
+		(watcher shouldProceedWithExportForApprovalResponse: #allow_once).
 	self deny:
-		(watcher shouldProceedWithExportForApprovalResponse: #rejectOnce)
+		(watcher shouldProceedWithExportForApprovalResponse: #reject_once)
 ]
 
 { #category : 'tests' }

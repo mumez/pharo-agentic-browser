@@ -293,7 +293,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce.
+	self assert: response equals: #allow_once.
 	self assert: topic status equals: #initial
 ]
 
@@ -309,7 +309,7 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: response equals: #rejectOnce.
+	self assert: response equals: #reject_once.
 	self assert: topic status equals: #initial
 ]
 
@@ -328,7 +328,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce.
+	self assert: response equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 
@@ -345,7 +345,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApproval: 'yes'.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allowOnce
+	self assert: response equals: #allow_once
 ]
 
 { #category : 'tests' }
@@ -358,7 +358,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApproval: 'yes'.
-	self assert: msg approvalResponse equals: #allowOnce.
+	self assert: msg approvalResponse equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 
@@ -372,7 +372,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
 	topic resolveApproval: 'no'.
-	self assert: msg approvalResponse equals: #rejectOnce.
+	self assert: msg approvalResponse equals: #reject_once.
 	self assert: topic status equals: #working
 ]
 
@@ -381,8 +381,8 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 	| topic msg |
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: #rejectOnce.
-	self assert: msg approvalResponse equals: #rejectOnce.
+	topic resolveApprovalWithOptionId: #reject_once.
+	self assert: msg approvalResponse equals: #reject_once.
 	self assert: topic status equals: #initial
 ]
 
@@ -407,11 +407,11 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	msg := AbMessage
 		       aiPermissionRequestText: 'Choose an option'
 		       options: {
-				       'Allow once' -> #allowOnce.
-				       'Deny' -> #rejectOnce }.
+				       'Allow once' -> #allow_once.
+				       'Deny' -> #reject_once }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: #allowOnce.
-	self assert: msg approvalResponse equals: #allowOnce.
+	topic resolveApprovalWithOptionId: #allow_once.
+	self assert: msg approvalResponse equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 

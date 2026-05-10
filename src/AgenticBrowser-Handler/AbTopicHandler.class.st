@@ -12,40 +12,7 @@ Class {
 { #category : 'private' }
 AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 
-	| canonicalOptionId |
-	canonicalOptionId := self canonicalApprovalOptionId: anOptionId.
-	canonicalOptionId = #rejectOnce ifTrue: [
-		aResponse rejectOnce.
-		^ self ].
-	canonicalOptionId = #rejectAlways ifTrue: [
-		aResponse rejectAlways.
-		^ self ].
-	canonicalOptionId = #allowOnce ifTrue: [
-		aResponse allowOnce.
-		^ self ].
-	canonicalOptionId = #allowAlways ifTrue: [
-		aResponse allowAlways.
-		^ self ].
 	aResponse selectOptionId: anOptionId asString
-]
-
-{ #category : 'private' }
-AbTopicHandler >> canonicalApprovalOptionId: anOptionId [
-
-	| normalized |
-	anOptionId ifNil: [ ^ #allowOnce ].
-	normalized := anOptionId asString asLowercase.
-	normalized := normalized copyReplaceAll: '-' with: '_'.
-	normalized := normalized copyReplaceAll: ' ' with: ''.
-	normalized = 'allowonce' ifTrue: [ ^ #allowOnce ].
-	normalized = 'allow_once' ifTrue: [ ^ #allowOnce ].
-	normalized = 'allowalways' ifTrue: [ ^ #allowAlways ].
-	normalized = 'allow_always' ifTrue: [ ^ #allowAlways ].
-	normalized = 'rejectonce' ifTrue: [ ^ #rejectOnce ].
-	normalized = 'reject_once' ifTrue: [ ^ #rejectOnce ].
-	normalized = 'rejectalways' ifTrue: [ ^ #rejectAlways ].
-	normalized = 'reject_always' ifTrue: [ ^ #rejectAlways ].
-	^ normalized asSymbol
 ]
 
 { #category : 'accessing' }
@@ -60,7 +27,7 @@ AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
 	label := anACPPermissionOption name.
 	optionId := anACPPermissionOption optionId.
 	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
-	^ label asString -> (self canonicalApprovalOptionId: optionId)
+	^ label asString -> optionId asSymbol
 ]
 
 { #category : 'private' }
@@ -73,9 +40,9 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 		           reject: [ :assoc | assoc isNil ].
 	options ifNotEmpty: [ ^ options asArray ].
 	^ {
-		  'Allow once' -> #allowOnce.
-		  'Always allow' -> #allowAlways.
-		  'Deny' -> #rejectOnce }
+		  'Allow once' -> #allow_once.
+		  'Always allow' -> #allow_always.
+		  'Deny' -> #reject_once }
 ]
 
 { #category : 'private' }
