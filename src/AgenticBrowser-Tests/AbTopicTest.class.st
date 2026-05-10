@@ -606,3 +606,35 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 	topic workingDirectoryPath: customPath.
 	self assert: topic workingDirectoryPath equals: customPath
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectRejectsPendingAiPermission [
+
+	| topic done response |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic disconnect.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #rejectOnce
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectRejectsPendingExportApproval [
+
+	| topic done response |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPackageExport: 'Export package Foo?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic disconnect.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #rejectOnce
+]

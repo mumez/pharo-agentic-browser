@@ -246,7 +246,15 @@ AbTopic >> disconnect [
 	self client ifNotNil: [
 		self client disconnect.
 		self client: nil.
-		self sessionId: nil ]
+		self sessionId: nil ].
+	self rejectPendingApprovals
+]
+
+{ #category : 'approval-private' }
+AbTopic >> rejectPendingApprovals [
+
+	self pendingAiPermissionMessage ifNotNil: [ :msg | self rejectAiPermissionOnTimeout: msg ].
+	self pendingExportApprovalMessage ifNotNil: [ :msg | self rejectExportOnTimeout: msg ]
 ]
 
 { #category : 'private' }
