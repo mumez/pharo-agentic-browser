@@ -30,17 +30,17 @@ AbSettings class >> initialize [
 ]
 
 { #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds [
+AbSettings >> aiPermissionWaitTimeoutSeconds [
 
 	^ self
-		  at: #approvalWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultApprovalWaitTimeoutSeconds ]
+		  at: #aiPermissionWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultAiPermissionWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> approvalWaitTimeoutSeconds: anInteger [
+AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 
-	self at: #approvalWaitTimeoutSeconds put: anInteger
+	self at: #aiPermissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'converting' }
@@ -65,21 +65,35 @@ AbSettings >> at: aKey put: aValue [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultApprovalWaitTimeoutSeconds [
+AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 
-	^ 30
+	^ 1800
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultPermissionWaitTimeoutSeconds [
+AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
 
-	^ 1800
+	^ 30
 ]
 
 { #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleDuration [
 
 	^ 2 seconds
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalWaitTimeoutSeconds [
+
+	^ self
+		  at: #exportApprovalWaitTimeoutSeconds
+		  ifAbsentPut: [ self defaultExportApprovalWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalWaitTimeoutSeconds: anInteger [
+
+	self at: #exportApprovalWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'initialization' }
@@ -101,20 +115,6 @@ AbSettings >> initialize [
 AbSettings >> keys [
 
 	^ self settingsDict keys
-]
-
-{ #category : 'accessing' }
-AbSettings >> permissionWaitTimeoutSeconds [
-
-	^ self
-		  at: #permissionWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultPermissionWaitTimeoutSeconds ]
-]
-
-{ #category : 'accessing' }
-AbSettings >> permissionWaitTimeoutSeconds: anInteger [
-
-	self at: #permissionWaitTimeoutSeconds put: anInteger
 ]
 
 { #category : 'private' }

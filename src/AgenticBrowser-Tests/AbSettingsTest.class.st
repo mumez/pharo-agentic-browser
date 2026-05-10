@@ -12,16 +12,18 @@ AbSettingsTest >> setUp [
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testApprovalWaitTimeoutSecondsDefault [
+AbSettingsTest >> testAiPermissionWaitTimeoutSecondsDefault [
 
-	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 30
+	self assert: AbSettings default aiPermissionWaitTimeoutSeconds equals: 1800
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testApprovalWaitTimeoutSecondsSettable [
+AbSettingsTest >> testAiPermissionWaitTimeoutSecondsSettable [
 
-	AbSettings default approvalWaitTimeoutSeconds: 5.
-	self assert: AbSettings default approvalWaitTimeoutSeconds equals: 5
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings aiPermissionWaitTimeoutSeconds: 120.
+	self assert: settings aiPermissionWaitTimeoutSeconds equals: 120
 ]
 
 { #category : 'tests' }
@@ -40,16 +42,18 @@ AbSettingsTest >> testDefaultReturnsSingletonInstance [
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testPermissionWaitTimeoutSecondsDefault [
+AbSettingsTest >> testExportApprovalWaitTimeoutSecondsDefault [
 
-	self assert: AbSettings default permissionWaitTimeoutSeconds equals: 1800
+	self assert: AbSettings default exportApprovalWaitTimeoutSeconds equals: 30
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testPermissionWaitTimeoutSecondsSettable [
+AbSettingsTest >> testExportApprovalWaitTimeoutSecondsSettable [
 
-	AbSettings default permissionWaitTimeoutSeconds: 999.
-	self assert: AbSettings default permissionWaitTimeoutSeconds equals: 999
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings exportApprovalWaitTimeoutSeconds: 60.
+	self assert: settings exportApprovalWaitTimeoutSeconds equals: 60
 ]
 
 { #category : 'tests' }
