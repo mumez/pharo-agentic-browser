@@ -149,6 +149,15 @@ AbTopicTest >> testHasPendingApprovalRequest [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testHasPendingApprovalRequestWithExportApproval [
+	| topic |
+	topic := AbTopic new.
+	self deny: topic hasPendingApprovalRequest.
+	topic addExportApprovalRequest: 'Export Foo?'.
+	self assert: topic hasPendingApprovalRequest
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testHumanRespondedTransition [
 
 	| topic |
@@ -365,6 +374,16 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic resolveApproval: 'no'.
 	self assert: msg approvalResponse equals: #rejectOnce.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
+	| topic msg |
+	topic := AbTopic new.
+	msg := topic addExportApprovalRequest: 'Export Foo?'.
+	topic resolveApprovalWithOptionId: #rejectOnce.
+	self assert: msg approvalResponse equals: #rejectOnce.
+	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
