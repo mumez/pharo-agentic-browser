@@ -74,6 +74,15 @@ AbTopicGoalTest >> testOnTopicCreatesInstance [
 ]
 
 { #category : 'tests' }
+AbTopicGoalTest >> testResultFileBasenameMatchesTopicId [
+
+	| goal topic |
+	topic := AbTopic new.
+	goal := AbTopicGoal on: topic.
+	self assert: goal resultFileBasename equals: 'result-' , topic topicId , '.md'
+]
+
+{ #category : 'tests' }
 AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 
 	| goal topic |
@@ -81,15 +90,6 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 	goal := AbTopicGoal on: topic.
 	self assert: goal resultFile parent = topic workingDirectory path.
 	self assert: goal resultFile basename equals: 'result-' , topic topicId , '.md'
-]
-
-{ #category : 'tests' }
-AbTopicGoalTest >> testResultFileBasenameMatchesTopicId [
-
-	| goal topic |
-	topic := AbTopic new.
-	goal := AbTopicGoal on: topic.
-	self assert: goal resultFileBasename equals: 'result-' , topic topicId , '.md'
 ]
 
 { #category : 'tests' }

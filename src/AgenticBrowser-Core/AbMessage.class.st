@@ -5,7 +5,8 @@ Class {
 		'sender',
 		'text',
 		'lastUpdated',
-		'isApprovalRequest',
+		'isAiPermission',
+		'isExportApproval',
 		'approvalResponse',
 		'isThink',
 		'approvalOptions'
@@ -15,18 +16,31 @@ Class {
 }
 
 { #category : 'instance creation' }
-AbMessage class >> approvalRequestText: aString [
-
-	^ self approvalRequestText: aString options: #()
+AbMessage class >> aiPermissionRequestText: aString [
+	^ self aiPermissionRequestText: aString options: #()
 ]
 
 { #category : 'instance creation' }
-AbMessage class >> approvalRequestText: aString options: aCollection [
-
+AbMessage class >> aiPermissionRequestText: aString options: aCollection [
 	^ self new
 		  sender: #ai;
 		  text: aString;
-		  isApprovalRequest: true;
+		  isAiPermission: true;
+		  approvalOptions: aCollection;
+		  yourself
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> exportApprovalRequestText: aString [
+	^ self exportApprovalRequestText: aString options: #()
+]
+
+{ #category : 'instance creation' }
+AbMessage class >> exportApprovalRequestText: aString options: aCollection [
+	^ self new
+		  sender: #ai;
+		  text: aString;
+		  isExportApproval: true;
 		  approvalOptions: aCollection;
 		  yourself
 ]
@@ -53,6 +67,16 @@ AbMessage >> appendText: aString [
 ]
 
 { #category : 'accessing' }
+AbMessage >> approvalOptions [
+	^ approvalOptions
+]
+
+{ #category : 'accessing' }
+AbMessage >> approvalOptions: aCollection [
+	approvalOptions := (aCollection ifNil: [ #() ]) asArray
+]
+
+{ #category : 'accessing' }
 AbMessage >> approvalResponse [
 	^ approvalResponse
 ]
@@ -62,27 +86,41 @@ AbMessage >> approvalResponse: aSymbol [
 	approvalResponse := aSymbol
 ]
 
-{ #category : 'printing' }
-AbMessage >> printOn: aStream [
-
-	super printOn: aStream.
-	aStream
-		nextPut: $(;
-		print: sender;
-		nextPutAll: ': ';
-		nextPutAll: (text ifNil: [ '' ]);
-		nextPut: $)
-]
-
 { #category : 'initialization' }
 AbMessage >> initialize [
 
 	sender := #system.
 	text := ''.
 	lastUpdated := DateAndTime now.
-	isApprovalRequest := false.
+	isAiPermission := false.
+	isExportApproval := false.
 	isThink := false.
 	approvalOptions := #()
+]
+
+{ #category : 'accessing' }
+AbMessage >> isAiPermission [
+	^ isAiPermission
+]
+
+{ #category : 'accessing' }
+AbMessage >> isAiPermission: aBoolean [
+	isAiPermission := aBoolean
+]
+
+{ #category : 'accessing' }
+AbMessage >> isApprovalRequest [
+	^ isAiPermission or: [ isExportApproval ]
+]
+
+{ #category : 'accessing' }
+AbMessage >> isExportApproval [
+	^ isExportApproval
+]
+
+{ #category : 'accessing' }
+AbMessage >> isExportApproval: aBoolean [
+	isExportApproval := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -98,23 +136,20 @@ AbMessage >> isThink: aBoolean [
 ]
 
 { #category : 'accessing' }
-AbMessage >> isApprovalRequest [
-	^ isApprovalRequest
+AbMessage >> lastUpdated [
+	^ lastUpdated
 ]
 
-{ #category : 'accessing' }
-AbMessage >> isApprovalRequest: aBoolean [
-	isApprovalRequest := aBoolean
-]
+{ #category : 'printing' }
+AbMessage >> printOn: aStream [
 
-{ #category : 'accessing' }
-AbMessage >> approvalOptions [
-	^ approvalOptions
-]
-
-{ #category : 'accessing' }
-AbMessage >> approvalOptions: aCollection [
-	approvalOptions := (aCollection ifNil: [ #() ]) asArray
+	super printOn: aStream.
+	aStream
+		nextPut: $(;
+		print: sender;
+		nextPutAll: ': ';
+		nextPutAll: (text ifNil: [ '' ]);
+		nextPut: $)
 ]
 
 { #category : 'accessing' }
@@ -136,9 +171,4 @@ AbMessage >> text [
 AbMessage >> text: aString [
 	text := aString.
 	lastUpdated := DateAndTime now
-]
-
-{ #category : 'accessing' }
-AbMessage >> lastUpdated [
-	^ lastUpdated
 ]

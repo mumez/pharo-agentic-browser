@@ -9,23 +9,6 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
-{ #category : 'initialization' }
-AbMessagesPresenter >> initializePresenters [
-
-	super initializePresenters.
-	messages := OrderedCollection new.
-	messageTextPresenter := self instantiate: MicTextPresenter.
-	messageTextPresenter text: '' asText
-]
-
-{ #category : 'layout' }
-AbMessagesPresenter >> defaultLayout [
-
-	^ SpBoxLayout newTopToBottom
-		  add: self messageTextPresenter;
-		  yourself
-]
-
 { #category : 'rendering' }
 AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 	"Add a new message or refresh an existing one (e.g. AI streaming chunk).
@@ -35,53 +18,6 @@ AbMessagesPresenter >> addOrUpdateMessage: anAbMessage [
 		ifFalse: [ self messages add: anAbMessage ].
 	self refreshCombinedText.
 	self scrollToBottom
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> setMessages: aCollection [
-	"Full replacement of the message list (e.g. on topic switch)."
-
-	messages := aCollection asOrderedCollection.
-	self refreshCombinedText.
-	self scrollToBottom
-]
-
-{ #category : 'rendering' }
-AbMessagesPresenter >> refreshMessages [
-	"Refresh display of all messages without changing scroll position.
-	 Used when message state changes (e.g. approval resolved)."
-
-	self refreshCombinedText
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> messages [
-
-	^ messages
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> messagePresenters [
-
-	^ #()
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> messageList [
-
-	^ self messageTextPresenter
-]
-
-{ #category : 'accessing' }
-AbMessagesPresenter >> messageCount [
-
-	^ self messages size
-]
-
-{ #category : 'rendering' }
-AbMessagesPresenter >> richTextFor: anAbMessage [
-
-	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
 ]
 
 { #category : 'rendering' }
@@ -98,16 +34,78 @@ AbMessagesPresenter >> combinedRichText [
 	^ combined
 ]
 
-{ #category : 'rendering' }
-AbMessagesPresenter >> refreshCombinedText [
+{ #category : 'layout' }
+AbMessagesPresenter >> defaultLayout [
 
-	self messageTextPresenter text: self combinedRichText
+	^ SpBoxLayout newTopToBottom
+		  add: self messageTextPresenter;
+		  yourself
+]
+
+{ #category : 'initialization' }
+AbMessagesPresenter >> initializePresenters [
+
+	super initializePresenters.
+	messages := OrderedCollection new.
+	messageTextPresenter := self instantiate: MicTextPresenter.
+	messageTextPresenter text: '' asText
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageCount [
+
+	^ self messages size
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messageList [
+
+	^ self messageTextPresenter
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messagePresenters [
+
+	^ #()
 ]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messageTextPresenter [
 
 	^ messageTextPresenter
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> messages [
+
+	^ messages
+]
+
+{ #category : 'private' }
+AbMessagesPresenter >> performScrollToBottom [
+
+	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
+	self messageTextPresenter adapter widget scrollToEndOfText
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> refreshCombinedText [
+
+	self messageTextPresenter text: self combinedRichText
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> refreshMessages [
+	"Refresh display of all messages without changing scroll position.
+	 Used when message state changes (e.g. approval resolved)."
+
+	self refreshCombinedText
+]
+
+{ #category : 'rendering' }
+AbMessagesPresenter >> richTextFor: anAbMessage [
+
+	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
 ]
 
 { #category : 'private' }
@@ -118,9 +116,11 @@ AbMessagesPresenter >> scrollToBottom [
 	self defer: [ self performScrollToBottom ]
 ]
 
-{ #category : 'private' }
-AbMessagesPresenter >> performScrollToBottom [
+{ #category : 'accessing' }
+AbMessagesPresenter >> setMessages: aCollection [
+	"Full replacement of the message list (e.g. on topic switch)."
 
-	self messageTextPresenter isBuilt ifFalse: [ ^ self ].
-	self messageTextPresenter adapter widget scrollToEndOfText
+	messages := aCollection asOrderedCollection.
+	self refreshCombinedText.
+	self scrollToBottom
 ]

@@ -5,55 +5,6 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
-{ #category : 'tests' }
-AbTopicHandlerTest >> testApplyApprovalOptionIdAllowOnce [
-
-	| response outcome |
-	response := ACPRequestPermissionResponse new.
-	AbTopicHandler new
-		applyApprovalOptionId: #allowOnce
-		toResponse: response.
-	outcome := response asDictionary at: 'outcome'.
-	self assert: (outcome at: 'optionId') equals: 'allow_once'
-]
-
-{ #category : 'tests' }
-AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
-
-	| response outcome |
-	response := ACPRequestPermissionResponse new.
-	AbTopicHandler new
-		applyApprovalOptionId: #rejectAlways
-		toResponse: response.
-	outcome := response asDictionary at: 'outcome'.
-	self assert: (outcome at: 'optionId') equals: 'reject_always'
-]
-
-{ #category : 'tests' }
-AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
-
-	| options request |
-	request := self samplePermissionRequest.
-	options := AbTopicHandler new permissionOptionsFor: request.
-	self assert: options size equals: 3.
-	self assert: options first key equals: 'Allow once'.
-	self assert: options first value equals: #allowOnce.
-	self assert: options second key equals: 'Always allow'.
-	self assert: options second value equals: #allowAlways.
-	self assert: options third key equals: 'Deny'.
-	self assert: options third value equals: #rejectOnce
-]
-
-{ #category : 'tests' }
-AbTopicHandlerTest >> testPermissionPromptTextForIncludesToolCallContext [
-
-	| promptText request |
-	request := self samplePermissionRequest.
-	promptText := AbTopicHandler new permissionPromptTextFor: request.
-	self assert: (promptText includesSubstring: 'run_package_test').
-	self assert: (promptText includesSubstring: 'MoneyCalc')
-]
-
 { #category : 'private' }
 AbTopicHandlerTest >> samplePermissionRequest [
 
@@ -85,4 +36,65 @@ AbTopicHandlerTest >> samplePermissionRequest [
 		             at: 'toolCall' put: toolCall;
 		             yourself.
 	^ ACPRequestPermission new rawValues: rawValues
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testApplyApprovalOptionIdAllowOnce [
+
+	| response outcome |
+	response := ACPRequestPermissionResponse new.
+	AbTopicHandler new
+		applyApprovalOptionId: #allow_once
+		toResponse: response.
+	outcome := response asDictionary at: 'outcome'.
+	self assert: (outcome at: 'optionId') equals: 'allow_once'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
+
+	| response outcome |
+	response := ACPRequestPermissionResponse new.
+	AbTopicHandler new
+		applyApprovalOptionId: #reject_always
+		toResponse: response.
+	outcome := response asDictionary at: 'outcome'.
+	self assert: (outcome at: 'optionId') equals: 'reject_always'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testApplyApprovalOptionIdPassesThroughCustomOptionId [
+
+	| response outcome |
+	response := ACPRequestPermissionResponse new.
+	AbTopicHandler new
+		applyApprovalOptionId: #yes_please
+		toResponse: response.
+	outcome := response asDictionary at: 'outcome'.
+	self assert: (outcome at: 'optionId') equals: 'yes_please'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
+
+	| options request |
+	request := self samplePermissionRequest.
+	options := AbTopicHandler new permissionOptionsFor: request.
+	self assert: options size equals: 3.
+	self assert: options first key equals: 'Allow once'.
+	self assert: options first value equals: #allow_once.
+	self assert: options second key equals: 'Always allow'.
+	self assert: options second value equals: #allow_always.
+	self assert: options third key equals: 'Deny'.
+	self assert: options third value equals: #reject_once
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testPermissionPromptTextForIncludesToolCallContext [
+
+	| promptText request |
+	request := self samplePermissionRequest.
+	promptText := AbTopicHandler new permissionPromptTextFor: request.
+	self assert: (promptText includesSubstring: 'run_package_test').
+	self assert: (promptText includesSubstring: 'MoneyCalc')
 ]

@@ -10,16 +10,6 @@ Class {
 }
 
 { #category : 'accessing' }
-AbTopicCurrentModelChanged >> topic [
-	^ topic
-]
-
-{ #category : 'accessing' }
-AbTopicCurrentModelChanged >> topic: anAbTopic [
-	topic := anAbTopic
-]
-
-{ #category : 'accessing' }
 AbTopicCurrentModelChanged >> model [
 	^ model
 ]
@@ -27,4 +17,14 @@ AbTopicCurrentModelChanged >> model [
 { #category : 'accessing' }
 AbTopicCurrentModelChanged >> model: aString [
 	model := aString
+]
+
+{ #category : 'accessing' }
+AbTopicCurrentModelChanged >> topic [
+	^ topic
+]
+
+{ #category : 'accessing' }
+AbTopicCurrentModelChanged >> topic: anAbTopic [
+	topic := anAbTopic
 ]

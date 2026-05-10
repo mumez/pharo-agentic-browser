@@ -10,16 +10,6 @@ Class {
 }
 
 { #category : 'accessing' }
-AbTopicStatusChanged >> topic [
-	^ topic
-]
-
-{ #category : 'accessing' }
-AbTopicStatusChanged >> topic: anAbTopic [
-	topic := anAbTopic
-]
-
-{ #category : 'accessing' }
 AbTopicStatusChanged >> status [
 	^ status
 ]
@@ -27,4 +17,14 @@ AbTopicStatusChanged >> status [
 { #category : 'accessing' }
 AbTopicStatusChanged >> status: aSymbol [
 	status := aSymbol
+]
+
+{ #category : 'accessing' }
+AbTopicStatusChanged >> topic [
+	^ topic
+]
+
+{ #category : 'accessing' }
+AbTopicStatusChanged >> topic: anAbTopic [
+	topic := anAbTopic
 ]

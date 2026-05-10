@@ -9,58 +9,25 @@ Class {
 	#package : 'AgenticBrowser-Handler'
 }
 
-{ #category : 'agent-callbacks' }
-AbTopicHandler >> requestPermission: anACPRequestPermission [
-
-	| response approvalOptionId |
-	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
-	approvalOptionId := self topic
-		                  requestApproval: (self permissionPromptTextFor: anACPRequestPermission)
-		                  options: (self permissionOptionsFor: anACPRequestPermission).
-	self logger debug: 'requestPermission: got approvalResponse='
-		, approvalOptionId printString.
-	response := anACPRequestPermission makeResponse.
-	self applyApprovalOptionId: approvalOptionId toResponse: response.
-	^ response
-]
-
 { #category : 'private' }
 AbTopicHandler >> applyApprovalOptionId: anOptionId toResponse: aResponse [
 
-	| canonicalOptionId |
-	canonicalOptionId := self canonicalApprovalOptionId: anOptionId.
-	canonicalOptionId = #rejectOnce ifTrue: [
-		aResponse rejectOnce.
-		^ self ].
-	canonicalOptionId = #rejectAlways ifTrue: [
-		aResponse rejectAlways.
-		^ self ].
-	canonicalOptionId = #allowOnce ifTrue: [
-		aResponse allowOnce.
-		^ self ].
-	canonicalOptionId = #allowAlways ifTrue: [
-		aResponse allowAlways.
-		^ self ].
-	aResponse rejectOnce
+	aResponse selectOptionId: anOptionId asString
+]
+
+{ #category : 'accessing' }
+AbTopicHandler >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'private' }
-AbTopicHandler >> canonicalApprovalOptionId: anOptionId [
+AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
 
-	| normalized |
-	anOptionId ifNil: [ ^ #allowOnce ].
-	normalized := anOptionId asString asLowercase.
-	normalized := normalized copyReplaceAll: '-' with: '_'.
-	normalized := normalized copyReplaceAll: ' ' with: ''.
-	normalized = 'allowonce' ifTrue: [ ^ #allowOnce ].
-	normalized = 'allow_once' ifTrue: [ ^ #allowOnce ].
-	normalized = 'allowalways' ifTrue: [ ^ #allowAlways ].
-	normalized = 'allow_always' ifTrue: [ ^ #allowAlways ].
-	normalized = 'rejectonce' ifTrue: [ ^ #rejectOnce ].
-	normalized = 'reject_once' ifTrue: [ ^ #rejectOnce ].
-	normalized = 'rejectalways' ifTrue: [ ^ #rejectAlways ].
-	normalized = 'reject_always' ifTrue: [ ^ #rejectAlways ].
-	^ normalized asSymbol
+	| label optionId |
+	label := anACPPermissionOption name.
+	optionId := anACPPermissionOption optionId.
+	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
+	^ label asString -> optionId asSymbol
 ]
 
 { #category : 'private' }
@@ -73,19 +40,9 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 		           reject: [ :assoc | assoc isNil ].
 	options ifNotEmpty: [ ^ options asArray ].
 	^ {
-		  'Allow once' -> #allowOnce.
-		  'Always allow' -> #allowAlways.
-		  'Deny' -> #rejectOnce }
-]
-
-{ #category : 'private' }
-AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
-
-	| label optionId |
-	label := anACPPermissionOption name.
-	optionId := anACPPermissionOption optionId.
-	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
-	^ label asString -> (self canonicalApprovalOptionId: optionId)
+		  'Allow once' -> AbConstants allowOnce.
+		  'Always allow' -> #allow_always.
+		  'Deny' -> AbConstants rejectOnce }
 ]
 
 { #category : 'private' }
@@ -115,6 +72,21 @@ AbTopicHandler >> rawInputForToolCall: anACPToolCall [
 ]
 
 { #category : 'agent-callbacks' }
+AbTopicHandler >> requestPermission: anACPRequestPermission [
+
+	| response approvalOptionId |
+	self logger debug: 'requestPermission: ' , anACPRequestPermission printString.
+	approvalOptionId := self topic
+		                  requestPermission: (self permissionPromptTextFor: anACPRequestPermission)
+		                  options: (self permissionOptionsFor: anACPRequestPermission).
+	self logger debug: 'requestPermission: got approvalResponse='
+		, approvalOptionId printString.
+	response := anACPRequestPermission makeResponse.
+	self applyApprovalOptionId: approvalOptionId toResponse: response.
+	^ response
+]
+
+{ #category : 'agent-callbacks' }
 AbTopicHandler >> sessionUpdate: aSessionUpdate [
 
 	aSessionUpdate isAgentMessageChunk
@@ -125,11 +97,6 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ].
 	aSessionUpdate isConfigOptionUpdate
 		ifTrue: [ ^ self topic updateCurrentModelFromConfigOptions: aSessionUpdate configOptions ]
-]
-
-{ #category : 'accessing' }
-AbTopicHandler >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
 { #category : 'accessing' }

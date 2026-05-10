@@ -73,23 +73,35 @@ AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringSourc
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTracksWithoutApproval [
+
+	watcher handlePackageChange: 'External-Changed'.
+	(Delay forMilliseconds: 100) wait.
+	self deny: topic hasPendingApprovalRequest.
+	self
+		assert: (topic messages select: [ :m | m isApprovalRequest ]) isEmpty.
+	self
+		assert: (topic updatedExternalPackageNames includes: 'External-Changed')
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
+
+	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
+	topic packagePrefixes: #( 'MyPkg' ).
+	watcher handlePackageChange: 'MyPkg'.
+	watcher handlePackageChange: 'MyPkg'.
+	watcher handlePackageChange: 'MyPkg'.
+	"Wait briefly for the single forked process to run with 0-second timeout"
+	(Delay forMilliseconds: 100) wait.
+	self
+		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
+		equals: 1
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testIsWatchingInitiallyFalse [
 
-	self deny: watcher isWatching
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStartSetsIsWatching [
-
-	watcher start.
-	self assert: watcher isWatching
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
-
-	watcher start.
-	watcher stop.
 	self deny: watcher isWatching
 ]
 
@@ -125,37 +137,25 @@ AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWi
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
-
-	AbSettings default approvalWaitTimeoutSeconds: 0.
-	topic packagePrefixes: #( 'MyPkg' ).
-	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	"Wait briefly for the single forked process to run with 0-second timeout"
-	(Delay forMilliseconds: 100) wait.
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
-		equals: 1
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTracksWithoutApproval [
-
-	watcher handlePackageChange: 'External-Changed'.
-	(Delay forMilliseconds: 100) wait.
-	self deny: topic hasPendingApprovalRequest.
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) isEmpty.
-	self
-		assert: (topic updatedExternalPackageNames includes: 'External-Changed')
-]
-
-{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:
-		(watcher shouldProceedWithExportForApprovalResponse: #allowOnce).
+		(watcher shouldProceedWithExportForApprovalResponse: #allow_once).
 	self deny:
-		(watcher shouldProceedWithExportForApprovalResponse: #rejectOnce)
+		(watcher shouldProceedWithExportForApprovalResponse: #reject_once)
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStartSetsIsWatching [
+
+	watcher start.
+	self assert: watcher isWatching
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
+
+	watcher start.
+	watcher stop.
+	self deny: watcher isWatching
 ]

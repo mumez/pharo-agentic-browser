@@ -50,14 +50,6 @@ AbTopicPhase2Test >> testAddUpdatedExternalPackageName [
 ]
 
 { #category : 'tests' }
-AbTopicPhase2Test >> testrelatedPackagesWatcherLazyInit [
-
-	| topic |
-	topic := AbTopic new.
-	self assert: (topic relatedPackagesWatcher isKindOf: AbTopicRelatedPackagesWatcher)
-]
-
-{ #category : 'tests' }
 AbTopicPhase2Test >> testMatchingPackageNamesEmptyPrefixes [
 
 	| topic |
@@ -92,13 +84,6 @@ AbTopicPhase2Test >> testPackagePrefixesDefaultsToEmptySet [
 
 	self assert: AbTopic new packagePrefixes isEmpty.
 	self assert: (AbTopic new packagePrefixes isKindOf: Set)
-]
-
-{ #category : 'tests' }
-AbTopicPhase2Test >> testUpdatedExternalPackageNamesDefaultsToEmptySet [
-
-	self assert: AbTopic new updatedExternalPackageNames isEmpty.
-	self assert: (AbTopic new updatedExternalPackageNames isKindOf: Set)
 ]
 
 { #category : 'tests' }
@@ -139,6 +124,13 @@ AbTopicPhase2Test >> testTopicIdIsUniquePerTopic [
 ]
 
 { #category : 'tests' }
+AbTopicPhase2Test >> testUpdatedExternalPackageNamesDefaultsToEmptySet [
+
+	self assert: AbTopic new updatedExternalPackageNames isEmpty.
+	self assert: (AbTopic new updatedExternalPackageNames isKindOf: Set)
+]
+
+{ #category : 'tests' }
 AbTopicPhase2Test >> testWorkingDirectoryLazyInit [
 
 	| topic |
@@ -167,4 +159,12 @@ AbTopicPhase2Test >> testWorkingDirectoryWasCreatedForConnection [
 	self assert: topic relatedPackagesWatcher isWatching.
 	topic stopWatching.
 	path deleteAll
+]
+
+{ #category : 'tests' }
+AbTopicPhase2Test >> testrelatedPackagesWatcherLazyInit [
+
+	| topic |
+	topic := AbTopic new.
+	self assert: (topic relatedPackagesWatcher isKindOf: AbTopicRelatedPackagesWatcher)
 ]

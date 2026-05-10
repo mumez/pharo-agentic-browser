@@ -14,6 +14,49 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
+{ #category : 'private' }
+AbNewTopicDialog >> addDetectedPrefixForDirectoryName: name into: prefixes [
+
+	| hyphenPos base |
+	(name beginsWith: 'BaselineOf') ifTrue: [
+		prefixes add: name.
+		^ self ].
+	hyphenPos := name indexOf: $-.
+	hyphenPos > 1 ifFalse: [ ^ self ].
+	base := name copyFrom: 1 to: hyphenPos - 1.
+	prefixes add: base , '-*'
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> agentDropList [
+
+	^ agentDropList
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> agentRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
+		  add: self agentDropList;
+		  yourself
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> buttonsRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
+		  addLast: self okButton withConstraints: [ :c | c width: 80 ];
+		  yourself
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> cancelButton [
+
+	^ cancelButton
+]
+
 { #category : 'initialization' }
 AbNewTopicDialog >> connectPresenters [
 
@@ -34,43 +77,6 @@ AbNewTopicDialog >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'layout' }
-AbNewTopicDialog >> titleRowLayout [
-
-	^ SpBoxLayout newLeftToRight
-		  add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
-		  add: self titleField;
-		  yourself
-]
-
-{ #category : 'layout' }
-AbNewTopicDialog >> agentRowLayout [
-
-	^ SpBoxLayout newLeftToRight
-		  add: (self newLabel label: 'Agent:') withConstraints: [ :c | c width: 80 ];
-		  add: self agentDropList;
-		  yourself
-]
-
-{ #category : 'layout' }
-AbNewTopicDialog >> workingDirectoryRowLayout [
-
-	^ SpBoxLayout newLeftToRight
-		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
-		  add: self workingDirField;
-		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
-		  yourself
-]
-
-{ #category : 'layout' }
-AbNewTopicDialog >> buttonsRowLayout [
-
-	^ SpBoxLayout newLeftToRight
-		  addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
-		  addLast: self okButton withConstraints: [ :c | c width: 80 ];
-		  yourself
-]
-
 { #category : 'operations' }
 AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
 
@@ -83,19 +89,6 @@ AbNewTopicDialog >> detectPackagePrefixesFromDirectory: aPathString [
 	srcDir directories do: [ :sub |
 		self addDetectedPrefixForDirectoryName: sub basename into: prefixes ].
 	^ prefixes asArray
-]
-
-{ #category : 'private' }
-AbNewTopicDialog >> addDetectedPrefixForDirectoryName: name into: prefixes [
-
-	| hyphenPos base |
-	(name beginsWith: 'BaselineOf') ifTrue: [
-		prefixes add: name.
-		^ self ].
-	hyphenPos := name indexOf: $-.
-	hyphenPos > 1 ifFalse: [ ^ self ].
-	base := name copyFrom: 1 to: hyphenPos - 1.
-	prefixes add: base , '-*'
 ]
 
 { #category : 'initialization' }
@@ -126,15 +119,10 @@ AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 		initialExtent: 580 @ 200
 ]
 
-{ #category : 'private' }
-AbNewTopicDialog >> onSelectWorkingDirClicked [
+{ #category : 'accessing' }
+AbNewTopicDialog >> okButton [
 
-	| selectedDir |
-	selectedDir := UIManager default
-		               chooseDirectory: 'Choose working directory'
-		               path: FileLocator home asFileReference.
-	selectedDir ifNil: [ ^ self ].
-	self workingDirField text: selectedDir fullName
+	^ okButton
 ]
 
 { #category : 'private' }
@@ -155,22 +143,15 @@ AbNewTopicDialog >> onOkClicked [
 	self withWindowDo: [ :w | w close ]
 ]
 
-{ #category : 'accessing' }
-AbNewTopicDialog >> titleField [
+{ #category : 'private' }
+AbNewTopicDialog >> onSelectWorkingDirClicked [
 
-	^ titleField
-]
-
-{ #category : 'accessing' }
-AbNewTopicDialog >> agentDropList [
-
-	^ agentDropList
-]
-
-{ #category : 'accessing' }
-AbNewTopicDialog >> workingDirField [
-
-	^ workingDirField
+	| selectedDir |
+	selectedDir := UIManager default
+		               chooseDirectory: 'Choose working directory'
+		               path: FileLocator home asFileReference.
+	selectedDir ifNil: [ ^ self ].
+	self workingDirField text: selectedDir fullName
 ]
 
 { #category : 'accessing' }
@@ -180,15 +161,18 @@ AbNewTopicDialog >> selectWorkingDirButton [
 ]
 
 { #category : 'accessing' }
-AbNewTopicDialog >> okButton [
+AbNewTopicDialog >> titleField [
 
-	^ okButton
+	^ titleField
 ]
 
-{ #category : 'accessing' }
-AbNewTopicDialog >> cancelButton [
+{ #category : 'layout' }
+AbNewTopicDialog >> titleRowLayout [
 
-	^ cancelButton
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Title:') withConstraints: [ :c | c width: 80 ];
+		  add: self titleField;
+		  yourself
 ]
 
 { #category : 'accessing' }
@@ -199,4 +183,20 @@ AbNewTopicDialog >> topic [
 { #category : 'accessing' }
 AbNewTopicDialog >> topic: anAbTopic [
 	topic := anAbTopic
+]
+
+{ #category : 'accessing' }
+AbNewTopicDialog >> workingDirField [
+
+	^ workingDirField
+]
+
+{ #category : 'layout' }
+AbNewTopicDialog >> workingDirectoryRowLayout [
+
+	^ SpBoxLayout newLeftToRight
+		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
+		  add: self workingDirField;
+		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
+		  yourself
 ]

@@ -11,6 +11,12 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> cancelButton [
+
+	^ cancelButton
+]
+
 { #category : 'initialization' }
 AbPackagePrefixesDialog >> connectPresenters [
 
@@ -54,6 +60,12 @@ AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
 		initialExtent: 500 @ 130
 ]
 
+{ #category : 'accessing' }
+AbPackagePrefixesDialog >> okButton [
+
+	^ okButton
+]
+
 { #category : 'private' }
 AbPackagePrefixesDialog >> onOkClicked [
 
@@ -67,18 +79,6 @@ AbPackagePrefixesDialog >> onOkClicked [
 AbPackagePrefixesDialog >> prefixField [
 
 	^ prefixField
-]
-
-{ #category : 'accessing' }
-AbPackagePrefixesDialog >> okButton [
-
-	^ okButton
-]
-
-{ #category : 'accessing' }
-AbPackagePrefixesDialog >> cancelButton [
-
-	^ cancelButton
 ]
 
 { #category : 'accessing' }

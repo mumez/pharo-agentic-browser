@@ -15,6 +15,30 @@ AbMessageTest >> testAiMessageCreation [
 ]
 
 { #category : 'tests' }
+AbMessageTest >> testAiPermissionRequestCreation [
+	| msg |
+	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
+	self assert: msg sender equals: #ai.
+	self assert: msg text equals: 'May I modify DBAdapter?'.
+	self assert: msg isAiPermission.
+	self deny: msg isExportApproval.
+	self assert: msg isApprovalRequest.
+	self assert: msg approvalOptions isEmpty.
+	self assert: msg approvalResponse isNil
+]
+
+{ #category : 'tests' }
+AbMessageTest >> testAiPermissionRequestCreationWithOptions [
+	| options msg |
+	options := { 'Allow once' -> #allow_once. 'Deny' -> #reject_once }.
+	msg := AbMessage aiPermissionRequestText: 'Select permission option' options: options.
+	self assert: msg isAiPermission.
+	self assert: msg approvalOptions equals: options.
+	self deny: msg isExportApproval.
+	self assert: msg isApprovalRequest
+]
+
+{ #category : 'tests' }
 AbMessageTest >> testAppendText [
 
 	| msg before |
@@ -27,41 +51,37 @@ AbMessageTest >> testAppendText [
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testTextUpdateRefreshesLastUpdated [
-
-	| msg before |
-	msg := AbMessage sender: #ai text: 'Draft'.
-	before := msg lastUpdated.
-	(Delay forMilliseconds: 1) wait.
-	msg text: 'Final'.
-	self assert: msg text equals: 'Final'.
-	self assert: msg lastUpdated > before
-]
-
-{ #category : 'tests' }
-AbMessageTest >> testApprovalRequestCreation [
-
+AbMessageTest >> testExportApprovalRequestCreation [
 	| msg |
-	msg := AbMessage approvalRequestText: 'May I modify DBAdapter?'.
+	msg := AbMessage exportApprovalRequestText: 'Export package Foo?'.
 	self assert: msg sender equals: #ai.
-	self assert: msg text equals: 'May I modify DBAdapter?'.
+	self assert: msg text equals: 'Export package Foo?'.
+	self assert: msg isExportApproval.
+	self deny: msg isAiPermission.
 	self assert: msg isApprovalRequest.
 	self assert: msg approvalOptions isEmpty.
 	self assert: msg approvalResponse isNil
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testApprovalRequestCreationWithOptions [
-
+AbMessageTest >> testExportApprovalRequestCreationWithOptions [
 	| options msg |
-	options := {
-		           'Allow once' -> #allowOnce.
-		           'Deny' -> #rejectOnce }.
-	msg := AbMessage
-		       approvalRequestText: 'Select permission option'
-		       options: options.
-	self assert: msg isApprovalRequest.
-	self assert: msg approvalOptions equals: options
+	options := { 'Allow once' -> #allow_once. 'Deny' -> #reject_once }.
+	msg := AbMessage exportApprovalRequestText: 'Export package Foo?' options: options.
+	self assert: msg isExportApproval.
+	self assert: msg approvalOptions equals: options.
+	self deny: msg isAiPermission.
+	self assert: msg isApprovalRequest
+]
+
+{ #category : 'tests' }
+AbMessageTest >> testHumanMessageCreation [
+
+	| msg |
+	msg := AbMessage sender: #human text: 'Fix the N+1 issue'.
+	self assert: msg sender equals: #human.
+	self assert: msg text equals: 'Fix the N+1 issue'.
+	self deny: msg isApprovalRequest.
 ]
 
 { #category : 'tests' }
@@ -81,13 +101,15 @@ AbMessageTest >> testPrintStringIncludesText [
 ]
 
 { #category : 'tests' }
-AbMessageTest >> testHumanMessageCreation [
+AbMessageTest >> testTextUpdateRefreshesLastUpdated [
 
-	| msg |
-	msg := AbMessage sender: #human text: 'Fix the N+1 issue'.
-	self assert: msg sender equals: #human.
-	self assert: msg text equals: 'Fix the N+1 issue'.
-	self deny: msg isApprovalRequest.
+	| msg before |
+	msg := AbMessage sender: #ai text: 'Draft'.
+	before := msg lastUpdated.
+	(Delay forMilliseconds: 1) wait.
+	msg text: 'Final'.
+	self assert: msg text equals: 'Final'.
+	self assert: msg lastUpdated > before
 ]
 
 { #category : 'tests' }
