@@ -247,14 +247,17 @@ AbTopic >> disconnect [
 		self client disconnect.
 		self client: nil.
 		self sessionId: nil ].
-	self rejectPendingApprovals
+	self abortPendingApprovals
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectPendingApprovals [
+AbTopic >> abortPendingApprovals [
 
-	self pendingAiPermissionMessage ifNotNil: [ :msg | self rejectAiPermissionOnTimeout: msg ].
-	self pendingExportApprovalMessage ifNotNil: [ :msg | self rejectExportOnTimeout: msg ]
+	self pendingAiPermissionMessage ifNotNil: [ :msg |
+		msg approvalResponse: #disconnected.
+		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
+	self pendingExportApprovalMessage ifNotNil: [ :msg |
+		msg approvalResponse: #disconnected ]
 ]
 
 { #category : 'private' }

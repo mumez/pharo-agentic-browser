@@ -608,7 +608,7 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testDisconnectRejectsPendingAiPermission [
+AbTopicTest >> testDisconnectAbortsPendingAiPermission [
 
 	| topic done response |
 	topic := AbTopic new.
@@ -620,11 +620,11 @@ AbTopicTest >> testDisconnectRejectsPendingAiPermission [
 		(Delay forMilliseconds: 1) wait ].
 	topic disconnect.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #rejectOnce
+	self assert: response equals: #disconnected
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testDisconnectRejectsPendingExportApproval [
+AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 
 	| topic done response |
 	topic := AbTopic new.
@@ -636,5 +636,5 @@ AbTopicTest >> testDisconnectRejectsPendingExportApproval [
 		(Delay forMilliseconds: 1) wait ].
 	topic disconnect.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #rejectOnce
+	self assert: response equals: #disconnected
 ]
