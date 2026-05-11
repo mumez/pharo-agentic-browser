@@ -45,6 +45,21 @@ AbTopicSession >> client: anACPClient [
 	client := anACPClient
 ]
 
+{ #category : 'private' }
+AbTopicSession >> doConnect [
+
+	| sessionResult |
+	self client: ACPClient new.
+	self client handler: (AbTopicHandler new topic: self topic; yourself).
+	self client agentCommand: '/usr/bin/env' arguments: self topic agentArguments.
+	self client connect.
+	self client initializeBy: [ :params | "use defaults" ].
+	sessionResult := self client newSessionBy: [ :params |
+						 params cwd: self topic ensureWorkingDirectoryForConnection ].
+	self sessionId: sessionResult sessionId.
+	self updateCurrentModelFromConfigOptions: sessionResult configOptions
+]
+
 { #category : 'operations' }
 AbTopicSession >> disconnect [
 
@@ -53,6 +68,12 @@ AbTopicSession >> disconnect [
 	self sessionId: nil.
 	self availableCommands: OrderedCollection new.
 	self currentModel: nil
+]
+
+{ #category : 'private' }
+AbTopicSession >> ensureConnected [
+
+	self client ifNil: [ self doConnect ]
 ]
 
 { #category : 'accessing' }

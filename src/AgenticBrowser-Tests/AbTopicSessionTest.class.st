@@ -61,6 +61,15 @@ AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
+
+	self assert: (AbTopicSession canUnderstand: #doConnect).
+	self assert: (AbTopicSession canUnderstand: #ensureConnected).
+	self deny: (AbTopic canUnderstand: #doConnect).
+	self deny: (AbTopic canUnderstand: #ensureConnected)
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 
 	| session topic commands |

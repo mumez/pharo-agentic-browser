@@ -251,27 +251,6 @@ AbTopic >> abortPendingApprovals [
 ]
 
 { #category : 'private' }
-AbTopic >> doConnect [
-
-	| sessionResult |
-	self client: ACPClient new.
-	self client handler: (AbTopicHandler new topic: self; yourself).
-	self client agentCommand: '/usr/bin/env' arguments: self agentArguments.
-	self client connect.
-	self client initializeBy: [ :params | "use defaults" ].
-	sessionResult := self client newSessionBy: [ :params |
-						 params cwd: self ensureWorkingDirectoryForConnection ].
-	self sessionId: sessionResult sessionId.
-	self updateCurrentModelFromConfigOptions: sessionResult configOptions
-]
-
-{ #category : 'private' }
-AbTopic >> ensureConnected [
-
-	self client ifNil: [ self doConnect ]
-]
-
-{ #category : 'private' }
 AbTopic >> ensureWorkingDirectoryForConnection [
 
 	self workingDirectory ensureExists.
@@ -559,7 +538,7 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 	self stateMachine handleEvent: #promptSent.
 	[
 	| result |
-	self ensureConnected.
+	self session ensureConnected.
 		result := self client promptBy: [ :params |
 				  params sessionId: self sessionId.
 				  params textPrompt: aString.
