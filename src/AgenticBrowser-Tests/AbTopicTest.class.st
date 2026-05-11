@@ -90,8 +90,9 @@ AbTopicTest >> testAvailableCommandsInitiallyEmpty [
 { #category : 'tests' }
 AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 
-	| topic mockClient |
+	| topic session mockClient |
 	topic := AbTopic new.
+	session := topic session.
 	mockClient := MockObject new.
 	mockClient
 		on: #cancelBy:
@@ -100,8 +101,8 @@ AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 			| params |
 			params := ACPCancelParams buildBy: aBlock.
 			self assert: params sessionId equals: 'session-1' ].
-	topic client: mockClient.
-	topic sessionId: 'session-1'.
+	session client: mockClient.
+	session sessionId: 'session-1'.
 	topic stateMachine handleEvent: #promptSent.
 
 	topic cancelPrompt.
@@ -650,12 +651,13 @@ AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 { #category : 'tests' }
 AbTopicTest >> testDisconnectClearsTransientSessionData [
 
-	| topic mockClient options modelOption commands |
+	| topic session mockClient options modelOption commands |
 	topic := AbTopic new.
+	session := topic session.
 	mockClient := MockObject new.
 	mockClient on: #disconnect verify: [ ].
-	topic client: mockClient.
-	topic sessionId: 'session-1'.
+	session client: mockClient.
+	session sessionId: 'session-1'.
 	commands := OrderedCollection
 		with: (ACPAvailableCommand new rawValues: (Dictionary new
 					  at: 'name' put: '/help';

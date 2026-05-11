@@ -216,12 +216,6 @@ AbTopic >> client [
 ]
 
 { #category : 'accessing' }
-AbTopic >> client: anACPClient [
-
-	self session client: anACPClient
-]
-
-{ #category : 'accessing' }
 AbTopic >> currentModel [
 	^ self session currentModel
 ]
@@ -552,12 +546,6 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 { #category : 'accessing' }
 AbTopic >> sessionId [
 	^ self session sessionId
-]
-
-{ #category : 'accessing' }
-AbTopic >> sessionId: aString [
-
-	self session sessionId: aString
 ]
 
 { #category : 'accessing' }
