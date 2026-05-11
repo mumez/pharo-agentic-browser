@@ -216,9 +216,12 @@ AbChatPresenterTest >> testModelTextInitiallyEmpty [
 { #category : 'tests' }
 AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
 
-	| topic |
+	| topic options modelOption |
 	topic := AbTopic new.
-	topic session currentModel: 'claude-sonnet-4'.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
 	presenter topic: topic.
 	self assert: presenter modelText equals: 'claude-sonnet-4'
 ]
