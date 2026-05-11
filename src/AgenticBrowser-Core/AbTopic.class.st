@@ -5,8 +5,6 @@ Class {
 		'title',
 		'agentArguments',
 		'messages',
-		'client',
-		'sessionId',
 		'stateMachine',
 		'announcer',
 		'topicId',
@@ -16,9 +14,8 @@ Class {
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
 		'logger',
-		'availableCommands',
 		'topicGoal',
-		'currentModel'
+		'session'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -179,12 +176,12 @@ AbTopic >> approvalResponseForUserText: aUserText [
 
 { #category : 'accessing' }
 AbTopic >> availableCommands [
-	^ availableCommands
+	^ self session availableCommands
 ]
 
 { #category : 'accessing' }
 AbTopic >> availableCommands: aCollection [
-	availableCommands := aCollection
+	self session availableCommands: aCollection
 ]
 
 { #category : 'operations' }
@@ -215,18 +212,12 @@ AbTopic >> clearUpdatedExternalPackageNames [
 
 { #category : 'accessing' }
 AbTopic >> client [
-	^ client
-]
-
-{ #category : 'accessing' }
-AbTopic >> client: anACPClient [
-
-	client := anACPClient
+	^ self session client
 ]
 
 { #category : 'accessing' }
 AbTopic >> currentModel [
-	^ currentModel
+	^ self session currentModel
 ]
 
 { #category : 'accessing' }
@@ -239,10 +230,7 @@ AbTopic >> defaultWorkingDirectoryPath [
 { #category : 'operations' }
 AbTopic >> disconnect [
 
-	self client ifNotNil: [
-		self client disconnect.
-		self client: nil.
-		self sessionId: nil ].
+	self session disconnect.
 	self abortPendingApprovals
 ]
 
@@ -254,27 +242,6 @@ AbTopic >> abortPendingApprovals [
 		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
 	self pendingExportApprovalMessage ifNotNil: [ :msg |
 		msg approvalResponse: AbConstants disconnected ]
-]
-
-{ #category : 'private' }
-AbTopic >> doConnect [
-
-	| sessionResult |
-	self client: ACPClient new.
-	self client handler: (AbTopicHandler new topic: self; yourself).
-	self client agentCommand: '/usr/bin/env' arguments: self agentArguments.
-	self client connect.
-	self client initializeBy: [ :params | "use defaults" ].
-	sessionResult := self client newSessionBy: [ :params |
-						 params cwd: self ensureWorkingDirectoryForConnection ].
-	self sessionId: sessionResult sessionId.
-	self updateCurrentModelFromConfigOptions: sessionResult configOptions
-]
-
-{ #category : 'private' }
-AbTopic >> ensureConnected [
-
-	self client ifNil: [ self doConnect ]
 ]
 
 { #category : 'private' }
@@ -315,7 +282,7 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	updatedExternalPackageNames := Set new.
-	availableCommands := OrderedCollection new.
+	session := AbTopicSession on: self.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -565,7 +532,7 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 	self stateMachine handleEvent: #promptSent.
 	[
 	| result |
-	self ensureConnected.
+	self session ensureConnected.
 		result := self client promptBy: [ :params |
 				  params sessionId: self sessionId.
 				  params textPrompt: aString.
@@ -578,13 +545,12 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 
 { #category : 'accessing' }
 AbTopic >> sessionId [
-	^ sessionId
+	^ self session sessionId
 ]
 
 { #category : 'accessing' }
-AbTopic >> sessionId: aString [
-
-	sessionId := aString
+AbTopic >> session [
+	^ session
 ]
 
 { #category : 'operations' }
@@ -637,23 +603,13 @@ AbTopic >> topicId [
 { #category : 'operations' }
 AbTopic >> updateAvailableCommands: aCollection [
 
-	self availableCommands: aCollection asOrderedCollection.
-	self announcer announce: (AbTopicAvailableCommandsChanged new
-			 topic: self;
-			 commands: self availableCommands;
-			 yourself)
+	self session updateAvailableCommands: aCollection
 ]
 
 { #category : 'operations' }
 AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
 
-	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	currentModel := modelOption currentValue.
-	self announcer announce: (AbTopicCurrentModelChanged new
-			 topic: self;
-			 model: currentModel;
-			 yourself)
+	self session updateCurrentModelFromConfigOptions: aCollection
 ]
 
 { #category : 'accessing' }

@@ -90,8 +90,9 @@ AbTopicTest >> testAvailableCommandsInitiallyEmpty [
 { #category : 'tests' }
 AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 
-	| topic mockClient |
+	| topic session mockClient |
 	topic := AbTopic new.
+	session := topic session.
 	mockClient := MockObject new.
 	mockClient
 		on: #cancelBy:
@@ -100,8 +101,8 @@ AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 			| params |
 			params := ACPCancelParams buildBy: aBlock.
 			self assert: params sessionId equals: 'session-1' ].
-	topic instVarNamed: #client put: mockClient.
-	topic instVarNamed: #sessionId put: 'session-1'.
+	session client: mockClient.
+	session sessionId: 'session-1'.
 	topic stateMachine handleEvent: #promptSent.
 
 	topic cancelPrompt.
@@ -188,6 +189,14 @@ AbTopicTest >> testImportGuardNestingCounter [
 AbTopicTest >> testInitialStatus [
 
 	self assert: AbTopic new status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testInitializeCreatesSessionWithBackReference [
+
+	| topic |
+	topic := AbTopic new.
+	self assert: topic session topic equals: topic
 ]
 
 { #category : 'tests' }
@@ -637,6 +646,35 @@ AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 	topic disconnect.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #disconnected
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectClearsTransientSessionData [
+
+	| topic session mockClient options modelOption commands |
+	topic := AbTopic new.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	session sessionId: 'session-1'.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/help';
+					  at: 'description' put: 'Show help';
+					  yourself)).
+	topic updateAvailableCommands: commands.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
+
+	topic disconnect.
+
+	self verify: mockClient.
+	self assert: topic sessionId isNil.
+	self assert: topic availableCommands isEmpty.
+	self assert: topic currentModel isNil
 ]
 
 { #category : 'tests' }
