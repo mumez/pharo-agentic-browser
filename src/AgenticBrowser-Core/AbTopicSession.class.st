@@ -15,13 +15,7 @@ Class {
 { #category : 'fuel' }
 AbTopicSession class >> fuelIgnoredInstanceVariableNames [
 
-	^ #( 'client' 'sessionId' 'currentModel' 'availableCommands' )
-]
-
-{ #category : 'fuel' }
-AbTopicSession >> fuelAfterMaterialization [
-
-	availableCommands := OrderedCollection new
+	^ #( 'client' 'sessionId' )
 ]
 
 { #category : 'instance creation' }
