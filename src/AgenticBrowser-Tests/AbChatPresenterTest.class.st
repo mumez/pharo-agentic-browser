@@ -218,7 +218,7 @@ AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
 
 	| topic |
 	topic := AbTopic new.
-	topic instVarNamed: #currentModel put: 'claude-sonnet-4'.
+	topic session currentModel: 'claude-sonnet-4'.
 	presenter topic: topic.
 	self assert: presenter modelText equals: 'claude-sonnet-4'
 ]

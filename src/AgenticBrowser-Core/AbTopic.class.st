@@ -5,8 +5,6 @@ Class {
 		'title',
 		'agentArguments',
 		'messages',
-		'client',
-		'sessionId',
 		'stateMachine',
 		'announcer',
 		'topicId',
@@ -16,9 +14,8 @@ Class {
 		'relatedPackagesWatcher',
 		'workingDirectoryPath',
 		'logger',
-		'availableCommands',
 		'topicGoal',
-		'currentModel'
+		'session'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -179,12 +176,12 @@ AbTopic >> approvalResponseForUserText: aUserText [
 
 { #category : 'accessing' }
 AbTopic >> availableCommands [
-	^ availableCommands
+	^ self session availableCommands
 ]
 
 { #category : 'accessing' }
 AbTopic >> availableCommands: aCollection [
-	availableCommands := aCollection
+	self session availableCommands: aCollection
 ]
 
 { #category : 'operations' }
@@ -215,18 +212,18 @@ AbTopic >> clearUpdatedExternalPackageNames [
 
 { #category : 'accessing' }
 AbTopic >> client [
-	^ client
+	^ self session client
 ]
 
 { #category : 'accessing' }
 AbTopic >> client: anACPClient [
 
-	client := anACPClient
+	self session client: anACPClient
 ]
 
 { #category : 'accessing' }
 AbTopic >> currentModel [
-	^ currentModel
+	^ self session currentModel
 ]
 
 { #category : 'accessing' }
@@ -239,10 +236,7 @@ AbTopic >> defaultWorkingDirectoryPath [
 { #category : 'operations' }
 AbTopic >> disconnect [
 
-	self client ifNotNil: [
-		self client disconnect.
-		self client: nil.
-		self sessionId: nil ].
+	self session disconnect.
 	self abortPendingApprovals
 ]
 
@@ -315,7 +309,7 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	updatedExternalPackageNames := Set new.
-	availableCommands := OrderedCollection new.
+	session := AbTopicSession on: self.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -578,13 +572,18 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 
 { #category : 'accessing' }
 AbTopic >> sessionId [
-	^ sessionId
+	^ self session sessionId
 ]
 
 { #category : 'accessing' }
 AbTopic >> sessionId: aString [
 
-	sessionId := aString
+	self session sessionId: aString
+]
+
+{ #category : 'accessing' }
+AbTopic >> session [
+	^ session
 ]
 
 { #category : 'operations' }
@@ -649,10 +648,10 @@ AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
 
 	| modelOption |
 	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	currentModel := modelOption currentValue.
+	self session currentModel: modelOption currentValue.
 	self announcer announce: (AbTopicCurrentModelChanged new
 			 topic: self;
-			 model: currentModel;
+			 model: self currentModel;
 			 yourself)
 ]
 

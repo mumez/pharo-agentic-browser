@@ -1,0 +1,87 @@
+Class {
+	#name : 'AbTopicSession',
+	#superclass : 'Object',
+	#instVars : [
+		'topic',
+		'client',
+		'sessionId',
+		'availableCommands',
+		'currentModel'
+	],
+	#category : 'AgenticBrowser-Core',
+	#package : 'AgenticBrowser-Core'
+}
+
+{ #category : 'instance creation' }
+AbTopicSession class >> on: anAbTopic [
+
+	^ self new
+		  topic: anAbTopic;
+		  yourself
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> availableCommands [
+	^ availableCommands
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> availableCommands: aCollection [
+	availableCommands := aCollection
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> client [
+	^ client
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> client: anACPClient [
+	client := anACPClient
+]
+
+{ #category : 'operations' }
+AbTopicSession >> disconnect [
+
+	self client ifNotNil: [ self client disconnect ].
+	self client: nil.
+	self sessionId: nil.
+	self availableCommands: OrderedCollection new.
+	self currentModel: nil
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel [
+	^ currentModel
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel: aString [
+	currentModel := aString
+]
+
+{ #category : 'initialization' }
+AbTopicSession >> initialize [
+
+	availableCommands := OrderedCollection new
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> sessionId [
+	^ sessionId
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> sessionId: aString [
+	sessionId := aString
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> topic [
+	^ topic
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> topic: anAbTopic [
+	topic := anAbTopic
+]
