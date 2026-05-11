@@ -12,6 +12,12 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
+{ #category : 'fuel' }
+AbTopicSession class >> fuelIgnoredInstanceVariableNames [
+
+	^ #( 'client' 'sessionId' )
+]
+
 { #category : 'instance creation' }
 AbTopicSession class >> on: anAbTopic [
 

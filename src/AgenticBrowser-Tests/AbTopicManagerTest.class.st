@@ -135,6 +135,21 @@ AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testSessionClientAndSessionIdAreNilAfterFuelRoundTrip [
+
+	| topic session bytes materialized |
+	topic := AbTopic new title: 'Session round-trip'.
+	session := topic session.
+	"Simulate a connected state by manually setting non-nil stand-ins"
+	session client: 'fake-client'.
+	session sessionId: 'fake-session-id'.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: materialized session client isNil.
+	self assert: materialized session sessionId isNil
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testTopicsInitiallyEmpty [
 
 	self assert: AbTopicManager forTest topics isEmpty
