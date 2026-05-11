@@ -26,6 +26,11 @@ AbTopicSession >> availableCommands [
 ]
 
 { #category : 'accessing' }
+AbTopicSession >> announcer [
+	^ self topic announcer
+]
+
+{ #category : 'accessing' }
 AbTopicSession >> availableCommands: aCollection [
 	availableCommands := aCollection
 ]
@@ -90,7 +95,7 @@ AbTopicSession >> topic: anAbTopic [
 AbTopicSession >> updateAvailableCommands: aCollection [
 
 	self availableCommands: aCollection asOrderedCollection.
-	self topic announcer announce: (AbTopicAvailableCommandsChanged new
+	self announcer announce: (AbTopicAvailableCommandsChanged new
 			 topic: self topic;
 			 commands: self availableCommands;
 			 yourself)
@@ -102,7 +107,7 @@ AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
 	| modelOption |
 	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
 	self currentModel: modelOption currentValue.
-	self topic announcer announce: (AbTopicCurrentModelChanged new
+	self announcer announce: (AbTopicCurrentModelChanged new
 			 topic: self topic;
 			 model: self currentModel;
 			 yourself)

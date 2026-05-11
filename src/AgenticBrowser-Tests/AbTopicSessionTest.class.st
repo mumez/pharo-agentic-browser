@@ -52,6 +52,15 @@ AbTopicSessionTest >> testDisconnectClearsTransientFields [
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
+
+	| topic session |
+	topic := AbTopic new.
+	session := topic session.
+	self assert: session announcer equals: topic announcer
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 
 	| session topic commands |
