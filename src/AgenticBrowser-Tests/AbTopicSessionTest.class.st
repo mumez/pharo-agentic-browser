@@ -50,3 +50,39 @@ AbTopicSessionTest >> testDisconnectClearsTransientFields [
 	self assert: session currentModel isNil.
 	self assert: session availableCommands isEmpty
 ]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
+
+	| session topic commands |
+	topic := AbTopic new.
+	session := topic session.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/help';
+					  at: 'description' put: 'Show help';
+					  yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/status';
+					  at: 'description' put: 'Show status';
+					  yourself)).
+
+	session updateAvailableCommands: commands.
+
+	self assert: topic availableCommands size equals: 2
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+
+	| session topic options modelOption |
+	topic := AbTopic new.
+	session := topic session.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
+	options := OrderedCollection with: modelOption.
+
+	session updateCurrentModelFromConfigOptions: options.
+
+	self assert: topic currentModel equals: 'claude-opus-4'
+]

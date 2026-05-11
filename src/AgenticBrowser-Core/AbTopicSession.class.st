@@ -85,3 +85,25 @@ AbTopicSession >> topic [
 AbTopicSession >> topic: anAbTopic [
 	topic := anAbTopic
 ]
+
+{ #category : 'operations' }
+AbTopicSession >> updateAvailableCommands: aCollection [
+
+	self availableCommands: aCollection asOrderedCollection.
+	self topic announcer announce: (AbTopicAvailableCommandsChanged new
+			 topic: self topic;
+			 commands: self availableCommands;
+			 yourself)
+]
+
+{ #category : 'operations' }
+AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
+
+	| modelOption |
+	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
+	self currentModel: modelOption currentValue.
+	self topic announcer announce: (AbTopicCurrentModelChanged new
+			 topic: self topic;
+			 model: self currentModel;
+			 yourself)
+]

@@ -636,23 +636,13 @@ AbTopic >> topicId [
 { #category : 'operations' }
 AbTopic >> updateAvailableCommands: aCollection [
 
-	self availableCommands: aCollection asOrderedCollection.
-	self announcer announce: (AbTopicAvailableCommandsChanged new
-			 topic: self;
-			 commands: self availableCommands;
-			 yourself)
+	self session updateAvailableCommands: aCollection
 ]
 
 { #category : 'operations' }
 AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
 
-	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	self session currentModel: modelOption currentValue.
-	self announcer announce: (AbTopicCurrentModelChanged new
-			 topic: self;
-			 model: self currentModel;
-			 yourself)
+	self session updateCurrentModelFromConfigOptions: aCollection
 ]
 
 { #category : 'accessing' }
