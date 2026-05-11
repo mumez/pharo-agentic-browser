@@ -199,7 +199,8 @@ AbTopicManagerTest >> testSaveToAndLoadFromRoundTrip [
 	loaded := AbTopicManager loadFrom: file.
 	self assert: loaded topics size equals: 1.
 	self assert: loaded topics first title equals: 'Persisted topic'.
-	self assert: loaded topics first topicId equals: topic topicId ]
+	self assert: loaded topics first topicId equals: topic topicId.
+	self assert: (loaded instVarNamed: 'announcer') isNil ]
 		ensure: [ file ensureDelete ]
 ]
 
@@ -244,4 +245,19 @@ AbTopicManagerTest >> testDefaultPersistenceFileIsInAgenticBrowserDirectory [
 	file := AbTopicManager defaultPersistenceFile.
 	self assert: (file fullName includesSubstring: 'agentic-browser').
 	self assert: (file fullName endsWith: 'ab-topics.fuel')
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testLoadDoesNothingWhenPersistenceFileDoesNotExist [
+
+	| previousTopicsCount |
+	"This test works because AbTopicManager forTest != AbTopicManager default.
+	 We only need to confirm load doesn't raise when the file is absent."
+	AbTopicManager defaultPersistenceFile exists ifTrue: [ ^ self skip ].
+	previousTopicsCount := AbTopicManager default topics size.
+	"Should silently do nothing when file does not exist"
+	[ AbTopicManager load ]
+		on: Error
+		do: [ :e | self fail: 'load raised error when file absent: ' , e messageText ].
+	self assert: AbTopicManager default topics size equals: previousTopicsCount
 ]

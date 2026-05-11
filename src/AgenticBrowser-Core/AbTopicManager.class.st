@@ -49,7 +49,7 @@ AbTopicManager class >> defaultPersistenceFile [
 	^ Smalltalk imageDirectory / 'agentic-browser' / 'ab-topics.fuel'
 ]
 
-{ #category : 'persistence' }
+{ #category : 'private' }
 AbTopicManager class >> saveTo: aFileReference manager: aManager [
 
 	aFileReference parent ensureCreateDirectory.
@@ -77,6 +77,7 @@ AbTopicManager class >> save [
 { #category : 'persistence' }
 AbTopicManager class >> load [
 
+	self defaultPersistenceFile exists ifFalse: [ ^ self ].
 	default := self loadFrom: self defaultPersistenceFile
 ]
 
