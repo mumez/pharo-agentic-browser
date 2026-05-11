@@ -21,6 +21,12 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
+{ #category : 'fuel' }
+AbTopic class >> fuelIgnoredInstanceVariableNames [
+
+	^ #( 'announcer' 'logger' 'workingDirectory' 'relatedPackagesWatcher' )
+]
+
 { #category : 'private' }
 AbTopic >> addAiChunk: aString think: aBoolean [
 

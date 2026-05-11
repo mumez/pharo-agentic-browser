@@ -150,6 +150,37 @@ AbTopicManagerTest >> testSessionClientAndSessionIdAreNilAfterFuelRoundTrip [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testTopicLazyInstVarsAreNilAfterFuelRoundTrip [
+
+	| topic bytes materialized |
+	topic := AbTopic new title: 'Lazy instVars'.
+	"Force-create the lazy instVars so they are non-nil before serialization"
+	topic announcer.
+	topic workingDirectory.
+	topic relatedPackagesWatcher.
+	topic logger.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: (materialized instVarNamed: 'announcer') isNil.
+	self assert: (materialized instVarNamed: 'workingDirectory') isNil.
+	self assert: (materialized instVarNamed: 'relatedPackagesWatcher') isNil.
+	self assert: (materialized instVarNamed: 'logger') isNil
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicStatusIsPreservedAfterFuelRoundTrip [
+
+	| topic bytes materialized |
+	topic := AbTopic new title: 'Status round-trip'.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic status equals: #endTurn.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: materialized status equals: #endTurn
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testTopicsInitiallyEmpty [
 
 	self assert: AbTopicManager forTest topics isEmpty
