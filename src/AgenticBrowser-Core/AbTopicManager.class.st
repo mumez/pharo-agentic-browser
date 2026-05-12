@@ -37,6 +37,50 @@ AbTopicManager class >> uniqueInstance [
 	^ self default
 ]
 
+{ #category : 'fuel' }
+AbTopicManager class >> fuelIgnoredInstanceVariableNames [
+
+	^ #( 'announcer' )
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> defaultPersistenceFile [
+
+	^ Smalltalk imageDirectory / 'agentic-browser' / 'ab-topics.fuel'
+]
+
+{ #category : 'private' }
+AbTopicManager class >> saveTo: aFileReference manager: aManager [
+
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> saveTo: aFileReference [
+
+	self saveTo: aFileReference manager: self default
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> loadFrom: aFileReference [
+
+	^ FLMaterializer materializeFromFileNamed: aFileReference fullName
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> save [
+
+	self saveTo: self defaultPersistenceFile
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> load [
+
+	self defaultPersistenceFile exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultPersistenceFile
+]
+
 { #category : 'operations' }
 AbTopicManager >> addTopic: anAbTopic [
 

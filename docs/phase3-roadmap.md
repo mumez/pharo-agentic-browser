@@ -96,7 +96,6 @@ The referenced class definition or method source is attached as ACP **text resou
 
 **Implementation sketch:**
 - Parse `@Foo` and `@Foo>>bar` tokens in `AbChatPresenter` before sending
-- Resolve via `Smalltalk globals` / `RPackageOrganizer`
 - Attach resolved source as ACP text resources in `AbTopic>>sendPrompt:`
 
 ---

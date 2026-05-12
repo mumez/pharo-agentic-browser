@@ -216,9 +216,12 @@ AbChatPresenterTest >> testModelTextInitiallyEmpty [
 { #category : 'tests' }
 AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
 
-	| topic |
+	| topic options modelOption |
 	topic := AbTopic new.
-	topic instVarNamed: #currentModel put: 'claude-sonnet-4'.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
 	presenter topic: topic.
 	self assert: presenter modelText equals: 'claude-sonnet-4'
 ]
@@ -389,4 +392,28 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	self assert: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first text equals: '/st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'explain @OrderedCollection'.
+	presenter onSendButtonClicked.
+	self assert: topic messages size equals: 1.
+	self assert: (topic messages first text includesSubstring: 'OrderedCollection')
 ]

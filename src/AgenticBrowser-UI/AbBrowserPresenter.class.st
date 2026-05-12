@@ -66,7 +66,8 @@ AbBrowserPresenter >> onWindowClosed [
 
 	| manager |
 	manager := AbTopicManager uniqueInstance.
-	manager cleanupAllTopics
+	manager cleanupAllTopics.
+	AbTopicManager save
 ]
 
 { #category : 'accessing' }

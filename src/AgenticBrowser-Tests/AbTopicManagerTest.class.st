@@ -135,7 +135,129 @@ AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testSessionClientAndSessionIdAreNilAfterFuelRoundTrip [
+
+	| topic session bytes materialized |
+	topic := AbTopic new title: 'Session round-trip'.
+	session := topic session.
+	"Simulate a connected state by manually setting non-nil stand-ins"
+	session client: 'fake-client'.
+	session sessionId: 'fake-session-id'.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: materialized session client isNil.
+	self assert: materialized session sessionId isNil
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicLazyInstVarsAreNilAfterFuelRoundTrip [
+
+	| topic bytes materialized |
+	topic := AbTopic new title: 'Lazy instVars'.
+	"Force-create the lazy instVars so they are non-nil before serialization"
+	topic announcer.
+	topic workingDirectory.
+	topic relatedPackagesWatcher.
+	topic logger.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: (materialized instVarNamed: 'announcer') isNil.
+	self assert: (materialized instVarNamed: 'workingDirectory') isNil.
+	self assert: (materialized instVarNamed: 'relatedPackagesWatcher') isNil.
+	self assert: (materialized instVarNamed: 'logger') isNil
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicStatusIsPreservedAfterFuelRoundTrip [
+
+	| topic bytes materialized |
+	topic := AbTopic new title: 'Status round-trip'.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	self assert: topic status equals: #endTurn.
+	bytes := FLSerializer serializeToByteArray: topic.
+	materialized := FLMaterializer materializeFromByteArray: bytes.
+	self assert: materialized status equals: #endTurn
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testTopicsInitiallyEmpty [
 
 	self assert: AbTopicManager forTest topics isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testSaveToAndLoadFromRoundTrip [
+
+	| manager topic file loaded |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'Persisted topic'.
+	manager addTopic: topic.
+	file := FileReference newTempFilePrefix: 'ab-topics-test-' suffix: '.fuel'.
+	[
+	AbTopicManager saveTo: file manager: manager.
+	loaded := AbTopicManager loadFrom: file.
+	self assert: loaded topics size equals: 1.
+	self assert: loaded topics first title equals: 'Persisted topic'.
+	self assert: loaded topics first topicId equals: topic topicId.
+	self assert: (loaded instVarNamed: 'announcer') isNil ]
+		ensure: [ file ensureDelete ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testLoadFromRestoresTopicStatus [
+
+	| manager topic file loaded |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'End turn topic'.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	manager addTopic: topic.
+	file := FileReference newTempFilePrefix: 'ab-topics-status-' suffix: '.fuel'.
+	[
+	AbTopicManager saveTo: file manager: manager.
+	loaded := AbTopicManager loadFrom: file.
+	self assert: loaded topics first status equals: #endTurn ]
+		ensure: [ file ensureDelete ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testLoadFromRestoresWorkingDirectoryPath [
+
+	| manager topic path file loaded |
+	manager := AbTopicManager forTest.
+	topic := AbTopic new title: 'Path topic'.
+	path := (FileLocator temp / ('ab-path-test-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	manager addTopic: topic.
+	file := FileReference newTempFilePrefix: 'ab-topics-path-' suffix: '.fuel'.
+	[
+	AbTopicManager saveTo: file manager: manager.
+	loaded := AbTopicManager loadFrom: file.
+	self assert: loaded topics first workingDirectoryPath equals: path ]
+		ensure: [ file ensureDelete ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testDefaultPersistenceFileIsInAgenticBrowserDirectory [
+
+	| file |
+	file := AbTopicManager defaultPersistenceFile.
+	self assert: (file fullName includesSubstring: 'agentic-browser').
+	self assert: (file fullName endsWith: 'ab-topics.fuel')
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testLoadDoesNothingWhenPersistenceFileDoesNotExist [
+
+	| previousTopicsCount |
+	"This test works because AbTopicManager forTest != AbTopicManager default.
+	 We only need to confirm load doesn't raise when the file is absent."
+	AbTopicManager defaultPersistenceFile exists ifTrue: [ ^ self skip ].
+	previousTopicsCount := AbTopicManager default topics size.
+	"Should silently do nothing when file does not exist"
+	[ AbTopicManager load ]
+		on: Error
+		do: [ :e | self fail: 'load raised error when file absent: ' , e messageText ].
+	self assert: AbTopicManager default topics size equals: previousTopicsCount
 ]
