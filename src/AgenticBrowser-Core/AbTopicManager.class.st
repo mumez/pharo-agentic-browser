@@ -13,6 +13,12 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
+{ #category : 'class initialization' }
+AbTopicManager class >> initialize [
+
+	default := forTest := nil
+]
+
 { #category : 'instance creation' }
 AbTopicManager class >> default [
 

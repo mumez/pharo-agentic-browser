@@ -86,12 +86,12 @@ AbTopicListPresenter >> destroy [
 { #category : 'private' }
 AbTopicListPresenter >> iconNameFor: aTopic [
 
-	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
-	aTopic isWorking ifTrue: [ ^ #pointersTo ].
-	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
-	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
-	aTopic isEndTurn ifTrue: [ ^ #accept ].
-	^ #radioButtonOff
+	aTopic isInitial ifTrue: [ ^ #whiteCircle ].
+	aTopic isWorking ifTrue: [ ^ #sparkle ].
+	aTopic isWaitingForHuman ifTrue: [ ^ #question ].
+	aTopic isGoalAchieved ifTrue: [ ^ #check ].
+	aTopic isEndTurn ifTrue: [ ^ #greenCircle ].
+	^ #redCircle
 ]
 
 { #category : 'initialization' }
@@ -101,7 +101,7 @@ AbTopicListPresenter >> initializePresenters [
 	topicList := self newList.
 	topicList display: [ :topic | self topicListLabelFor: topic ].
 	topicList displayIcon: [ :item |
-		Smalltalk ui icons iconNamed: (self iconNameFor: item) ].
+		AbUiConstants iconNamed: (self iconNameFor: item) ].
 	sortDropList := self newDropList.
 	sortDropList items: self sortOptions.
 	sortDropList display: [ :option | option key ].
@@ -127,6 +127,15 @@ AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onClearSessionIdRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	topic clearSessionId
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onDeleteTopicRequest [
 
 	| selectedTopic |
@@ -138,15 +147,6 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		ifTrue: [
 			AbTopicManager uniqueInstance removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
-]
-
-{ #category : 'private' }
-AbTopicListPresenter >> onClearSessionIdRequest [
-
-	| topic |
-	topic := self topicList selectedItem.
-	topic ifNil: [ ^ self ].
-	topic clearSessionId
 ]
 
 { #category : 'private' }
