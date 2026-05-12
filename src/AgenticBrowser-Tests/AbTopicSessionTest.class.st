@@ -45,7 +45,7 @@ AbTopicSessionTest >> testOnInitializesTransientFields [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testDisconnectClearsTransientFields [
+AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
 
 	| topic session mockClient |
 	topic := AbTopic new.
@@ -65,9 +65,22 @@ AbTopicSessionTest >> testDisconnectClearsTransientFields [
 
 	self verify: mockClient.
 	self assert: session client isNil.
-	self assert: session sessionId isNil.
+	self assert: session sessionId equals: 'session-1'.
 	self assert: session currentModel isNil.
 	self assert: session availableCommands isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testClearSessionIdClearsSessionId [
+
+	| topic session |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	session sessionId: 'session-1'.
+
+	session clearSessionId.
+
+	self assert: session sessionId isNil
 ]
 
 { #category : 'tests' }

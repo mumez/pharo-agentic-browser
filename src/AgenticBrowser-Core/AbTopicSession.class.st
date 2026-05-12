@@ -76,9 +76,14 @@ AbTopicSession >> disconnect [
 
 	self client ifNotNil: [ self client disconnect ].
 	self client: nil.
-	self sessionId: nil.
 	self availableCommands: OrderedCollection new.
 	self currentModel: nil
+]
+
+{ #category : 'operations' }
+AbTopicSession >> clearSessionId [
+
+	self sessionId: nil
 ]
 
 { #category : 'private' }

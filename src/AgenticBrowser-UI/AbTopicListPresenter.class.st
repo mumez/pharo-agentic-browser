@@ -146,7 +146,7 @@ AbTopicListPresenter >> onClearSessionIdRequest [
 	| topic |
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
-	topic disconnect
+	topic clearSessionId
 ]
 
 { #category : 'private' }
@@ -215,7 +215,7 @@ AbTopicListPresenter >> onSetAgentRequest [
 		(UIManager default
 			 confirm: 'The active agent session will be disconnected. Continue?'
 			 label: 'Change Agent') ifFalse: [ ^ self ].
-		topic disconnect ].
+		topic clearSessionId ].
 	topic agentArguments: dialog selectedArguments.
 	self defer: [ self refresh ]
 ]
