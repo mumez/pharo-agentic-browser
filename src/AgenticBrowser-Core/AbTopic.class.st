@@ -358,7 +358,7 @@ AbTopic >> isWorking [
 
 { #category : 'accessing' }
 AbTopic >> session [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
+	^ session ifNil: [ session := AbTopicSession on: self ]
 ]
 
 { #category : 'accessing' }
