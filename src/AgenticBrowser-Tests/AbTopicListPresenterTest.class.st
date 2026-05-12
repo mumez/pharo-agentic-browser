@@ -60,13 +60,13 @@ AbTopicListPresenterTest >> testIconForEndTurnTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
-	self assert: (presenter iconNameFor: topic) equals: #accept
+	self assert: (presenter iconNameFor: topic) equals: #greenCircle
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForInitialTopic [
 
-	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
+	self assert: (presenter iconNameFor: topic) equals: #whiteCircle
 ]
 
 { #category : 'tests' }
@@ -74,14 +74,14 @@ AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	self assert: (presenter iconNameFor: topic) equals: #flag
+	self assert: (presenter iconNameFor: topic) equals: #question
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForWorkingTopic [
 
 	topic stateMachine handleEvent: #promptSent.
-	self assert: (presenter iconNameFor: topic) equals: #pointersTo
+	self assert: (presenter iconNameFor: topic) equals: #sparkle
 ]
 
 { #category : 'tests' }
