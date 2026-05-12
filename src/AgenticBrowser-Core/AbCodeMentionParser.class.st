@@ -33,16 +33,16 @@ AbCodeMentionParser class >> tryParseRestFrom: stream forClass: className [
 
 	| savedPos isClassSide methodName |
 	savedPos := stream position.
-	self skipSpacesFrom: stream.
+	stream skipSeparators.
 
 	isClassSide := self trySkip: 'class' from: stream.
-	isClassSide ifTrue: [ self skipSpacesFrom: stream ].
+	isClassSide ifTrue: [ stream skipSeparators ].
 
 	(self trySkip: '>>' from: stream) ifFalse: [
 		stream position: savedPos.
 		^ AbCodeMention className: className ].
 
-	self skipSpacesFrom: stream.
+	stream skipSeparators.
 	stream peekFor: $#.
 	methodName := self readSelectorFrom: stream.
 	methodName ifEmpty: [ ^ AbCodeMention className: className ].
@@ -65,25 +65,19 @@ AbCodeMentionParser class >> trySkip: aString from: stream [
 { #category : 'private' }
 AbCodeMentionParser class >> readIdentifierFrom: stream [
 
-	^ String streamContents: [ :out |
-		[ stream atEnd not
-			and: [ stream peek isLetter or: [ stream peek isDigit ] ] ]
-			whileTrue: [ out nextPut: stream next ] ]
+	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit ] ]
 ]
 
 { #category : 'private' }
 AbCodeMentionParser class >> readSelectorFrom: stream [
 
-	^ String streamContents: [ :out |
-		[ stream atEnd not
-			and: [ stream peek isLetter or: [ stream peek isDigit
-				or: [ stream peek = $: ] ] ] ]
-			whileTrue: [ out nextPut: stream next ] ]
+	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit or: [ ch = $: ] ] ]
 ]
 
 { #category : 'private' }
-AbCodeMentionParser class >> skipSpacesFrom: stream [
+AbCodeMentionParser class >> readTokenFrom: stream accepting: aTestBlock [
 
-	[ stream atEnd not and: [ stream peek isSeparator ] ]
-		whileTrue: [ stream next ]
+	^ String streamContents: [ :out |
+		[ stream atEnd not and: [ aTestBlock value: stream peek ] ]
+			whileTrue: [ out nextPut: stream next ] ]
 ]

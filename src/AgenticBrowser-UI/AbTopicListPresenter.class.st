@@ -38,6 +38,7 @@ AbTopicListPresenter >> buildTopicContextMenu [
 		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
 		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
+		  addItem: [ :item | item name: 'Clear Session ID'; action: [ self onClearSessionIdRequest ] ];
 		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
 		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
 		  yourself
@@ -140,6 +141,15 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onClearSessionIdRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	topic clearSessionId
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onInspectTopicRequest [
 
 	| selectedTopic |
@@ -205,7 +215,7 @@ AbTopicListPresenter >> onSetAgentRequest [
 		(UIManager default
 			 confirm: 'The active agent session will be disconnected. Continue?'
 			 label: 'Change Agent') ifFalse: [ ^ self ].
-		topic disconnect ].
+		topic clearSessionId ].
 	topic agentArguments: dialog selectedArguments.
 	self defer: [ self refresh ]
 ]

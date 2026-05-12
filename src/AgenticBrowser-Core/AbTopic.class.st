@@ -240,6 +240,13 @@ AbTopic >> disconnect [
 	self abortPendingApprovals
 ]
 
+{ #category : 'operations' }
+AbTopic >> clearSessionId [
+
+	self disconnect.
+	self session clearSessionId
+]
+
 { #category : 'approval-private' }
 AbTopic >> abortPendingApprovals [
 
