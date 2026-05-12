@@ -5,6 +5,25 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'private' }
+AbTopicSessionTest >> mockInitializeResponseWithCapabilities: capabilities [
+
+	| initializeResponse |
+	initializeResponse := MockObject new.
+	initializeResponse on: #agentCapabilities verify: [ capabilities ].
+	^ initializeResponse
+]
+
+{ #category : 'private' }
+AbTopicSessionTest >> mockSessionResultWithId: aSessionId [
+
+	| sessionResult |
+	sessionResult := MockObject new.
+	sessionResult on: #sessionId verify: [ aSessionId ].
+	sessionResult on: #configOptions verify: [ #() ].
+	^ sessionResult
+]
+
 { #category : 'tests' }
 AbTopicSessionTest >> testOnCreatesSessionWithTopicBackReference [
 
@@ -67,6 +86,130 @@ AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
 	self assert: (AbTopicSession canUnderstand: #ensureConnected).
 	self deny: (AbTopic canUnderstand: #doConnect).
 	self deny: (AbTopic canUnderstand: #ensureConnected)
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupported [
+
+	| topic session capabilities initializeResponse loadResult mockClient |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	session sessionId: 'session-1'.
+	capabilities := MockObject new.
+	capabilities on: #isResumeSupported verify: [ false ].
+	capabilities on: #isLoadSupported verify: [ true ].
+	initializeResponse := self
+		                      mockInitializeResponseWithCapabilities: capabilities.
+	loadResult := self mockSessionResultWithId: 'session-1-loaded'.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :handler | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | initializeResponse ].
+	mockClient
+		on: #loadSessionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPLoadSessionParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1'.
+			loadResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: capabilities.
+	self verify: initializeResponse.
+	self verify: loadResult.
+	self verify: mockClient.
+	self assert: session sessionId equals: 'session-1-loaded'
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndLoadUnsupported [
+
+	| topic session capabilities initializeResponse newSessionResult mockClient |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	session sessionId: 'session-1'.
+	capabilities := MockObject new.
+	capabilities on: #isResumeSupported verify: [ false ].
+	capabilities on: #isLoadSupported verify: [ false ].
+	initializeResponse := self
+		                      mockInitializeResponseWithCapabilities: capabilities.
+	newSessionResult := self mockSessionResultWithId: 'session-2-new'.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :handler | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | initializeResponse ].
+	mockClient
+		on: #newSessionBy:
+		with: MockObject any
+		verify: [ :unused | newSessionResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: capabilities.
+	self verify: initializeResponse.
+	self verify: newSessionResult.
+	self verify: mockClient.
+	self assert: session sessionId equals: 'session-2-new'
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndResumeSupported [
+
+	| topic session capabilities initializeResponse resumeResult mockClient |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	session sessionId: 'session-1'.
+	capabilities := MockObject new.
+	capabilities on: #isResumeSupported verify: [ true ].
+	initializeResponse := self
+		                      mockInitializeResponseWithCapabilities: capabilities.
+	resumeResult := self mockSessionResultWithId: 'session-1-resumed'.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :handler | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | initializeResponse ].
+	mockClient
+		on: #resumeSessionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPResumeSessionParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1'.
+			resumeResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: capabilities.
+	self verify: initializeResponse.
+	self verify: resumeResult.
+	self verify: mockClient.
+	self assert: session sessionId equals: 'session-1-resumed'
 ]
 
 { #category : 'tests' }

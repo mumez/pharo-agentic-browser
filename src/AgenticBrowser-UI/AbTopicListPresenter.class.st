@@ -38,6 +38,7 @@ AbTopicListPresenter >> buildTopicContextMenu [
 		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
 		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
+		  addItem: [ :item | item name: 'Clear Session ID'; action: [ self onClearSessionIdRequest ] ];
 		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
 		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
 		  yourself
@@ -137,6 +138,15 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		ifTrue: [
 			AbTopicManager uniqueInstance removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onClearSessionIdRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	topic disconnect
 ]
 
 { #category : 'private' }

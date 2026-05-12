@@ -135,7 +135,7 @@ AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testSessionClientAndSessionIdAreNilAfterFuelRoundTrip [
+AbTopicManagerTest >> testSessionClientIsNilAndSessionIdIsPreservedAfterFuelRoundTrip [
 
 	| topic session bytes materialized |
 	topic := AbTopic new title: 'Session round-trip'.
@@ -146,7 +146,7 @@ AbTopicManagerTest >> testSessionClientAndSessionIdAreNilAfterFuelRoundTrip [
 	bytes := FLSerializer serializeToByteArray: topic.
 	materialized := FLMaterializer materializeFromByteArray: bytes.
 	self assert: materialized session client isNil.
-	self assert: materialized session sessionId isNil
+	self assert: materialized session sessionId equals: 'fake-session-id'
 ]
 
 { #category : 'tests' }

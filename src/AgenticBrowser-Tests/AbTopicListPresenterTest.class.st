@@ -103,6 +103,25 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicListPresenterTest >> testOnClearSessionIdRequestClearsSelectedTopicSession [
+
+	| topicListMock mockClient |
+	topic session sessionId: 'session-1'.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	topic session client: mockClient.
+	topicListMock := MockObject new.
+	topicListMock on: #selectedItem verify: [ topic ].
+	presenter instVarNamed: 'topicList' put: topicListMock.
+
+	presenter onClearSessionIdRequest.
+
+	self verify: topicListMock.
+	self verify: mockClient.
+	self assert: topic sessionId isNil
+]
+
+{ #category : 'tests' }
 AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
 
 	| testPath |
