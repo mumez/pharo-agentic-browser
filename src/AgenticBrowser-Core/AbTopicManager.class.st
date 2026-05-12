@@ -49,17 +49,17 @@ AbTopicManager class >> defaultPersistenceFile [
 	^ Smalltalk imageDirectory / 'agentic-browser' / 'ab-topics.fuel'
 ]
 
-{ #category : 'private' }
-AbTopicManager class >> saveTo: aFileReference manager: aManager [
-
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
-]
-
 { #category : 'persistence' }
 AbTopicManager class >> saveTo: aFileReference [
 
 	self saveTo: aFileReference manager: self default
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> saveTo: aFileReference manager: aManager [
+
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
 ]
 
 { #category : 'persistence' }
@@ -103,10 +103,7 @@ AbTopicManager >> at: aTopicId [
 { #category : 'operations' }
 AbTopicManager >> cleanupAllTopics [
 
-	topics valuesDo: [ :topic |
-		topic stopWatching.
-		topic workingDirectory unsubscribeFromSisServerImportEvents.
-		[ topic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ] ]
+	topics valuesDo: [ :topic | self teardownTopic: topic ]
 ]
 
 { #category : 'initialization' }
@@ -118,10 +115,16 @@ AbTopicManager >> initialize [
 { #category : 'operations' }
 AbTopicManager >> removeTopic: anAbTopic [
 
-	anAbTopic stopWatching.
-	anAbTopic workingDirectory unsubscribeFromSisServerImportEvents.
-	[ anAbTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ].
+	self teardownTopic: anAbTopic.
 	topics removeKey: anAbTopic topicId ifAbsent: []
+]
+
+{ #category : 'private' }
+AbTopicManager >> teardownTopic: aTopic [
+
+	aTopic stopWatching.
+	aTopic workingDirectory unsubscribeFromSisServerImportEvents.
+	[ aTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ]
 ]
 
 { #category : 'operations' }
