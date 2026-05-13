@@ -138,6 +138,22 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testDenyApprovalUsesSecondOptionInTwoItemMode [
+
+	| topic approvalMessage |
+	topic := AbTopic new.
+	presenter topic: topic.
+	approvalMessage := topic
+		                   addAiPermissionRequest: 'Pick an option'
+		                   options: {
+						                   'First option' -> #first_option.
+						                   'Second option' -> #second_option }.
+	presenter enterApprovalMode: approvalMessage.
+	presenter onDenyButtonClicked.
+	self assert: approvalMessage approvalResponse equals: #second_option
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
