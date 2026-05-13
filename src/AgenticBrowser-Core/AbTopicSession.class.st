@@ -67,7 +67,7 @@ AbTopicSession >> doConnectWithClient: anACPClient [
 	self client connect.
 	initializeResult := self client initializeBy: [ :params | "use defaults" ].
 	sessionResult := self sessionResultFromInitializeResponse: initializeResult.
-	self sessionId: sessionResult sessionId.
+	sessionResult sessionId ifNotNil: [ :sid | self sessionId: sid ].
 	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
