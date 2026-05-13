@@ -23,6 +23,13 @@ AbTopicListPresenterTest >> setUp [
 	self topic: (AbTopic new title: 'TestTopic').
 ]
 
+{ #category : 'running' }
+AbTopicListPresenterTest >> tearDown [
+
+	presenter release.
+	super tearDown
+]
+
 { #category : 'tests' }
 AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForAddsPrefixesAndClearsPendingList [
 

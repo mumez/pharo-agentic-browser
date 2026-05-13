@@ -121,11 +121,10 @@ AbChatPresenter >> denyOptionIdForPendingApproval [
 ]
 
 { #category : 'initialization' }
-AbChatPresenter >> destroy [
+AbChatPresenter >> release [
 
 	self stopDotsAnimation.
-	self unsubscribeFromTopic: self currentTopic.
-	super destroy
+	self unsubscribeFromTopic: self currentTopic
 ]
 
 { #category : 'accessing' }

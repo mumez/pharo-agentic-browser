@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbChatPresenterTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'presenter'
 	],
@@ -11,9 +11,17 @@ Class {
 { #category : 'running' }
 AbChatPresenterTest >> setUp [
 
+	super setUp.
 	presenter := AbChatPresenter new.
 	presenter initializePresenters.
 	presenter connectPresenters
+]
+
+{ #category : 'running' }
+AbChatPresenterTest >> tearDown [
+
+	presenter release.
+	super tearDown
 ]
 
 { #category : 'tests' }

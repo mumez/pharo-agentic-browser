@@ -77,10 +77,9 @@ AbTopicListPresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
-AbTopicListPresenter >> destroy [
+AbTopicListPresenter >> release [
 
-	self unsubscribeFromTopicManager.
-	super destroy
+	self unsubscribeFromTopicManager
 ]
 
 { #category : 'private' }
