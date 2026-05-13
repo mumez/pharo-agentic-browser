@@ -240,6 +240,13 @@ AbTopic >> disconnect [
 	self abortPendingApprovals
 ]
 
+{ #category : 'operations' }
+AbTopic >> clearSessionId [
+
+	self disconnect.
+	self session clearSessionId
+]
+
 { #category : 'approval-private' }
 AbTopic >> abortPendingApprovals [
 
@@ -288,7 +295,7 @@ AbTopic >> initialize [
 	messages := OrderedCollection new.
 	packagePrefixes := Set new.
 	updatedExternalPackageNames := Set new.
-	session := AbTopicSession on: self.
+	session := nil.
 	topicId := UUID new asString.
 	self initializeStateMachine
 ]
@@ -347,6 +354,11 @@ AbTopic >> isWaitingForHuman [
 AbTopic >> isWorking [
 
 	^ self status = #working
+]
+
+{ #category : 'accessing' }
+AbTopic >> session [
+	^ session ifNil: [ session := AbTopicSession on: self ]
 ]
 
 { #category : 'accessing' }
@@ -556,7 +568,7 @@ AbTopic >> sessionId [
 
 { #category : 'accessing' }
 AbTopic >> session [
-	^ session
+	^ session ifNil: [session := AbTopicSession on: self]
 ]
 
 { #category : 'operations' }

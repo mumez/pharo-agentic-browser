@@ -38,6 +38,7 @@ AbTopicListPresenter >> buildTopicContextMenu [
 		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
 		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
 		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
+		  addItem: [ :item | item name: 'Clear Session ID'; action: [ self onClearSessionIdRequest ] ];
 		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
 		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
 		  yourself
@@ -76,21 +77,20 @@ AbTopicListPresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
-AbTopicListPresenter >> destroy [
+AbTopicListPresenter >> release [
 
-	self unsubscribeFromTopicManager.
-	super destroy
+	self unsubscribeFromTopicManager
 ]
 
 { #category : 'private' }
 AbTopicListPresenter >> iconNameFor: aTopic [
 
-	aTopic isInitial ifTrue: [ ^ #radioButtonOff ].
-	aTopic isWorking ifTrue: [ ^ #pointersTo ].
-	aTopic isWaitingForHuman ifTrue: [ ^ #flag ].
-	aTopic isGoalAchieved ifTrue: [ ^ #checkboxSelected ].
-	aTopic isEndTurn ifTrue: [ ^ #accept ].
-	^ #radioButtonOff
+	aTopic isInitial ifTrue: [ ^ #whiteCircle ].
+	aTopic isWorking ifTrue: [ ^ #sparkle ].
+	aTopic isWaitingForHuman ifTrue: [ ^ #question ].
+	aTopic isGoalAchieved ifTrue: [ ^ #check ].
+	aTopic isEndTurn ifTrue: [ ^ #greenCircle ].
+	^ #redCircle
 ]
 
 { #category : 'initialization' }
@@ -100,7 +100,7 @@ AbTopicListPresenter >> initializePresenters [
 	topicList := self newList.
 	topicList display: [ :topic | self topicListLabelFor: topic ].
 	topicList displayIcon: [ :item |
-		Smalltalk ui icons iconNamed: (self iconNameFor: item) ].
+		AbUiConstants iconNamed: (self iconNameFor: item) ].
 	sortDropList := self newDropList.
 	sortDropList items: self sortOptions.
 	sortDropList display: [ :option | option key ].
@@ -123,6 +123,15 @@ AbTopicListPresenter >> onApplyUpdatedExternalPackagesRequest [
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	self applyUpdatedExternalPackagesFor: topic
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onClearSessionIdRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	topic clearSessionId
 ]
 
 { #category : 'private' }
@@ -205,7 +214,7 @@ AbTopicListPresenter >> onSetAgentRequest [
 		(UIManager default
 			 confirm: 'The active agent session will be disconnected. Continue?'
 			 label: 'Change Agent') ifFalse: [ ^ self ].
-		topic disconnect ].
+		topic clearSessionId ].
 	topic agentArguments: dialog selectedArguments.
 	self defer: [ self refresh ]
 ]

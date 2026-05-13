@@ -15,7 +15,7 @@ Class {
 { #category : 'fuel' }
 AbTopicSession class >> fuelIgnoredInstanceVariableNames [
 
-	^ #( 'client' 'sessionId' )
+	^ #( 'client' )
 ]
 
 { #category : 'instance creation' }
@@ -54,15 +54,20 @@ AbTopicSession >> client: anACPClient [
 { #category : 'private' }
 AbTopicSession >> doConnect [
 
-	| sessionResult |
-	self client: ACPClient new.
+	self doConnectWithClient: ACPClient new
+]
+
+{ #category : 'private' }
+AbTopicSession >> doConnectWithClient: anACPClient [
+
+	| initializeResult sessionResult |
+	self client: anACPClient.
 	self client handler: (AbTopicHandler new topic: self topic; yourself).
 	self client agentCommand: '/usr/bin/env' arguments: self topic agentArguments.
 	self client connect.
-	self client initializeBy: [ :params | "use defaults" ].
-	sessionResult := self client newSessionBy: [ :params |
-						 params cwd: self topic ensureWorkingDirectoryForConnection ].
-	self sessionId: sessionResult sessionId.
+	initializeResult := self client initializeBy: [ :params | "use defaults" ].
+	sessionResult := self sessionResultFromInitializeResponse: initializeResult.
+	sessionResult sessionId ifNotNil: [ :sid | self sessionId: sid ].
 	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
@@ -71,9 +76,14 @@ AbTopicSession >> disconnect [
 
 	self client ifNotNil: [ self client disconnect ].
 	self client: nil.
-	self sessionId: nil.
 	self availableCommands: OrderedCollection new.
 	self currentModel: nil
+]
+
+{ #category : 'operations' }
+AbTopicSession >> clearSessionId [
+
+	self sessionId: nil
 ]
 
 { #category : 'private' }
@@ -96,6 +106,27 @@ AbTopicSession >> currentModel: aString [
 AbTopicSession >> initialize [
 
 	availableCommands := OrderedCollection new
+]
+
+{ #category : 'private' }
+AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
+
+	| existingSessionId workingDirectoryPath capabilities |
+	existingSessionId := self sessionId.
+	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
+	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
+		capabilities := initializeResponse agentCapabilities.
+		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
+			^ self client resumeSessionBy: [ :params |
+				  params
+					  sessionId: existingSessionId;
+					  cwd: workingDirectoryPath ] ].
+		(capabilities notNil and: [ capabilities isLoadSupported ]) ifTrue: [
+			^ self client loadSessionBy: [ :params |
+				  params
+					  sessionId: existingSessionId;
+					  cwd: workingDirectoryPath ] ] ].
+	^ self client newSessionBy: [ :params | params cwd: workingDirectoryPath ]
 ]
 
 { #category : 'accessing' }

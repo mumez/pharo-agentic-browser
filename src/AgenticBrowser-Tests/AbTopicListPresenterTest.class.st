@@ -23,6 +23,13 @@ AbTopicListPresenterTest >> setUp [
 	self topic: (AbTopic new title: 'TestTopic').
 ]
 
+{ #category : 'running' }
+AbTopicListPresenterTest >> tearDown [
+
+	presenter release.
+	super tearDown
+]
+
 { #category : 'tests' }
 AbTopicListPresenterTest >> testApplyUpdatedExternalPackagesForAddsPrefixesAndClearsPendingList [
 
@@ -60,13 +67,13 @@ AbTopicListPresenterTest >> testIconForEndTurnTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
-	self assert: (presenter iconNameFor: topic) equals: #accept
+	self assert: (presenter iconNameFor: topic) equals: #greenCircle
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForInitialTopic [
 
-	self assert: (presenter iconNameFor: topic) equals: #radioButtonOff
+	self assert: (presenter iconNameFor: topic) equals: #whiteCircle
 ]
 
 { #category : 'tests' }
@@ -74,14 +81,14 @@ AbTopicListPresenterTest >> testIconForWaitingForHumanTopic [
 
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #permissionRequested.
-	self assert: (presenter iconNameFor: topic) equals: #flag
+	self assert: (presenter iconNameFor: topic) equals: #question
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForWorkingTopic [
 
 	topic stateMachine handleEvent: #promptSent.
-	self assert: (presenter iconNameFor: topic) equals: #pointersTo
+	self assert: (presenter iconNameFor: topic) equals: #sparkle
 ]
 
 { #category : 'tests' }
@@ -100,6 +107,25 @@ AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
 	presenter onPackagePrefixSet: topic.
 	self assert: (topic messages anySatisfy: [ :m |
 		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnClearSessionIdRequestClearsSelectedTopicSession [
+
+	| topicListMock mockClient |
+	topic session sessionId: 'session-1'.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	topic session client: mockClient.
+	topicListMock := MockObject new.
+	topicListMock on: #selectedItem verify: [ topic ].
+	presenter instVarNamed: 'topicList' put: topicListMock.
+
+	presenter onClearSessionIdRequest.
+
+	self verify: topicListMock.
+	self verify: mockClient.
+	self assert: topic sessionId isNil
 ]
 
 { #category : 'tests' }

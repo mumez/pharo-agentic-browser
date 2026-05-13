@@ -12,7 +12,10 @@ Class {
 { #category : 'instance creation' }
 AbBrowserPresenter class >> open [
 
-	^ self new open
+	| presenter |
+	presenter := self new.
+	presenter open.
+	^ presenter
 ]
 
 { #category : 'accessing' }
@@ -65,6 +68,8 @@ AbBrowserPresenter >> messagesPresenter [
 AbBrowserPresenter >> onWindowClosed [
 
 	| manager |
+	topicListPresenter release.
+	chatPresenter release.
 	manager := AbTopicManager uniqueInstance.
 	manager cleanupAllTopics.
 	AbTopicManager save

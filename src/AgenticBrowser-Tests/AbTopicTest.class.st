@@ -649,7 +649,7 @@ AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testDisconnectClearsTransientSessionData [
+AbTopicTest >> testDisconnectKeepsSessionIdAndClearsTransientSessionData [
 
 	| topic session mockClient options modelOption commands |
 	topic := AbTopic new.
@@ -672,9 +672,27 @@ AbTopicTest >> testDisconnectClearsTransientSessionData [
 	topic disconnect.
 
 	self verify: mockClient.
-	self assert: topic sessionId isNil.
+	self assert: topic sessionId equals: 'session-1'.
 	self assert: topic availableCommands isEmpty.
 	self assert: topic currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testClearSessionIdDisconnectsAndClearsSessionId [
+
+	| topic session mockClient |
+	topic := AbTopic new.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	session sessionId: 'session-1'.
+
+	topic clearSessionId.
+
+	self verify: mockClient.
+	self assert: topic sessionId isNil.
+	self assert: topic client isNil
 ]
 
 { #category : 'tests' }

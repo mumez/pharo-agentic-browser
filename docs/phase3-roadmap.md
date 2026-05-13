@@ -146,7 +146,37 @@ stop [
 
 ---
 
-## 4. Screenshot Attachment
+## 4. Agent Error Visibility
+
+Surface agent-side errors (rate limits, invalid params, connection failures) to the user in the chat UI instead of silently failing or going to `end_turn`.
+
+**Motivation:** During multi-agent testing, it was discovered that errors like rate limiting (`opencode`) or invalid params cause the topic to immediately return `end_turn` with no visible feedback. The user has no way to distinguish a normal completion from a silent error.
+
+**Examples encountered:**
+- `opencode` rate limit → silent `end_turn` with no content
+- Agents not returning `sessionId` in resume response → `ACPRequestError: Invalid params` (fixed), but the error was only visible in the debugger
+- Connection failures mid-prompt → silent `end_turn`
+
+**Proposed approach:**
+- Catch `ACPRequestError` and other errors in `AbTopic >> sendPrompt:withResources:` and add them as system messages to the topic
+- Display a distinct error style (e.g., red system message) in `AbMessagesPresenter`
+- Include the error reason/code when available
+
+**Sketch:**
+```smalltalk
+"In AbTopic >> sendPrompt:withResources:"
+[
+    result := self client promptBy: [ ... ].
+    ...
+] on: ACPRequestError do: [ :e |
+    self addSystemMessage: 'Agent error: ' , e messageText.
+    self stateMachine handleEvent: #turnEnded
+] fork
+```
+
+---
+
+## 5. Screenshot Attachment
 
 Select a Pharo window and send its screenshot to the AI agent as an ACP **binary resource**.
 
