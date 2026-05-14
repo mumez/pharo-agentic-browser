@@ -260,21 +260,6 @@ AbTopicSessionTest >> testOnInitializesTransientFields [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testResolvedMcpServersUsesAbMcpServersLoader [
-
-	| topic session mockLoader mockServers result |
-	topic := AbTopic new.
-	session := AbTopicSession on: topic.
-	mockServers := OrderedCollection new.
-	mockLoader := MockObject new.
-	mockLoader on: #load verify: [ mockServers ].
-	session mcpServersLoader: mockLoader.
-	result := session resolvedMcpServers.
-	self verify: mockLoader.
-	self assert: result equals: mockServers
-]
-
-{ #category : 'tests' }
 AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 
 	| session topic commands |

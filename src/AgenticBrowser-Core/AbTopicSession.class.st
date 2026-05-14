@@ -6,8 +6,7 @@ Class {
 		'client',
 		'sessionId',
 		'availableCommands',
-		'currentModel',
-		'mcpServersLoader'
+		'currentModel'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -16,7 +15,7 @@ Class {
 { #category : 'fuel' }
 AbTopicSession class >> fuelIgnoredInstanceVariableNames [
 
-	^ #( 'client' 'mcpServersLoader' )
+	^ #( 'client' )
 ]
 
 { #category : 'instance creation' }
@@ -109,20 +108,10 @@ AbTopicSession >> initialize [
 	availableCommands := OrderedCollection new
 ]
 
-{ #category : 'accessing' }
-AbTopicSession >> mcpServersLoader [
-	^ mcpServersLoader ifNil: [ AbMcpServersLoader new ]
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> mcpServersLoader: aLoader [
-	mcpServersLoader := aLoader
-]
-
 { #category : 'private' }
 AbTopicSession >> resolvedMcpServers [
 
-	^ self mcpServersLoader load
+	^ AbMcpServersLoader new load
 ]
 
 { #category : 'accessing' }
