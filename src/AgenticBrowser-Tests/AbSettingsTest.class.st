@@ -59,7 +59,7 @@ AbSettingsTest >> testExportApprovalWaitTimeoutSecondsSettable [
 { #category : 'tests' }
 AbSettingsTest >> testUseDefaultMcpServersDefaultIsTrue [
 
-	self assert: AbSettings default useDefaultMcpServers equals: true
+	self assert: AbSettings default useDefaultMcpServers
 ]
 
 { #category : 'tests' }
