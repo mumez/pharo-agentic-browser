@@ -57,7 +57,11 @@ AbSettings class >> load [
 { #category : 'persistence' }
 AbSettings class >> loadFrom: aFileReference [
 
-	^ aFileReference readStreamDo: [ :stream | STON fromStream: stream ]
+	| dict settings |
+	dict := aFileReference readStreamDo: [ :stream | STON fromStream: stream ].
+	settings := self new.
+	dict keysAndValuesDo: [ :k :v | settings at: k put: v ].
+	^ settings
 ]
 
 { #category : 'persistence' }
@@ -77,7 +81,9 @@ AbSettings class >> saveTo: aFileReference settings: anAbSettings [
 
 	aFileReference parent ensureCreateDirectory.
 	aFileReference writeStreamDo: [ :stream |
-		STON put: anAbSettings onStream: stream ]
+		(STONWriter on: stream)
+			prettyPrint: true;
+			nextPut: anAbSettings settingsDict ]
 ]
 
 { #category : 'accessing' }
