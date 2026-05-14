@@ -13,8 +13,12 @@ Class {
 AbMcpServersLoader class >> default [
 
 	^ self new
-		  mcpJsonFile: AbSettings defaultAgenticBrowserRootDirectory / 'mcp.json';
-		  yourself
+]
+
+{ #category : 'defaults' }
+AbMcpServersLoader class >> defaultMcpJsonFileReference [
+
+	^ AbSettings defaultAgenticBrowserRootDirectory / 'mcp.json'
 ]
 
 { #category : 'private' }
@@ -79,7 +83,7 @@ AbMcpServersLoader >> loadFromFile [
 
 { #category : 'accessing' }
 AbMcpServersLoader >> mcpJsonFile [
-	^ mcpJsonFile
+	^ mcpJsonFile ifNil: [ mcpJsonFile := self class defaultMcpJsonFileReference ]
 ]
 
 { #category : 'accessing' }
