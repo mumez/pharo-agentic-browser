@@ -87,18 +87,23 @@ AbMcpServersLoader >> defaultConfigDicts [
 ]
 
 { #category : 'private' }
+AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
+
+	#( #command #args #type #url ) do: [ :key |
+		(aConfigDict at: key ifAbsent: [ nil ]) ifNotNil: [ :v |
+			aServer perform: (key , ':') asSymbol with: v ] ].
+	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
+		envSource isDictionary
+			ifTrue: [ envSource keysAndValuesDo: [ :k :v | aServer addEnvNamed: k value: v ] ]
+			ifFalse: [ aServer env: envSource ] ]
+]
+
+{ #category : 'private' }
 AbMcpServersLoader >> mcpServerNamed: aName fromConfig: aConfigDict [
 
 	| server |
 	server := ACPMcpServer new.
 	server name: aName.
-	(aConfigDict at: 'command' ifAbsent: [ nil ]) ifNotNil: [ :v | server command: v ].
-	(aConfigDict at: 'args' ifAbsent: [ nil ]) ifNotNil: [ :v | server args: v ].
-	(aConfigDict at: 'type' ifAbsent: [ nil ]) ifNotNil: [ :v | server type: v ].
-	(aConfigDict at: 'url' ifAbsent: [ nil ]) ifNotNil: [ :v | server url: v ].
-	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
-		envSource isDictionary
-			ifTrue: [ envSource keysAndValuesDo: [ :k :v | server addEnvNamed: k value: v ] ]
-			ifFalse: [ server env: envSource ] ].
+	self configureServer: server fromDict: aConfigDict.
 	^ server
 ]

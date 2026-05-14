@@ -24,10 +24,10 @@ AbMcpServersLoaderTest >> testLoadFromFileReturnsParsedConfigDict [
 	jsonString := '{"mcpServers":{"my-server":{"command":"uvx","args":["pkg"]}}}'.
 	tmpFile writeStreamDo: [ :s | s nextPutAll: jsonString ].
 	loader mcpJsonFile: tmpFile.
-	result := loader loadFromFile.
-	self assert: (result includesKey: 'my-server').
-	self assert: ((result at: 'my-server') at: 'command') equals: 'uvx'.
-	tmpFile ensureDelete
+	[ result := loader loadFromFile.
+	  self assert: (result includesKey: 'my-server').
+	  self assert: ((result at: 'my-server') at: 'command') equals: 'uvx' ]
+		ensure: [ tmpFile ensureDelete ]
 ]
 
 { #category : 'tests' }
@@ -95,10 +95,10 @@ AbMcpServersLoaderTest >> testLoadUserServersTakePrecedenceOverDefaults [
 	tmpFile writeStreamDo: [ :s | s nextPutAll: jsonString ].
 	loader mcpJsonFile: tmpFile.
 	loader useDefaultMcpServers: true.
-	result := loader load.
-	interopServer := result detect: [ :s | s name = 'smalltalk-interop' ].
-	self assert: interopServer command equals: 'myuvx'.
-	tmpFile ensureDelete
+	[ result := loader load.
+	  interopServer := result detect: [ :s | s name = 'smalltalk-interop' ].
+	  self assert: interopServer command equals: 'myuvx' ]
+		ensure: [ tmpFile ensureDelete ]
 ]
 
 { #category : 'tests' }
