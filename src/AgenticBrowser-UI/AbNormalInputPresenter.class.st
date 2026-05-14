@@ -50,17 +50,19 @@ AbNormalInputPresenter >> enableMentionDrop [
 	inputField
 		dropEnabled: true;
 		wantsDrop: [ :transfer |
-			| items |
-			items := transfer passenger dragContext selectedItems.
-			items ifEmpty: [ false ] ifNotEmpty: [ :nonEmpty |
-				| obj |
-				obj := nonEmpty first actualObject.
+			(self firstActualObjectFrom: transfer) ifNil: [ false ] ifNotNil: [ :obj |
 				obj isCompiledMethod or: [ obj isBehavior ] ] ];
 		acceptDrop: [ :transfer |
-			| items |
-			items := transfer passenger dragContext selectedItems.
-			items ifNotEmpty: [ :nonEmpty |
-				self insertMention: (self mentionStringFor: nonEmpty first actualObject) ] ]
+			(self firstActualObjectFrom: transfer) ifNotNil: [ :obj |
+				self insertMention: (self mentionStringFor: obj) ] ]
+]
+
+{ #category : 'private' }
+AbNormalInputPresenter >> firstActualObjectFrom: transfer [
+
+	| items |
+	items := transfer passenger dragContext selectedItems.
+	^ items ifEmpty: [ nil ] ifNotEmpty: [ :nonEmpty | nonEmpty first actualObject ]
 ]
 
 { #category : 'initialization' }
