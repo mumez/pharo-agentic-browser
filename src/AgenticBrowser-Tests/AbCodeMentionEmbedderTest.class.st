@@ -26,16 +26,6 @@ AbCodeMentionEmbedderTest >> testClassResourceTonelContainsClassName [
 ]
 
 { #category : 'tests' }
-AbCodeMentionEmbedderTest >> testMethodResourceHasCorrectUrl [
-
-	| mention resources |
-	mention := AbCodeMention className: 'OrderedCollection' methodName: 'add:' isClassSide: false.
-	resources := AbCodeMentionEmbedder resourcesFor: { mention }.
-	self assert: resources first key
-		equals: 'http://localhost:8086/get-method-source?class_name=OrderedCollection&method_name=add:&is_class_method=false'
-]
-
-{ #category : 'tests' }
 AbCodeMentionEmbedderTest >> testClassSideMethodResourceHasCorrectUrl [
 
 	| mention resources |
@@ -43,6 +33,24 @@ AbCodeMentionEmbedderTest >> testClassSideMethodResourceHasCorrectUrl [
 	resources := AbCodeMentionEmbedder resourcesFor: { mention }.
 	self assert: resources first key
 		equals: 'http://localhost:8086/get-method-source?class_name=OrderedCollection&method_name=new&is_class_method=true'
+]
+
+{ #category : 'tests' }
+AbCodeMentionEmbedderTest >> testEmptyMentionsReturnsEmptyCollection [
+
+	| resources |
+	resources := AbCodeMentionEmbedder resourcesFor: #().
+	self assert: resources isEmpty
+]
+
+{ #category : 'tests' }
+AbCodeMentionEmbedderTest >> testMethodResourceHasCorrectUrl [
+
+	| mention resources |
+	mention := AbCodeMention className: 'OrderedCollection' methodName: 'add:' isClassSide: false.
+	resources := AbCodeMentionEmbedder resourcesFor: { mention }.
+	self assert: resources first key
+		equals: 'http://localhost:8086/get-method-source?class_name=OrderedCollection&method_name=add:&is_class_method=false'
 ]
 
 { #category : 'tests' }
@@ -60,13 +68,5 @@ AbCodeMentionEmbedderTest >> testUnknownClassIsSkipped [
 	| mention resources |
 	mention := AbCodeMention className: 'NonExistentClass99999'.
 	resources := AbCodeMentionEmbedder resourcesFor: { mention }.
-	self assert: resources isEmpty
-]
-
-{ #category : 'tests' }
-AbCodeMentionEmbedderTest >> testEmptyMentionsReturnsEmptyCollection [
-
-	| resources |
-	resources := AbCodeMentionEmbedder resourcesFor: #().
 	self assert: resources isEmpty
 ]

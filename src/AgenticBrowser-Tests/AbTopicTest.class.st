@@ -113,9 +113,88 @@ AbTopicTest >> testCancelPromptCallsAcpCancelWithoutSystemMessage [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testClearSessionIdDisconnectsAndClearsSessionId [
+
+	| topic session mockClient |
+	topic := AbTopic new.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	session sessionId: 'session-1'.
+
+	topic clearSessionId.
+
+	self verify: mockClient.
+	self assert: topic sessionId isNil.
+	self assert: topic client isNil
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testCurrentModelInitiallyNil [
 
 	self assert: AbTopic new currentModel isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectAbortsPendingAiPermission [
+
+	| topic done response |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic disconnect.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #disconnected
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectAbortsPendingExportApproval [
+
+	| topic done response |
+	topic := AbTopic new.
+	done := Semaphore new.
+	[
+	response := topic requestPackageExport: 'Export package Foo?'.
+	done signal ] fork.
+	[ topic hasPendingApprovalRequest ] whileFalse: [
+		(Delay forMilliseconds: 1) wait ].
+	topic disconnect.
+	done waitTimeoutMilliseconds: 1000.
+	self assert: response equals: #disconnected
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDisconnectKeepsSessionIdAndClearsTransientSessionData [
+
+	| topic session mockClient options modelOption commands |
+	topic := AbTopic new.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	session sessionId: 'session-1'.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/help';
+					  at: 'description' put: 'Show help';
+					  yourself)).
+	topic updateAvailableCommands: commands.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
+	options := OrderedCollection with: modelOption.
+	topic updateCurrentModelFromConfigOptions: options.
+
+	topic disconnect.
+
+	self verify: mockClient.
+	self assert: topic sessionId equals: 'session-1'.
+	self assert: topic availableCommands isEmpty.
+	self assert: topic currentModel isNil
 ]
 
 { #category : 'tests' }
@@ -386,16 +465,6 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
-	| topic msg |
-	topic := AbTopic new.
-	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: #reject_once.
-	self assert: msg approvalResponse equals: #reject_once.
-	self assert: topic status equals: #initial
-]
-
-{ #category : 'tests' }
 AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 
 	| topic msg |
@@ -422,6 +491,37 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	topic resolveApprovalWithOptionId: #allow_once.
 	self assert: msg approvalResponse equals: #allow_once.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
+	| topic msg |
+	topic := AbTopic new.
+	msg := topic addExportApprovalRequest: 'Export Foo?'.
+	topic resolveApprovalWithOptionId: #reject_once.
+	self assert: msg approvalResponse equals: #reject_once.
+	self assert: topic status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
+
+	| topic |
+	topic := AbTopic new.
+	topic sendPrompt: 'hi'.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first text equals: 'hi'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendPromptWithResourcesAddsHumanMessage [
+
+	| topic |
+	topic := AbTopic new.
+	topic sendPrompt: 'hello' withResources: #().
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first sender equals: #human.
+	self assert: topic messages first text equals: 'hello'
 ]
 
 { #category : 'tests' }
@@ -614,104 +714,4 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 		              fullName.
 	topic workingDirectoryPath: customPath.
 	self assert: topic workingDirectoryPath equals: customPath
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testDisconnectAbortsPendingAiPermission [
-
-	| topic done response |
-	topic := AbTopic new.
-	done := Semaphore new.
-	[
-	response := topic requestPermission: 'Approve this action?'.
-	done signal ] fork.
-	[ topic hasPendingApprovalRequest ] whileFalse: [
-		(Delay forMilliseconds: 1) wait ].
-	topic disconnect.
-	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #disconnected
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testDisconnectAbortsPendingExportApproval [
-
-	| topic done response |
-	topic := AbTopic new.
-	done := Semaphore new.
-	[
-	response := topic requestPackageExport: 'Export package Foo?'.
-	done signal ] fork.
-	[ topic hasPendingApprovalRequest ] whileFalse: [
-		(Delay forMilliseconds: 1) wait ].
-	topic disconnect.
-	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #disconnected
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testDisconnectKeepsSessionIdAndClearsTransientSessionData [
-
-	| topic session mockClient options modelOption commands |
-	topic := AbTopic new.
-	session := topic session.
-	mockClient := MockObject new.
-	mockClient on: #disconnect verify: [ ].
-	session client: mockClient.
-	session sessionId: 'session-1'.
-	commands := OrderedCollection
-		with: (ACPAvailableCommand new rawValues: (Dictionary new
-					  at: 'name' put: '/help';
-					  at: 'description' put: 'Show help';
-					  yourself)).
-	topic updateAvailableCommands: commands.
-	modelOption := ACPConfigOption new beModelCategory.
-	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
-	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
-
-	topic disconnect.
-
-	self verify: mockClient.
-	self assert: topic sessionId equals: 'session-1'.
-	self assert: topic availableCommands isEmpty.
-	self assert: topic currentModel isNil
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testClearSessionIdDisconnectsAndClearsSessionId [
-
-	| topic session mockClient |
-	topic := AbTopic new.
-	session := topic session.
-	mockClient := MockObject new.
-	mockClient on: #disconnect verify: [ ].
-	session client: mockClient.
-	session sessionId: 'session-1'.
-
-	topic clearSessionId.
-
-	self verify: mockClient.
-	self assert: topic sessionId isNil.
-	self assert: topic client isNil
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testSendPromptWithResourcesAddsHumanMessage [
-
-	| topic |
-	topic := AbTopic new.
-	topic sendPrompt: 'hello' withResources: #().
-	self assert: topic messages size equals: 1.
-	self assert: topic messages first sender equals: #human.
-	self assert: topic messages first text equals: 'hello'
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
-
-	| topic |
-	topic := AbTopic new.
-	topic sendPrompt: 'hi'.
-	self assert: topic messages size equals: 1.
-	self assert: topic messages first text equals: 'hi'
 ]

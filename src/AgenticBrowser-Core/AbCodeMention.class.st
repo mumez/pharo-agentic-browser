@@ -40,14 +40,9 @@ AbCodeMention >> className: aString [
 	className := aString
 ]
 
-{ #category : 'accessing' }
-AbCodeMention >> methodName [
-	^ methodName
-]
-
-{ #category : 'accessing' }
-AbCodeMention >> methodName: aString [
-	methodName := aString
+{ #category : 'testing' }
+AbCodeMention >> isClassMention [
+	^ self methodName isNil
 ]
 
 { #category : 'accessing' }
@@ -61,11 +56,16 @@ AbCodeMention >> isClassSide: aBoolean [
 ]
 
 { #category : 'testing' }
-AbCodeMention >> isClassMention [
-	^ self methodName isNil
-]
-
-{ #category : 'testing' }
 AbCodeMention >> isMethodMention [
 	^ self methodName notNil
+]
+
+{ #category : 'accessing' }
+AbCodeMention >> methodName [
+	^ methodName
+]
+
+{ #category : 'accessing' }
+AbCodeMention >> methodName: aString [
+	methodName := aString
 ]

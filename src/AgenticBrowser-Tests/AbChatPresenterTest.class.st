@@ -353,6 +353,30 @@ AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelText [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'explain @OrderedCollection'.
+	presenter onSendButtonClicked.
+	self assert: topic messages size equals: 1.
+	self assert: (topic messages first text includesSubstring: 'OrderedCollection')
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages first text equals: '/st-buddy hello world'
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
 
 	| topic |
@@ -416,28 +440,4 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	self assert: presenter normalInputPresenter isCancelEnabled
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
-
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter normalInputPresenter inputField text: 'hello world'.
-	presenter onSendButtonClicked.
-	self assert: topic messages size equals: 1.
-	self assert: topic messages first text equals: '/st-buddy hello world'
-]
-
-{ #category : 'tests' }
-AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
-
-	| topic |
-	topic := AbTopic new.
-	presenter topic: topic.
-	presenter normalInputPresenter inputField text: 'explain @OrderedCollection'.
-	presenter onSendButtonClicked.
-	self assert: topic messages size equals: 1.
-	self assert: (topic messages first text includesSubstring: 'OrderedCollection')
 ]

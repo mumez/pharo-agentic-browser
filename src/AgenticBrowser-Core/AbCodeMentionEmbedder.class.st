@@ -6,30 +6,6 @@ Class {
 }
 
 { #category : 'private' }
-AbCodeMentionEmbedder class >> mcpBaseUrl [
-
-	^ 'http://localhost:8086'
-]
-
-{ #category : 'operations' }
-AbCodeMentionEmbedder class >> resourcesFor: mentions [
-
-	^ mentions inject: OrderedCollection new into: [ :acc :mention |
-		[ acc add: (self resourceFor: mention) ]
-			on: Error
-			do: [ :e | "skip mentions that can't be resolved" ].
-		acc ]
-]
-
-{ #category : 'private' }
-AbCodeMentionEmbedder class >> resourceFor: mention [
-
-	^ mention isClassMention
-		ifTrue: [ self classResourceFor: mention ]
-		ifFalse: [ self methodResourceFor: mention ]
-]
-
-{ #category : 'private' }
 AbCodeMentionEmbedder class >> classResourceFor: mention [
 
 	| className cls url tonel |
@@ -38,6 +14,12 @@ AbCodeMentionEmbedder class >> classResourceFor: mention [
 	url := '{1}/get-class-source?class_name={2}' format: { self mcpBaseUrl. className }.
 	tonel := TonelWriter sourceCodeOf: cls.
 	^ url -> tonel
+]
+
+{ #category : 'private' }
+AbCodeMentionEmbedder class >> mcpBaseUrl [
+
+	^ 'http://localhost:8086'
 ]
 
 { #category : 'private' }
@@ -55,4 +37,22 @@ AbCodeMentionEmbedder class >> methodResourceFor: mention [
 			writeMethodDefinition: ((cls >> methodName asSymbol) asMCMethodDefinition)
 			on: str ].
 	^ url -> tonel
+]
+
+{ #category : 'private' }
+AbCodeMentionEmbedder class >> resourceFor: mention [
+
+	^ mention isClassMention
+		ifTrue: [ self classResourceFor: mention ]
+		ifFalse: [ self methodResourceFor: mention ]
+]
+
+{ #category : 'operations' }
+AbCodeMentionEmbedder class >> resourcesFor: mentions [
+
+	^ mentions inject: OrderedCollection new into: [ :acc :mention |
+		[ acc add: (self resourceFor: mention) ]
+			on: Error
+			do: [ :e | "skip mentions that can't be resolved" ].
+		acc ]
 ]

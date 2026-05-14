@@ -25,23 +25,34 @@ AbTopicSessionTest >> mockSessionResultWithId: aSessionId [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testOnCreatesSessionWithTopicBackReference [
+AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 
 	| topic session |
 	topic := AbTopic new.
-	session := AbTopicSession on: topic.
-	self assert: session topic equals: topic
+	session := topic session.
+	self assert: session announcer equals: topic announcer
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testOnInitializesTransientFields [
+AbTopicSessionTest >> testClearSessionIdClearsSessionId [
 
 	| topic session |
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
-	self assert: session sessionId isNil.
-	self assert: session currentModel isNil.
-	self assert: session availableCommands isEmpty
+	session sessionId: 'session-1'.
+
+	session clearSessionId.
+
+	self assert: session sessionId isNil
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
+
+	self assert: (AbTopicSession canUnderstand: #doConnect).
+	self assert: (AbTopicSession canUnderstand: #ensureConnected).
+	self deny: (AbTopic canUnderstand: #doConnect).
+	self deny: (AbTopic canUnderstand: #ensureConnected)
 ]
 
 { #category : 'tests' }
@@ -68,37 +79,6 @@ AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
 	self assert: session sessionId equals: 'session-1'.
 	self assert: session currentModel isNil.
 	self assert: session availableCommands isEmpty
-]
-
-{ #category : 'tests' }
-AbTopicSessionTest >> testClearSessionIdClearsSessionId [
-
-	| topic session |
-	topic := AbTopic new.
-	session := AbTopicSession on: topic.
-	session sessionId: 'session-1'.
-
-	session clearSessionId.
-
-	self assert: session sessionId isNil
-]
-
-{ #category : 'tests' }
-AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
-
-	| topic session |
-	topic := AbTopic new.
-	session := topic session.
-	self assert: session announcer equals: topic announcer
-]
-
-{ #category : 'tests' }
-AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
-
-	self assert: (AbTopicSession canUnderstand: #doConnect).
-	self assert: (AbTopicSession canUnderstand: #ensureConnected).
-	self deny: (AbTopic canUnderstand: #doConnect).
-	self deny: (AbTopic canUnderstand: #ensureConnected)
 ]
 
 { #category : 'tests' }
@@ -184,6 +164,40 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
+
+	| topic session newSessionResult mockClient capturedMcpServers |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	newSessionResult := self mockSessionResultWithId: 'session-new'.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :h | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | nil ].
+	mockClient
+		on: #newSessionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSessionParams buildBy: aBlock.
+			capturedMcpServers := params mcpServers.
+			newSessionResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: mockClient.
+	self assert: capturedMcpServers isCollection
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndResumeSupported [
 
 	| topic session capabilities initializeResponse resumeResult mockClient |
@@ -226,24 +240,23 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
+AbTopicSessionTest >> testOnCreatesSessionWithTopicBackReference [
 
-	| session topic commands |
+	| topic session |
 	topic := AbTopic new.
-	session := topic session.
-	commands := OrderedCollection
-		with: (ACPAvailableCommand new rawValues: (Dictionary new
-					  at: 'name' put: '/help';
-					  at: 'description' put: 'Show help';
-					  yourself))
-		with: (ACPAvailableCommand new rawValues: (Dictionary new
-					  at: 'name' put: '/status';
-					  at: 'description' put: 'Show status';
-					  yourself)).
+	session := AbTopicSession on: topic.
+	self assert: session topic equals: topic
+]
 
-	session updateAvailableCommands: commands.
+{ #category : 'tests' }
+AbTopicSessionTest >> testOnInitializesTransientFields [
 
-	self assert: topic availableCommands size equals: 2
+	| topic session |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	self assert: session sessionId isNil.
+	self assert: session currentModel isNil.
+	self assert: session availableCommands isEmpty
 ]
 
 { #category : 'tests' }
@@ -262,37 +275,24 @@ AbTopicSessionTest >> testResolvedMcpServersUsesAbMcpServersLoader [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
+AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 
-	| topic session newSessionResult mockClient capturedMcpServers |
+	| session topic commands |
 	topic := AbTopic new.
-	session := AbTopicSession on: topic.
-	newSessionResult := self mockSessionResultWithId: 'session-new'.
-	mockClient := MockObject new.
-	mockClient on: #handler: with: MockObject any verify: [ :h | ].
-	mockClient
-		on: #agentCommand:arguments:
-		with: '/usr/bin/env'
-		with: topic agentArguments
-		verify: [ ].
-	mockClient on: #connect verify: [ ].
-	mockClient
-		on: #initializeBy:
-		with: MockObject any
-		verify: [ :unused | nil ].
-	mockClient
-		on: #newSessionBy:
-		with: MockObject any
-		verify: [ :aBlock |
-			| params |
-			params := ACPSessionParams buildBy: aBlock.
-			capturedMcpServers := params mcpServers.
-			newSessionResult ].
+	session := topic session.
+	commands := OrderedCollection
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/help';
+					  at: 'description' put: 'Show help';
+					  yourself))
+		with: (ACPAvailableCommand new rawValues: (Dictionary new
+					  at: 'name' put: '/status';
+					  at: 'description' put: 'Show status';
+					  yourself)).
 
-	session doConnectWithClient: mockClient.
+	session updateAvailableCommands: commands.
 
-	self verify: mockClient.
-	self assert: capturedMcpServers isCollection
+	self assert: topic availableCommands size equals: 2
 ]
 
 { #category : 'tests' }

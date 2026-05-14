@@ -13,16 +13,22 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
-{ #category : 'class initialization' }
-AbTopicManager class >> initialize [
-
-	default := forTest := nil
-]
-
 { #category : 'instance creation' }
 AbTopicManager class >> default [
 
 	^ default ifNil: [ default := self new ]
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> defaultFileReference [
+
+	^ AbSettings defaultAgenticBrowserRootDirectory / self fileName
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> fileName [
+
+	^ 'ab-topics.fuel'
 ]
 
 { #category : 'instance creation' }
@@ -37,41 +43,23 @@ AbTopicManager class >> forTest: anInstance [
 	forTest := anInstance
 ]
 
-{ #category : 'instance creation' }
-AbTopicManager class >> uniqueInstance [
-
-	^ self default
-]
-
 { #category : 'fuel' }
 AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 
 	^ #( 'announcer' )
 ]
 
-{ #category : 'persistence' }
-AbTopicManager class >> fileName [
+{ #category : 'class initialization' }
+AbTopicManager class >> initialize [
 
-	^ 'ab-topics.fuel'
+	default := forTest := nil
 ]
 
 { #category : 'persistence' }
-AbTopicManager class >> defaultFileReference [
+AbTopicManager class >> load [
 
-	^ AbSettings defaultAgenticBrowserRootDirectory / self fileName
-]
-
-{ #category : 'persistence' }
-AbTopicManager class >> saveTo: aFileReference [
-
-	self saveTo: aFileReference manager: self default
-]
-
-{ #category : 'persistence' }
-AbTopicManager class >> saveTo: aFileReference manager: aManager [
-
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
+	self defaultFileReference exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultFileReference
 ]
 
 { #category : 'persistence' }
@@ -87,10 +75,22 @@ AbTopicManager class >> save [
 ]
 
 { #category : 'persistence' }
-AbTopicManager class >> load [
+AbTopicManager class >> saveTo: aFileReference [
 
-	self defaultFileReference exists ifFalse: [ ^ self ].
-	default := self loadFrom: self defaultFileReference
+	self saveTo: aFileReference manager: self default
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> saveTo: aFileReference manager: aManager [
+
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
+]
+
+{ #category : 'instance creation' }
+AbTopicManager class >> uniqueInstance [
+
+	^ self default
 ]
 
 { #category : 'operations' }
@@ -131,18 +131,18 @@ AbTopicManager >> removeTopic: anAbTopic [
 	topics removeKey: anAbTopic topicId ifAbsent: []
 ]
 
+{ #category : 'operations' }
+AbTopicManager >> subscribeAllTopicsToSisServer [
+
+	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
+]
+
 { #category : 'private' }
 AbTopicManager >> teardownTopic: aTopic [
 
 	aTopic stopWatching.
 	aTopic workingDirectory unsubscribeFromSisServerImportEvents.
 	[ aTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ]
-]
-
-{ #category : 'operations' }
-AbTopicManager >> subscribeAllTopicsToSisServer [
-
-	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
 ]
 
 { #category : 'accessing' }

@@ -27,6 +27,16 @@ AbTopic class >> fuelIgnoredInstanceVariableNames [
 	^ #( 'announcer' 'logger' 'workingDirectory' 'relatedPackagesWatcher' )
 ]
 
+{ #category : 'approval-private' }
+AbTopic >> abortPendingApprovals [
+
+	self pendingAiPermissionMessage ifNotNil: [ :msg |
+		msg approvalResponse: AbConstants disconnected.
+		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
+	self pendingExportApprovalMessage ifNotNil: [ :msg |
+		msg approvalResponse: AbConstants disconnected ]
+]
+
 { #category : 'private' }
 AbTopic >> addAiChunk: aString think: aBoolean [
 
@@ -211,6 +221,13 @@ AbTopic >> checkGoalAchievement [
 ]
 
 { #category : 'operations' }
+AbTopic >> clearSessionId [
+
+	self disconnect.
+	self session clearSessionId
+]
+
+{ #category : 'operations' }
 AbTopic >> clearUpdatedExternalPackageNames [
 
 	self updatedExternalPackageNames removeAll
@@ -238,23 +255,6 @@ AbTopic >> disconnect [
 
 	self session disconnect.
 	self abortPendingApprovals
-]
-
-{ #category : 'operations' }
-AbTopic >> clearSessionId [
-
-	self disconnect.
-	self session clearSessionId
-]
-
-{ #category : 'approval-private' }
-AbTopic >> abortPendingApprovals [
-
-	self pendingAiPermissionMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected.
-		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
-	self pendingExportApprovalMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected ]
 ]
 
 { #category : 'private' }
@@ -354,11 +354,6 @@ AbTopic >> isWaitingForHuman [
 AbTopic >> isWorking [
 
 	^ self status = #working
-]
-
-{ #category : 'accessing' }
-AbTopic >> session [
-	^ session ifNil: [ session := AbTopicSession on: self ]
 ]
 
 { #category : 'accessing' }
@@ -562,13 +557,13 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 ]
 
 { #category : 'accessing' }
-AbTopic >> sessionId [
-	^ self session sessionId
+AbTopic >> session [
+	^ session ifNil: [ session := AbTopicSession on: self ]
 ]
 
 { #category : 'accessing' }
-AbTopic >> session [
-	^ session ifNil: [session := AbTopicSession on: self]
+AbTopic >> sessionId [
+	^ self session sessionId
 ]
 
 { #category : 'operations' }

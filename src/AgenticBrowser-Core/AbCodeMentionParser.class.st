@@ -19,6 +19,26 @@ AbCodeMentionParser class >> parseFrom: aString [
 ]
 
 { #category : 'private' }
+AbCodeMentionParser class >> readIdentifierFrom: stream [
+
+	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit ] ]
+]
+
+{ #category : 'private' }
+AbCodeMentionParser class >> readSelectorFrom: stream [
+
+	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit or: [ ch = $: ] ] ]
+]
+
+{ #category : 'private' }
+AbCodeMentionParser class >> readTokenFrom: stream accepting: aTestBlock [
+
+	^ String streamContents: [ :out |
+		[ stream atEnd not and: [ aTestBlock value: stream peek ] ]
+			whileTrue: [ out nextPut: stream next ] ]
+]
+
+{ #category : 'private' }
 AbCodeMentionParser class >> tryParseMentionFrom: stream [
 
 	| className |
@@ -60,24 +80,4 @@ AbCodeMentionParser class >> trySkip: aString from: stream [
 			^ false ].
 		stream next ].
 	^ true
-]
-
-{ #category : 'private' }
-AbCodeMentionParser class >> readIdentifierFrom: stream [
-
-	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit ] ]
-]
-
-{ #category : 'private' }
-AbCodeMentionParser class >> readSelectorFrom: stream [
-
-	^ self readTokenFrom: stream accepting: [ :ch | ch isLetter or: [ ch isDigit or: [ ch = $: ] ] ]
-]
-
-{ #category : 'private' }
-AbCodeMentionParser class >> readTokenFrom: stream accepting: aTestBlock [
-
-	^ String streamContents: [ :out |
-		[ stream atEnd not and: [ aTestBlock value: stream peek ] ]
-			whileTrue: [ out nextPut: stream next ] ]
 ]

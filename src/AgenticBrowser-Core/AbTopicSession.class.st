@@ -28,18 +28,24 @@ AbTopicSession class >> on: anAbTopic [
 ]
 
 { #category : 'accessing' }
-AbTopicSession >> availableCommands [
-	^ availableCommands
-]
-
-{ #category : 'accessing' }
 AbTopicSession >> announcer [
 	^ self topic announcer
 ]
 
 { #category : 'accessing' }
+AbTopicSession >> availableCommands [
+	^ availableCommands
+]
+
+{ #category : 'accessing' }
 AbTopicSession >> availableCommands: aCollection [
 	availableCommands := aCollection
+]
+
+{ #category : 'operations' }
+AbTopicSession >> clearSessionId [
+
+	self sessionId: nil
 ]
 
 { #category : 'accessing' }
@@ -50,6 +56,25 @@ AbTopicSession >> client [
 { #category : 'accessing' }
 AbTopicSession >> client: anACPClient [
 	client := anACPClient
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel [
+	^ currentModel
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel: aString [
+	currentModel := aString
+]
+
+{ #category : 'operations' }
+AbTopicSession >> disconnect [
+
+	self client ifNotNil: [ self client disconnect ].
+	self client: nil.
+	self availableCommands: OrderedCollection new.
+	self currentModel: nil
 ]
 
 { #category : 'private' }
@@ -72,35 +97,10 @@ AbTopicSession >> doConnectWithClient: anACPClient [
 	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
-{ #category : 'operations' }
-AbTopicSession >> disconnect [
-
-	self client ifNotNil: [ self client disconnect ].
-	self client: nil.
-	self availableCommands: OrderedCollection new.
-	self currentModel: nil
-]
-
-{ #category : 'operations' }
-AbTopicSession >> clearSessionId [
-
-	self sessionId: nil
-]
-
 { #category : 'private' }
 AbTopicSession >> ensureConnected [
 
 	self client ifNil: [ self doConnect ]
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> currentModel [
-	^ currentModel
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> currentModel: aString [
-	currentModel := aString
 ]
 
 { #category : 'initialization' }
@@ -123,6 +123,16 @@ AbTopicSession >> mcpServersLoader: aLoader [
 AbTopicSession >> resolvedMcpServers [
 
 	^ self mcpServersLoader load
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> sessionId [
+	^ sessionId
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> sessionId: aString [
+	sessionId := aString
 ]
 
 { #category : 'private' }
@@ -150,16 +160,6 @@ AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
 		  params
 			  cwd: workingDirectoryPath;
 			  mcpServers: mcpServers ]
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> sessionId [
-	^ sessionId
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> sessionId: aString [
-	sessionId := aString
 ]
 
 { #category : 'accessing' }

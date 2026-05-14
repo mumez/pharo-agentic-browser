@@ -24,6 +24,16 @@ AbUiConstantsTest >> testGreenCircle [
 ]
 
 { #category : 'tests' }
+AbUiConstantsTest >> testIconNamedKnownSymbol [
+	self assert: ((AbUiConstants iconNamed: #check) isKindOf: Form)
+]
+
+{ #category : 'tests' }
+AbUiConstantsTest >> testIconNamedUnknownSymbol [
+	self assert: (AbUiConstants iconNamed: #zzzzz) isNil
+]
+
+{ #category : 'tests' }
 AbUiConstantsTest >> testQuestion [
 	self deny: AbUiConstants question isNil.
 	self assert: (AbUiConstants question isKindOf: Form)
@@ -39,14 +49,4 @@ AbUiConstantsTest >> testRedCircle [
 AbUiConstantsTest >> testSparkle [
 	self deny: AbUiConstants sparkle isNil.
 	self assert: (AbUiConstants sparkle isKindOf: Form)
-]
-
-{ #category : 'tests' }
-AbUiConstantsTest >> testIconNamedKnownSymbol [
-	self assert: ((AbUiConstants iconNamed: #check) isKindOf: Form)
-]
-
-{ #category : 'tests' }
-AbUiConstantsTest >> testIconNamedUnknownSymbol [
-	self assert: (AbUiConstants iconNamed: #zzzzz) isNil
 ]

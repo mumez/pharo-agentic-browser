@@ -17,22 +17,22 @@ AbSettings class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
+{ #category : 'persistence' }
+AbSettings class >> defaultAgenticBrowserRootDirectory [
+
+	^ Smalltalk imageDirectory / 'agentic-browser'
+]
+
 { #category : 'instance creation' }
 AbSettings class >> defaultCopied [
 
 	^ self new initFrom: self default
 ]
 
-{ #category : 'class initialization' }
-AbSettings class >> initialize [
-
-	default := nil
-]
-
 { #category : 'persistence' }
-AbSettings class >> defaultAgenticBrowserRootDirectory [
+AbSettings class >> defaultFileReference [
 
-	^ Smalltalk imageDirectory / 'agentic-browser'
+	^ self defaultAgenticBrowserRootDirectory / self fileName
 ]
 
 { #category : 'persistence' }
@@ -41,10 +41,10 @@ AbSettings class >> fileName [
 	^ 'ab-settings.ston'
 ]
 
-{ #category : 'persistence' }
-AbSettings class >> defaultFileReference [
+{ #category : 'class initialization' }
+AbSettings class >> initialize [
 
-	^ self defaultAgenticBrowserRootDirectory / self fileName
+	default := nil
 ]
 
 { #category : 'persistence' }

@@ -18,46 +18,16 @@ AbMcpServersLoader class >> default [
 		  yourself
 ]
 
-{ #category : 'accessing' }
-AbMcpServersLoader >> mcpJsonFile [
-	^ mcpJsonFile
-]
+{ #category : 'private' }
+AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
 
-{ #category : 'accessing' }
-AbMcpServersLoader >> mcpJsonFile: aFileReference [
-	mcpJsonFile := aFileReference
-]
-
-{ #category : 'accessing' }
-AbMcpServersLoader >> useDefaultMcpServers [
-	^ useDefaultMcpServers ifNil: [ true ]
-]
-
-{ #category : 'accessing' }
-AbMcpServersLoader >> useDefaultMcpServers: aBoolean [
-	useDefaultMcpServers := aBoolean
-]
-
-{ #category : 'loading' }
-AbMcpServersLoader >> load [
-
-	| merged |
-	merged := Dictionary new.
-	self useDefaultMcpServers ifTrue: [
-		merged addAll: self defaultConfigDicts ].
-	merged addAll: self loadFromFile.
-	^ merged keys
-		  collect: [ :name | self mcpServerNamed: name fromConfig: (merged at: name) ]
-		  as: OrderedCollection
-]
-
-{ #category : 'loading' }
-AbMcpServersLoader >> loadFromFile [
-
-	| json |
-	(mcpJsonFile isNil or: [ mcpJsonFile exists not ]) ifTrue: [ ^ Dictionary new ].
-	json := STONJSON fromString: mcpJsonFile contents.
-	^ (json at: 'mcpServers' ifAbsent: [ ^ Dictionary new ]) asDictionary
+	#( #command #args #type #url ) do: [ :key |
+		(aConfigDict at: key ifAbsent: [ nil ]) ifNotNil: [ :v |
+			aServer perform: (key , ':') asSymbol with: v ] ].
+	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
+		envSource isDictionary
+			ifTrue: [ envSource keysAndValuesDo: [ :k :v | aServer addEnvNamed: k value: v ] ]
+			ifFalse: [ aServer env: envSource ] ]
 ]
 
 { #category : 'private' }
@@ -86,16 +56,36 @@ AbMcpServersLoader >> defaultConfigDicts [
 		  yourself
 ]
 
-{ #category : 'private' }
-AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
+{ #category : 'loading' }
+AbMcpServersLoader >> load [
 
-	#( #command #args #type #url ) do: [ :key |
-		(aConfigDict at: key ifAbsent: [ nil ]) ifNotNil: [ :v |
-			aServer perform: (key , ':') asSymbol with: v ] ].
-	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
-		envSource isDictionary
-			ifTrue: [ envSource keysAndValuesDo: [ :k :v | aServer addEnvNamed: k value: v ] ]
-			ifFalse: [ aServer env: envSource ] ]
+	| merged |
+	merged := Dictionary new.
+	self useDefaultMcpServers ifTrue: [
+		merged addAll: self defaultConfigDicts ].
+	merged addAll: self loadFromFile.
+	^ merged keys
+		  collect: [ :name | self mcpServerNamed: name fromConfig: (merged at: name) ]
+		  as: OrderedCollection
+]
+
+{ #category : 'loading' }
+AbMcpServersLoader >> loadFromFile [
+
+	| json |
+	(mcpJsonFile isNil or: [ mcpJsonFile exists not ]) ifTrue: [ ^ Dictionary new ].
+	json := STONJSON fromString: mcpJsonFile contents.
+	^ (json at: 'mcpServers' ifAbsent: [ ^ Dictionary new ]) asDictionary
+]
+
+{ #category : 'accessing' }
+AbMcpServersLoader >> mcpJsonFile [
+	^ mcpJsonFile
+]
+
+{ #category : 'accessing' }
+AbMcpServersLoader >> mcpJsonFile: aFileReference [
+	mcpJsonFile := aFileReference
 ]
 
 { #category : 'private' }
@@ -106,4 +96,14 @@ AbMcpServersLoader >> mcpServerNamed: aName fromConfig: aConfigDict [
 	server name: aName.
 	self configureServer: server fromDict: aConfigDict.
 	^ server
+]
+
+{ #category : 'accessing' }
+AbMcpServersLoader >> useDefaultMcpServers [
+	^ useDefaultMcpServers ifNil: [ true ]
+]
+
+{ #category : 'accessing' }
+AbMcpServersLoader >> useDefaultMcpServers: aBoolean [
+	useDefaultMcpServers := aBoolean
 ]
