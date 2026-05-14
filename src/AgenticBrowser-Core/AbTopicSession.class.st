@@ -111,7 +111,7 @@ AbTopicSession >> initialize [
 
 { #category : 'accessing' }
 AbTopicSession >> mcpServersLoader [
-	^ mcpServersLoader ifNil: [ AbMcpServersLoader default ]
+	^ mcpServersLoader ifNil: [ AbMcpServersLoader new ]
 ]
 
 { #category : 'accessing' }

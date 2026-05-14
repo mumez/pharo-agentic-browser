@@ -9,12 +9,6 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
-{ #category : 'instance creation' }
-AbMcpServersLoader class >> default [
-
-	^ self new
-]
-
 { #category : 'defaults' }
 AbMcpServersLoader class >> defaultMcpJsonFileReference [
 
