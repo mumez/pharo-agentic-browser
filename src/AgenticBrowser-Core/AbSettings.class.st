@@ -134,6 +134,12 @@ AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultUseDefaultMcpServers [
+
+	^ true
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleDuration [
 
 	^ 2 seconds
@@ -183,6 +189,20 @@ AbSettings >> settingsDict [
 		current := Dictionary new.
 		self instVarNamed: #settingsDict put: current ].
 	^ current
+]
+
+{ #category : 'accessing' }
+AbSettings >> useDefaultMcpServers [
+
+	^ self
+		  at: #useDefaultMcpServers
+		  ifAbsentPut: [ self defaultUseDefaultMcpServers ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useDefaultMcpServers: aBoolean [
+
+	self at: #useDefaultMcpServers put: aBoolean
 ]
 
 { #category : 'accessing' }
