@@ -4,16 +4,28 @@
 
 **Goal:** Enable users to specify MCP servers (via `mcp.json`) that are passed to the ACP agent on session start, with optional auto-merge of built-in Smalltalk MCP servers.
 
-**Architecture:** A new `AbMcpServersLoader` class reads `mcp.json` from `defaultAgenticBrowserRootDirectory`, optionally merges default Smalltalk servers (controlled by `AbSettings >> useDefaultMcpServers`), and returns a Dictionary passed to `mcpServers:` on all three ACP session params (`ACPNewSessionParams`, `ACPResumeSessionParams`, `ACPLoadSessionParams`). The merge point is `AbTopicSession >> sessionResultFromInitializeResponse:`.
+**Architecture:** A new `AbMcpServersLoader` class reads `mcp.json` from `defaultAgenticBrowserRootDirectory`, optionally merges default Smalltalk servers (controlled by `AbSettings >> useDefaultMcpServers`), and returns a Collection of `ACPMcpServer` objects. `AbTopicSession >> sessionResultFromInitializeResponse:` calls `params mcpServers:` with this collection for all three session param types (new/resume/load), which all inherit from `ACPSessionParams`. The `addMcpServerBy:` builder method on `ACPSessionParams` is available for constructing individual servers.
 
-**Tech Stack:** Pharo Smalltalk, Tonel file format, STON (for existing settings), NativeJSON / Dictionary for mcp.json parsing, SUnit for tests.
+**Tech Stack:** Pharo Smalltalk, Tonel file format, STON (existing settings persistence), STONJSON (mcp.json parsing), ACPMcpServer / ACPEnvVariable (ACP-DataTypes), SUnit for tests.
+
+### ACP API reference
+
+`ACPSessionParams` (superclass of `ACPNewSessionParams`, `ACPResumeSessionParams`, `ACPLoadSessionParams`):
+- `addMcpServerBy: aBlock` — creates `ACPMcpServer new`, passes it to `aBlock`, appends to mcpServers
+- `mcpServers: anArray` — accepts an Array of `ACPMcpServer` objects (replaces entire list)
+- `mcpServers` — returns current Array of `ACPMcpServer`
+
+`ACPMcpServer` fields: `name:`, `command:`, `args:`, `type:`, `url:`, `env:` (Array of `ACPEnvVariable`), `headers:`
+- `addEnvNamed: aName value: aValue` — convenience method to append one env var
+
+`ACPEnvVariable` fields: `name:`, `value:`
 
 ---
 
 ## File Structure
 
 **New files:**
-- `src/AgenticBrowser-Core/AbMcpServersLoader.class.st` — reads mcp.json, merges default servers
+- `src/AgenticBrowser-Core/AbMcpServersLoader.class.st` — reads mcp.json, merges defaults, returns `OrderedCollection of ACPMcpServer`
 - `src/AgenticBrowser-Tests/AbMcpServersLoaderTest.class.st` — unit tests for loader
 
 **Modified files:**
@@ -58,7 +70,7 @@ Expected: FAIL — `useDefaultMcpServers` does not exist yet.
 
 - [ ] **Step 3: Add `useDefaultMcpServers` accessors to AbSettings**
 
-In `AbSettings.class.st`, add two methods in the `accessing` category and one in `defaults`:
+In `AbSettings.class.st`, add in the `defaults` category:
 
 ```smalltalk
 { #category : 'defaults' }
@@ -66,7 +78,11 @@ AbSettings >> defaultUseDefaultMcpServers [
 
 	^ true
 ]
+```
 
+Add in the `accessing` category:
+
+```smalltalk
 { #category : 'accessing' }
 AbSettings >> useDefaultMcpServers [
 
@@ -84,7 +100,7 @@ AbSettings >> useDefaultMcpServers: aBoolean [
 
 - [ ] **Step 4: Import and run tests**
 
-Use st-import skill to import `AgenticBrowser-Core`, then st-test to run `AbSettingsTest`.
+Use st-import to import `AgenticBrowser-Core`, then st-test to run `AbSettingsTest`.
 Expected: All tests pass.
 
 - [ ] **Step 5: Commit**
@@ -104,7 +120,7 @@ git commit -m "feat: add useDefaultMcpServers setting to AbSettings"
 
 ### Background: mcp.json format
 
-The file is a JSON object at `defaultAgenticBrowserRootDirectory / 'mcp.json'`:
+The file lives at `defaultAgenticBrowserRootDirectory / 'mcp.json'`. Standard Cursor format:
 
 ```json
 {
@@ -118,24 +134,27 @@ The file is a JSON object at `defaultAgenticBrowserRootDirectory / 'mcp.json'`:
 }
 ```
 
-Parsing is done with `STONJSON >> fromString:` which returns a `Dictionary`. The `'mcpServers'` key holds a nested Dictionary of server name → config Dictionary.
+Parsed with `STONJSON fromString: aFileRef contents` → returns a `Dictionary`. The `'mcpServers'` value is a nested Dictionary of `serverName → configDict`.
 
-### Default Smalltalk MCP servers
+### Merge strategy
 
-When `AbSettings default useDefaultMcpServers` is `true`, merge these two entries into the result:
+Internal working uses a `Dictionary` keyed by server name for easy override:
+1. Start with `defaultConfigDicts` (name → raw config dict) when `useDefaultMcpServers` is true
+2. Overlay entries from `loadFromFile` (same format) — user config wins
+3. Convert merged dict to `OrderedCollection of ACPMcpServer` at the end
+
+### Default Smalltalk MCP servers (raw config dicts)
 
 ```
 'smalltalk-interop' →
   command: 'uvx'
   args: #('--from' 'git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git' 'pharo-smalltalk-interop-mcp-server')
-  env: { 'PHARO_SIS_PORT' → '8086' }
+  env: {'PHARO_SIS_PORT' → '8086'}
 
 'smalltalk-validator' →
   command: 'uvx'
   args: #('--from' 'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main' 'smalltalk-validator-mcp-server')
 ```
-
-Merge rule: mcp.json values win over defaults (user config takes precedence). Concretely: start with defaults, then overwrite with mcp.json entries.
 
 - [ ] **Step 1: Write failing tests for AbMcpServersLoader**
 
@@ -150,7 +169,7 @@ Class {
 }
 
 { #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadFromMissingFileReturnsEmptyDictionary [
+AbMcpServersLoaderTest >> testLoadFromMissingFileReturnsEmpty [
 
 	| loader result |
 	loader := AbMcpServersLoader new.
@@ -160,7 +179,7 @@ AbMcpServersLoaderTest >> testLoadFromMissingFileReturnsEmptyDictionary [
 ]
 
 { #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadFromFileReturnsServersDict [
+AbMcpServersLoaderTest >> testLoadFromFileReturnsParsedConfigDict [
 
 	| loader jsonString tmpFile result |
 	loader := AbMcpServersLoader new.
@@ -170,58 +189,69 @@ AbMcpServersLoaderTest >> testLoadFromFileReturnsServersDict [
 	loader mcpJsonFile: tmpFile.
 	result := loader loadFromFile.
 	self assert: (result includesKey: 'my-server').
-	self assert: (result at: 'my-server') isDictionary.
+	self assert: ((result at: 'my-server') at: 'command') equals: 'uvx'.
 	tmpFile ensureDelete
 ]
 
 { #category : 'tests' }
-AbMcpServersLoaderTest >> testDefaultMcpServersIncludesSmallTalkInterop [
-
-	| loader defaults |
-	loader := AbMcpServersLoader new.
-	defaults := loader defaultMcpServers.
-	self assert: (defaults includesKey: 'smalltalk-interop').
-	self assert: ((defaults at: 'smalltalk-interop') at: 'command') equals: 'uvx'
-]
-
-{ #category : 'tests' }
-AbMcpServersLoaderTest >> testDefaultMcpServersIncludesSmallTalkValidator [
-
-	| loader defaults |
-	loader := AbMcpServersLoader new.
-	defaults := loader defaultMcpServers.
-	self assert: (defaults includesKey: 'smalltalk-validator').
-	self assert: ((defaults at: 'smalltalk-validator') at: 'command') equals: 'uvx'
-]
-
-{ #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadMergesDefaultsWhenUseDefaultMcpServersTrue [
-
-	| loader result |
-	loader := AbMcpServersLoader new.
-	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
-	loader useDefaultMcpServers: true.
-	result := loader load.
-	self assert: (result includesKey: 'smalltalk-interop').
-	self assert: (result includesKey: 'smalltalk-validator')
-]
-
-{ #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadDoesNotMergeDefaultsWhenUseDefaultMcpServersFalse [
+AbMcpServersLoaderTest >> testLoadWithoutFileAndDefaultsReturnsEmpty [
 
 	| loader result |
 	loader := AbMcpServersLoader new.
 	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
 	loader useDefaultMcpServers: false.
 	result := loader load.
-	self deny: (result includesKey: 'smalltalk-interop').
-	self deny: (result includesKey: 'smalltalk-validator')
+	self assert: result isEmpty
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadWithDefaultsReturnsMcpServerObjects [
+
+	| loader result |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: true.
+	result := loader load.
+	self assert: (result allSatisfy: [ :each | each isKindOf: ACPMcpServer ])
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadWithDefaultsIncludesSmalltalkInterop [
+
+	| loader result |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: true.
+	result := loader load.
+	self assert: (result anySatisfy: [ :s | s name = 'smalltalk-interop' ])
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadWithDefaultsIncludesSmalltalkValidator [
+
+	| loader result |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: true.
+	result := loader load.
+	self assert: (result anySatisfy: [ :s | s name = 'smalltalk-validator' ])
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadWithoutDefaultsDoesNotIncludeSmalltalkInterop [
+
+	| loader result |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: false.
+	result := loader load.
+	self deny: (result anySatisfy: [ :s | s name = 'smalltalk-interop' ])
 ]
 
 { #category : 'tests' }
 AbMcpServersLoaderTest >> testLoadUserServersTakePrecedenceOverDefaults [
 
-	| loader jsonString tmpFile result userConfig |
+	| loader jsonString tmpFile result interopServer |
 	loader := AbMcpServersLoader new.
 	tmpFile := FileReference newTempFilePrefix: 'mcp' suffix: '.json'.
 	jsonString := '{"mcpServers":{"smalltalk-interop":{"command":"myuvx","args":[]}}}'.
@@ -229,15 +259,28 @@ AbMcpServersLoaderTest >> testLoadUserServersTakePrecedenceOverDefaults [
 	loader mcpJsonFile: tmpFile.
 	loader useDefaultMcpServers: true.
 	result := loader load.
-	userConfig := result at: 'smalltalk-interop'.
-	self assert: (userConfig at: 'command') equals: 'myuvx'.
+	interopServer := result detect: [ :s | s name = 'smalltalk-interop' ].
+	self assert: interopServer command equals: 'myuvx'.
 	tmpFile ensureDelete
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadSmalltalkInteropHasEnvVar [
+
+	| loader result interopServer |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: true.
+	result := loader load.
+	interopServer := result detect: [ :s | s name = 'smalltalk-interop' ].
+	self assert: (interopServer env anySatisfy: [ :e |
+		e name = 'PHARO_SIS_PORT' and: [ e value = '8086' ] ])
 ]
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Use st-test skill to run `AbMcpServersLoaderTest`.
+Use st-test to run `AbMcpServersLoaderTest`.
 Expected: FAIL — `AbMcpServersLoader` does not exist yet.
 
 - [ ] **Step 3: Implement AbMcpServersLoader**
@@ -288,12 +331,14 @@ AbMcpServersLoader >> useDefaultMcpServers: aBoolean [
 { #category : 'loading' }
 AbMcpServersLoader >> load [
 
-	| result |
-	result := Dictionary new.
+	| merged |
+	merged := Dictionary new.
 	self useDefaultMcpServers ifTrue: [
-		result addAllFrom: self defaultMcpServers ].
-	result addAllFrom: self loadFromFile.
-	^ result
+		merged addAllFrom: self defaultConfigDicts ].
+	merged addAllFrom: self loadFromFile.
+	^ merged keys
+		  collect: [ :name | self mcpServerNamed: name fromConfig: (merged at: name) ]
+		  as: OrderedCollection
 ]
 
 { #category : 'loading' }
@@ -305,8 +350,8 @@ AbMcpServersLoader >> loadFromFile [
 	^ (json at: 'mcpServers' ifAbsent: [ ^ Dictionary new ]) asDictionary
 ]
 
-{ #category : 'defaults' }
-AbMcpServersLoader >> defaultMcpServers [
+{ #category : 'private' }
+AbMcpServersLoader >> defaultConfigDicts [
 
 	^ Dictionary new
 		  at: 'smalltalk-interop'
@@ -330,7 +375,26 @@ AbMcpServersLoader >> defaultMcpServers [
 				   yourself);
 		  yourself
 ]
+
+{ #category : 'private' }
+AbMcpServersLoader >> mcpServerNamed: aName fromConfig: aConfigDict [
+
+	| server |
+	server := ACPMcpServer new.
+	server name: aName.
+	(aConfigDict at: 'command' ifAbsent: [ nil ]) ifNotNil: [ :v | server command: v ].
+	(aConfigDict at: 'args' ifAbsent: [ nil ]) ifNotNil: [ :v | server args: v ].
+	(aConfigDict at: 'type' ifAbsent: [ nil ]) ifNotNil: [ :v | server type: v ].
+	(aConfigDict at: 'url' ifAbsent: [ nil ]) ifNotNil: [ :v | server url: v ].
+	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
+		envSource isDictionary
+			ifTrue: [ envSource keysAndValuesDo: [ :k :v | server addEnvNamed: k value: v ] ]
+			ifFalse: [ server env: envSource ] ].
+	^ server
+]
 ```
+
+Note: `env` in mcp.json is a flat Dictionary (`{"KEY": "VALUE"}`), so `keysAndValuesDo:` maps each entry to `addEnvNamed:value:`. The `ifFalse:` branch handles the case where a user passes an already-structured array (forward compatibility).
 
 - [ ] **Step 4: Import and run tests**
 
@@ -341,7 +405,7 @@ Expected: All tests pass.
 
 ```bash
 git add src/AgenticBrowser-Core/AbMcpServersLoader.class.st src/AgenticBrowser-Tests/AbMcpServersLoaderTest.class.st
-git commit -m "feat: add AbMcpServersLoader for reading mcp.json and merging default MCP servers"
+git commit -m "feat: add AbMcpServersLoader building ACPMcpServer objects from mcp.json"
 ```
 
 ---
@@ -354,15 +418,23 @@ git commit -m "feat: add AbMcpServersLoader for reading mcp.json and merging def
 
 ### How mcpServers are passed
 
-`sessionResultFromInitializeResponse:` calls `newSessionBy:`, `resumeSessionBy:`, or `loadSessionBy:`. Each block receives params that respond to `mcpServers:`. We call `params mcpServers: self resolvedMcpServers` in each block.
-
-`resolvedMcpServers` delegates to `AbMcpServersLoader default load`.
+`sessionResultFromInitializeResponse:` calls `newSessionBy:`, `resumeSessionBy:`, or `loadSessionBy:`. All three params classes inherit `mcpServers:` from `ACPSessionParams`, which accepts an Array of `ACPMcpServer`. We resolve the servers once per connect and pass them to whichever branch is taken.
 
 - [ ] **Step 1: Write failing tests**
 
 Add to `AbTopicSessionTest`:
 
 ```smalltalk
+{ #category : 'tests' }
+AbTopicSessionTest >> testResolvedMcpServersReturnsCollection [
+
+	| topic session result |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	result := session resolvedMcpServers.
+	self assert: result isCollection
+]
+
 { #category : 'tests' }
 AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
 
@@ -395,28 +467,18 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
 	session doConnectWithClient: mockClient.
 
 	self verify: mockClient.
-	self assert: capturedMcpServers isDictionary
-]
-
-{ #category : 'tests' }
-AbTopicSessionTest >> testResolvedMcpServersReturnsDictionary [
-
-	| topic session result |
-	topic := AbTopic new.
-	session := AbTopicSession on: topic.
-	result := session resolvedMcpServers.
-	self assert: result isDictionary
+	self assert: capturedMcpServers isCollection
 ]
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
 Use st-test to run `AbTopicSessionTest`.
-Expected: FAIL — `resolvedMcpServers` does not exist and mcpServers is not set.
+Expected: FAIL — `resolvedMcpServers` does not exist.
 
 - [ ] **Step 3: Add `resolvedMcpServers` and update `sessionResultFromInitializeResponse:`**
 
-In `AbTopicSession.class.st`, add a new method in `private` category:
+In `AbTopicSession.class.st`, add in `private` category:
 
 ```smalltalk
 { #category : 'private' }
@@ -426,7 +488,7 @@ AbTopicSession >> resolvedMcpServers [
 ]
 ```
 
-Update `sessionResultFromInitializeResponse:` to pass mcpServers in all three session param blocks:
+Replace `sessionResultFromInitializeResponse:` entirely:
 
 ```smalltalk
 { #category : 'private' }
@@ -457,20 +519,16 @@ AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
 ]
 ```
 
-- [ ] **Step 4: Update existing session tests that verify params**
-
-The existing tests `testDoConnectWithClientUsesResumeWhenSessionIdExistsAndResumeSupported` and `testDoConnectWithClientFallsBackToLoadWhenResumeUnsupported` use `ACPResumeSessionParams buildBy:` and `ACPLoadSessionParams buildBy:` respectively. They don't currently assert on `mcpServers`, so they should still pass without changes. Verify they pass after import.
-
-- [ ] **Step 5: Import and run all tests**
+- [ ] **Step 4: Import and run all tests**
 
 Use st-import to import `AgenticBrowser-Core` and `AgenticBrowser-Tests`, then st-test to run the full `AgenticBrowser-Tests` package.
-Expected: All tests pass.
+Expected: All tests pass including the previously passing session tests.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/AgenticBrowser-Core/AbTopicSession.class.st src/AgenticBrowser-Tests/AbTopicSessionTest.class.st
-git commit -m "feat: pass mcpServers from mcp.json to ACP session params on connect"
+git commit -m "feat: pass ACPMcpServer objects from mcp.json to ACP session params on connect"
 ```
 
 ---
@@ -479,9 +537,7 @@ git commit -m "feat: pass mcpServers from mcp.json to ACP session params on conn
 
 - [ ] **Step 1: Export all modified packages**
 
-Use st-export skill to export:
-- `AgenticBrowser-Core`
-- `AgenticBrowser-Tests`
+Use st-export to export: `AgenticBrowser-Core`, `AgenticBrowser-Tests`
 
 - [ ] **Step 2: Verify exported files**
 
@@ -489,7 +545,7 @@ Use st-export skill to export:
 git diff --stat src/
 ```
 
-Expected: changes in `AbSettings.class.st`, `AbMcpServersLoader.class.st`, `AbTopicSession.class.st`, and test files.
+Expected: changes in `AbSettings.class.st`, new `AbMcpServersLoader.class.st`, `AbTopicSession.class.st`, and test files.
 
 - [ ] **Step 3: Commit exported changes**
 
@@ -497,16 +553,6 @@ Expected: changes in `AbSettings.class.st`, `AbMcpServersLoader.class.st`, `AbTo
 git add src/AgenticBrowser-Core/ src/AgenticBrowser-Tests/
 git commit -m "chore: export packages after MCP server support implementation"
 ```
-
----
-
-## ACP Side Feedback
-
-> **Note for ACP library maintainers:** `mcpServers:` currently accepts a raw `Dictionary` (server name → config Dictionary). A dedicated `ACPMcpServer` DataType class (similar to `ACPNewSessionParams` etc.) would improve type safety and discoverability. This would allow callers to write:
-> ```smalltalk
-> params mcpServers: { ACPMcpServer name: 'my-server' command: 'uvx' args: #('pkg') }
-> ```
-> instead of constructing nested Dictionaries manually.
 
 ---
 
@@ -518,18 +564,19 @@ git commit -m "chore: export packages after MCP server support implementation"
 |---|---|
 | `mcp.json` が `defaultAgenticBrowserRootDirectory` にあれば使う | Task 2 (`loadFromFile`) |
 | `mcp.json` フォーマットはcursor標準 (`mcpServers` キー) | Task 2 |
-| `useDefaultMcpServers: true` → smalltalk-interop + smalltalk-validator をマージ | Task 2 (`load` + `defaultMcpServers`) |
-| `useDefaultMcpServers: false` → マージしない | Task 2 (tests: `testLoadDoesNotMergeDefaultsWhenUseDefaultMcpServersFalse`) |
+| `useDefaultMcpServers: true` → smalltalk-interop + smalltalk-validator をマージ | Task 2 (`load` + `defaultConfigDicts`) |
+| `useDefaultMcpServers: false` → マージしない | Task 2 (`testLoadWithoutDefaultsDoesNotIncludeSmalltalkInterop`) |
 | ユーザ設定が defaults より優先 | Task 2 (`testLoadUserServersTakePrecedenceOverDefaults`) |
 | ACPセッション全種 (new/resume/load) に mcpServers を渡す | Task 3 |
 | `AbSettings >> useDefaultMcpServers` 永続化 | Task 1 (既存の `settingsDict` ベース永続化で自動対応) |
 
 ### Type consistency
 
-- `AbMcpServersLoader >> load` → `Dictionary` (server name → config Dictionary)
-- `AbTopicSession >> resolvedMcpServers` → same `Dictionary`
-- `params mcpServers:` → receives that `Dictionary`
-- All consistent across tasks.
+- `AbMcpServersLoader >> loadFromFile` → `Dictionary` (server name → raw config dict) — internal only
+- `AbMcpServersLoader >> defaultConfigDicts` → same `Dictionary` — internal only
+- `AbMcpServersLoader >> load` → `OrderedCollection of ACPMcpServer`
+- `AbTopicSession >> resolvedMcpServers` → same `OrderedCollection of ACPMcpServer`
+- `params mcpServers:` → receives `OrderedCollection of ACPMcpServer` ✓
 
 ### Placeholder scan
 
