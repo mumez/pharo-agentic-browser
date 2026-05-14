@@ -247,6 +247,51 @@ AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testResolvedMcpServersReturnsCollection [
+
+	| topic session result |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	result := session resolvedMcpServers.
+	self assert: result isCollection
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
+
+	| topic session newSessionResult mockClient capturedMcpServers |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	newSessionResult := self mockSessionResultWithId: 'session-new'.
+	capturedMcpServers := nil.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :h | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | nil ].
+	mockClient
+		on: #newSessionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSessionParams buildBy: aBlock.
+			capturedMcpServers := params mcpServers.
+			newSessionResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: mockClient.
+	self assert: capturedMcpServers isCollection
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
 
 	| session topic options modelOption |

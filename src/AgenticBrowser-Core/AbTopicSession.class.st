@@ -109,24 +109,36 @@ AbTopicSession >> initialize [
 ]
 
 { #category : 'private' }
+AbTopicSession >> resolvedMcpServers [
+
+	^ AbMcpServersLoader default load
+]
+
+{ #category : 'private' }
 AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
 
-	| existingSessionId workingDirectoryPath capabilities |
+	| existingSessionId workingDirectoryPath capabilities mcpServers |
 	existingSessionId := self sessionId.
 	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
+	mcpServers := self resolvedMcpServers.
 	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
 		capabilities := initializeResponse agentCapabilities.
 		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
 			^ self client resumeSessionBy: [ :params |
 				  params
 					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath ] ].
+					  cwd: workingDirectoryPath;
+					  mcpServers: mcpServers ] ].
 		(capabilities notNil and: [ capabilities isLoadSupported ]) ifTrue: [
 			^ self client loadSessionBy: [ :params |
 				  params
 					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath ] ] ].
-	^ self client newSessionBy: [ :params | params cwd: workingDirectoryPath ]
+					  cwd: workingDirectoryPath;
+					  mcpServers: mcpServers ] ] ].
+	^ self client newSessionBy: [ :params |
+		  params
+			  cwd: workingDirectoryPath;
+			  mcpServers: mcpServers ]
 ]
 
 { #category : 'accessing' }
