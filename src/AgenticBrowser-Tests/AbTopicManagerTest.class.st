@@ -239,10 +239,10 @@ AbTopicManagerTest >> testLoadFromRestoresWorkingDirectoryPath [
 ]
 
 { #category : 'tests' }
-AbTopicManagerTest >> testDefaultPersistenceFileIsInAgenticBrowserDirectory [
+AbTopicManagerTest >> testDefaultFileReferenceIsInAgenticBrowserDirectory [
 
 	| file |
-	file := AbTopicManager defaultPersistenceFile.
+	file := AbTopicManager defaultFileReference.
 	self assert: (file fullName includesSubstring: 'agentic-browser').
 	self assert: (file fullName endsWith: 'ab-topics.fuel')
 ]
@@ -253,7 +253,7 @@ AbTopicManagerTest >> testLoadDoesNothingWhenPersistenceFileDoesNotExist [
 	| previousTopicsCount |
 	"This test works because AbTopicManager forTest != AbTopicManager default.
 	 We only need to confirm load doesn't raise when the file is absent."
-	AbTopicManager defaultPersistenceFile exists ifTrue: [ ^ self skip ].
+	AbTopicManager defaultFileReference exists ifTrue: [ ^ self skip ].
 	previousTopicsCount := AbTopicManager default topics size.
 	"Should silently do nothing when file does not exist"
 	[ AbTopicManager load ]

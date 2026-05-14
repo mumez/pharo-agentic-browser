@@ -72,6 +72,7 @@ AbBrowserPresenter >> onWindowClosed [
 	chatPresenter release.
 	manager := AbTopicManager uniqueInstance.
 	manager cleanupAllTopics.
+	AbSettings save.
 	AbTopicManager save
 ]
 

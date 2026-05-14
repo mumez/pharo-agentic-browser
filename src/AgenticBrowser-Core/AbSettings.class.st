@@ -29,6 +29,57 @@ AbSettings class >> initialize [
 	default := nil
 ]
 
+{ #category : 'persistence' }
+AbSettings class >> defaultAgenticBrowserRootDirectory [
+
+	^ Smalltalk imageDirectory / 'agentic-browser'
+]
+
+{ #category : 'persistence' }
+AbSettings class >> fileName [
+
+	^ 'ab-settings.ston'
+]
+
+{ #category : 'persistence' }
+AbSettings class >> defaultFileReference [
+
+	^ self defaultAgenticBrowserRootDirectory / self fileName
+]
+
+{ #category : 'persistence' }
+AbSettings class >> load [
+
+	self defaultFileReference exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultFileReference
+]
+
+{ #category : 'persistence' }
+AbSettings class >> loadFrom: aFileReference [
+
+	^ aFileReference readStreamDo: [ :stream | STON fromStream: stream ]
+]
+
+{ #category : 'persistence' }
+AbSettings class >> save [
+
+	self saveTo: self defaultFileReference
+]
+
+{ #category : 'persistence' }
+AbSettings class >> saveTo: aFileReference [
+
+	self saveTo: aFileReference settings: self default
+]
+
+{ #category : 'persistence' }
+AbSettings class >> saveTo: aFileReference settings: anAbSettings [
+
+	aFileReference parent ensureCreateDirectory.
+	aFileReference writeStreamDo: [ :stream |
+		STON put: anAbSettings onStream: stream ]
+]
+
 { #category : 'accessing' }
 AbSettings >> aiPermissionWaitTimeoutSeconds [
 

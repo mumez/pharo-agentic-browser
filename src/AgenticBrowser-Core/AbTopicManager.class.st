@@ -50,9 +50,15 @@ AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 ]
 
 { #category : 'persistence' }
-AbTopicManager class >> defaultPersistenceFile [
+AbTopicManager class >> fileName [
 
-	^ Smalltalk imageDirectory / 'agentic-browser' / 'ab-topics.fuel'
+	^ 'ab-topics.fuel'
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> defaultFileReference [
+
+	^ AbSettings defaultAgenticBrowserRootDirectory / self fileName
 ]
 
 { #category : 'persistence' }
@@ -77,14 +83,14 @@ AbTopicManager class >> loadFrom: aFileReference [
 { #category : 'persistence' }
 AbTopicManager class >> save [
 
-	self saveTo: self defaultPersistenceFile
+	self saveTo: self defaultFileReference
 ]
 
 { #category : 'persistence' }
 AbTopicManager class >> load [
 
-	self defaultPersistenceFile exists ifFalse: [ ^ self ].
-	default := self loadFrom: self defaultPersistenceFile
+	self defaultFileReference exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultFileReference
 ]
 
 { #category : 'operations' }
