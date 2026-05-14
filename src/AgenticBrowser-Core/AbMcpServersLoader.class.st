@@ -3,7 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'mcpJsonFile',
-		'useDefaultMcpServers'
+		'settings'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -14,7 +14,6 @@ AbMcpServersLoader class >> default [
 
 	^ self new
 		  mcpJsonFile: AbSettings defaultAgenticBrowserRootDirectory / 'mcp.json';
-		  useDefaultMcpServers: AbSettings default useDefaultMcpServers;
 		  yourself
 ]
 
@@ -73,8 +72,8 @@ AbMcpServersLoader >> load [
 AbMcpServersLoader >> loadFromFile [
 
 	| json |
-	(mcpJsonFile isNil or: [ mcpJsonFile exists not ]) ifTrue: [ ^ Dictionary new ].
-	json := STONJSON fromString: mcpJsonFile contents.
+	(self mcpJsonFile isNil or: [ self mcpJsonFile exists not ]) ifTrue: [ ^ Dictionary new ].
+	json := STONJSON fromString: self mcpJsonFile contents.
 	^ (json at: 'mcpServers' ifAbsent: [ ^ Dictionary new ]) asDictionary
 ]
 
@@ -99,11 +98,16 @@ AbMcpServersLoader >> mcpServerNamed: aName fromConfig: aConfigDict [
 ]
 
 { #category : 'accessing' }
+AbMcpServersLoader >> settings [
+	^ settings ifNil: [ settings := AbSettings defaultCopied ]
+]
+
+{ #category : 'accessing' }
 AbMcpServersLoader >> useDefaultMcpServers [
-	^ useDefaultMcpServers ifNil: [ true ]
+	^ self settings useDefaultMcpServers
 ]
 
 { #category : 'accessing' }
 AbMcpServersLoader >> useDefaultMcpServers: aBoolean [
-	useDefaultMcpServers := aBoolean
+	self settings useDefaultMcpServers: aBoolean
 ]
