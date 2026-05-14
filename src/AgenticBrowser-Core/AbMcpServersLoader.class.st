@@ -16,6 +16,33 @@ AbMcpServersLoader class >> defaultMcpJsonFileReference [
 ]
 
 { #category : 'private' }
+AbMcpServersLoader >> addSmalltalkInteropMcpTo: aDict [
+
+	| server |
+	server := ACPMcpServer new
+		name: 'smalltalk-interop';
+		command: 'uvx';
+		args: #( '--from' 'git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git'
+			'pharo-smalltalk-interop-mcp-server' );
+		yourself.
+	server addEnvNamed: 'PHARO_SIS_PORT' value: '8086'.
+	aDict at: server name put: server asDictionary
+]
+
+{ #category : 'private' }
+AbMcpServersLoader >> addSmalltalkValidatorMcpTo: aDict [
+
+	| server |
+	server := ACPMcpServer new
+		name: 'smalltalk-validator';
+		command: 'uvx';
+		args: #( '--from' 'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main'
+			'smalltalk-validator-mcp-server' );
+		yourself.
+	aDict at: server name put: server asDictionary
+]
+
+{ #category : 'private' }
 AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
 
 	#( #command #args #type #url ) do: [ :key |
@@ -30,27 +57,11 @@ AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
 { #category : 'private' }
 AbMcpServersLoader >> defaultConfigDicts [
 
-	^ Dictionary new
-		  at: 'smalltalk-interop'
-		  put: (Dictionary new
-				   at: 'command' put: 'uvx';
-				   at: 'args'
-				   put: #( '--from'
-					   'git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git'
-					   'pharo-smalltalk-interop-mcp-server' );
-				   at: 'env' put: (Dictionary new
-						    at: 'PHARO_SIS_PORT' put: '8086';
-						    yourself);
-				   yourself);
-		  at: 'smalltalk-validator'
-		  put: (Dictionary new
-				   at: 'command' put: 'uvx';
-				   at: 'args'
-				   put: #( '--from'
-					   'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main'
-					   'smalltalk-validator-mcp-server' );
-				   yourself);
-		  yourself
+	| dict |
+	dict := Dictionary new.
+	self addSmalltalkInteropMcpTo: dict.
+	self addSmalltalkValidatorMcpTo: dict.
+	^ dict
 ]
 
 { #category : 'loading' }
