@@ -107,19 +107,6 @@ AbChatPresenter >> defaultLayout [
 		  yourself
 ]
 
-{ #category : 'private' }
-AbChatPresenter >> denyOptionIdForPendingApproval [
-
-	| rejectOption |
-	self pendingApprovalMessage ifNil: [ ^ AbConstants rejectOnce ].
-	rejectOption := self pendingApprovalMessage approvalOptions
-		                detect: [ :assoc | assoc value asString asLowercase includesSubstring: 'reject' ]
-		                ifNone: [ nil ].
-	^ rejectOption
-		  ifNil: [ AbConstants rejectOnce ]
-		  ifNotNil: [ rejectOption value ]
-]
-
 { #category : 'initialization' }
 AbChatPresenter >> release [
 
@@ -276,7 +263,8 @@ AbChatPresenter >> onConfirmButtonClicked [
 AbChatPresenter >> onDenyButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
-	self currentTopic resolveApprovalWithOptionId: self denyOptionIdForPendingApproval.
+	self currentTopic
+		resolveApprovalWithOptionId: self confirmPresenter selectedOptionIdForDenyAction.
 	self exitApprovalMode
 ]
 

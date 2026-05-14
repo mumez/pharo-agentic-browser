@@ -23,11 +23,14 @@ AbConfirmPresenter >> approvalOptions: aCollection [
 
 	| labels |
 	approvalOptions := (aCollection ifNil: [ #() ]) asArray.
+	approvalOptions ifEmpty: [ approvalOptions := self defaultApprovalOptions ].
 	labels := approvalOptions collect: [ :assoc | assoc key ].
 	self optionDropList items: labels.
+	self updateActionButtons.
 	labels
 		ifEmpty: [ self optionDropList startWithoutSelection ]
-		ifNotEmpty: [ self optionDropList selectItem: labels first ]
+		ifNotEmpty: [ self optionDropList selectItem: labels first ].
+	self layout: self defaultLayout
 ]
 
 { #category : 'accessing' }
@@ -67,11 +70,7 @@ AbConfirmPresenter >> defaultLayout [
 		  borderWidth: 6;
 		  spacing: 4;
 		  add: self confirmationLabel;
-		  add: (SpBoxLayout newLeftToRight
-				   add: self optionDropList;
-				   addLast: self confirmButton withConstraints: [ :c | c width: 100 ];
-				   addLast: self denyButton withConstraints: [ :c | c width: 80 ];
-				   yourself)
+		  add: self optionAndActionButtonsLayout
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
 ]
@@ -95,7 +94,6 @@ AbConfirmPresenter >> initializePresenters [
 	confirmationLabel := self newText.
 	confirmationLabel beNotEditable.
 	optionDropList := self newDropList.
-	optionDropList startWithoutSelection.
 
 	confirmButton := self newButton.
 	confirmButton label: 'Confirm'.
@@ -129,6 +127,18 @@ AbConfirmPresenter >> optionLabels [
 	^ self approvalOptions collect: [ :assoc | assoc key ]
 ]
 
+{ #category : 'layout' }
+AbConfirmPresenter >> optionAndActionButtonsLayout [
+
+	| row |
+	row := SpBoxLayout newLeftToRight
+		       add: self optionDropList;
+		       addLast: self confirmButton withConstraints: [ :c | c width: 100 ].
+	self showsDenyButton ifTrue: [
+		row addLast: self denyButton withConstraints: [ :c | c width: 80 ] ].
+	^ row yourself
+]
+
 { #category : 'actions' }
 AbConfirmPresenter >> selectOptionNamed: aString [
 
@@ -138,9 +148,33 @@ AbConfirmPresenter >> selectOptionNamed: aString [
 { #category : 'accessing' }
 AbConfirmPresenter >> selectedOptionId [
 
-	| idx |
+	| selectedLabel selectedOption |
 	self approvalOptions ifEmpty: [ ^ AbConstants allowOnce ].
-	idx := self optionDropList selectedIndex.
-	idx = 0 ifTrue: [ ^ self approvalOptions first value ].
-	^ (self approvalOptions at: idx) value
+	selectedLabel := self optionDropList selectedItem.
+	selectedLabel ifNil: [ ^ self approvalOptions first value ].
+	selectedOption := self approvalOptions
+		                  detect: [ :assoc | assoc key = selectedLabel ]
+		                  ifNone: [ self approvalOptions first ].
+	^ selectedOption value
+]
+
+{ #category : 'accessing' }
+AbConfirmPresenter >> selectedOptionIdForDenyAction [
+
+	self showsDenyButton ifTrue: [ ^ self approvalOptions second value ].
+	^ self selectedOptionId
+]
+
+{ #category : 'layout' }
+AbConfirmPresenter >> showsDenyButton [
+
+	^ self approvalOptions size = 2
+]
+
+{ #category : 'private' }
+AbConfirmPresenter >> updateActionButtons [
+
+	self confirmButton label: (self showsDenyButton
+			 ifTrue: [ 'Confirm' ]
+			 ifFalse: [ 'Submit' ])
 ]
