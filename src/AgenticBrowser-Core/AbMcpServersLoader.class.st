@@ -46,9 +46,9 @@ AbMcpServersLoader >> addSmalltalkValidatorMcpTo: aDict [
 AbMcpServersLoader >> configureServer: aServer fromDict: aConfigDict [
 
 	#( #command #args #type #url ) do: [ :key |
-		(aConfigDict at: key ifAbsent: [ nil ]) ifNotNil: [ :v |
-			aServer perform: (key , ':') asSymbol with: v ] ].
-	(aConfigDict at: 'env' ifAbsent: [ nil ]) ifNotNil: [ :envSource |
+		aConfigDict at: key ifPresent: [ :v |
+			aServer perform: key asMutator with: v ] ].
+	aConfigDict at: 'env' ifPresent: [ :envSource |
 		envSource isDictionary
 			ifTrue: [ envSource keysAndValuesDo: [ :k :v | aServer addEnvNamed: k value: v ] ]
 			ifFalse: [ aServer env: envSource ] ]
