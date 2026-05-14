@@ -247,13 +247,18 @@ AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testResolvedMcpServersReturnsCollection [
+AbTopicSessionTest >> testResolvedMcpServersUsesAbMcpServersLoader [
 
-	| topic session result |
+	| topic session mockLoader mockServers result |
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
+	mockServers := OrderedCollection new.
+	mockLoader := MockObject new.
+	mockLoader on: #load verify: [ mockServers ].
+	session mcpServersLoader: mockLoader.
 	result := session resolvedMcpServers.
-	self assert: result isCollection
+	self verify: mockLoader.
+	self assert: result equals: mockServers
 ]
 
 { #category : 'tests' }
@@ -263,7 +268,6 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
 	newSessionResult := self mockSessionResultWithId: 'session-new'.
-	capturedMcpServers := nil.
 	mockClient := MockObject new.
 	mockClient on: #handler: with: MockObject any verify: [ :h | ].
 	mockClient
