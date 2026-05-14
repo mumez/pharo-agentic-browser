@@ -45,11 +45,31 @@ AbNormalInputPresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
+AbNormalInputPresenter >> enableMentionDrop [
+
+	inputField
+		dropEnabled: true;
+		wantsDrop: [ :transfer |
+			| items |
+			items := transfer passenger dragContext selectedItems.
+			items ifEmpty: [ false ] ifNotEmpty: [ :nonEmpty |
+				| obj |
+				obj := nonEmpty first actualObject.
+				obj isCompiledMethod or: [ obj isBehavior ] ] ];
+		acceptDrop: [ :transfer |
+			| items |
+			items := transfer passenger dragContext selectedItems.
+			items ifNotEmpty: [ :nonEmpty |
+				self insertMention: (self mentionStringFor: nonEmpty first actualObject) ] ]
+]
+
+{ #category : 'initialization' }
 AbNormalInputPresenter >> initializePresenters [
 
 	super initializePresenters.
 	inputField := self newText.
 	inputField placeholder: 'Type your request...'.
+	self enableMentionDrop.
 
 	sendButton := self newButton.
 	sendButton label: 'Send'.
@@ -80,6 +100,26 @@ AbNormalInputPresenter >> inputText [
 AbNormalInputPresenter >> isCancelEnabled [
 
 	^ self cancelButton isEnabled
+]
+
+{ #category : 'actions' }
+AbNormalInputPresenter >> insertMention: aString [
+
+	| currentText |
+	currentText := self inputField text.
+	self inputField text: (currentText
+		ifEmpty: [ aString , ' ' ]
+		ifNotEmpty: [ currentText , ' ' , aString , ' ' ])
+]
+
+{ #category : 'private' }
+AbNormalInputPresenter >> mentionStringFor: anObject [
+
+	anObject ifNil: [ ^ '' ].
+	anObject isCompiledMethod ifTrue: [
+		^ '@' , anObject methodClass name , '>>' , anObject selector ].
+	anObject isBehavior ifTrue: [ ^ '@' , anObject name ].
+	^ ''
 ]
 
 { #category : 'actions' }
