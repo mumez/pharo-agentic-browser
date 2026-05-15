@@ -31,6 +31,39 @@ AbMcpServersLoaderTest >> testLoadFromMissingFileReturnsEmpty [
 ]
 
 { #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadResultIsJsonEncodableViaSessionParams [
+
+	| loader servers params json serverDicts interop validator |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: true.
+	servers := loader load.
+	params := ACPSessionParams new.
+	params mcpServers: servers.
+	self shouldnt: [ json := STONJSON toString: params asDictionary ] raise: Error.
+	serverDicts := (STONJSON fromString: json) at: 'mcpServers'.
+	interop := serverDicts detect: [ :s | (s at: 'name') = 'smalltalk-interop' ].
+	self assert: (interop at: 'command') equals: 'uvx'.
+	self assert: (interop at: 'args') equals: #( '--from' 'git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git' 'pharo-smalltalk-interop-mcp-server' ).
+	self assert: ((interop at: 'env') anySatisfy: [ :e | (e at: 'name') = 'PHARO_SIS_PORT' and: [ (e at: 'value') = '8086' ] ]).
+	validator := serverDicts detect: [ :s | (s at: 'name') = 'smalltalk-validator' ].
+	self assert: (validator at: 'command') equals: 'uvx'.
+	self assert: (validator at: 'args') equals: #( '--from' 'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main' 'smalltalk-validator-mcp-server' ).
+	self assert: (validator at: 'env') equals: #()
+]
+
+{ #category : 'tests' }
+AbMcpServersLoaderTest >> testLoadReturnsArray [
+
+	| loader result |
+	loader := AbMcpServersLoader new.
+	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
+	loader useDefaultMcpServers: false.
+	result := loader load.
+	self assert: result class equals: Array
+]
+
+{ #category : 'tests' }
 AbMcpServersLoaderTest >> testLoadSmalltalkInteropHasEnvVar [
 
 	| loader result interopServer |
@@ -112,36 +145,4 @@ AbMcpServersLoaderTest >> testLoadWithoutFileAndDefaultsReturnsEmpty [
 	loader useDefaultMcpServers: false.
 	result := loader load.
 	self assert: result isEmpty
-]
-
-{ #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadReturnsArray [
-
-	| loader result |
-	loader := AbMcpServersLoader new.
-	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
-	loader useDefaultMcpServers: false.
-	result := loader load.
-	self assert: result class equals: Array
-]
-
-{ #category : 'tests' }
-AbMcpServersLoaderTest >> testLoadResultIsJsonEncodableViaSessionParams [
-
-	| loader servers params json serverDicts interop validator |
-	loader := AbMcpServersLoader new.
-	loader mcpJsonFile: (FileReference / 'nonexistent' / 'mcp.json').
-	loader useDefaultMcpServers: true.
-	servers := loader load.
-	params := ACPSessionParams new.
-	params mcpServers: servers.
-	self shouldnt: [ json := STONJSON toString: params asDictionary ] raise: Error.
-	serverDicts := (STONJSON fromString: json) at: 'mcpServers'.
-	interop := serverDicts detect: [ :s | (s at: 'name') = 'smalltalk-interop' ].
-	self assert: (interop at: 'command') equals: 'uvx'.
-	self assert: (interop at: 'args') equals: #( '--from' 'git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git' 'pharo-smalltalk-interop-mcp-server' ).
-	self assert: ((interop at: 'env') anySatisfy: [ :e | (e at: 'name') = 'PHARO_SIS_PORT' and: [ (e at: 'value') = '8086' ] ]).
-	validator := serverDicts detect: [ :s | (s at: 'name') = 'smalltalk-validator' ].
-	self assert: (validator at: 'command') equals: 'uvx'.
-	self assert: (validator at: 'args') equals: #( '--from' 'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main' 'smalltalk-validator-mcp-server' )
 ]

@@ -17,7 +17,6 @@ AbMcpServersLoader class >> defaultMcpJsonFileReference [
 
 { #category : 'private' }
 AbMcpServersLoader >> addSmalltalkInteropMcpTo: aDict [
-
 	| server |
 	server := ACPMcpServer new
 		name: 'smalltalk-interop';
@@ -31,13 +30,13 @@ AbMcpServersLoader >> addSmalltalkInteropMcpTo: aDict [
 
 { #category : 'private' }
 AbMcpServersLoader >> addSmalltalkValidatorMcpTo: aDict [
-
 	| server |
 	server := ACPMcpServer new
 		name: 'smalltalk-validator';
 		command: 'uvx';
 		args: #( '--from' 'git+https://github.com/mumez/smalltalk-validator-mcp-server.git@main'
 			'smalltalk-validator-mcp-server' );
+		env: #();
 		yourself.
 	aDict at: server name put: server asDictionary
 ]
@@ -98,11 +97,11 @@ AbMcpServersLoader >> mcpJsonFile: aFileReference [
 
 { #category : 'private' }
 AbMcpServersLoader >> mcpServerNamed: aName fromConfig: aConfigDict [
-
 	| server |
 	server := ACPMcpServer new.
 	server name: aName.
 	self configureServer: server fromDict: aConfigDict.
+	(server env isNil and: [ server command notNil ]) ifTrue: [ server env: #() ].
 	^ server
 ]
 
