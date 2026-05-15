@@ -111,7 +111,7 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupporte
 		with: MockObject any
 		verify: [ :aBlock |
 			| params |
-			params := ACPLoadSessionParams buildBy: aBlock.
+			params := ACPSessionParams buildBy: aBlock.
 			self assert: params sessionId equals: 'session-1'.
 			loadResult ].
 
@@ -226,7 +226,7 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 		with: MockObject any
 		verify: [ :aBlock |
 			| params |
-			params := ACPResumeSessionParams buildBy: aBlock.
+			params := ACPSessionParams buildBy: aBlock.
 			self assert: params sessionId equals: 'session-1'.
 			resumeResult ].
 
