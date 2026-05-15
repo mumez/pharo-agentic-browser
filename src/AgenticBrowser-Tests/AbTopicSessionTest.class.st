@@ -88,9 +88,9 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupporte
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
-	capabilities := MockObject new.
-	capabilities on: #isResumeSupported verify: [ false ].
-	capabilities on: #isLoadSupported verify: [ true ].
+	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
+		at: 'loadSession' put: true;
+		yourself).
 	initializeResponse := self
 		                      mockInitializeResponseWithCapabilities: capabilities.
 	loadResult := self mockSessionResultWithId: 'session-1-loaded'.
@@ -117,7 +117,6 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupporte
 
 	session doConnectWithClient: mockClient.
 
-	self verify: capabilities.
 	self verify: initializeResponse.
 	self verify: loadResult.
 	self verify: mockClient.
@@ -131,9 +130,7 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
-	capabilities := MockObject new.
-	capabilities on: #isResumeSupported verify: [ false ].
-	capabilities on: #isLoadSupported verify: [ false ].
+	capabilities := ACPAgentCapabilities fromDictionary: Dictionary new.
 	initializeResponse := self
 		                      mockInitializeResponseWithCapabilities: capabilities.
 	newSessionResult := self mockSessionResultWithId: 'session-2-new'.
@@ -156,7 +153,6 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 
 	session doConnectWithClient: mockClient.
 
-	self verify: capabilities.
 	self verify: initializeResponse.
 	self verify: newSessionResult.
 	self verify: mockClient.
@@ -164,7 +160,46 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
+AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersWhenMcpCapabilitiesPresent [
+
+	| topic session newSessionResult mockClient capturedMcpServers capabilities initializeResponse |
+	topic := AbTopic new.
+	session := AbTopicSession on: topic.
+	newSessionResult := self mockSessionResultWithId: 'session-new'.
+	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
+		at: 'mcpCapabilities' put: Dictionary new;
+		yourself).
+	initializeResponse := self mockInitializeResponseWithCapabilities: capabilities.
+	mockClient := MockObject new.
+	mockClient on: #handler: with: MockObject any verify: [ :h | ].
+	mockClient
+		on: #agentCommand:arguments:
+		with: '/usr/bin/env'
+		with: topic agentArguments
+		verify: [ ].
+	mockClient on: #connect verify: [ ].
+	mockClient
+		on: #initializeBy:
+		with: MockObject any
+		verify: [ :unused | initializeResponse ].
+	mockClient
+		on: #newSessionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSessionParams buildBy: aBlock.
+			capturedMcpServers := params mcpServers.
+			newSessionResult ].
+
+	session doConnectWithClient: mockClient.
+
+	self verify: mockClient.
+	self assert: capturedMcpServers isCollection.
+	self assert: capturedMcpServers notEmpty
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testDoConnectWithClientSkipsMcpServersWhenMcpCapabilitiesAbsent [
 
 	| topic session newSessionResult mockClient capturedMcpServers |
 	topic := AbTopic new.
@@ -194,7 +229,7 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersToNewSession [
 	session doConnectWithClient: mockClient.
 
 	self verify: mockClient.
-	self assert: capturedMcpServers isCollection
+	self assert: capturedMcpServers isEmpty
 ]
 
 { #category : 'tests' }
@@ -204,8 +239,9 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 	topic := AbTopic new.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
-	capabilities := MockObject new.
-	capabilities on: #isResumeSupported verify: [ true ].
+	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
+		at: 'sessionCapabilities' put: (Dictionary new at: 'resume' put: Dictionary new; yourself);
+		yourself).
 	initializeResponse := self
 		                      mockInitializeResponseWithCapabilities: capabilities.
 	resumeResult := self mockSessionResultWithId: 'session-1-resumed'.
@@ -232,7 +268,6 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 
 	session doConnectWithClient: mockClient.
 
-	self verify: capabilities.
 	self verify: initializeResponse.
 	self verify: resumeResult.
 	self verify: mockClient.

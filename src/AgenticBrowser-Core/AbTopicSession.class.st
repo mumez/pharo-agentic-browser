@@ -127,12 +127,16 @@ AbTopicSession >> sessionId: aString [
 { #category : 'private' }
 AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
 
-	| existingSessionId workingDirectoryPath capabilities mcpServers |
+	| existingSessionId workingDirectoryPath capabilities mcpServers mcpSupported |
 	existingSessionId := self sessionId.
 	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
-	mcpServers := self resolvedMcpServers.
+	capabilities := initializeResponse notNil
+		                ifTrue: [ initializeResponse agentCapabilities ]
+		                ifFalse: [ nil ].
+	mcpSupported := capabilities notNil and: [
+		                capabilities rawValues includesKey: 'mcpCapabilities' ].
+	mcpServers := mcpSupported ifTrue: [ self resolvedMcpServers ] ifFalse: [ #() ].
 	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
-		capabilities := initializeResponse agentCapabilities.
 		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
 			^ self client resumeSessionBy: [ :params |
 				  params
