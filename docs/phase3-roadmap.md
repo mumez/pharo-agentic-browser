@@ -62,7 +62,7 @@ onSetGoalRequest          "handles 'Set Goal...' context menu action"
 
 ---
 
-## 1. Session Persistence
+## 1. Session Persistence - DONE
 
 Save and restore topic sessions to a file, independent of Pharo image save.
 
