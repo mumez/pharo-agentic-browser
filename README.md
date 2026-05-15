@@ -1,6 +1,6 @@
 # pharo-agentic-browser
 
-A GUI application inside the Pharo image for managing multiple AI agent work sessions as **topics**. It uses [pharo-acp](https://github.com/mumez/pharo-acp) (an ACP client library) as the backend and Spec2 for the UI.
+A Pharo-native GUI for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
 
 ## Overview
 
