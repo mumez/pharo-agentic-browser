@@ -133,9 +133,13 @@ AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
 	capabilities := initializeResponse notNil
 		                ifTrue: [ initializeResponse agentCapabilities ]
 		                ifFalse: [ nil ].
-	mcpSupported := capabilities notNil and: [
-		                capabilities rawValues includesKey: 'mcpCapabilities' ].
-	mcpServers := mcpSupported ifTrue: [ self resolvedMcpServers ] ifFalse: [ #() ].
+	mcpSupported := capabilities notNil and: [ capabilities isMcpServersSupported ].
+	mcpServers := self resolvedMcpServers.
+	mcpSupported ifFalse: [
+		mcpServers ifNotEmpty: [
+			self topic addSystemMessage:
+				'Note: MCP servers are configured but this agent does not support MCP server registration.' ].
+		mcpServers := #() ].
 	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
 		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
 			^ self client resumeSessionBy: [ :params |

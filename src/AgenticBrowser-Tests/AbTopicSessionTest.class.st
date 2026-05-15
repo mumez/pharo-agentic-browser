@@ -167,7 +167,7 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersWhenMcpCapabilities
 	session := AbTopicSession on: topic.
 	newSessionResult := self mockSessionResultWithId: 'session-new'.
 	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
-		at: 'mcpCapabilities' put: Dictionary new;
+		at: 'mcpCapabilities' put: (Dictionary new at: 'http' put: true; yourself);
 		yourself).
 	initializeResponse := self mockInitializeResponseWithCapabilities: capabilities.
 	mockClient := MockObject new.
