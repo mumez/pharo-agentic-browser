@@ -74,7 +74,7 @@ AbMcpServersLoader >> load [
 	merged addAll: self loadFromFile.
 	^ merged keys
 		  collect: [ :name | self mcpServerNamed: name fromConfig: (merged at: name) ]
-		  as: OrderedCollection
+		  as: Array
 ]
 
 { #category : 'loading' }
