@@ -4,7 +4,7 @@ Candidate features for the next phase, noted after Phase 2 completion (2026-04-2
 
 ---
 
-## 0. Goal Setting (Primary Feature)
+## 0. Goal Setting (Primary Feature) - DONE
 
 Allow users to define a completion condition (goal) for a topic. When set, the AI agent works autonomously until the goal is achieved, then reports back in a structured result file.
 
@@ -62,7 +62,7 @@ onSetGoalRequest          "handles 'Set Goal...' context menu action"
 
 ---
 
-## 1. Session Persistence
+## 1. Session Persistence - DONE
 
 Save and restore topic sessions to a file, independent of Pharo image save.
 
@@ -84,7 +84,7 @@ AbTopicManager loadSessionFrom: '/path/to/session.fuel'.
 
 ---
 
-## 2. Code Mentions in Chat (@Class / @Class>>method)
+## 2. Code Mentions in Chat (@Class / @Class>>method) - DONE
 
 Allow chat input to reference Pharo classes or methods inline:
 

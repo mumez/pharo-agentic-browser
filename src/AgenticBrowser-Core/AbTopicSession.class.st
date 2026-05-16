@@ -27,18 +27,24 @@ AbTopicSession class >> on: anAbTopic [
 ]
 
 { #category : 'accessing' }
-AbTopicSession >> availableCommands [
-	^ availableCommands
-]
-
-{ #category : 'accessing' }
 AbTopicSession >> announcer [
 	^ self topic announcer
 ]
 
 { #category : 'accessing' }
+AbTopicSession >> availableCommands [
+	^ availableCommands
+]
+
+{ #category : 'accessing' }
 AbTopicSession >> availableCommands: aCollection [
 	availableCommands := aCollection
+]
+
+{ #category : 'operations' }
+AbTopicSession >> clearSessionId [
+
+	self sessionId: nil
 ]
 
 { #category : 'accessing' }
@@ -49,6 +55,25 @@ AbTopicSession >> client [
 { #category : 'accessing' }
 AbTopicSession >> client: anACPClient [
 	client := anACPClient
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel [
+	^ currentModel
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentModel: aString [
+	currentModel := aString
+]
+
+{ #category : 'operations' }
+AbTopicSession >> disconnect [
+
+	self client ifNotNil: [ self client disconnect ].
+	self client: nil.
+	self availableCommands: OrderedCollection new.
+	self currentModel: nil
 ]
 
 { #category : 'private' }
@@ -71,35 +96,10 @@ AbTopicSession >> doConnectWithClient: anACPClient [
 	self updateCurrentModelFromConfigOptions: sessionResult configOptions
 ]
 
-{ #category : 'operations' }
-AbTopicSession >> disconnect [
-
-	self client ifNotNil: [ self client disconnect ].
-	self client: nil.
-	self availableCommands: OrderedCollection new.
-	self currentModel: nil
-]
-
-{ #category : 'operations' }
-AbTopicSession >> clearSessionId [
-
-	self sessionId: nil
-]
-
 { #category : 'private' }
 AbTopicSession >> ensureConnected [
 
 	self client ifNil: [ self doConnect ]
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> currentModel [
-	^ currentModel
-]
-
-{ #category : 'accessing' }
-AbTopicSession >> currentModel: aString [
-	currentModel := aString
 ]
 
 { #category : 'initialization' }
@@ -109,24 +109,9 @@ AbTopicSession >> initialize [
 ]
 
 { #category : 'private' }
-AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
+AbTopicSession >> resolvedMcpServers [
 
-	| existingSessionId workingDirectoryPath capabilities |
-	existingSessionId := self sessionId.
-	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
-	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
-		capabilities := initializeResponse agentCapabilities.
-		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
-			^ self client resumeSessionBy: [ :params |
-				  params
-					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath ] ].
-		(capabilities notNil and: [ capabilities isLoadSupported ]) ifTrue: [
-			^ self client loadSessionBy: [ :params |
-				  params
-					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath ] ] ].
-	^ self client newSessionBy: [ :params | params cwd: workingDirectoryPath ]
+	^ AbMcpServersLoader new load
 ]
 
 { #category : 'accessing' }
@@ -137,6 +122,41 @@ AbTopicSession >> sessionId [
 { #category : 'accessing' }
 AbTopicSession >> sessionId: aString [
 	sessionId := aString
+]
+
+{ #category : 'private' }
+AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
+
+	| existingSessionId workingDirectoryPath capabilities mcpServers mcpSupported |
+	existingSessionId := self sessionId.
+	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
+	capabilities := initializeResponse notNil
+		                ifTrue: [ initializeResponse agentCapabilities ]
+		                ifFalse: [ nil ].
+	mcpSupported := capabilities notNil and: [ capabilities isMcpServersSupported ].
+	mcpServers := self resolvedMcpServers.
+	mcpSupported ifFalse: [
+		mcpServers ifNotEmpty: [
+			self topic addSystemMessage:
+				'Note: MCP servers are configured but this agent does not support MCP server registration.' ].
+		mcpServers := #() ].
+	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
+		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
+			^ self client resumeSessionBy: [ :params |
+				  params
+					  sessionId: existingSessionId;
+					  cwd: workingDirectoryPath;
+					  mcpServers: mcpServers ] ].
+		(capabilities notNil and: [ capabilities isLoadSupported ]) ifTrue: [
+			^ self client loadSessionBy: [ :params |
+				  params
+					  sessionId: existingSessionId;
+					  cwd: workingDirectoryPath;
+					  mcpServers: mcpServers ] ] ].
+	^ self client newSessionBy: [ :params |
+		  params
+			  cwd: workingDirectoryPath;
+			  mcpServers: mcpServers ]
 ]
 
 { #category : 'accessing' }

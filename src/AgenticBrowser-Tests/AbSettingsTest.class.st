@@ -57,6 +57,21 @@ AbSettingsTest >> testExportApprovalWaitTimeoutSecondsSettable [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testUseDefaultMcpServersDefaultIsTrue [
+
+	self assert: AbSettings default useDefaultMcpServers
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseDefaultMcpServersSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings useDefaultMcpServers: false.
+	self assert: settings useDefaultMcpServers equals: false
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testWatcherMessageThrottleDurationDefault [
 
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 2 seconds

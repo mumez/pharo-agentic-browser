@@ -92,24 +92,6 @@ AbTopicListPresenterTest >> testIconForWorkingTopic [
 ]
 
 { #category : 'tests' }
-AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessage [
-
-	topic packagePrefixes: Set new.
-	presenter onPackagePrefixSet: topic.
-	self assert: (topic messages anySatisfy: [ :m |
-		m sender = #system and: [ m text includesSubstring: 'new project' ] ])
-]
-
-{ #category : 'tests' }
-AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
-
-	topic addPackagePrefix: 'NonExistentXYZ99-*'.
-	presenter onPackagePrefixSet: topic.
-	self assert: (topic messages anySatisfy: [ :m |
-		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])
-]
-
-{ #category : 'tests' }
 AbTopicListPresenterTest >> testOnClearSessionIdRequestClearsSelectedTopicSession [
 
 	| topicListMock mockClient |
@@ -126,6 +108,24 @@ AbTopicListPresenterTest >> testOnClearSessionIdRequestClearsSelectedTopicSessio
 	self verify: topicListMock.
 	self verify: mockClient.
 	self assert: topic sessionId isNil
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnPackagePrefixSetEmptyPrefixAddsNewProjectMessage [
+
+	topic packagePrefixes: Set new.
+	presenter onPackagePrefixSet: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [ m text includesSubstring: 'new project' ] ])
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testOnPackagePrefixSetNoMatchAddsSystemMessage [
+
+	topic addPackagePrefix: 'NonExistentXYZ99-*'.
+	presenter onPackagePrefixSet: topic.
+	self assert: (topic messages anySatisfy: [ :m |
+		m sender = #system and: [ m text includesSubstring: 'No packages match' ] ])
 ]
 
 { #category : 'tests' }

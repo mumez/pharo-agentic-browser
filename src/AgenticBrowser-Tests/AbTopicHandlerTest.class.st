@@ -51,18 +51,6 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdAllowOnce [
 ]
 
 { #category : 'tests' }
-AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
-
-	| response outcome |
-	response := ACPRequestPermissionResponse new.
-	AbTopicHandler new
-		applyApprovalOptionId: #reject_always
-		toResponse: response.
-	outcome := response asDictionary at: 'outcome'.
-	self assert: (outcome at: 'optionId') equals: 'reject_always'
-]
-
-{ #category : 'tests' }
 AbTopicHandlerTest >> testApplyApprovalOptionIdPassesThroughCustomOptionId [
 
 	| response outcome |
@@ -72,6 +60,18 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdPassesThroughCustomOptionId [
 		toResponse: response.
 	outcome := response asDictionary at: 'outcome'.
 	self assert: (outcome at: 'optionId') equals: 'yes_please'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
+
+	| response outcome |
+	response := ACPRequestPermissionResponse new.
+	AbTopicHandler new
+		applyApprovalOptionId: #reject_always
+		toResponse: response.
+	outcome := response asDictionary at: 'outcome'.
+	self assert: (outcome at: 'optionId') equals: 'reject_always'
 ]
 
 { #category : 'tests' }

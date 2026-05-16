@@ -17,16 +17,73 @@ AbSettings class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
+{ #category : 'persistence' }
+AbSettings class >> defaultAgenticBrowserRootDirectory [
+
+	^ Smalltalk imageDirectory / 'agentic-browser'
+]
+
 { #category : 'instance creation' }
 AbSettings class >> defaultCopied [
 
 	^ self new initFrom: self default
 ]
 
+{ #category : 'persistence' }
+AbSettings class >> defaultFileReference [
+
+	^ self defaultAgenticBrowserRootDirectory / self fileName
+]
+
+{ #category : 'persistence' }
+AbSettings class >> fileName [
+
+	^ 'ab-settings.ston'
+]
+
 { #category : 'class initialization' }
 AbSettings class >> initialize [
 
 	default := nil
+]
+
+{ #category : 'persistence' }
+AbSettings class >> load [
+
+	self defaultFileReference exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultFileReference
+]
+
+{ #category : 'persistence' }
+AbSettings class >> loadFrom: aFileReference [
+
+	| dict settings |
+	dict := aFileReference readStreamDo: [ :stream | STON fromStream: stream ].
+	settings := self new.
+	dict keysAndValuesDo: [ :k :v | settings at: k put: v ].
+	^ settings
+]
+
+{ #category : 'persistence' }
+AbSettings class >> save [
+
+	self saveTo: self defaultFileReference
+]
+
+{ #category : 'persistence' }
+AbSettings class >> saveTo: aFileReference [
+
+	self saveTo: aFileReference settings: self default
+]
+
+{ #category : 'persistence' }
+AbSettings class >> saveTo: aFileReference settings: anAbSettings [
+
+	aFileReference parent ensureCreateDirectory.
+	aFileReference writeStreamDo: [ :stream |
+		(STONWriter on: stream)
+			prettyPrint: true;
+			nextPut: anAbSettings settingsDict ]
 ]
 
 { #category : 'accessing' }
@@ -74,6 +131,12 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
 
 	^ 30
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultUseDefaultMcpServers [
+
+	^ true
 ]
 
 { #category : 'defaults' }
@@ -126,6 +189,20 @@ AbSettings >> settingsDict [
 		current := Dictionary new.
 		self instVarNamed: #settingsDict put: current ].
 	^ current
+]
+
+{ #category : 'accessing' }
+AbSettings >> useDefaultMcpServers [
+
+	^ self
+		  at: #useDefaultMcpServers
+		  ifAbsentPut: [ self defaultUseDefaultMcpServers ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useDefaultMcpServers: aBoolean [
+
+	self at: #useDefaultMcpServers put: aBoolean
 ]
 
 { #category : 'accessing' }

@@ -17,6 +17,22 @@ AbCodeMentionParserTest >> testClassMentionCreation [
 ]
 
 { #category : 'tests' }
+AbCodeMentionParserTest >> testClassSideMethodMentionCreation [
+
+	| mention |
+	mention := AbCodeMention className: 'Foo' methodName: 'new' isClassSide: true.
+	self assert: mention isClassSide
+]
+
+{ #category : 'tests' }
+AbCodeMentionParserTest >> testIgnoresLowercaseMention [
+
+	| mentions |
+	mentions := AbCodeMentionParser parseFrom: '@notAClass hello'.
+	self assert: mentions isEmpty
+]
+
+{ #category : 'tests' }
 AbCodeMentionParserTest >> testMethodMentionCreation [
 
 	| mention |
@@ -26,14 +42,6 @@ AbCodeMentionParserTest >> testMethodMentionCreation [
 	self deny: mention isClassMention.
 	self assert: mention isMethodMention.
 	self deny: mention isClassSide
-]
-
-{ #category : 'tests' }
-AbCodeMentionParserTest >> testClassSideMethodMentionCreation [
-
-	| mention |
-	mention := AbCodeMention className: 'Foo' methodName: 'new' isClassSide: true.
-	self assert: mention isClassSide
 ]
 
 { #category : 'tests' }
@@ -47,22 +55,12 @@ AbCodeMentionParserTest >> testParsesClassMention [
 ]
 
 { #category : 'tests' }
-AbCodeMentionParserTest >> testParsesInstanceMethodMention [
+AbCodeMentionParserTest >> testParsesClassMentionAtEndOfString [
 
 	| mentions |
-	mentions := AbCodeMentionParser parseFrom: 'See @OrderedCollection >> add:'.
+	mentions := AbCodeMentionParser parseFrom: 'look at @OrderedCollection'.
 	self assert: mentions size equals: 1.
-	self assert: mentions first className equals: 'OrderedCollection'.
-	self assert: mentions first methodName equals: 'add:'.
-	self deny: mentions first isClassSide
-]
-
-{ #category : 'tests' }
-AbCodeMentionParserTest >> testParsesMethodMentionWithHashPrefix [
-
-	| mentions |
-	mentions := AbCodeMentionParser parseFrom: '@OrderedCollection >> #add:'.
-	self assert: mentions first methodName equals: 'add:'
+	self assert: mentions first isClassMention
 ]
 
 { #category : 'tests' }
@@ -84,6 +82,25 @@ AbCodeMentionParserTest >> testParsesClassSideMethodWithHash [
 ]
 
 { #category : 'tests' }
+AbCodeMentionParserTest >> testParsesEmptyString [
+
+	| mentions |
+	mentions := AbCodeMentionParser parseFrom: ''.
+	self assert: mentions isEmpty
+]
+
+{ #category : 'tests' }
+AbCodeMentionParserTest >> testParsesInstanceMethodMention [
+
+	| mentions |
+	mentions := AbCodeMentionParser parseFrom: 'See @OrderedCollection >> add:'.
+	self assert: mentions size equals: 1.
+	self assert: mentions first className equals: 'OrderedCollection'.
+	self assert: mentions first methodName equals: 'add:'.
+	self deny: mentions first isClassSide
+]
+
+{ #category : 'tests' }
 AbCodeMentionParserTest >> testParsesKeywordSelectorWithHash [
 
 	| mentions |
@@ -100,35 +117,18 @@ AbCodeMentionParserTest >> testParsesKeywordSelectorWithoutHash [
 ]
 
 { #category : 'tests' }
+AbCodeMentionParserTest >> testParsesMethodMentionWithHashPrefix [
+
+	| mentions |
+	mentions := AbCodeMentionParser parseFrom: '@OrderedCollection >> #add:'.
+	self assert: mentions first methodName equals: 'add:'
+]
+
+{ #category : 'tests' }
 AbCodeMentionParserTest >> testParsesMultipleMentions [
 
 	| mentions |
 	mentions := AbCodeMentionParser parseFrom: '@OrderedCollection and @Dictionary >> at:'.
 	self assert: mentions size equals: 2.
 	self assert: (mentions collect: #className) asArray equals: #('OrderedCollection' 'Dictionary')
-]
-
-{ #category : 'tests' }
-AbCodeMentionParserTest >> testIgnoresLowercaseMention [
-
-	| mentions |
-	mentions := AbCodeMentionParser parseFrom: '@notAClass hello'.
-	self assert: mentions isEmpty
-]
-
-{ #category : 'tests' }
-AbCodeMentionParserTest >> testParsesEmptyString [
-
-	| mentions |
-	mentions := AbCodeMentionParser parseFrom: ''.
-	self assert: mentions isEmpty
-]
-
-{ #category : 'tests' }
-AbCodeMentionParserTest >> testParsesClassMentionAtEndOfString [
-
-	| mentions |
-	mentions := AbCodeMentionParser parseFrom: 'look at @OrderedCollection'.
-	self assert: mentions size equals: 1.
-	self assert: mentions first isClassMention
 ]

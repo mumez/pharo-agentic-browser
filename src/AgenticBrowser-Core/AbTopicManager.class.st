@@ -13,16 +13,22 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
-{ #category : 'class initialization' }
-AbTopicManager class >> initialize [
-
-	default := forTest := nil
-]
-
 { #category : 'instance creation' }
 AbTopicManager class >> default [
 
 	^ default ifNil: [ default := self new ]
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> defaultFileReference [
+
+	^ AbSettings defaultAgenticBrowserRootDirectory / self fileName
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> fileName [
+
+	^ 'ab-topics.fuel'
 ]
 
 { #category : 'instance creation' }
@@ -37,22 +43,35 @@ AbTopicManager class >> forTest: anInstance [
 	forTest := anInstance
 ]
 
-{ #category : 'instance creation' }
-AbTopicManager class >> uniqueInstance [
-
-	^ self default
-]
-
 { #category : 'fuel' }
 AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 
 	^ #( 'announcer' )
 ]
 
-{ #category : 'persistence' }
-AbTopicManager class >> defaultPersistenceFile [
+{ #category : 'class initialization' }
+AbTopicManager class >> initialize [
 
-	^ Smalltalk imageDirectory / 'agentic-browser' / 'ab-topics.fuel'
+	default := forTest := nil
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> load [
+
+	self defaultFileReference exists ifFalse: [ ^ self ].
+	default := self loadFrom: self defaultFileReference
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> loadFrom: aFileReference [
+
+	^ FLMaterializer materializeFromFileNamed: aFileReference fullName
+]
+
+{ #category : 'persistence' }
+AbTopicManager class >> save [
+
+	self saveTo: self defaultFileReference
 ]
 
 { #category : 'persistence' }
@@ -68,23 +87,10 @@ AbTopicManager class >> saveTo: aFileReference manager: aManager [
 	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
 ]
 
-{ #category : 'persistence' }
-AbTopicManager class >> loadFrom: aFileReference [
+{ #category : 'instance creation' }
+AbTopicManager class >> uniqueInstance [
 
-	^ FLMaterializer materializeFromFileNamed: aFileReference fullName
-]
-
-{ #category : 'persistence' }
-AbTopicManager class >> save [
-
-	self saveTo: self defaultPersistenceFile
-]
-
-{ #category : 'persistence' }
-AbTopicManager class >> load [
-
-	self defaultPersistenceFile exists ifFalse: [ ^ self ].
-	default := self loadFrom: self defaultPersistenceFile
+	^ self default
 ]
 
 { #category : 'operations' }
@@ -125,18 +131,18 @@ AbTopicManager >> removeTopic: anAbTopic [
 	topics removeKey: anAbTopic topicId ifAbsent: []
 ]
 
+{ #category : 'operations' }
+AbTopicManager >> subscribeAllTopicsToSisServer [
+
+	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
+]
+
 { #category : 'private' }
 AbTopicManager >> teardownTopic: aTopic [
 
 	aTopic stopWatching.
 	aTopic workingDirectory unsubscribeFromSisServerImportEvents.
 	[ aTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ]
-]
-
-{ #category : 'operations' }
-AbTopicManager >> subscribeAllTopicsToSisServer [
-
-	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
 ]
 
 { #category : 'accessing' }

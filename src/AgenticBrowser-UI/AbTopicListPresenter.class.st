@@ -31,16 +31,25 @@ AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
 { #category : 'private' }
 AbTopicListPresenter >> buildTopicContextMenu [
 
+	| topic notWorking |
+	topic := topicList selectedItem.
+	notWorking := topic isWorking not.
 	^ SpMenuPresenter new
-		  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ];
-		  addItem: [ :item | item name: 'Set Goal...'; action: [ self onSetGoalRequest ] ];
-		  addItem: [ :item | item name: 'Set Target Packages...'; action: [ self onSetTargetPackagesRequest ] ];
-		  addItem: [ :item | item name: 'Apply Updated External Packages'; action: [ self onApplyUpdatedExternalPackagesRequest ] ];
-		  addItem: [ :item | item name: 'Set Working Directory...'; action: [ self onSetWorkingDirectoryRequest ] ];
-		  addItem: [ :item | item name: 'Set Agent...'; action: [ self onSetAgentRequest ] ];
-		  addItem: [ :item | item name: 'Clear Session ID'; action: [ self onClearSessionIdRequest ] ];
-		  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
-		  addItem: [ :item | item name: 'Delete'; action: [ self onDeleteTopicRequest ] ];
+		  addGroup: [ :group |
+			  group
+				  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
+				  addItem: [ :item | item name: 'Delete'; enabled: notWorking; action: [ self onDeleteTopicRequest ] ];
+				  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ] ];
+		  addGroup: [ :group |
+			  group
+				  addItem: [ :item | item name: 'Change Agent...'; enabled: notWorking; action: [ self onSetAgentRequest ] ];
+				  addItem: [ :item | item name: 'Set Goal...'; action: [ self onSetGoalRequest ] ];
+				  addItem: [ :item | item name: 'Set Working Directory...'; enabled: notWorking; action: [ self onSetWorkingDirectoryRequest ] ];
+				  addItem: [ :item | item name: 'Clear Session ID'; enabled: notWorking; action: [ self onClearSessionIdRequest ] ] ];
+		  addGroup: [ :group |
+			  group
+				  addItem: [ :item | item name: 'Set Target Packages...'; enabled: notWorking; action: [ self onSetTargetPackagesRequest ] ];
+				  addItem: [ :item | item name: 'Apply Updated External Packages'; enabled: notWorking; action: [ self onApplyUpdatedExternalPackagesRequest ] ] ];
 		  yourself
 ]
 

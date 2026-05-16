@@ -8,6 +8,7 @@ Class {
 { #category : 'instance creation' }
 AgenticBrowser class >> open [
 
+	AbSettings load.
 	AbTopicManager load.
 	^ AbBrowserPresenter open
 ]
