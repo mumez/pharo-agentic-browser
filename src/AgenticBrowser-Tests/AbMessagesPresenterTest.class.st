@@ -67,9 +67,9 @@ AbMessagesPresenterTest >> testInitialMessageCountIsZero [
 ]
 
 { #category : 'tests' }
-AbMessagesPresenterTest >> testIsHideThinkEnabledByDefaultIsFalse [
+AbMessagesPresenterTest >> testHideThinkEnabledByDefaultIsFalse [
 
-	self deny: presenter isHideThinkEnabled
+	self deny: presenter hideThinkEnabled
 ]
 
 { #category : 'tests' }

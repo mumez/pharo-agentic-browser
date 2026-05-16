@@ -4,8 +4,7 @@ Class {
 	#instVars : [
 		'messageTextPresenter',
 		'messages',
-		'hideThinkCheckBox',
-		'hideThinkEnabled'
+		'hideThinkCheckBox'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -57,9 +56,15 @@ AbMessagesPresenter >> hideThinkCheckBox [
 ]
 
 { #category : 'accessing' }
+AbMessagesPresenter >> hideThinkEnabled [
+
+	^ hideThinkCheckBox state
+]
+
+{ #category : 'accessing' }
 AbMessagesPresenter >> hideThinkEnabled: aBoolean [
 
-	hideThinkEnabled := aBoolean.
+	hideThinkCheckBox state: aBoolean.
 	self refreshCombinedText
 ]
 
@@ -68,21 +73,14 @@ AbMessagesPresenter >> initializePresenters [
 
 	super initializePresenters.
 	messages := OrderedCollection new.
-	hideThinkEnabled := false.
 	messageTextPresenter := self instantiate: MicTextPresenter.
 	messageTextPresenter text: '' asText.
 	hideThinkCheckBox := self newCheckBox.
 	hideThinkCheckBox label: 'Hide think'.
-	hideThinkCheckBox state: hideThinkEnabled.
 	hideThinkCheckBox whenChangedDo: [ :isChecked |
 		self hideThinkEnabled: isChecked ]
 ]
 
-{ #category : 'accessing' }
-AbMessagesPresenter >> isHideThinkEnabled [
-
-	^ hideThinkEnabled
-]
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
@@ -161,6 +159,6 @@ AbMessagesPresenter >> setMessages: aCollection [
 { #category : 'private' }
 AbMessagesPresenter >> visibleMessages [
 
-	hideThinkEnabled ifFalse: [ ^ self messages ].
+	self hideThinkEnabled ifFalse: [ ^ self messages ].
 	^ self messages reject: [ :message | message isThink ]
 ]
