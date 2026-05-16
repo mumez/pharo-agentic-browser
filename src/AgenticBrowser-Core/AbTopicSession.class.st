@@ -125,38 +125,58 @@ AbTopicSession >> sessionId: aString [
 ]
 
 { #category : 'private' }
-AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
+AbTopicSession >> capabilitiesFrom: initializeResponse [
 
-	| existingSessionId workingDirectoryPath capabilities mcpServers mcpSupported |
-	existingSessionId := self sessionId.
-	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
-	capabilities := initializeResponse notNil
-		                ifTrue: [ initializeResponse agentCapabilities ]
-		                ifFalse: [ nil ].
-	mcpSupported := capabilities notNil and: [ capabilities isMcpServersSupported ].
-	mcpServers := self resolvedMcpServers.
-	mcpSupported ifFalse: [
-		mcpServers ifNotEmpty: [
-			self topic addSystemMessage:
-				'Note: MCP servers are configured but this agent does not support MCP server registration.' ].
-		mcpServers := #() ].
-	(existingSessionId notNil and: [ initializeResponse notNil ]) ifTrue: [
-		(capabilities notNil and: [ capabilities isResumeSupported ]) ifTrue: [
-			^ self client resumeSessionBy: [ :params |
-				  params
-					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath;
-					  mcpServers: mcpServers ] ].
-		(capabilities notNil and: [ capabilities isLoadSupported ]) ifTrue: [
-			^ self client loadSessionBy: [ :params |
-				  params
-					  sessionId: existingSessionId;
-					  cwd: workingDirectoryPath;
-					  mcpServers: mcpServers ] ] ].
+	^ initializeResponse ifNotNil: [ initializeResponse agentCapabilities ]
+]
+
+{ #category : 'private' }
+AbTopicSession >> notifyMcpServersNotRegistered: servers [
+
+	servers ifNotEmpty: [
+		self topic addSystemMessage:
+			'Note: MCP servers are configured but this agent does not support MCP server registration.' ]
+]
+
+{ #category : 'private' }
+AbTopicSession >> createSessionAt: workingDirectoryPath mcpServers: mcpServers [
+
 	^ self client newSessionBy: [ :params |
 		  params
 			  cwd: workingDirectoryPath;
 			  mcpServers: mcpServers ]
+]
+
+{ #category : 'private' }
+AbTopicSession >> resumeOrCreateSessionAt: workingDirectoryPath mcpServers: mcpServers capabilities: capabilities [
+
+	| existingSessionId |
+	existingSessionId := self sessionId.
+	existingSessionId ifNil: [ ^ self createSessionAt: workingDirectoryPath mcpServers: mcpServers ].
+	capabilities ifNil: [ ^ self createSessionAt: workingDirectoryPath mcpServers: mcpServers ].
+	capabilities isResumeSupported ifTrue: [
+		^ self client resumeSessionBy: [ :params |
+			  params sessionId: existingSessionId; cwd: workingDirectoryPath; mcpServers: mcpServers ] ].
+	capabilities isLoadSupported ifTrue: [
+		^ self client loadSessionBy: [ :params |
+			  params sessionId: existingSessionId; cwd: workingDirectoryPath; mcpServers: mcpServers ] ].
+	^ self createSessionAt: workingDirectoryPath mcpServers: mcpServers
+]
+
+{ #category : 'private' }
+AbTopicSession >> sessionResultFromInitializeResponse: initializeResponse [
+
+	| capabilities mcpServers workingDirectoryPath |
+	capabilities := self capabilitiesFrom: initializeResponse.
+	mcpServers := self resolvedMcpServers.
+	(capabilities isNil or: [ capabilities isMcpServersSupported not ]) ifTrue: [
+		self notifyMcpServersNotRegistered: mcpServers.
+		mcpServers := #() ].
+	workingDirectoryPath := self topic ensureWorkingDirectoryForConnection.
+	^ self
+		  resumeOrCreateSessionAt: workingDirectoryPath
+		  mcpServers: mcpServers
+		  capabilities: capabilities
 ]
 
 { #category : 'accessing' }
