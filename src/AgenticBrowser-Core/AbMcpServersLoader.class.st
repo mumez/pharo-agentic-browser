@@ -71,8 +71,8 @@ AbMcpServersLoader >> load [
 	self useDefaultMcpServers ifTrue: [
 		merged addAll: self defaultConfigDicts ].
 	merged addAll: self loadFromFile.
-	^ merged keys
-		  collect: [ :name | self mcpServerNamed: name fromConfig: (merged at: name) ]
+	^ merged associations
+		  collect: [ :assoc | self mcpServerNamed: assoc key fromConfig: assoc value ]
 		  as: Array
 ]
 

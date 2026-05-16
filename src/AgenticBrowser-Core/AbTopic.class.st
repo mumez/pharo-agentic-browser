@@ -224,7 +224,7 @@ AbTopic >> checkGoalAchievement [
 AbTopic >> clearSessionId [
 
 	self disconnect.
-	self session clearSessionId
+	session ifNotNil: [ session clearSessionId ]
 ]
 
 { #category : 'operations' }
