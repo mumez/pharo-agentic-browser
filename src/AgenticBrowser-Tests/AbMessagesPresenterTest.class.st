@@ -67,6 +67,12 @@ AbMessagesPresenterTest >> testInitialMessageCountIsZero [
 ]
 
 { #category : 'tests' }
+AbMessagesPresenterTest >> testHideThinkEnabledByDefaultIsFalse [
+
+	self deny: presenter hideThinkEnabled
+]
+
+{ #category : 'tests' }
 AbMessagesPresenterTest >> testInitializeUsesMicTextPresenter [
 
 	self assert: presenter messageTextPresenter class equals: MicTextPresenter
@@ -91,6 +97,17 @@ AbMessagesPresenterTest >> testMessageListItemCountMatchesAfterMultipleAdds [
 ]
 
 { #category : 'tests' }
+AbMessagesPresenterTest >> testMessageListKeepsThinkMessagesWhenHidden [
+
+	| thinkMessage |
+	thinkMessage := AbMessage sender: #ai text: 'Hidden idea' isThink: true.
+	presenter hideThinkEnabled: true.
+	presenter addOrUpdateMessage: thinkMessage.
+	self assert: presenter messageCount equals: 1.
+	self assert: (presenter messages includes: thinkMessage)
+]
+
+{ #category : 'tests' }
 AbMessagesPresenterTest >> testMessageListUpdatedAfterSetMessages [
 
 	| msgs |
@@ -107,6 +124,29 @@ AbMessagesPresenterTest >> testPerformScrollToBottomDoesNotError [
 
 	presenter addOrUpdateMessage: (AbMessage sender: #human text: 'Hi').
 	self shouldnt: [ presenter performScrollToBottom ] raise: Error
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testRefreshCombinedTextHidesThinkMessagesWhenEnabled [
+
+	presenter setMessages: {
+			(AbMessage sender: #human text: 'Visible human').
+			(AbMessage sender: #ai text: 'Hidden think' isThink: true).
+			(AbMessage sender: #ai text: 'Visible ai') }.
+	presenter hideThinkEnabled: true.
+	self assert: (presenter combinedRichText asString includesSubstring: 'Visible human').
+	self assert: (presenter combinedRichText asString includesSubstring: 'Visible ai').
+	self deny: (presenter combinedRichText asString includesSubstring: 'Hidden think')
+]
+
+{ #category : 'tests' }
+AbMessagesPresenterTest >> testRefreshCombinedTextShowsThinkMessagesWhenDisabled [
+
+	presenter setMessages: {
+			(AbMessage sender: #human text: 'Visible human').
+			(AbMessage sender: #ai text: 'Visible think' isThink: true) }.
+	presenter hideThinkEnabled: false.
+	self assert: (presenter combinedRichText asString includesSubstring: 'Visible think')
 ]
 
 { #category : 'tests' }
