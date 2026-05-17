@@ -94,7 +94,7 @@ AbTopicListPresenter >> release [
 { #category : 'private' }
 AbTopicListPresenter >> iconNameFor: aTopic [
 
-	aTopic isInitial ifTrue: [ ^ #whiteCircle ].
+	aTopic isInitial ifTrue: [ ^ #blueCircle ].
 	aTopic isWorking ifTrue: [ ^ #sparkle ].
 	aTopic isWaitingForHuman ifTrue: [ ^ #question ].
 	aTopic isGoalAchieved ifTrue: [ ^ #check ].
