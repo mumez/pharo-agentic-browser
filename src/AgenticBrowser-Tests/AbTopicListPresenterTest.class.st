@@ -73,7 +73,7 @@ AbTopicListPresenterTest >> testIconForEndTurnTopic [
 { #category : 'tests' }
 AbTopicListPresenterTest >> testIconForInitialTopic [
 
-	self assert: (presenter iconNameFor: topic) equals: #whiteCircle
+	self assert: (presenter iconNameFor: topic) equals: #blueCircle
 ]
 
 { #category : 'tests' }
