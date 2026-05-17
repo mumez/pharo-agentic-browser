@@ -249,11 +249,9 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	dialog := AbPackagePrefixesDialog new.
+	dialog prefixPatterns: topic packagePrefixes asOrderedCollection.
 	dialog openModal.
-	dialog prefixPatterns
-		ifEmpty: [ topic packagePrefixes: Set new ]
-		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
-			topic addPackagePrefix: pattern ] ].
+	topic packagePrefixes: dialog prefixPatterns.
 	self onPackagePrefixSet: topic
 ]
 
