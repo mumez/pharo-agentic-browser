@@ -147,15 +147,15 @@ Watching starts automatically when a topic first connects (on the first **Send**
 
 ## Supported Agents
 
-| Agent | Arguments |
-|-------|-----------|
-| Claude Code | `claude-agent-acp` |
-| Gemini CLI | `gemini --acp` |
-| OpenCode | `opencode acp` |
-| GitHub Copilot CLI | `copilot --acp --stdio` |
-| Codex | `codex-acp` |
+| Agent | Arguments | Install |
+|-------|-----------| ----------- |
+| Claude Code | [`claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp) | `npm install -g @agentclientprotocol/claude-agent-acp` |
+| Codex | [`codex-acp`](https://github.com/zed-industries/codex-acp) | `npm install -g @agentclientprotocol/codex-acp` |
+| Gemini CLI | [`gemini --acp`](https://github.com/google-gemini/gemini-cli) | ACP is built-in |
+| OpenCode | [`opencode acp`](https://github.com/anomalyco/opencode) | ACP is built-in |
+| GitHub Copilot CLI | [`copilot --acp --stdio`](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) | ACP is built-in |
 
-> **Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and slash commands (e.g. `/st-buddy`, `/st-import`, `/st-test`) that agents can use to work directly with Pharo packages inside the session.
+> **Strongly Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and MCP servers that agents can use to work directly with Pharo inside the session.
 
 ## Package Structure
 
