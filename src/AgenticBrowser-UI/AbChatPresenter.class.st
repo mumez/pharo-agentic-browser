@@ -169,9 +169,9 @@ AbChatPresenter >> initializeStatusBar [
 
 { #category : 'private' }
 AbChatPresenter >> inputTextForCommand: aString [
-
-	aString = 'init' ifTrue: [ ^ '/init ' ].
-	^ aString , ' '
+	| insertString |
+	insertString := '/{1} '.
+	^ insertString format: {aString}
 ]
 
 { #category : 'private' }

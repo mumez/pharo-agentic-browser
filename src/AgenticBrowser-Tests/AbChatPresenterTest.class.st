@@ -82,6 +82,12 @@ AbChatPresenterTest >> testCommandSelectionInitInsertsSlashCommand [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testInputTextForCommandFormatsAsSlashCommand [
+
+	self assert: (presenter inputTextForCommand: 'command1') equals: '/command1 '
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 
 	| topic approvalMessage |
