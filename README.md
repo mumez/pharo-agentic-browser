@@ -76,7 +76,7 @@ Metacello new
 Open the browser window:
 
 ```smalltalk
-AbBrowserPresenter open.
+AgenticBrowser open.
 ```
 
 1. Click **+ New Topic**
