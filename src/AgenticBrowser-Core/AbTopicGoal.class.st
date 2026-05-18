@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'topic',
 		'description',
-		'achieved',
+		'result',
 		'whenAchieved'
 	],
 	#category : 'AgenticBrowser-Core',
@@ -18,13 +18,13 @@ AbTopicGoal class >> on: aTopic [
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> achieved [
-	^ achieved
+AbTopicGoal >> result [
+	^ result
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> achieved: aString [
-	achieved := aString
+AbTopicGoal >> result: aString [
+	result := aString
 ]
 
 { #category : 'operations' }
@@ -33,7 +33,7 @@ AbTopicGoal >> checkAchievement [
 	| file |
 	file := self resultFile.
 	file exists ifFalse: [ ^ false ].
-	self achieved: file contents.
+	self result: file contents.
 	file delete.
 	^ true
 ]
@@ -50,7 +50,7 @@ AbTopicGoal >> description: aString [
 
 { #category : 'testing' }
 AbTopicGoal >> isAchieved [
-	^ self achieved notNil
+	^ self result notNil
 ]
 
 { #category : 'accessing' }

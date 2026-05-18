@@ -16,7 +16,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsFalseWhenNoFile [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsAchievedAndDeletesFile [
+AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsResultAndDeletesFile [
 
 	| goal topic resultFile |
 	topic := AbTopic new.
@@ -28,7 +28,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsAchievedAndDeletesFile 
 	[
 		self assert: goal checkAchievement.
 		self assert: goal isAchieved.
-		self assert: goal achieved equals: 'Goal reached: tests green.'.
+		self assert: goal result equals: 'Goal reached: tests green.'.
 		self deny: resultFile exists ]
 	ensure: [
 		resultFile exists ifTrue: [ resultFile delete ] ]

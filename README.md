@@ -114,7 +114,18 @@ report in result-<topic-id>.md. Keep retrying until the goal is achieved.
 
 The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✓` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
 
+Two hooks fire when a goal is achieved:
 
+- **Announcement** — `AbTopicGoalAchieved` is announced via the topic's own announcer, carrying the `topic` and `goal` (`AbTopicGoal`). Subscribe with:
+  ```smalltalk
+  topic announcer
+      when: AbTopicGoalAchieved
+      do: [:ann | Transcript crShow: ann topic title , ' achieved: ' , ann goal result].
+  ```
+- **Callback block** — register an optional block on the topic with `whenGoalAchieved:`. The block receives the `AbTopicGoal` as its argument (or takes zero arguments):
+  ```smalltalk
+  topic whenGoalAchieved: [:goal | Transcript crShow: goal resultText].
+  ```
 
 ### Session Persistence
 
