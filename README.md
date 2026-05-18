@@ -76,7 +76,7 @@ Metacello new
 Open the browser window:
 
 ```smalltalk
-AbBrowserPresenter open.
+AgenticBrowser open.
 ```
 
 1. Click **+ New Topic**
@@ -132,8 +132,8 @@ Two hooks fire when a goal is achieved:
 Topics are saved automatically to `ab-topics.fuel` in the AgenticBrowser root directory using Pharo's Fuel serializer. You can also save and restore manually:
 
 ```smalltalk
-AbTopicManager default save.
-AbTopicManager default load.
+AbTopicManager save.
+AbTopicManager load.
 ```
 
 ### MCP Servers
