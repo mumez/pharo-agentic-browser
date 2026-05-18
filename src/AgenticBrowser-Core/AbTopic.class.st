@@ -248,13 +248,6 @@ AbTopic >> currentModel [
 	^ self session currentModel
 ]
 
-{ #category : 'accessing' }
-AbTopic >> defaultWorkingDirectoryPath [
-
-	^ (Smalltalk imageDirectory / 'agentic-browser'
-	   / self workingDirectory directoryName) fullName
-]
-
 { #category : 'operations' }
 AbTopic >> disconnect [
 
@@ -671,7 +664,7 @@ AbTopic >> workingDirectory [
 { #category : 'accessing' }
 AbTopic >> workingDirectoryPath [
 
-	^ workingDirectoryPath ifNil: [ workingDirectoryPath := self defaultWorkingDirectoryPath ]
+	^ workingDirectoryPath ifNil: [ workingDirectoryPath := self workingDirectory defaultPath ]
 ]
 
 { #category : 'accessing' }
