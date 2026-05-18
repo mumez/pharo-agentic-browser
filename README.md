@@ -1,6 +1,6 @@
 # pharo-agentic-browser
 
-A Pharo-native GUI for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
+A Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
 
 ## Overview
 
@@ -11,12 +11,12 @@ A Pharo-native GUI for managing multiple AI coding agent sessions — Claude Cod
 |   Topics            |  [Human] @QueryClass refactor this        |
 |                     |                                           |
 |                     +-------------------------------------------+
-|  ● DB Optimization  |  [AI] I'll refactor QueryClass. First,    |
-|  ⏸ UI Improvement   |       let me check the current code...    |
-|  ★ Fix Tests        |                                           |
+| ❇️DB Optimization  |  [AI] I'll refactor QueryClass. First,    |
+|  UI Improvement     |       let me check the current code...    |
+| ✓Fix Tests         |                                           |
 |                     |  [System] UserList-Core was modified;     |
-|  [+ New Topic]      |           .st files have been updated       |
-|                     |  ⏸ [AI] May I modify DBAdapter#connect?   |
+|  [+ New Topic]      |           .st files have been updated     |
+|                     |  [AI] May I modify DBAdapter#connect?  　 |
 |                     |  [Human] yes                              |
 +---------------------+-------------------------------------------+
 ```
@@ -53,7 +53,7 @@ The core workflow:
 
 ## Installation
 
-In a Pharo 13 image, open a Playground and evaluate:
+In a Pharo image, open a Playground and evaluate:
 
 ```smalltalk
 Metacello new
@@ -112,7 +112,7 @@ Goal has been set: all tests pass. When the goal is achieved, summarize and
 report in result-<topic-id>.md. Keep retrying until the goal is achieved.
 ```
 
-The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✅` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
+The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✓` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
 
 ### Session Persistence
 
