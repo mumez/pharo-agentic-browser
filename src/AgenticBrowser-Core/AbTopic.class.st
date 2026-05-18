@@ -216,8 +216,13 @@ AbTopic >> checkGoalAchievement [
 	self topicGoal checkAchievement ifFalse: [ ^ false ].
 	self stateMachine handleEvent: #goalReached.
 	self announceGoalAchieved.
-	self topicGoal runWhenAchievedBlock.
+	self topicGoal fireWhenAchieved.
 	^ true
+]
+
+{ #category : 'operations' }
+AbTopic >> whenGoalAchieved: aBlock [
+	self topicGoal whenAchieved: aBlock
 ]
 
 { #category : 'operations' }
@@ -243,13 +248,6 @@ AbTopic >> currentModel [
 	^ self session currentModel
 ]
 
-{ #category : 'accessing' }
-AbTopic >> defaultWorkingDirectoryPath [
-
-	^ (Smalltalk imageDirectory / 'agentic-browser'
-	   / self workingDirectory directoryName) fullName
-]
-
 { #category : 'operations' }
 AbTopic >> disconnect [
 
@@ -269,7 +267,6 @@ AbTopic >> ensureWorkingDirectoryForConnection [
 { #category : 'operations' }
 AbTopic >> goalDescription: aString [
 
-	self topicGoal: (AbTopicGoal on: self).
 	self topicGoal description: aString.
 	self sendPrompt: self topicGoal notificationPrompt
 ]
@@ -297,6 +294,7 @@ AbTopic >> initialize [
 	updatedExternalPackageNames := Set new.
 	session := nil.
 	topicId := UUID new asString.
+	topicGoal := nil.
 	self initializeStateMachine
 ]
 
@@ -600,7 +598,7 @@ AbTopic >> title: aString [
 
 { #category : 'accessing' }
 AbTopic >> topicGoal [
-	^ topicGoal
+	^ topicGoal ifNil: [ topicGoal := AbTopicGoal on: self ]
 ]
 
 { #category : 'accessing' }
@@ -666,7 +664,7 @@ AbTopic >> workingDirectory [
 { #category : 'accessing' }
 AbTopic >> workingDirectoryPath [
 
-	^ workingDirectoryPath ifNil: [ workingDirectoryPath := self defaultWorkingDirectoryPath ]
+	^ workingDirectoryPath ifNil: [ workingDirectoryPath := self workingDirectory defaultPath ]
 ]
 
 { #category : 'accessing' }

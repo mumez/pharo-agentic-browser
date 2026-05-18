@@ -4,8 +4,8 @@ Class {
 	#instVars : [
 		'topic',
 		'description',
-		'achieved',
-		'whenAchievedBlock'
+		'result',
+		'whenAchieved'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -18,13 +18,13 @@ AbTopicGoal class >> on: aTopic [
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> achieved [
-	^ achieved
+AbTopicGoal >> result [
+	^ result
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> achieved: aString [
-	achieved := aString
+AbTopicGoal >> result: aString [
+	result := aString
 ]
 
 { #category : 'operations' }
@@ -33,7 +33,7 @@ AbTopicGoal >> checkAchievement [
 	| file |
 	file := self resultFile.
 	file exists ifFalse: [ ^ false ].
-	self achieved: file contents.
+	self result: file contents.
 	file delete.
 	^ true
 ]
@@ -50,7 +50,7 @@ AbTopicGoal >> description: aString [
 
 { #category : 'testing' }
 AbTopicGoal >> isAchieved [
-	^ self achieved notNil
+	^ self result notNil
 ]
 
 { #category : 'accessing' }
@@ -75,9 +75,9 @@ AbTopicGoal >> resultFileBasename [
 ]
 
 { #category : 'operations' }
-AbTopicGoal >> runWhenAchievedBlock [
+AbTopicGoal >> fireWhenAchieved [
 
-	self whenAchievedBlock ifNotNil: [ :block | block value ]
+	self whenAchieved ifNotNil: [ :block | block cull: self ]
 ]
 
 { #category : 'accessing' }
@@ -92,10 +92,10 @@ AbTopicGoal >> topic: anAbTopic [
 
 { #category : 'accessing' }
 AbTopicGoal >> whenAchieved: aBlock [
-	whenAchievedBlock := aBlock
+	whenAchieved := aBlock
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> whenAchievedBlock [
-	^ whenAchievedBlock
+AbTopicGoal >> whenAchieved [
+	^ whenAchieved
 ]

@@ -94,7 +94,7 @@ AbTopicListPresenter >> release [
 { #category : 'private' }
 AbTopicListPresenter >> iconNameFor: aTopic [
 
-	aTopic isInitial ifTrue: [ ^ #whiteCircle ].
+	aTopic isInitial ifTrue: [ ^ #blueCircle ].
 	aTopic isWorking ifTrue: [ ^ #sparkle ].
 	aTopic isWaitingForHuman ifTrue: [ ^ #question ].
 	aTopic isGoalAchieved ifTrue: [ ^ #check ].
@@ -249,11 +249,9 @@ AbTopicListPresenter >> onSetTargetPackagesRequest [
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	dialog := AbPackagePrefixesDialog new.
+	dialog prefixPatterns: topic packagePrefixes asOrderedCollection.
 	dialog openModal.
-	dialog prefixPatterns
-		ifEmpty: [ topic packagePrefixes: Set new ]
-		ifNotEmpty: [ dialog prefixPatterns do: [ :pattern |
-			topic addPackagePrefix: pattern ] ].
+	topic packagePrefixes: dialog prefixPatterns.
 	self onPackagePrefixSet: topic
 ]
 

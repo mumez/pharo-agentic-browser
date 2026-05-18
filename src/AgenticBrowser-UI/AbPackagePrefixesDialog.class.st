@@ -88,5 +88,8 @@ AbPackagePrefixesDialog >> prefixPatterns [
 
 { #category : 'accessing' }
 AbPackagePrefixesDialog >> prefixPatterns: aCollection [
-	prefixPatterns := aCollection
+	prefixPatterns := aCollection.
+	prefixField ifNotNil: [
+		prefixField text: (', ' join: aCollection asSortedCollection)
+	]
 ]

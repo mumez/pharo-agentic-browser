@@ -16,7 +16,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsFalseWhenNoFile [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsAchievedAndDeletesFile [
+AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsResultAndDeletesFile [
 
 	| goal topic resultFile |
 	topic := AbTopic new.
@@ -28,7 +28,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsAchievedAndDeletesFile 
 	[
 		self assert: goal checkAchievement.
 		self assert: goal isAchieved.
-		self assert: goal achieved equals: 'Goal reached: tests green.'.
+		self assert: goal result equals: 'Goal reached: tests green.'.
 		self deny: resultFile exists ]
 	ensure: [
 		resultFile exists ifTrue: [ resultFile delete ] ]
@@ -93,7 +93,7 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testWhenAchievedBlockIsCalledAfterCheckAchievement [
+AbTopicGoalTest >> testwhenAchievedIsCalledAfterCheckAchievement [
 
 	| goal topic resultFile called |
 	topic := AbTopic new.
@@ -106,7 +106,7 @@ AbTopicGoalTest >> testWhenAchievedBlockIsCalledAfterCheckAchievement [
 	resultFile writeStreamDo: [ :s | s nextPutAll: 'Result.' ].
 	[
 		goal checkAchievement.
-		goal runWhenAchievedBlock.
+		goal fireWhenAchieved.
 		self assert: called ]
 	ensure: [
 		resultFile exists ifTrue: [ resultFile delete ] ]

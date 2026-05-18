@@ -3,7 +3,8 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'messageTextPresenter',
-		'messages'
+		'messages',
+		'hideThinkCheckBox'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -26,7 +27,7 @@ AbMessagesPresenter >> combinedRichText [
 	| combined isFirst |
 	combined := '' asText.
 	isFirst := true.
-	self messages do: [ :msg |
+	self visibleMessages do: [ :msg |
 		isFirst
 			ifFalse: [ combined := combined , String crlf asText , String crlf asText ].
 		combined := combined , (self richTextFor: msg).
@@ -38,8 +39,33 @@ AbMessagesPresenter >> combinedRichText [
 AbMessagesPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
+		  add: (SpBoxLayout newLeftToRight
+				   vAlignCenter;
+				   add: self newNullPresenter;
+				   add: self hideThinkCheckBox withConstraints: [ :c | c width: 110 ];
+				   yourself)
+		  withConstraints: [ :c | c height: 26 ];
 		  add: self messageTextPresenter;
 		  yourself
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> hideThinkCheckBox [
+
+	^ hideThinkCheckBox
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> hideThinkEnabled [
+
+	^ hideThinkCheckBox state
+]
+
+{ #category : 'accessing' }
+AbMessagesPresenter >> hideThinkEnabled: aBoolean [
+
+	hideThinkCheckBox state: aBoolean.
+	self refreshCombinedText
 ]
 
 { #category : 'initialization' }
@@ -48,8 +74,13 @@ AbMessagesPresenter >> initializePresenters [
 	super initializePresenters.
 	messages := OrderedCollection new.
 	messageTextPresenter := self instantiate: MicTextPresenter.
-	messageTextPresenter text: '' asText
+	messageTextPresenter text: '' asText.
+	hideThinkCheckBox := self newCheckBox.
+	hideThinkCheckBox label: 'Hide think'.
+	hideThinkCheckBox whenChangedDo: [ :isChecked |
+		self hideThinkEnabled: isChecked ]
 ]
+
 
 { #category : 'accessing' }
 AbMessagesPresenter >> messageCount [
@@ -123,4 +154,11 @@ AbMessagesPresenter >> setMessages: aCollection [
 	messages := aCollection asOrderedCollection.
 	self refreshCombinedText.
 	self scrollToBottom
+]
+
+{ #category : 'private' }
+AbMessagesPresenter >> visibleMessages [
+
+	self hideThinkEnabled ifFalse: [ ^ self messages ].
+	^ self messages reject: [ :message | message isThink ]
 ]

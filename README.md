@@ -1,6 +1,6 @@
 # pharo-agentic-browser
 
-A Pharo-native GUI for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
+A Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
 
 ## Overview
 
@@ -11,12 +11,12 @@ A Pharo-native GUI for managing multiple AI coding agent sessions — Claude Cod
 |   Topics            |  [Human] @QueryClass refactor this        |
 |                     |                                           |
 |                     +-------------------------------------------+
-|  ● DB Optimization  |  [AI] I'll refactor QueryClass. First,    |
-|  ⏸ UI Improvement   |       let me check the current code...    |
-|  ★ Fix Tests        |                                           |
+| ❇️DB Optimization  |  [AI] I'll refactor QueryClass. First,    |
+|  UI Improvement     |       let me check the current code...    |
+| ✓Fix Tests         |                                           |
 |                     |  [System] UserList-Core was modified;     |
-|  [+ New Topic]      |           .st files have been updated       |
-|                     |  ⏸ [AI] May I modify DBAdapter#connect?   |
+|  [+ New Topic]      |           .st files have been updated     |
+|                     |  [AI] May I modify DBAdapter#connect?  　 |
 |                     |  [Human] yes                              |
 +---------------------+-------------------------------------------+
 ```
@@ -53,7 +53,7 @@ The core workflow:
 
 ## Installation
 
-In a Pharo 13 image, open a Playground and evaluate:
+In a Pharo image, open a Playground and evaluate:
 
 ```smalltalk
 Metacello new
@@ -112,7 +112,20 @@ Goal has been set: all tests pass. When the goal is achieved, summarize and
 report in result-<topic-id>.md. Keep retrying until the goal is achieved.
 ```
 
-The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✅` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
+The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✓` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
+
+Two hooks fire when a goal is achieved:
+
+- **Announcement** — `AbTopicGoalAchieved` is announced via the topic's own announcer, carrying the `topic` and `goal` (`AbTopicGoal`). Subscribe with:
+  ```smalltalk
+  topic announcer
+      when: AbTopicGoalAchieved
+      do: [:ann | Transcript crShow: ann topic title , ' achieved: ' , ann goal result].
+  ```
+- **Callback block** — register an optional block on the topic with `whenGoalAchieved:`. The block receives the `AbTopicGoal` as its argument (or takes zero arguments):
+  ```smalltalk
+  topic whenGoalAchieved: [:goal | Transcript crShow: goal resultText].
+  ```
 
 ### Session Persistence
 
@@ -147,15 +160,15 @@ Watching starts automatically when a topic first connects (on the first **Send**
 
 ## Supported Agents
 
-| Agent | Arguments |
-|-------|-----------|
-| Claude Code | `claude-agent-acp` |
-| Gemini CLI | `gemini --acp` |
-| OpenCode | `opencode acp` |
-| GitHub Copilot CLI | `copilot --acp --stdio` |
-| Codex | `codex-acp` |
+| Agent | Arguments | Install |
+|-------|-----------| ----------- |
+| Claude Code | [`claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp) | `npm install -g @agentclientprotocol/claude-agent-acp` |
+| Codex | [`codex-acp`](https://github.com/zed-industries/codex-acp) | `npm install -g @agentclientprotocol/codex-acp` |
+| Gemini CLI | [`gemini --acp`](https://github.com/google-gemini/gemini-cli) | ACP is built-in |
+| OpenCode | [`opencode acp`](https://github.com/anomalyco/opencode) | ACP is built-in |
+| GitHub Copilot CLI | [`copilot --acp --stdio`](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) | ACP is built-in |
 
-> **Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and slash commands (e.g. `/st-buddy`, `/st-import`, `/st-test`) that agents can use to work directly with Pharo packages inside the session.
+> **Strongly Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and MCP servers that agents can use to work directly with Pharo inside the session.
 
 ## Package Structure
 

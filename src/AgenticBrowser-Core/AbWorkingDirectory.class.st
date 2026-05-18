@@ -45,6 +45,12 @@ AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
 ]
 
 { #category : 'accessing' }
+AbWorkingDirectory >> defaultPath [
+
+	^ (Smalltalk imageDirectory / 'agentic-browser' / self directoryName) fullName
+]
+
+{ #category : 'accessing' }
 AbWorkingDirectory >> directoryName [
 
 	^ self safeTopicName , '-' , (topic topicId copyFrom: 1 to: 8)
