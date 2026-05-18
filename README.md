@@ -114,6 +114,8 @@ report in result-<topic-id>.md. Keep retrying until the goal is achieved.
 
 The AI works autonomously. When it creates `result-<topic-id>.md` in the working directory, AgenticBrowser reads it, stores the result, and transitions the topic to `✓` (`#goalAchieved`). From that state, the topic can only be reset to `initial` (effectively archived).
 
+
+
 ### Session Persistence
 
 Topics are saved automatically to `ab-topics.fuel` in the AgenticBrowser root directory using Pharo's Fuel serializer. You can also save and restore manually:

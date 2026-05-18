@@ -5,7 +5,7 @@ Class {
 		'topic',
 		'description',
 		'achieved',
-		'whenAchievedBlock'
+		'whenAchieved'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -75,9 +75,9 @@ AbTopicGoal >> resultFileBasename [
 ]
 
 { #category : 'operations' }
-AbTopicGoal >> runWhenAchievedBlock [
+AbTopicGoal >> fireWhenAchieved [
 
-	self whenAchievedBlock ifNotNil: [ :block | block value ]
+	self whenAchieved ifNotNil: [ :block | block cull: self ]
 ]
 
 { #category : 'accessing' }
@@ -92,10 +92,10 @@ AbTopicGoal >> topic: anAbTopic [
 
 { #category : 'accessing' }
 AbTopicGoal >> whenAchieved: aBlock [
-	whenAchievedBlock := aBlock
+	whenAchieved := aBlock
 ]
 
 { #category : 'accessing' }
-AbTopicGoal >> whenAchievedBlock [
-	^ whenAchievedBlock
+AbTopicGoal >> whenAchieved [
+	^ whenAchieved
 ]

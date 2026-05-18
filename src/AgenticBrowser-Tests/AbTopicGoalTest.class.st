@@ -93,7 +93,7 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testWhenAchievedBlockIsCalledAfterCheckAchievement [
+AbTopicGoalTest >> testwhenAchievedIsCalledAfterCheckAchievement [
 
 	| goal topic resultFile called |
 	topic := AbTopic new.
@@ -106,7 +106,7 @@ AbTopicGoalTest >> testWhenAchievedBlockIsCalledAfterCheckAchievement [
 	resultFile writeStreamDo: [ :s | s nextPutAll: 'Result.' ].
 	[
 		goal checkAchievement.
-		goal runWhenAchievedBlock.
+		goal fireWhenAchieved.
 		self assert: called ]
 	ensure: [
 		resultFile exists ifTrue: [ resultFile delete ] ]
