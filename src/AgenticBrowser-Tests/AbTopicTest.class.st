@@ -379,7 +379,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allow_once.
 	self assert: topic status equals: #initial
@@ -414,7 +414,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allow_once.
 	self assert: topic status equals: #working
@@ -431,7 +431,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApproval: 'yes'.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: response equals: #allow_once
 ]
@@ -461,7 +461,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
-	topic resolveApproval: 'yes'.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	self assert: msg approvalResponse equals: #allow_once.
 	self assert: topic status equals: #working
 ]
@@ -475,7 +475,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
-	topic resolveApproval: 'no'.
+	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: msg approvalResponse equals: #reject_once.
 	self assert: topic status equals: #working
 ]
@@ -487,7 +487,7 @@ AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 	topic := AbTopic new.
 	msg := AbMessage aiPermissionRequestText: 'Export?'.
 	topic messages add: msg.
-	topic resolveApproval: 'yes'.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	self assert: topic status equals: #initial
 ]
 

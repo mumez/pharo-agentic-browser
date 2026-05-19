@@ -181,16 +181,6 @@ AbTopic >> announcer [
 	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
-{ #category : 'private' }
-AbTopic >> approvalResponseForUserText: aUserText [
-
-	^ (aUserText trimmed asLowercase includesSubstring: 'no')
-		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
-		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
-			ifTrue: [ AbConstants rejectOnce ]
-			ifFalse: [ AbConstants allowOnce ]
-]
-
 { #category : 'accessing' }
 AbTopic >> availableCommands [
 	^ self session availableCommands
@@ -498,22 +488,6 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 AbTopic >> resetFromGoalAchieved [
 
 	self stateMachine handleEvent: #reset
-]
-
-{ #category : 'operations' }
-AbTopic >> resolveApproval: aUserText [
-
-	| pending response |
-	self logger debug: 'resolveApproval: entered userText=' , aUserText printString.
-	self logger debug: 'resolveApproval: status(before humanResponded)='
-		, self status printString.
-	pending := self pendingApprovalMessage.
-	pending ifNil: [
-		self logger debug: 'resolveApproval: no pending approval found, returning'.
-		^ self ].
-	response := self approvalResponseForUserText: aUserText.
-	self logger debug: 'resolveApproval: response=' , response printString.
-	self resolveApprovalWithOptionId: response
 ]
 
 { #category : 'operations' }
