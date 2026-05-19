@@ -15,7 +15,8 @@ Class {
 		'workingDirectoryPath',
 		'logger',
 		'topicGoal',
-		'session'
+		'session',
+		'settings'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -31,10 +32,10 @@ AbTopic class >> fuelIgnoredInstanceVariableNames [
 AbTopic >> abortPendingApprovals [
 
 	self pendingAiPermissionMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected.
+		msg approvalOption: AbConstants disconnected.
 		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
 	self pendingExportApprovalMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected ]
+		msg approvalOption: AbConstants disconnected ]
 ]
 
 { #category : 'private' }
@@ -57,7 +58,7 @@ AbTopic >> addAiPermissionRequest: aDescription [
 
 	^ self
 		addAiPermissionRequest: aDescription
-		options: AbConstants defaultApprovalOptions copy
+		options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'approval-private' }
@@ -100,7 +101,7 @@ AbTopic >> addExportApprovalRequest: aDescription [
 
 	^ self
 		addExportApprovalRequest: aDescription
-		options: AbConstants defaultApprovalOptions copy
+		options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'approval-private' }
@@ -178,16 +179,6 @@ AbTopic >> announceStatusChanged: updatedStatus [
 { #category : 'accessing' }
 AbTopic >> announcer [
 	^ announcer ifNil: [ announcer := Announcer new ]
-]
-
-{ #category : 'private' }
-AbTopic >> approvalResponseForUserText: aUserText [
-
-	^ (aUserText trimmed asLowercase includesSubstring: 'no')
-		  | (aUserText trimmed asLowercase includesSubstring: 'deny')
-		  | (aUserText trimmed asLowercase includesSubstring: 'reject')
-			ifTrue: [ AbConstants rejectOnce ]
-			ifFalse: [ AbConstants allowOnce ]
 ]
 
 { #category : 'accessing' }
@@ -281,7 +272,7 @@ AbTopic >> hasPackagePrefix: aString [
 AbTopic >> hasPendingApprovalRequest [
 
 	^ messages anySatisfy: [ :m |
-		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
+		  m isApprovalRequest and: [ m approvalOption isNil ] ]
 ]
 
 { #category : 'initialization' }
@@ -399,7 +390,7 @@ AbTopic >> packagePrefixes: aCollection [
 AbTopic >> pendingAiPermissionMessage [
 
 	^ self messages
-		detect: [ :m | m isAiPermission and: [ m approvalResponse isNil ] ]
+		detect: [ :m | m isAiPermission and: [ m approvalOption isNil ] ]
 		ifNone: [ nil ]
 ]
 
@@ -413,7 +404,7 @@ AbTopic >> pendingApprovalMessage [
 AbTopic >> pendingExportApprovalMessage [
 
 	^ self messages
-		detect: [ :m | m isExportApproval and: [ m approvalResponse isNil ] ]
+		detect: [ :m | m isExportApproval and: [ m approvalOption isNil ] ]
 		ifNone: [ nil ]
 ]
 
@@ -423,7 +414,7 @@ AbTopic >> rejectAiPermissionOnTimeout: aMessage [
 	self
 		rejectOnTimeout: aMessage
 		logMessage: 'requestPermission: timeout reached, auto rejecting'
-		transitionHumanIfWaiting: true
+		changeToHumanResponded: true
 ]
 
 { #category : 'approval-private' }
@@ -432,15 +423,14 @@ AbTopic >> rejectExportOnTimeout: aMessage [
 	self
 		rejectOnTimeout: aMessage
 		logMessage: 'requestPackageExport: timeout reached, auto rejecting'
-		transitionHumanIfWaiting: false
+		changeToHumanResponded: false
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectOnTimeout: aMessage logMessage: aString transitionHumanIfWaiting: aBoolean [
-
-	aMessage approvalResponse ifNotNil: [ ^ self ].
+AbTopic >> rejectOnTimeout: aMessage logMessage: aString changeToHumanResponded: aBoolean [
+	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
-	aMessage approvalResponse: AbConstants rejectOnce.
+	aMessage approvalOption: AbConstants rejectOnce.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]
@@ -466,31 +456,31 @@ AbTopic >> removePackagePrefix: aString [
 { #category : 'operations' }
 AbTopic >> requestPackageExport: aDescription [
 
-	| msg |
+	| msg responseOnTime |
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
-	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions copy.
-	self waitForExportApprovalOf: msg.
-	self rejectExportOnTimeout: msg.
-	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ AbConstants rejectOnce ]
+	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions.
+	responseOnTime := self waitForExportApprovalOf: msg.
+	responseOnTime ifNil: [self rejectExportOnTimeout: msg].
+	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
+	^ msg approvalOption
 ]
 
 { #category : 'operations' }
 AbTopic >> requestPermission: aDescription [
 
-	^ self requestPermission: aDescription options: AbConstants defaultApprovalOptions copy
+	^ self requestPermission: aDescription options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'operations' }
 AbTopic >> requestPermission: aDescription options: approvalOptions [
 
-	| msg |
+	| msg responseOnTime |
 	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addAiPermissionRequestAndWaitForHuman: aDescription options: approvalOptions.
-	self waitForAiPermissionOf: msg.
-	self rejectAiPermissionOnTimeout: msg.
-	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ AbConstants rejectOnce ]
+	responseOnTime := self waitForAiPermissionOf: msg.
+	responseOnTime ifNil: [self rejectAiPermissionOnTimeout: msg].
+	self logger debug: 'requestPermission: done. response=' , msg approvalOption printString.
+	^ msg approvalOption
 ]
 
 { #category : 'operations' }
@@ -500,28 +490,12 @@ AbTopic >> resetFromGoalAchieved [
 ]
 
 { #category : 'operations' }
-AbTopic >> resolveApproval: aUserText [
-
-	| pending response |
-	self logger debug: 'resolveApproval: entered userText=' , aUserText printString.
-	self logger debug: 'resolveApproval: status(before humanResponded)='
-		, self status printString.
-	pending := self pendingApprovalMessage.
-	pending ifNil: [
-		self logger debug: 'resolveApproval: no pending approval found, returning'.
-		^ self ].
-	response := self approvalResponseForUserText: aUserText.
-	self logger debug: 'resolveApproval: response=' , response printString.
-	self resolveApprovalWithOptionId: response
-]
-
-{ #category : 'operations' }
 AbTopic >> resolveApprovalWithOptionId: anOptionId [
 
 	| pending |
 	pending := self pendingApprovalMessage.
 	pending ifNil: [ ^ self ].
-	pending approvalResponse: anOptionId.
+	pending approvalOption: anOptionId.
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'
@@ -562,6 +536,17 @@ AbTopic >> session [
 { #category : 'accessing' }
 AbTopic >> sessionId [
 	^ self session sessionId
+]
+
+{ #category : 'accessing' }
+AbTopic >> settings [
+
+	^ settings ifNil: [ settings := AbSettings defaultCopied ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> settings: anAbSettings [
+	settings := anAbSettings
 ]
 
 { #category : 'operations' }
@@ -633,7 +618,7 @@ AbTopic >> waitForAiPermissionOf: aMessage [
 
 	^ self
 		waitForApprovalOf: aMessage
-		timeoutSeconds: AbSettings default aiPermissionWaitTimeoutSeconds
+		timeoutSeconds: self settings aiPermissionWaitTimeoutSeconds
 ]
 
 { #category : 'approval-private' }
@@ -641,10 +626,10 @@ AbTopic >> waitForApprovalOf: aMessage timeoutSeconds: timeoutSeconds [
 
 	| waitSeconds |
 	waitSeconds := 0.
-	[ aMessage approvalResponse isNil and: [ waitSeconds < timeoutSeconds ] ] whileTrue: [
+	[ aMessage approvalOption isNil and: [ waitSeconds < timeoutSeconds ] ] whileTrue: [
 		1 second wait.
 		waitSeconds := waitSeconds + 1 ].
-	^ aMessage approvalResponse
+	^ aMessage approvalOption
 ]
 
 { #category : 'approval-private' }
@@ -652,7 +637,7 @@ AbTopic >> waitForExportApprovalOf: aMessage [
 
 	^ self
 		waitForApprovalOf: aMessage
-		timeoutSeconds: AbSettings default exportApprovalWaitTimeoutSeconds
+		timeoutSeconds: self settings exportApprovalWaitTimeoutSeconds
 ]
 
 { #category : 'accessing' }

@@ -79,7 +79,7 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 	approvalOptionId := self topic
 		                  requestPermission: (self permissionPromptTextFor: anACPRequestPermission)
 		                  options: (self permissionOptionsFor: anACPRequestPermission).
-	self logger debug: 'requestPermission: got approvalResponse='
+	self logger debug: 'requestPermission: got approvalOption='
 		, approvalOptionId printString.
 	response := anACPRequestPermission makeResponse.
 	self applyApprovalOptionId: approvalOptionId toResponse: response.

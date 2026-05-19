@@ -24,7 +24,7 @@ AbMessageTest >> testAiPermissionRequestCreation [
 	self deny: msg isExportApproval.
 	self assert: msg isApprovalRequest.
 	self assert: msg approvalOptions isEmpty.
-	self assert: msg approvalResponse isNil
+	self assert: msg approvalOption isNil
 ]
 
 { #category : 'tests' }
@@ -60,7 +60,7 @@ AbMessageTest >> testExportApprovalRequestCreation [
 	self deny: msg isAiPermission.
 	self assert: msg isApprovalRequest.
 	self assert: msg approvalOptions isEmpty.
-	self assert: msg approvalResponse isNil
+	self assert: msg approvalOption isNil
 ]
 
 { #category : 'tests' }

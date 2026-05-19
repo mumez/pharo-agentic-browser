@@ -96,7 +96,7 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #allow_once.
+	self assert: approvalMessage approvalOption equals: #allow_once.
 	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
 	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
 	self assert: presenter pendingApprovalMessage isNil
@@ -116,7 +116,7 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 	presenter enterApprovalMode: approvalMessage.
 	presenter confirmPresenter selectOptionNamed: 'Allow once'.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #allow_once
+	self assert: approvalMessage approvalOption equals: #allow_once
 ]
 
 { #category : 'tests' }
@@ -156,7 +156,7 @@ AbChatPresenterTest >> testDenyApprovalUsesSecondOptionInTwoItemMode [
 						                   'Second option' -> #second_option }.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
-	self assert: approvalMessage approvalResponse equals: #second_option
+	self assert: approvalMessage approvalOption equals: #second_option
 ]
 
 { #category : 'tests' }
