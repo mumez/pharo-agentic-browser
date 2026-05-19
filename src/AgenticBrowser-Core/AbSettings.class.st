@@ -73,17 +73,17 @@ AbSettings class >> save [
 { #category : 'persistence' }
 AbSettings class >> saveTo: aFileReference [
 
-	self saveTo: aFileReference settings: self default
+	self default saveFullTo: aFileReference
 ]
 
 { #category : 'persistence' }
-AbSettings class >> saveTo: aFileReference settings: anAbSettings [
+AbSettings >> saveFullTo: aFileReference [
 
 	aFileReference parent ensureCreateDirectory.
 	aFileReference writeStreamDo: [ :stream |
 		(STONWriter on: stream)
 			prettyPrint: true;
-			nextPut: anAbSettings settingsDict ]
+			nextPut: self asFullStonDictionary ]
 ]
 
 { #category : 'accessing' }
@@ -91,7 +91,7 @@ AbSettings >> aiPermissionWaitTimeoutSeconds [
 
 	^ self
 		  at: #aiPermissionWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultAiPermissionWaitTimeoutSeconds ]
+		  ifAbsent: [ self defaultAiPermissionWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
@@ -101,12 +101,13 @@ AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 ]
 
 { #category : 'converting' }
-AbSettings >> asDictionary [
-
-	^ self keys inject: Dictionary new into: [ :dict :key |
-		  dict
-			  at: key put: (self perform: key);
-			  yourself ]
+AbSettings >> asFullStonDictionary [
+	| selectors |
+	selectors := (self class selectorsInProtocol: 'accessing') select: [ :each | each isUnary ].
+	^ selectors inject: Dictionary new into: [:dic :each |
+		dic at: each asString put: (self perform: each).
+		dic
+	]
 ]
 
 { #category : 'actions-dictionary' }
@@ -123,25 +124,25 @@ AbSettings >> at: aKey put: aValue [
 
 { #category : 'defaults' }
 AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
-
+	self isDefault ifFalse: [ ^ self class default defaultAiPermissionWaitTimeoutSeconds ].
 	^ 1800
 ]
 
 { #category : 'defaults' }
 AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
-
+	self isDefault ifFalse: [ ^ self class default defaultExportApprovalWaitTimeoutSeconds ].
 	^ 30
 ]
 
 { #category : 'defaults' }
 AbSettings >> defaultUseDefaultMcpServers [
-
+	self isDefault ifFalse: [ ^ self class default defaultUseDefaultMcpServers ].
 	^ true
 ]
 
 { #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleDuration [
-
+	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleDuration ].
 	^ 2 seconds
 ]
 
@@ -150,7 +151,7 @@ AbSettings >> exportApprovalWaitTimeoutSeconds [
 
 	^ self
 		  at: #exportApprovalWaitTimeoutSeconds
-		  ifAbsentPut: [ self defaultExportApprovalWaitTimeoutSeconds ]
+		  ifAbsent: [ self defaultExportApprovalWaitTimeoutSeconds ]
 ]
 
 { #category : 'accessing' }
@@ -183,12 +184,13 @@ AbSettings >> keys [
 { #category : 'private' }
 AbSettings >> settingsDict [
 
-	| current |
-	current := self instVarNamed: #settingsDict.
-	current ifNil: [
-		current := Dictionary new.
-		self instVarNamed: #settingsDict put: current ].
-	^ current
+	^ settingsDict
+]
+
+{ #category : 'testing' }
+AbSettings >> isDefault [
+
+	^ self == self class default
 ]
 
 { #category : 'accessing' }
@@ -196,7 +198,7 @@ AbSettings >> useDefaultMcpServers [
 
 	^ self
 		  at: #useDefaultMcpServers
-		  ifAbsentPut: [ self defaultUseDefaultMcpServers ]
+		  ifAbsent: [ self defaultUseDefaultMcpServers ]
 ]
 
 { #category : 'accessing' }
@@ -210,7 +212,7 @@ AbSettings >> watcherMessageThrottleDuration [
 
 	^ self
 		  at: #watcherMessageThrottleDuration
-		  ifAbsentPut: [ self defaultWatcherMessageThrottleDuration ]
+		  ifAbsent: [ self defaultWatcherMessageThrottleDuration ]
 ]
 
 { #category : 'accessing' }
