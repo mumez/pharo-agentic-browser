@@ -456,13 +456,13 @@ AbTopic >> removePackagePrefix: aString [
 { #category : 'operations' }
 AbTopic >> requestPackageExport: aDescription [
 
-	| msg |
+	| msg responseOnTime |
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
 	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions copy.
-	self waitForExportApprovalOf: msg.
-	self rejectExportOnTimeout: msg.
+	responseOnTime := self waitForExportApprovalOf: msg.
+	responseOnTime ifNil: [self rejectExportOnTimeout: msg].
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
-	^ msg approvalOption ifNil: [ AbConstants rejectOnce ]
+	^ msg approvalOption
 ]
 
 { #category : 'operations' }
@@ -480,7 +480,7 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 	responseOnTime := self waitForAiPermissionOf: msg.
 	responseOnTime ifNil: [self rejectAiPermissionOnTimeout: msg].
 	self logger debug: 'requestPermission: done. response=' , msg approvalOption printString.
-	^ msg approvalOption ifNil: [ AbConstants rejectOnce ]
+	^ msg approvalOption
 ]
 
 { #category : 'operations' }

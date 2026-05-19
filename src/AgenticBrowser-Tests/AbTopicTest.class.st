@@ -139,33 +139,33 @@ AbTopicTest >> testCurrentModelInitiallyNil [
 { #category : 'tests' }
 AbTopicTest >> testDisconnectAbortsPendingAiPermission [
 
-	| topic done response |
+	| topic done option |
 	topic := AbTopic new.
 	done := Semaphore new.
 	[
-	response := topic requestPermission: 'Approve this action?'.
+	option := topic requestPermission: 'Approve this action?'.
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic disconnect.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #disconnected
+	self assert: option equals: #disconnected
 ]
 
 { #category : 'tests' }
 AbTopicTest >> testDisconnectAbortsPendingExportApproval [
 
-	| topic done response |
+	| topic done option |
 	topic := AbTopic new.
 	done := Semaphore new.
 	[
-	response := topic requestPackageExport: 'Export package Foo?'.
+	option := topic requestPackageExport: 'Export package Foo?'.
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic disconnect.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #disconnected
+	self assert: option equals: #disconnected
 ]
 
 { #category : 'tests' }
@@ -371,84 +371,84 @@ AbTopicTest >> testPromptSentTransition [
 { #category : 'tests' }
 AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 
-	| topic response done |
+	| topic option done |
 	topic := AbTopic new.
 	done := Semaphore new.
 	[
-	response := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	option := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allow_once.
+	self assert: option equals: #allow_once.
 	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
 AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 
-	| topic response done timedOut |
+	| topic option done timedOut |
 	topic := AbTopic new.
 	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
 	done := Semaphore new.
 	[
-	response := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	option := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: response equals: #reject_once.
+	self assert: option equals: #reject_once.
 	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
 AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 
-	| topic response done |
+	| topic option done |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
 	done := Semaphore new.
 	[
-	response := topic requestPermission: 'Approve this action?'.
+	option := topic requestPermission: 'Approve this action?'.
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allow_once.
+	self assert: option equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
 AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 
-	| topic response done |
+	| topic option done |
 	topic := AbTopic new.
 	done := Semaphore new.
 	[
-	response := topic requestPermission: 'Approve this action?'.
+	option := topic requestPermission: 'Approve this action?'.
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: response equals: #allow_once
+	self assert: option equals: #allow_once
 ]
 
 { #category : 'tests' }
 AbTopicTest >> testRequestPermissionTimesOutUsingTopicSettings [
 
-	| topic response done timedOut |
+	| topic option done timedOut |
 	topic := AbTopic new.
 	topic settings aiPermissionWaitTimeoutSeconds: 0.
 	done := Semaphore new.
 	[
-	response := topic requestPermission: 'Approve this action?'.
+	option := topic requestPermission: 'Approve this action?'.
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: response equals: #reject_once.
+	self assert: option equals: #reject_once.
 	self assert: topic status equals: #working
 ]
 
