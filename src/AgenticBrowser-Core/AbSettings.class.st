@@ -111,6 +111,12 @@ AbSettings >> asFullStonDictionary [
 ]
 
 { #category : 'actions-dictionary' }
+AbSettings >> at: aKey ifAbsent: aBlock [
+
+	^ self settingsDict at: aKey ifAbsent: aBlock
+]
+
+{ #category : 'actions-dictionary' }
 AbSettings >> at: aKey ifAbsentPut: aBlock [
 
 	^ self settingsDict at: aKey ifAbsentPut: aBlock

@@ -83,3 +83,31 @@ AbSettingsTest >> testWatcherMessageThrottleDurationSettable [
 	AbSettings default watcherMessageThrottleDuration: 7 seconds.
 	self assert: AbSettings default watcherMessageThrottleDuration equals: 7 seconds
 ]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCopiedUnsetValueFallsBackToDefault [
+
+	| copied |
+	copied := AbSettings defaultCopied.
+	self assert: copied exportApprovalWaitTimeoutSeconds equals: AbSettings default exportApprovalWaitTimeoutSeconds
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testReadingValueDoesNotModifySettingsDict [
+
+	| settings |
+	settings := AbSettings new.
+	settings exportApprovalWaitTimeoutSeconds.
+	self assert: settings keys isEmpty
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testAsFullStonDictionaryContainsAllAccessingKeys [
+
+	| dict |
+	dict := AbSettings default asFullStonDictionary.
+	self assert: (dict includesKey: 'exportApprovalWaitTimeoutSeconds').
+	self assert: (dict includesKey: 'aiPermissionWaitTimeoutSeconds').
+	self assert: (dict includesKey: 'useDefaultMcpServers').
+	self assert: (dict includesKey: 'watcherMessageThrottleDuration')
+]
