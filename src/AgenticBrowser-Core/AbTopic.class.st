@@ -58,7 +58,7 @@ AbTopic >> addAiPermissionRequest: aDescription [
 
 	^ self
 		addAiPermissionRequest: aDescription
-		options: AbConstants defaultApprovalOptions copy
+		options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'approval-private' }
@@ -101,7 +101,7 @@ AbTopic >> addExportApprovalRequest: aDescription [
 
 	^ self
 		addExportApprovalRequest: aDescription
-		options: AbConstants defaultApprovalOptions copy
+		options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'approval-private' }
@@ -458,7 +458,7 @@ AbTopic >> requestPackageExport: aDescription [
 
 	| msg responseOnTime |
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
-	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions copy.
+	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions.
 	responseOnTime := self waitForExportApprovalOf: msg.
 	responseOnTime ifNil: [self rejectExportOnTimeout: msg].
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
@@ -468,7 +468,7 @@ AbTopic >> requestPackageExport: aDescription [
 { #category : 'operations' }
 AbTopic >> requestPermission: aDescription [
 
-	^ self requestPermission: aDescription options: AbConstants defaultApprovalOptions copy
+	^ self requestPermission: aDescription options: AbConstants defaultApprovalOptions
 ]
 
 { #category : 'operations' }
