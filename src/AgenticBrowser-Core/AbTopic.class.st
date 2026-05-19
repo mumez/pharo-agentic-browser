@@ -32,10 +32,10 @@ AbTopic class >> fuelIgnoredInstanceVariableNames [
 AbTopic >> abortPendingApprovals [
 
 	self pendingAiPermissionMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected.
+		msg approvalOption: AbConstants disconnected.
 		self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ] ].
 	self pendingExportApprovalMessage ifNotNil: [ :msg |
-		msg approvalResponse: AbConstants disconnected ]
+		msg approvalOption: AbConstants disconnected ]
 ]
 
 { #category : 'private' }
@@ -272,7 +272,7 @@ AbTopic >> hasPackagePrefix: aString [
 AbTopic >> hasPendingApprovalRequest [
 
 	^ messages anySatisfy: [ :m |
-		  m isApprovalRequest and: [ m approvalResponse isNil ] ]
+		  m isApprovalRequest and: [ m approvalOption isNil ] ]
 ]
 
 { #category : 'initialization' }
@@ -390,7 +390,7 @@ AbTopic >> packagePrefixes: aCollection [
 AbTopic >> pendingAiPermissionMessage [
 
 	^ self messages
-		detect: [ :m | m isAiPermission and: [ m approvalResponse isNil ] ]
+		detect: [ :m | m isAiPermission and: [ m approvalOption isNil ] ]
 		ifNone: [ nil ]
 ]
 
@@ -404,7 +404,7 @@ AbTopic >> pendingApprovalMessage [
 AbTopic >> pendingExportApprovalMessage [
 
 	^ self messages
-		detect: [ :m | m isExportApproval and: [ m approvalResponse isNil ] ]
+		detect: [ :m | m isExportApproval and: [ m approvalOption isNil ] ]
 		ifNone: [ nil ]
 ]
 
@@ -414,7 +414,7 @@ AbTopic >> rejectAiPermissionOnTimeout: aMessage [
 	self
 		rejectOnTimeout: aMessage
 		logMessage: 'requestPermission: timeout reached, auto rejecting'
-		transitionHumanIfWaiting: true
+		changeToHumanResponded: true
 ]
 
 { #category : 'approval-private' }
@@ -423,15 +423,14 @@ AbTopic >> rejectExportOnTimeout: aMessage [
 	self
 		rejectOnTimeout: aMessage
 		logMessage: 'requestPackageExport: timeout reached, auto rejecting'
-		transitionHumanIfWaiting: false
+		changeToHumanResponded: false
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectOnTimeout: aMessage logMessage: aString transitionHumanIfWaiting: aBoolean [
-
-	aMessage approvalResponse ifNotNil: [ ^ self ].
+AbTopic >> rejectOnTimeout: aMessage logMessage: aString changeToHumanResponded: aBoolean [
+	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
-	aMessage approvalResponse: AbConstants rejectOnce.
+	aMessage approvalOption: AbConstants rejectOnce.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]
@@ -462,8 +461,8 @@ AbTopic >> requestPackageExport: aDescription [
 	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions copy.
 	self waitForExportApprovalOf: msg.
 	self rejectExportOnTimeout: msg.
-	self logger debug: 'requestPackageExport: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ AbConstants rejectOnce ]
+	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
+	^ msg approvalOption ifNil: [ AbConstants rejectOnce ]
 ]
 
 { #category : 'operations' }
@@ -475,13 +474,13 @@ AbTopic >> requestPermission: aDescription [
 { #category : 'operations' }
 AbTopic >> requestPermission: aDescription options: approvalOptions [
 
-	| msg |
+	| msg responseOnTime |
 	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addAiPermissionRequestAndWaitForHuman: aDescription options: approvalOptions.
-	self waitForAiPermissionOf: msg.
-	self rejectAiPermissionOnTimeout: msg.
-	self logger debug: 'requestPermission: done. response=' , msg approvalResponse printString.
-	^ msg approvalResponse ifNil: [ AbConstants rejectOnce ]
+	responseOnTime := self waitForAiPermissionOf: msg.
+	responseOnTime ifNil: [self rejectAiPermissionOnTimeout: msg].
+	self logger debug: 'requestPermission: done. response=' , msg approvalOption printString.
+	^ msg approvalOption ifNil: [ AbConstants rejectOnce ]
 ]
 
 { #category : 'operations' }
@@ -496,7 +495,7 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 	| pending |
 	pending := self pendingApprovalMessage.
 	pending ifNil: [ ^ self ].
-	pending approvalResponse: anOptionId.
+	pending approvalOption: anOptionId.
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'
@@ -627,10 +626,10 @@ AbTopic >> waitForApprovalOf: aMessage timeoutSeconds: timeoutSeconds [
 
 	| waitSeconds |
 	waitSeconds := 0.
-	[ aMessage approvalResponse isNil and: [ waitSeconds < timeoutSeconds ] ] whileTrue: [
+	[ aMessage approvalOption isNil and: [ waitSeconds < timeoutSeconds ] ] whileTrue: [
 		1 second wait.
 		waitSeconds := waitSeconds + 1 ].
-	^ aMessage approvalResponse
+	^ aMessage approvalOption
 ]
 
 { #category : 'approval-private' }

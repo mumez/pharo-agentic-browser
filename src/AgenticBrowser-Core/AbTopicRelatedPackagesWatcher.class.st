@@ -59,10 +59,10 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalResponse packageName: aPackageName [
+AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalOption packageName: aPackageName [
 
-	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalResponse printString.
-	(self shouldProceedWithExportForApprovalResponse: approvalResponse)
+	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalOption printString.
+	(self shouldProceedWithExportForApprovalResponse: approvalOption)
 		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
 		ifFalse: [
 			self topic addSystemMessage:
@@ -150,12 +150,12 @@ AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 
-	| approvalResponse |
+	| approvalOption |
 	self logger debug: 'requestApprovalToExportPackage: ' , aPackageName.
 	[
-	approvalResponse := self topic requestPackageExport:
+	approvalOption := self topic requestPackageExport:
 		                    (self exportPackageApprovalPromptFor: aPackageName).
-	self handleExportPackageApprovalResponse: approvalResponse packageName: aPackageName ]
+	self handleExportPackageApprovalResponse: approvalOption packageName: aPackageName ]
 		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToExportPackage:' ]
 ]
 

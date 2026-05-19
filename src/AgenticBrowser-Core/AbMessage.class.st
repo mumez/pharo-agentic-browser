@@ -7,7 +7,7 @@ Class {
 		'lastUpdated',
 		'isAiPermission',
 		'isExportApproval',
-		'approvalResponse',
+		'approvalOption',
 		'isThink',
 		'approvalOptions'
 	],
@@ -77,13 +77,13 @@ AbMessage >> approvalOptions: aCollection [
 ]
 
 { #category : 'accessing' }
-AbMessage >> approvalResponse [
-	^ approvalResponse
+AbMessage >> approvalOption [
+	^ approvalOption
 ]
 
 { #category : 'accessing' }
-AbMessage >> approvalResponse: aSymbol [
-	approvalResponse := aSymbol
+AbMessage >> approvalOption: aSymbol [
+	approvalOption := aSymbol
 ]
 
 { #category : 'initialization' }

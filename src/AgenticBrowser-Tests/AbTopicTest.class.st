@@ -462,7 +462,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
-	self assert: msg approvalResponse equals: #allow_once.
+	self assert: msg approvalOption equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 
@@ -476,7 +476,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
-	self assert: msg approvalResponse equals: #reject_once.
+	self assert: msg approvalOption equals: #reject_once.
 	self assert: topic status equals: #working
 ]
 
@@ -505,7 +505,7 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 				       'Deny' -> #reject_once }.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: #allow_once.
-	self assert: msg approvalResponse equals: #allow_once.
+	self assert: msg approvalOption equals: #allow_once.
 	self assert: topic status equals: #working
 ]
 
@@ -515,7 +515,7 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
 	topic resolveApprovalWithOptionId: #reject_once.
-	self assert: msg approvalResponse equals: #reject_once.
+	self assert: msg approvalOption equals: #reject_once.
 	self assert: topic status equals: #initial
 ]
 
