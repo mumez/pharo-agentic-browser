@@ -437,6 +437,22 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testRequestPermissionTimesOutUsingTopicSettings [
+
+	| topic response done timedOut |
+	topic := AbTopic new.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	done := Semaphore new.
+	[
+	response := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: response equals: #reject_once.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testResolveApprovalAllowAlways [
 
 	| topic msg |
@@ -714,4 +730,18 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 		              fullName.
 	topic workingDirectoryPath: customPath.
 	self assert: topic workingDirectoryPath equals: customPath
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
+
+	| topic |
+	topic := AbTopic new.
+	self deny: topic settings == AbSettings default.
+	self
+		assert: topic settings aiPermissionWaitTimeoutSeconds
+		equals: AbSettings default aiPermissionWaitTimeoutSeconds.
+	self
+		assert: topic settings exportApprovalWaitTimeoutSeconds
+		equals: AbSettings default exportApprovalWaitTimeoutSeconds
 ]
