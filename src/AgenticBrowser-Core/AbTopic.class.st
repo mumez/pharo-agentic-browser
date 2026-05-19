@@ -15,7 +15,8 @@ Class {
 		'workingDirectoryPath',
 		'logger',
 		'topicGoal',
-		'session'
+		'session',
+		'settings'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -564,6 +565,17 @@ AbTopic >> sessionId [
 	^ self session sessionId
 ]
 
+{ #category : 'accessing' }
+AbTopic >> settings [
+
+	^ settings ifNil: [ settings := AbSettings defaultCopied ]
+]
+
+{ #category : 'accessing' }
+AbTopic >> settings: anAbSettings [
+	settings := anAbSettings
+]
+
 { #category : 'operations' }
 AbTopic >> startWatching [
 
@@ -633,7 +645,7 @@ AbTopic >> waitForAiPermissionOf: aMessage [
 
 	^ self
 		waitForApprovalOf: aMessage
-		timeoutSeconds: AbSettings default aiPermissionWaitTimeoutSeconds
+		timeoutSeconds: self settings aiPermissionWaitTimeoutSeconds
 ]
 
 { #category : 'approval-private' }
@@ -652,7 +664,7 @@ AbTopic >> waitForExportApprovalOf: aMessage [
 
 	^ self
 		waitForApprovalOf: aMessage
-		timeoutSeconds: AbSettings default exportApprovalWaitTimeoutSeconds
+		timeoutSeconds: self settings exportApprovalWaitTimeoutSeconds
 ]
 
 { #category : 'accessing' }
