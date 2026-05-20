@@ -409,27 +409,27 @@ AbTopic >> pendingExportApprovalMessage [
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectAiPermissionOnTimeout: aMessage [
+AbTopic >> respondAiPermissionOnTimeout: aMessage [
 
 	self
-		rejectOnTimeout: aMessage
+		respondOnTimeout: aMessage
 		approvalOption: self settings aiPermissionTimeoutOption
-		logMessage: 'requestPermission: timeout reached, auto rejecting'
+		logMessage: 'requestPermission: timeout reached, auto resolving by timeout option'
 		changeToHumanResponded: true
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectExportOnTimeout: aMessage [
+AbTopic >> respondExportOnTimeout: aMessage [
 
 	self
-		rejectOnTimeout: aMessage
+		respondOnTimeout: aMessage
 		approvalOption: self settings exportApprovalTimeoutOption
-		logMessage: 'requestPackageExport: timeout reached, auto rejecting'
+		logMessage: 'requestPackageExport: timeout reached, auto resolving by timeout option'
 		changeToHumanResponded: false
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
+AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
 	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
 	aMessage approvalOption: anOptionSymbol.
@@ -462,7 +462,7 @@ AbTopic >> requestPackageExport: aDescription [
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
 	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions.
 	responseOnTime := self waitForExportApprovalOf: msg.
-	responseOnTime ifNil: [self rejectExportOnTimeout: msg].
+	responseOnTime ifNil: [self respondExportOnTimeout: msg].
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
 	^ msg approvalOption
 ]
@@ -480,7 +480,7 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addAiPermissionRequestAndWaitForHuman: aDescription options: approvalOptions.
 	responseOnTime := self waitForAiPermissionOf: msg.
-	responseOnTime ifNil: [self rejectAiPermissionOnTimeout: msg].
+	responseOnTime ifNil: [self respondAiPermissionOnTimeout: msg].
 	self logger debug: 'requestPermission: done. response=' , msg approvalOption printString.
 	^ msg approvalOption
 ]
