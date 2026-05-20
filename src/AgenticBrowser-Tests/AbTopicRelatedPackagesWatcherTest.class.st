@@ -24,6 +24,16 @@ AbTopicRelatedPackagesWatcherTest >> tearDown [
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeAddsToPendingApprovals [
+
+	| ann |
+	ann := ClassModifiedClassDefinition new.
+	ann newClassDefinition: AbTopic.
+	watcher handleClassChange: ann.
+	self assert: (watcher pendingPackageApprovals includes: 'AgenticBrowser-Core')
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport [
 
 	| ann errorRaised |
@@ -37,6 +47,16 @@ AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport
 		do: [ :e | errorRaised := true ] ]
 		ensure: [ topic workingDirectory endImportFromSource ].
 	self deny: errorRaised
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeAddsToPendingApprovals [
+
+	| ann |
+	ann := MethodModified new.
+	ann method: (AbTopic >> #status).
+	watcher handleMethodChange: ann.
+	self assert: (watcher pendingPackageApprovals includes: 'AgenticBrowser-Core')
 ]
 
 { #category : 'tests' }

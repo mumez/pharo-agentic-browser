@@ -28,11 +28,22 @@ AbTopicRelatedPackagesWatcher >> cleanupPendingApprovalFor: aPackageName in: aSe
 ]
 
 { #category : 'private' }
+AbTopicRelatedPackagesWatcher >> doHandleClassChange: aClassName in: aPackageName [
+
+	| matchesPrefix |
+	matchesPrefix := self topic packagePrefixes anySatisfy: [ :prefix |
+		                 prefix match: aPackageName ].
+	matchesPrefix
+		ifTrue: [ self requestApprovalToExportClass: aClassName in: aPackageName ]
+		ifFalse: [ self trackExternalPackageChange: aPackageName ]
+]
+
+{ #category : 'private' }
 AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
 
 	| matchesPrefix |
 	matchesPrefix := self topic packagePrefixes anySatisfy: [ :prefix |
-						 prefix match: aPackageName ].
+		                 prefix match: aPackageName ].
 	matchesPrefix
 		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
 		ifFalse: [ self trackExternalPackageChange: aPackageName ]
@@ -50,12 +61,32 @@ AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
 { #category : 'event handling' }
 AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 
-	| pkgName |
+	| pkgName className |
 	self topic workingDirectory isImportingFromSource ifTrue: [
 		self logger debug: 'handleClassChange: suppressed during import'.
 		^ self ].
 	pkgName := anAnnouncement classAffected package name asString.
-	self handlePackageChange: pkgName
+	className := anAnnouncement classAffected name asString.
+	self handleClassChangeNamed: className in: pkgName
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> handleClassChangeNamed: aClassName in: aPackageName [
+
+	(self pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
+	self pendingPackageApprovals add: aPackageName.
+	[ self doHandleClassChange: aClassName in: aPackageName ] fork
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName [
+
+	self logger debug: 'requestApprovalToExportClass:in: got response=' , approvalOption printString.
+	(self shouldProceedWithExportForApprovalResponse: approvalOption)
+		ifTrue: [ self postSystemMessageAndExportClass: aClassName in: aPackageName ]
+		ifFalse: [
+			self topic addSystemMessage:
+				'Skipped export for ' , aPackageName , ' (approval denied).' ]
 ]
 
 { #category : 'private' }
@@ -72,12 +103,13 @@ AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalOp
 { #category : 'event handling' }
 AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 
-	| pkgName |
+	| pkgName className |
 	self topic workingDirectory isImportingFromSource ifTrue: [
 		self logger debug: 'handleMethodChange: suppressed during import'.
 		^ self ].
 	pkgName := anAnnouncement methodPackage name asString.
-	self handlePackageChange: pkgName
+	className := anAnnouncement method methodClass instanceSide name asString.
+	self handleClassChangeNamed: className in: pkgName
 ]
 
 { #category : 'private' }
@@ -137,11 +169,35 @@ AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 	shouldAnnounce := self
 		                  shouldAnnouncePackageChangeFor: aPackageName
 		                  at: DateAndTime now.
-	shouldAnnounce
-		ifTrue: [
-			self topic sendPrompt:
-				'{1} was modified; {1}/*.st files have been updated!' format: {aPackageName} ].
-	self topic workingDirectory exportPackageNamed: aPackageName.
+	shouldAnnounce ifTrue: [
+		self topic sendPrompt:
+			'{1} was modified; {1}/*.st files have been updated!' format: { aPackageName } ].
+	self topic workingDirectory exportPackageNamed: aPackageName
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> postSystemMessageAndExportClass: aClassName in: aPackageName [
+
+	| shouldAnnounce |
+	shouldAnnounce := self
+		                  shouldAnnouncePackageChangeFor: aPackageName
+		                  at: DateAndTime now.
+	shouldAnnounce ifTrue: [
+		self topic sendPrompt:
+			'{1} was modified; {1}/*.st files have been updated!' format: { aPackageName } ].
+	self topic workingDirectory exportClassNamed: aClassName in: aPackageName
+]
+
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> requestApprovalToExportClass: aClassName in: aPackageName [
+
+	| approvalOption |
+	self logger debug: 'requestApprovalToExportClass:in: ' , aClassName , ' in ' , aPackageName.
+	[
+	approvalOption := self topic requestPackageExport:
+		                    (self exportPackageApprovalPromptFor: aPackageName).
+	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName ]
+		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToExportClass:in:' ]
 ]
 
 { #category : 'private' }

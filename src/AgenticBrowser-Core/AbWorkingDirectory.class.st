@@ -69,11 +69,24 @@ AbWorkingDirectory >> ensureExists [
 ]
 
 { #category : 'exporting' }
+AbWorkingDirectory >> exportClassNamed: aClassName in: aPackageName [
+
+	| cls classFile |
+	self ensureExists.
+	cls := Smalltalk globals at: aClassName asSymbol.
+	classFile := self sourcePath / aPackageName / (aClassName , '.class.st').
+	classFile parent ensureCreateDirectory.
+	classFile writeStreamDo: [ :stream | TonelWriter exportClass: cls on: stream ]
+]
+
+{ #category : 'exporting' }
 AbWorkingDirectory >> exportPackageNamed: aPackageName [
-    self ensureExists.
-    SisServer current handleExportPackage: {
-		  'package_name' -> aPackageName.
-		  'path' -> self sourcePath fullName } asDictionary
+
+	| snapshot writer |
+	self ensureExists.
+	snapshot := (MCPackage named: aPackageName) snapshot.
+	writer := TonelWriter on: self sourcePath ensureCreateDirectory.
+	writer writeSnapshot: snapshot
 ]
 
 { #category : 'private' }
