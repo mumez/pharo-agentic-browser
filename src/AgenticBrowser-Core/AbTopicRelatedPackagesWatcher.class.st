@@ -177,6 +177,7 @@ AbTopicRelatedPackagesWatcher >> shouldAnnouncePackageChangeFor: aPackageName at
 AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aResponseSymbol [
 
 	^ aResponseSymbol = AbConstants allowOnce
+	  or: [ aResponseSymbol = AbConstants allowAlways ]
 ]
 
 { #category : 'operations' }

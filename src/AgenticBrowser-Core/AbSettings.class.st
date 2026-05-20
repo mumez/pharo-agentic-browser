@@ -95,6 +95,20 @@ AbSettings >> aiPermissionWaitTimeoutSeconds [
 ]
 
 { #category : 'accessing' }
+AbSettings >> aiPermissionTimeoutOption [
+
+	^ self
+		  at: #aiPermissionTimeoutOption
+		  ifAbsent: [ self defaultAiPermissionTimeoutOption ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> aiPermissionTimeoutOption: anOptionSymbol [
+
+	self at: #aiPermissionTimeoutOption put: anOptionSymbol
+]
+
+{ #category : 'accessing' }
 AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 
 	self at: #aiPermissionWaitTimeoutSeconds put: anInteger
@@ -135,9 +149,21 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultAiPermissionTimeoutOption [
+	self isDefault ifFalse: [ ^ self class default defaultAiPermissionTimeoutOption ].
+	^ AbConstants rejectOnce
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultExportApprovalWaitTimeoutSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultExportApprovalWaitTimeoutSeconds ].
 	^ 30
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultExportApprovalTimeoutOption [
+	self isDefault ifFalse: [ ^ self class default defaultExportApprovalTimeoutOption ].
+	^ AbConstants rejectOnce
 ]
 
 { #category : 'defaults' }
@@ -158,6 +184,20 @@ AbSettings >> exportApprovalWaitTimeoutSeconds [
 	^ self
 		  at: #exportApprovalWaitTimeoutSeconds
 		  ifAbsent: [ self defaultExportApprovalWaitTimeoutSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalTimeoutOption [
+
+	^ self
+		  at: #exportApprovalTimeoutOption
+		  ifAbsent: [ self defaultExportApprovalTimeoutOption ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> exportApprovalTimeoutOption: anOptionSymbol [
+
+	self at: #exportApprovalTimeoutOption put: anOptionSymbol
 ]
 
 { #category : 'accessing' }
