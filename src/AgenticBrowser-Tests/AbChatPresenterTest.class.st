@@ -96,7 +96,7 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalOption equals: #allow_once.
+	self assert: approvalMessage approvalOption equals: AbConstants allowOnce.
 	self assert: presenter normalInputPresenter sendButtonLabel equals: 'Send'.
 	self assert: presenter normalInputPresenter cancelButtonLabel equals: 'Cancel'.
 	self assert: presenter pendingApprovalMessage isNil
@@ -111,12 +111,12 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 	approvalMessage := topic
 		                   addAiPermissionRequest: 'Pick an option'
 		                   options: {
-						                   'Allow once' -> #allow_once.
-						                   'Always allow' -> #allow_always }.
+						                   'Allow once' -> AbConstants allowOnce.
+						                   'Always allow' -> AbConstants allowAlways }.
 	presenter enterApprovalMode: approvalMessage.
 	presenter confirmPresenter selectOptionNamed: 'Allow once'.
 	presenter onConfirmButtonClicked.
-	self assert: approvalMessage approvalOption equals: #allow_once
+	self assert: approvalMessage approvalOption equals: AbConstants allowOnce
 ]
 
 { #category : 'tests' }
@@ -178,8 +178,8 @@ AbChatPresenterTest >> testEnterApprovalModeLoadsApprovalOptionsIntoConfirmPrese
 	approvalMessage := AbMessage
 		                   aiPermissionRequestText: 'Pick an option'
 		                   options: {
-						                   'Allow once' -> #allow_once.
-						                   'Always allow' -> #allow_always }.
+						                   'Allow once' -> AbConstants allowOnce.
+						                   'Always allow' -> AbConstants allowAlways }.
 	presenter enterApprovalMode: approvalMessage.
 	self assert: presenter confirmPresenter optionLabels asArray equals: #( 'Allow once' 'Always allow' )
 ]

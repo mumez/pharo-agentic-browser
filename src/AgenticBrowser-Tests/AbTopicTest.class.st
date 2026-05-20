@@ -381,7 +381,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once.
+	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #initial
 ]
 
@@ -397,7 +397,7 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: option equals: #reject_once.
+	self assert: option equals: AbConstants rejectOnce.
 	self assert: topic status equals: #initial
 ]
 
@@ -416,7 +416,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once.
+	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -433,7 +433,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once
+	self assert: option equals: AbConstants allowOnce
 ]
 
 { #category : 'tests' }
@@ -448,7 +448,7 @@ AbTopicTest >> testRequestPermissionTimesOutUsingTopicSettings [
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: option equals: #reject_once.
+	self assert: option equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -462,7 +462,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
-	self assert: msg approvalOption equals: #allow_once.
+	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -476,7 +476,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
-	self assert: msg approvalOption equals: #reject_once.
+	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -501,11 +501,11 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	msg := AbMessage
 		       aiPermissionRequestText: 'Choose an option'
 		       options: {
-				       'Allow once' -> #allow_once.
-				       'Deny' -> #reject_once }.
+				       'Allow once' -> AbConstants allowOnce.
+				       'Deny' -> AbConstants rejectOnce }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: #allow_once.
-	self assert: msg approvalOption equals: #allow_once.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -514,8 +514,8 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 	| topic msg |
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: #reject_once.
-	self assert: msg approvalOption equals: #reject_once.
+	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #initial
 ]
 

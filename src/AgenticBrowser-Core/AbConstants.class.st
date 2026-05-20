@@ -6,6 +6,12 @@ Class {
 }
 
 { #category : 'approval-options' }
+AbConstants class >> allowAlways [
+
+	^ #allow_always
+]
+
+{ #category : 'approval-options' }
 AbConstants class >> allowOnce [
 
 	^ #allow_once

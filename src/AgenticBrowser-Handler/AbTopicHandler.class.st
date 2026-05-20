@@ -41,7 +41,7 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 	options ifNotEmpty: [ ^ options asArray ].
 	^ {
 		  'Allow once' -> AbConstants allowOnce.
-		  'Always allow' -> #allow_always.
+		  'Always allow' -> AbConstants allowAlways.
 		  'Deny' -> AbConstants rejectOnce }
 ]
 
