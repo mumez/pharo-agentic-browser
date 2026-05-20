@@ -413,6 +413,7 @@ AbTopic >> rejectAiPermissionOnTimeout: aMessage [
 
 	self
 		rejectOnTimeout: aMessage
+		approvalOption: self settings aiPermissionTimeoutOption
 		logMessage: 'requestPermission: timeout reached, auto rejecting'
 		changeToHumanResponded: true
 ]
@@ -422,15 +423,16 @@ AbTopic >> rejectExportOnTimeout: aMessage [
 
 	self
 		rejectOnTimeout: aMessage
+		approvalOption: self settings exportApprovalTimeoutOption
 		logMessage: 'requestPackageExport: timeout reached, auto rejecting'
 		changeToHumanResponded: false
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectOnTimeout: aMessage logMessage: aString changeToHumanResponded: aBoolean [
+AbTopic >> rejectOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
 	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
-	aMessage approvalOption: AbConstants rejectOnce.
+	aMessage approvalOption: anOptionSymbol.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]

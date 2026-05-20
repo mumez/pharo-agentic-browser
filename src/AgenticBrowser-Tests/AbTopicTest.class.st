@@ -402,6 +402,23 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testRequestPackageExportTimesOutUsingExportApprovalTimeoutOption [
+
+	| topic option done timedOut |
+	topic := AbTopic new.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	topic settings exportApprovalTimeoutOption: AbConstants allowAlways.
+	done := Semaphore new.
+	[
+	option := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: option equals: AbConstants allowAlways.
+	self assert: topic status equals: #initial
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 
 	| topic option done |
@@ -449,6 +466,23 @@ AbTopicTest >> testRequestPermissionTimesOutUsingTopicSettings [
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
 	self assert: option equals: AbConstants rejectOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPermissionTimesOutUsingAiPermissionTimeoutOption [
+
+	| topic option done timedOut |
+	topic := AbTopic new.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	topic settings aiPermissionTimeoutOption: AbConstants allowAlways.
+	done := Semaphore new.
+	[
+	option := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: option equals: AbConstants allowAlways.
 	self assert: topic status equals: #working
 ]
 
@@ -743,5 +777,11 @@ AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
 		equals: AbSettings default aiPermissionWaitTimeoutSeconds.
 	self
 		assert: topic settings exportApprovalWaitTimeoutSeconds
-		equals: AbSettings default exportApprovalWaitTimeoutSeconds
+		equals: AbSettings default exportApprovalWaitTimeoutSeconds.
+	self
+		assert: topic settings exportApprovalTimeoutOption
+		equals: AbSettings default exportApprovalTimeoutOption.
+	self
+		assert: topic settings aiPermissionTimeoutOption
+		equals: AbSettings default aiPermissionTimeoutOption
 ]

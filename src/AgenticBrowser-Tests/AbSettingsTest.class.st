@@ -27,6 +27,21 @@ AbSettingsTest >> testAiPermissionWaitTimeoutSecondsSettable [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testAiPermissionTimeoutOptionDefault [
+
+	self assert: AbSettings default aiPermissionTimeoutOption equals: AbConstants rejectOnce
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testAiPermissionTimeoutOptionSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings aiPermissionTimeoutOption: AbConstants allowAlways.
+	self assert: settings aiPermissionTimeoutOption equals: AbConstants allowAlways
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testDefaultCopiedDoesNotMutateDefault [
 
 	| copied |
@@ -54,6 +69,21 @@ AbSettingsTest >> testExportApprovalWaitTimeoutSecondsSettable [
 	settings := AbSettings defaultCopied.
 	settings exportApprovalWaitTimeoutSeconds: 60.
 	self assert: settings exportApprovalWaitTimeoutSeconds equals: 60
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testExportApprovalTimeoutOptionDefault [
+
+	self assert: AbSettings default exportApprovalTimeoutOption equals: AbConstants rejectOnce
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testExportApprovalTimeoutOptionSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings exportApprovalTimeoutOption: AbConstants allowAlways.
+	self assert: settings exportApprovalTimeoutOption equals: AbConstants allowAlways
 ]
 
 { #category : 'tests' }
@@ -108,6 +138,8 @@ AbSettingsTest >> testAsFullStonDictionaryContainsAllAccessingKeys [
 	dict := AbSettings default asFullStonDictionary.
 	self assert: (dict includesKey: 'exportApprovalWaitTimeoutSeconds').
 	self assert: (dict includesKey: 'aiPermissionWaitTimeoutSeconds').
+	self assert: (dict includesKey: 'exportApprovalTimeoutOption').
+	self assert: (dict includesKey: 'aiPermissionTimeoutOption').
 	self assert: (dict includesKey: 'useDefaultMcpServers').
 	self assert: (dict includesKey: 'watcherMessageThrottleDuration')
 ]

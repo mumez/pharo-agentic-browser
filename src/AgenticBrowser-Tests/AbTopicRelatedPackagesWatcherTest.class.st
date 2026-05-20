@@ -141,6 +141,8 @@ AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalRespo
 
 	self assert:
 		(watcher shouldProceedWithExportForApprovalResponse: AbConstants allowOnce).
+	self assert:
+		(watcher shouldProceedWithExportForApprovalResponse: AbConstants allowAlways).
 	self deny:
 		(watcher shouldProceedWithExportForApprovalResponse: AbConstants rejectOnce)
 ]
