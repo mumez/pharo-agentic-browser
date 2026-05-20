@@ -139,11 +139,8 @@ AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
 		                  at: DateAndTime now.
 	shouldAnnounce
 		ifTrue: [
-			self topic addSystemMessage:
-				aPackageName , ' was modified; .st files have been updated' ]
-		ifFalse: [
-			self logger debug: 'postSystemMessageAndExport: system message suppressed for '
-				, aPackageName ].
+			self topic sendPrompt:
+				'{1} was modified; {1}/*.st files have been updated!' format: {aPackageName} ].
 	self topic workingDirectory exportPackageNamed: aPackageName.
 ]
 
