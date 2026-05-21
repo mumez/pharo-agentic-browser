@@ -96,7 +96,7 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 	aSessionUpdate isAvailableCommandsUpdate
 		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ].
 	aSessionUpdate isConfigOptionUpdate
-		ifTrue: [ ^ self topic updateCurrentModelFromConfigOptions: aSessionUpdate configOptions ]
+		ifTrue: [ ^ self topic updateConfigOptions: aSessionUpdate configOptions ]
 ]
 
 { #category : 'accessing' }

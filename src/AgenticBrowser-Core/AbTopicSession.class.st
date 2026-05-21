@@ -6,7 +6,9 @@ Class {
 		'client',
 		'sessionId',
 		'availableCommands',
-		'currentModel'
+		'currentModel',
+		'currentMode',
+		'configOptions'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -67,13 +69,25 @@ AbTopicSession >> currentModel: aString [
 	currentModel := aString
 ]
 
+{ #category : 'accessing' }
+AbTopicSession >> currentMode [
+	^ currentMode
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentMode: aString [
+	currentMode := aString
+]
+
 { #category : 'operations' }
 AbTopicSession >> disconnect [
 
 	self client ifNotNil: [ self client disconnect ].
 	self client: nil.
 	self availableCommands: OrderedCollection new.
-	self currentModel: nil
+	self currentModel: nil.
+	self currentMode: nil.
+	self configOptions: OrderedCollection new
 ]
 
 { #category : 'private' }
@@ -93,7 +107,7 @@ AbTopicSession >> doConnectWithClient: anACPClient [
 	initializeResult := self client initializeBy: [ :params | "use defaults" ].
 	sessionResult := self sessionResultFromInitializeResponse: initializeResult.
 	sessionResult sessionId ifNotNil: [ :sid | self sessionId: sid ].
-	self updateCurrentModelFromConfigOptions: sessionResult configOptions
+	self updateConfigOptions: sessionResult configOptions
 ]
 
 { #category : 'private' }
@@ -105,7 +119,25 @@ AbTopicSession >> ensureConnected [
 { #category : 'initialization' }
 AbTopicSession >> initialize [
 
-	availableCommands := OrderedCollection new
+	availableCommands := OrderedCollection new.
+	configOptions := OrderedCollection new
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> configOptions [
+	^ configOptions
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> configOptions: aCollection [
+	configOptions := (aCollection ifNil: [ #() ]) asOrderedCollection
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> modeConfigOption [
+	^ self configOptions
+		detect: [ :opt | opt isModeCategory ]
+		ifNone: [ nil ]
 ]
 
 { #category : 'private' }
@@ -209,4 +241,37 @@ AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
 			 topic: self topic;
 			 model: self currentModel;
 			 yourself)
+]
+
+{ #category : 'operations' }
+AbTopicSession >> updateCurrentModeFromConfigOptions: aCollection [
+
+	| modeOption |
+	modeOption := aCollection
+		              detect: [ :opt | opt isModeCategory ]
+		              ifNone: [
+			              self currentMode: nil.
+			              ^ self ].
+	self currentMode: modeOption currentValue
+]
+
+{ #category : 'operations' }
+AbTopicSession >> updateConfigOptions: aCollection [
+
+	self configOptions: aCollection.
+	self updateCurrentModeFromConfigOptions: self configOptions.
+	self updateCurrentModelFromConfigOptions: self configOptions
+]
+
+{ #category : 'operations' }
+AbTopicSession >> setConfigOptionId: aConfigId value: aValue [
+
+	| result |
+	self ensureConnected.
+	result := self client setSessionConfigOptionBy: [ :params |
+		          params
+			          sessionId: self sessionId;
+			          configId: aConfigId;
+			          value: aValue ].
+	self updateConfigOptions: result configOptions
 ]
