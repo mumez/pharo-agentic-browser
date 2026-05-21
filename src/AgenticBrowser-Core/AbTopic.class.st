@@ -620,12 +620,6 @@ AbTopic >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
-
-	self updateConfigOptions: aCollection
-]
-
-{ #category : 'operations' }
 AbTopic >> updateConfigOptions: aCollection [
 
 	self session updateConfigOptions: aCollection

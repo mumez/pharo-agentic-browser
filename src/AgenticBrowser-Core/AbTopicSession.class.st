@@ -35,7 +35,7 @@ AbTopicSession >> announcer [
 
 { #category : 'accessing' }
 AbTopicSession >> availableCommands [
-	^ availableCommands
+	^ availableCommands ifNil: [ availableCommands := OrderedCollection new ]
 ]
 
 { #category : 'accessing' }
@@ -83,11 +83,7 @@ AbTopicSession >> currentMode: aString [
 AbTopicSession >> disconnect [
 
 	self client ifNotNil: [ self client disconnect ].
-	self client: nil.
-	self availableCommands: OrderedCollection new.
-	self currentModel: nil.
-	self currentMode: nil.
-	self configOptions: OrderedCollection new
+	self initClientDerived
 ]
 
 { #category : 'private' }
@@ -118,26 +114,43 @@ AbTopicSession >> ensureConnected [
 
 { #category : 'initialization' }
 AbTopicSession >> initialize [
+    topic := nil.
+    sessionId := nil.
+    self initClientDerived
+]
 
-	availableCommands := OrderedCollection new.
-	configOptions := OrderedCollection new
+{ #category : 'initialization' }
+AbTopicSession >> initClientDerived [
+    client := nil.
+    currentModel := nil.
+    currentMode := nil.
+    configOptions := nil.
+    availableCommands := nil
 ]
 
 { #category : 'accessing' }
 AbTopicSession >> configOptions [
-	^ configOptions
+	^ configOptions ifNil: [ configOptions := OrderedCollection new ]
 ]
 
 { #category : 'accessing' }
 AbTopicSession >> configOptions: aCollection [
-	configOptions := (aCollection ifNil: [ #() ]) asOrderedCollection
+	configOptions := aCollection ifNotNil: [ :c | c asOrderedCollection ]
 ]
 
 { #category : 'accessing' }
 AbTopicSession >> modeConfigOption [
-	^ self configOptions
-		detect: [ :opt | opt isModeCategory ]
-		ifNone: [ nil ]
+	^ self detectModeFrom: self configOptions
+]
+
+{ #category : 'private' }
+AbTopicSession >> detectModeFrom: aCollection [
+	^ aCollection detect: [ :opt | opt isModeCategory ] ifNone: [ nil ]
+]
+
+{ #category : 'private' }
+AbTopicSession >> detectModelFrom: aCollection [
+	^ aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ nil ]
 ]
 
 { #category : 'private' }
@@ -232,11 +245,13 @@ AbTopicSession >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
+AbTopicSession >> updateCurrentModel: aModelOption [
 
-	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	self currentModel: modelOption currentValue.
+	| newModel |
+	aModelOption ifNil: [ ^ self ].
+	newModel := aModelOption currentValue.
+	newModel = self currentModel ifTrue: [ ^ self ].
+	self currentModel: newModel.
 	self announcer announce: (AbTopicCurrentModelChanged new
 			 topic: self topic;
 			 model: self currentModel;
@@ -244,17 +259,25 @@ AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopicSession >> updateCurrentModeFromConfigOptions: aCollection [
+AbTopicSession >> updateCurrentMode: aModeOption [
 
-	self currentMode: (self modeConfigOption ifNotNil: [ :opt | opt currentValue ])
+	| newMode |
+	aModeOption ifNil: [ ^ self ].
+	newMode := aModeOption currentValue.
+	newMode = self currentMode ifTrue: [ ^ self ].
+	self currentMode: newMode.
+	self announcer announce: (AbTopicCurrentModeChanged new
+			 topic: self topic;
+			 mode: self currentMode;
+			 yourself)
 ]
 
 { #category : 'operations' }
 AbTopicSession >> updateConfigOptions: aCollection [
 
 	self configOptions: aCollection.
-	self updateCurrentModeFromConfigOptions: self configOptions.
-	self updateCurrentModelFromConfigOptions: self configOptions
+	self updateCurrentMode: (self detectModeFrom: self configOptions).
+	self updateCurrentModel: (self detectModelFrom: self configOptions)
 ]
 
 { #category : 'operations' }

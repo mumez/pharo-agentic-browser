@@ -55,7 +55,7 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handleClassChangeNamed: aClassName in: aPackageName [
 
-	changeQueue nextPut: aClassName -> aPackageName
+	self changeQueue nextPut: aClassName -> aPackageName
 ]
 
 { #category : 'private' }
@@ -177,7 +177,7 @@ AbTopicRelatedPackagesWatcher >> runWorkerLoop [
 
 	[ isWatching ] whileTrue: [
 		| item |
-		item := changeQueue next.
+		item := self changeQueue next.
 		item ifNotNil: [
 			self doHandleClassChange: item key in: item value ] ]
 ]

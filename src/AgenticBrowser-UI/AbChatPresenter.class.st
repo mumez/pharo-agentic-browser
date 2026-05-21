@@ -372,7 +372,12 @@ AbChatPresenter >> onSendButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
 
-	self modelText: (aModelString ifNil: [ '' ]).
+	self modelText: (aModelString ifNil: [ '' ])
+]
+
+{ #category : 'event handling' }
+AbChatPresenter >> onTopicCurrentModeChanged: aTopic mode: aModeString [
+
 	self syncModeDropListFromTopic: aTopic
 ]
 
@@ -501,6 +506,10 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
 		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic model: ann model ] ]
+		for: self.
+	aTopic announcer
+		when: AbTopicCurrentModeChanged
+		do: [ :ann | self defer: [ self onTopicCurrentModeChanged: ann topic mode: ann mode ] ]
 		for: self
 ]
 
@@ -512,7 +521,7 @@ AbChatPresenter >> topic: anAbTopic [
 	anAbTopic ifNil: [
 		self commandNames: #().
 		self modelText: ''.
-		self syncModeDropListFromTopic: nil.
+		self onTopicCurrentModeChanged: nil mode: nil.
 		normalInputPresenter cancelEnabled: false.
 		self stopDotsAnimation.
 		^ self ].
@@ -520,6 +529,7 @@ AbChatPresenter >> topic: anAbTopic [
 	self rerenderMessages.
 	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
 	self onTopicCurrentModelChanged: anAbTopic model: anAbTopic currentModel.
+	self onTopicCurrentModeChanged: anAbTopic mode: anAbTopic currentMode.
 	self onTopicStatusChanged: anAbTopic status: anAbTopic status
 ]
 

@@ -316,7 +316,7 @@ AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+AbTopicSessionTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| session topic options modelOption |
 	topic := AbTopic new.
@@ -325,7 +325,7 @@ AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurren
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
 
-	session updateCurrentModelFromConfigOptions: options.
+	session updateConfigOptions: options.
 
 	self assert: topic currentModel equals: 'claude-opus-4'
 ]
