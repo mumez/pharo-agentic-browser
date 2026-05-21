@@ -57,35 +57,6 @@ AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringSourc
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTracksWithoutApproval [
-
-	watcher handlePackageChange: 'External-Changed'.
-	(Delay forMilliseconds: 100) wait.
-	self deny: topic hasPendingApprovalRequest.
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) isEmpty.
-	self
-		assert: (topic updatedExternalPackageNames includes: 'External-Changed')
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
-
-	"Without fork, each handlePackageChange: call runs synchronously.
-	The first call requests approval and completes before the second call.
-	Each call independently requests approval, so we verify that
-	multiple calls each produce their own approval request."
-	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
-	topic packagePrefixes: #( 'MyPkg' ).
-	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	"Each synchronous call produces an approval request"
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
-		equals: 2
-]
-
-{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testIsWatchingInitiallyFalse [
 
 	self deny: watcher isWatching
@@ -146,4 +117,21 @@ AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
 	watcher start.
 	watcher stop.
 	self deny: watcher isWatching
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesItem [
+
+	watcher handleClassChangeNamed: 'MyClass' in: 'MyPkg'.
+	self assert: watcher changeQueue size equals: 1.
+	self assert: watcher changeQueue next equals: 'MyClass' -> 'MyPkg'
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesInFifoOrder [
+
+	watcher handleClassChangeNamed: 'ClassA' in: 'Pkg1'.
+	watcher handleClassChangeNamed: 'ClassB' in: 'Pkg2'.
+	self assert: watcher changeQueue next equals: 'ClassA' -> 'Pkg1'.
+	self assert: watcher changeQueue next equals: 'ClassB' -> 'Pkg2'
 ]

@@ -5,7 +5,9 @@ Class {
 		'topic',
 		'isWatching',
 		'lastAnnouncedAtByPackage',
-		'logger'
+		'logger',
+		'changeQueue',
+		'workerProcess'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -27,17 +29,6 @@ AbTopicRelatedPackagesWatcher >> doHandleClassChange: aClassName in: aPackageNam
 		                 prefix match: aPackageName ].
 	matchesPrefix
 		ifTrue: [ self requestApprovalToExportClass: aClassName in: aPackageName ]
-		ifFalse: [ self trackExternalPackageChange: aPackageName ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> doHandlePackageChange: aPackageName [
-
-	| matchesPrefix |
-	matchesPrefix := self topic packagePrefixes anySatisfy: [ :prefix |
-		                 prefix match: aPackageName ].
-	matchesPrefix
-		ifTrue: [ self requestApprovalToExportPackage: aPackageName ]
 		ifFalse: [ self trackExternalPackageChange: aPackageName ]
 ]
 
@@ -65,7 +56,7 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handleClassChangeNamed: aClassName in: aPackageName [
 
-	self doHandleClassChange: aClassName in: aPackageName
+	changeQueue nextPut: aClassName -> aPackageName
 ]
 
 { #category : 'private' }
@@ -74,17 +65,6 @@ AbTopicRelatedPackagesWatcher >> handleExportClassApprovalResponse: approvalOpti
 	self logger debug: 'requestApprovalToExportClass:in: got response=' , approvalOption printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalOption)
 		ifTrue: [ self postSystemMessageAndExportClass: aClassName in: aPackageName ]
-		ifFalse: [
-			self topic addSystemMessage:
-				'Skipped export for ' , aPackageName , ' (approval denied).' ]
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> handleExportPackageApprovalResponse: approvalOption packageName: aPackageName [
-
-	self logger debug: 'requestApprovalToExportPackage: got response=' , approvalOption printString.
-	(self shouldProceedWithExportForApprovalResponse: approvalOption)
-		ifTrue: [ self postSystemMessageAndExport: aPackageName ]
 		ifFalse: [
 			self topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ]
@@ -102,17 +82,13 @@ AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 	self handleClassChangeNamed: className in: pkgName
 ]
 
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
-
-	self doHandlePackageChange: aPackageName
-]
-
 { #category : 'initialization' }
 AbTopicRelatedPackagesWatcher >> initialize [
 
 	self isWatching: false.
-	lastAnnouncedAtByPackage := Dictionary new
+	lastAnnouncedAtByPackage := Dictionary new.
+	changeQueue := SharedQueue new.
+	workerProcess := nil
 ]
 
 { #category : 'accessing' }
@@ -137,23 +113,20 @@ AbTopicRelatedPackagesWatcher >> logger [
 	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
 
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> changeQueue [
+	^ changeQueue
+]
+
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> workerProcess [
+	^ workerProcess
+]
+
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
 
 	^ AbSettings default watcherMessageThrottleDuration
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> postSystemMessageAndExport: aPackageName [
-
-	| shouldAnnounce |
-	shouldAnnounce := self
-		                  shouldAnnouncePackageChangeFor: aPackageName
-		                  at: DateAndTime now.
-	shouldAnnounce ifTrue: [
-		self topic sendPrompt:
-			'{1} was modified; {1}/*.st files have been updated!' format: { aPackageName } ].
-	self topic workingDirectory exportPackageNamed: aPackageName
 ]
 
 { #category : 'private' }
@@ -177,16 +150,6 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportClass: aClassName in: aP
 	approvalOption := self topic requestPackageExport:
 		                    (self exportPackageApprovalPromptFor: aPackageName).
 	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
-
-	| approvalOption |
-	self logger debug: 'requestApprovalToExportPackage: ' , aPackageName.
-	approvalOption := self topic requestPackageExport:
-		                    (self exportPackageApprovalPromptFor: aPackageName).
-	self handleExportPackageApprovalResponse: approvalOption packageName: aPackageName
 ]
 
 { #category : 'private' }
