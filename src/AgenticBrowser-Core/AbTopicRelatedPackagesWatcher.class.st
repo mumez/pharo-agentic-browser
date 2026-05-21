@@ -35,8 +35,7 @@ AbTopicRelatedPackagesWatcher >> doHandleClassChange: aClassName in: aPackageNam
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
 
-	^ 'Package ''' , aPackageName
-	  , ''' was modified.'
+	^ ('Package "{1}" was modified.') format: {aPackageName})
 	  , String cr
 	  , 'Export .st files now? (yes/no)'
 ]
@@ -62,9 +61,9 @@ AbTopicRelatedPackagesWatcher >> handleClassChangeNamed: aClassName in: aPackage
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName [
 
-	self logger debug: 'requestApprovalToExportClass:in: got response=' , approvalOption printString.
+	self logger debug: 'handleExportClassApprovalResponse:className: got approvalOption=' , approvalOption printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalOption)
-		ifTrue: [ self postSystemMessageAndExportClass: aClassName in: aPackageName ]
+		ifTrue: [ self exportClassWithPostIfNeeded: aClassName in: aPackageName ]
 		ifFalse: [
 			self topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ]
@@ -126,20 +125,20 @@ AbTopicRelatedPackagesWatcher >> workerProcess [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
 
-	^ AbSettings default watcherMessageThrottleDuration
+	^ selt topic watcherMessageThrottleDuration
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> postSystemMessageAndExportClass: aClassName in: aPackageName [
+AbTopicRelatedPackagesWatcher >> exportClassWithPostIfNeeded: aClassName in: aPackageName [
 
 	| shouldAnnounce |
 	shouldAnnounce := self
 		                  shouldAnnouncePackageChangeFor: aPackageName
 		                  at: DateAndTime now.
+	self topic workingDirectory exportClassNamed: aClassName in: aPackageName.
 	shouldAnnounce ifTrue: [
 		self topic sendPrompt:
-			'{1} was modified; {1}/*.st files have been updated!' format: { aPackageName } ].
-	self topic workingDirectory exportClassNamed: aClassName in: aPackageName
+			('{1} was modified; {1}/*.st files have been updated!' format: { aPackageName }) ]
 ]
 
 { #category : 'private' }
