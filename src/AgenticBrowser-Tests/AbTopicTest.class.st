@@ -187,7 +187,7 @@ AbTopicTest >> testDisconnectKeepsSessionIdAndClearsTransientSessionData [
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 
 	topic disconnect.
 
@@ -653,19 +653,19 @@ AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+AbTopicTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| topic options modelOption |
 	topic := AbTopic new.
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 	self assert: topic currentModel equals: 'claude-opus-4'
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
+AbTopicTest >> testUpdateConfigOptionsFiresAnnouncement [
 
 	| topic announced announcedModel options modelOption |
 	topic := AbTopic new.
@@ -679,21 +679,21 @@ AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
 	options := OrderedCollection with: modelOption.
-	[ topic updateCurrentModelFromConfigOptions: options.
+	[ topic updateConfigOptions: options.
 	self assert: announced.
 	self assert: announcedModel equals: 'claude-sonnet-4' ]
 		ensure: [ topic announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
+AbTopicTest >> testUpdateConfigOptionsIgnoresNonModelCategory [
 
 	| topic options modeOption |
 	topic := AbTopic new.
 	modeOption := ACPConfigOption new beModeCategory.
 	modeOption rawValues at: 'currentValue' put: 'ask'.
 	options := OrderedCollection with: modeOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 	self assert: topic currentModel isNil
 ]
 

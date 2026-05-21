@@ -316,7 +316,7 @@ AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+AbTopicSessionTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| session topic options modelOption |
 	topic := AbTopic new.
@@ -325,7 +325,50 @@ AbTopicSessionTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurren
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
 
-	session updateCurrentModelFromConfigOptions: options.
+	session updateConfigOptions: options.
 
 	self assert: topic currentModel equals: 'claude-opus-4'
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testUpdateConfigOptionsExtractsModeCurrentValue [
+
+	| session topic options |
+	topic := AbTopic new.
+	session := topic session.
+	options := OrderedCollection with: (self modeOptionWithCurrentValue: 'ask').
+
+	session updateConfigOptions: options.
+
+	self assert: topic currentMode equals: 'ask'
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testSetConfigOptionIdValueCallsAcpClient [
+
+	| topic session mockClient result resultOptions |
+	topic := AbTopic new.
+	session := topic session.
+	session sessionId: 'session-1'.
+	resultOptions := OrderedCollection with: (self modeOptionWithCurrentValue: 'code').
+	result := MockObject new.
+	result on: #configOptions verify: [ resultOptions ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSetSessionConfigOptionParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1'.
+			self assert: params configId equals: 'mode'.
+			self assert: params value equals: 'code'.
+			result ].
+	session client: mockClient.
+
+	session setConfigOptionId: 'mode' value: 'code'.
+
+	self verify: result.
+	self verify: mockClient.
+	self assert: topic currentMode equals: 'code'
 ]

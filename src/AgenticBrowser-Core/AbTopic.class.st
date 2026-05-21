@@ -239,6 +239,21 @@ AbTopic >> currentModel [
 	^ self session currentModel
 ]
 
+{ #category : 'accessing' }
+AbTopic >> currentMode [
+	^ self session currentMode
+]
+
+{ #category : 'accessing' }
+AbTopic >> configOptions [
+	^ self session configOptions
+]
+
+{ #category : 'accessing' }
+AbTopic >> modeConfigOption [
+	^ self session modeConfigOption
+]
+
 { #category : 'operations' }
 AbTopic >> disconnect [
 
@@ -605,9 +620,15 @@ AbTopic >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
+AbTopic >> updateConfigOptions: aCollection [
 
-	self session updateCurrentModelFromConfigOptions: aCollection
+	self session updateConfigOptions: aCollection
+]
+
+{ #category : 'operations' }
+AbTopic >> setConfigOptionId: aConfigId value: aValue [
+
+	self session setConfigOptionId: aConfigId value: aValue
 ]
 
 { #category : 'accessing' }

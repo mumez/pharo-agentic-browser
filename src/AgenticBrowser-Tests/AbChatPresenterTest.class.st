@@ -251,9 +251,70 @@ AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
 	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 	presenter topic: topic.
 	self assert: presenter modelText equals: 'claude-sonnet-4'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModeNamesInitiallyEmpty [
+
+	self assert: presenter modeNames isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModeNamesShowsCurrentModeWhenTopicSet [
+
+	| topic options modelOption |
+	topic := AbTopic new.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection
+		           with: modelOption
+		           with: (self modeOptionWithCurrentValue: 'ask').
+	topic updateConfigOptions: options.
+	presenter topic: topic.
+	self assert: presenter modeNames asArray equals: #( 'Ask' 'Code' ).
+	self assert: presenter selectedModeName equals: 'Ask'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSelectingModeCallsSetConfigOption [
+
+	| topic session mockClient options result resultOptions modelOption |
+	topic := AbTopic new.
+	session := topic session.
+	session sessionId: 'session-1'.
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
+	options := OrderedCollection
+		           with: modelOption
+		           with: (self modeOptionWithCurrentValue: 'ask').
+	topic updateConfigOptions: options.
+	resultOptions := OrderedCollection
+		                 with: modelOption
+		                 with: (self modeOptionWithCurrentValue: 'code').
+	result := MockObject new.
+	result on: #configOptions verify: [ resultOptions ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSetSessionConfigOptionParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1'.
+			self assert: params configId equals: 'mode'.
+			self assert: params value equals: 'code'.
+			result ].
+	session client: mockClient.
+	presenter topic: topic.
+
+	presenter modeDropList selectItem: 'Code'.
+
+	self verify: result.
+	self verify: mockClient.
+	self assert: presenter selectedModeName equals: 'Code'
 ]
 
 { #category : 'tests' }

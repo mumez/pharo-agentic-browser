@@ -6,7 +6,9 @@ Class {
 		'client',
 		'sessionId',
 		'availableCommands',
-		'currentModel'
+		'currentModel',
+		'currentMode',
+		'configOptions'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -33,7 +35,7 @@ AbTopicSession >> announcer [
 
 { #category : 'accessing' }
 AbTopicSession >> availableCommands [
-	^ availableCommands
+	^ availableCommands ifNil: [ availableCommands := OrderedCollection new ]
 ]
 
 { #category : 'accessing' }
@@ -67,13 +69,21 @@ AbTopicSession >> currentModel: aString [
 	currentModel := aString
 ]
 
+{ #category : 'accessing' }
+AbTopicSession >> currentMode [
+	^ currentMode
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> currentMode: aString [
+	currentMode := aString
+]
+
 { #category : 'operations' }
 AbTopicSession >> disconnect [
 
 	self client ifNotNil: [ self client disconnect ].
-	self client: nil.
-	self availableCommands: OrderedCollection new.
-	self currentModel: nil
+	self initClientDerived
 ]
 
 { #category : 'private' }
@@ -93,7 +103,7 @@ AbTopicSession >> doConnectWithClient: anACPClient [
 	initializeResult := self client initializeBy: [ :params | "use defaults" ].
 	sessionResult := self sessionResultFromInitializeResponse: initializeResult.
 	sessionResult sessionId ifNotNil: [ :sid | self sessionId: sid ].
-	self updateCurrentModelFromConfigOptions: sessionResult configOptions
+	self updateConfigOptions: sessionResult configOptions
 ]
 
 { #category : 'private' }
@@ -104,8 +114,43 @@ AbTopicSession >> ensureConnected [
 
 { #category : 'initialization' }
 AbTopicSession >> initialize [
+    topic := nil.
+    sessionId := nil.
+    self initClientDerived
+]
 
-	availableCommands := OrderedCollection new
+{ #category : 'initialization' }
+AbTopicSession >> initClientDerived [
+    client := nil.
+    currentModel := nil.
+    currentMode := nil.
+    configOptions := nil.
+    availableCommands := nil
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> configOptions [
+	^ configOptions ifNil: [ configOptions := OrderedCollection new ]
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> configOptions: aCollection [
+	configOptions := aCollection ifNotNil: [ :c | c asOrderedCollection ]
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> modeConfigOption [
+	^ self detectModeFrom: self configOptions
+]
+
+{ #category : 'private' }
+AbTopicSession >> detectModeFrom: aCollection [
+	^ aCollection detect: [ :opt | opt isModeCategory ] ifNone: [ nil ]
+]
+
+{ #category : 'private' }
+AbTopicSession >> detectModelFrom: aCollection [
+	^ aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ nil ]
 ]
 
 { #category : 'private' }
@@ -200,13 +245,50 @@ AbTopicSession >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
+AbTopicSession >> updateCurrentModel: aModelOption [
 
-	| modelOption |
-	modelOption := aCollection detect: [ :opt | opt isModelCategory ] ifNone: [ ^ self ].
-	self currentModel: modelOption currentValue.
+	| newModel |
+	aModelOption ifNil: [ ^ self ].
+	newModel := aModelOption currentValue.
+	newModel = self currentModel ifTrue: [ ^ self ].
+	self currentModel: newModel.
 	self announcer announce: (AbTopicCurrentModelChanged new
 			 topic: self topic;
 			 model: self currentModel;
 			 yourself)
+]
+
+{ #category : 'operations' }
+AbTopicSession >> updateCurrentMode: aModeOption [
+
+	| newMode |
+	aModeOption ifNil: [ ^ self ].
+	newMode := aModeOption currentValue.
+	newMode = self currentMode ifTrue: [ ^ self ].
+	self currentMode: newMode.
+	self announcer announce: (AbTopicCurrentModeChanged new
+			 topic: self topic;
+			 mode: self currentMode;
+			 yourself)
+]
+
+{ #category : 'operations' }
+AbTopicSession >> updateConfigOptions: aCollection [
+
+	self configOptions: aCollection.
+	self updateCurrentMode: (self detectModeFrom: self configOptions).
+	self updateCurrentModel: (self detectModelFrom: self configOptions)
+]
+
+{ #category : 'operations' }
+AbTopicSession >> setConfigOptionId: aConfigId value: aValue [
+
+	| result |
+	self ensureConnected.
+	result := self client setSessionConfigOptionBy: [ :params |
+		          params
+			          sessionId: self sessionId;
+			          configId: aConfigId;
+			          value: aValue ].
+	self updateConfigOptions: result configOptions
 ]
