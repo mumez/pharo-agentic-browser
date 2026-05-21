@@ -4,7 +4,6 @@ Class {
 	#instVars : [
 		'topic',
 		'isWatching',
-		'pendingPackageApprovals',
 		'lastAnnouncedAtByPackage',
 		'logger'
 	],
@@ -18,13 +17,6 @@ AbTopicRelatedPackagesWatcher class >> forTopic: anAbTopic [
 	^ self new
 		  topic: anAbTopic;
 		  yourself
-]
-
-{ #category : 'private' }
-AbTopicRelatedPackagesWatcher >> cleanupPendingApprovalFor: aPackageName in: aSelectorName [
-
-	self logger debug: aSelectorName , ' ensure cleanup for ' , aPackageName.
-	self pendingPackageApprovals remove: aPackageName ifAbsent: []
 ]
 
 { #category : 'private' }
@@ -73,9 +65,7 @@ AbTopicRelatedPackagesWatcher >> handleClassChange: anAnnouncement [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handleClassChangeNamed: aClassName in: aPackageName [
 
-	(self pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
-	self pendingPackageApprovals add: aPackageName.
-	[ self doHandleClassChange: aClassName in: aPackageName ] fork
+	self doHandleClassChange: aClassName in: aPackageName
 ]
 
 { #category : 'private' }
@@ -115,16 +105,13 @@ AbTopicRelatedPackagesWatcher >> handleMethodChange: anAnnouncement [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> handlePackageChange: aPackageName [
 
-	(self pendingPackageApprovals includes: aPackageName) ifTrue: [ ^ self ].
-	self pendingPackageApprovals add: aPackageName.
-	[ self doHandlePackageChange: aPackageName ] fork
+	self doHandlePackageChange: aPackageName
 ]
 
 { #category : 'initialization' }
 AbTopicRelatedPackagesWatcher >> initialize [
 
 	self isWatching: false.
-	pendingPackageApprovals := Set new.
 	lastAnnouncedAtByPackage := Dictionary new
 ]
 
@@ -154,12 +141,6 @@ AbTopicRelatedPackagesWatcher >> logger [
 AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
 
 	^ AbSettings default watcherMessageThrottleDuration
-]
-
-{ #category : 'accessing' }
-AbTopicRelatedPackagesWatcher >> pendingPackageApprovals [
-
-	^ pendingPackageApprovals
 ]
 
 { #category : 'private' }
@@ -193,11 +174,9 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportClass: aClassName in: aP
 
 	| approvalOption |
 	self logger debug: 'requestApprovalToExportClass:in: ' , aClassName , ' in ' , aPackageName.
-	[
 	approvalOption := self topic requestPackageExport:
 		                    (self exportPackageApprovalPromptFor: aPackageName).
-	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName ]
-		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToExportClass:in:' ]
+	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName
 ]
 
 { #category : 'private' }
@@ -205,11 +184,9 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportPackage: aPackageName [
 
 	| approvalOption |
 	self logger debug: 'requestApprovalToExportPackage: ' , aPackageName.
-	[
 	approvalOption := self topic requestPackageExport:
 		                    (self exportPackageApprovalPromptFor: aPackageName).
-	self handleExportPackageApprovalResponse: approvalOption packageName: aPackageName ]
-		ensure: [ self cleanupPendingApprovalFor: aPackageName in: 'requestApprovalToExportPackage:' ]
+	self handleExportPackageApprovalResponse: approvalOption packageName: aPackageName
 ]
 
 { #category : 'private' }
@@ -269,7 +246,5 @@ AbTopicRelatedPackagesWatcher >> topic: anAbTopic [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> trackExternalPackageChange: aPackageName [
 
-	[
-	self topic addUpdatedExternalPackageName: aPackageName ]
-		ensure: [ self pendingPackageApprovals remove: aPackageName ifAbsent: [] ]
+	self topic addUpdatedExternalPackageName: aPackageName
 ]

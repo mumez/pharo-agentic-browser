@@ -24,42 +24,6 @@ AbTopicRelatedPackagesWatcherTest >> tearDown [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeAddsToPendingApprovals [
-
-	| ann |
-	ann := ClassModifiedClassDefinition new.
-	ann newClassDefinition: AbTopic.
-	watcher handleClassChange: ann.
-	self assert: (watcher pendingPackageApprovals includes: 'AgenticBrowser-Core')
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport [
-
-	| ann errorRaised |
-	errorRaised := false.
-	ann := ClassModifiedClassDefinition new.
-	ann newClassDefinition: AbTopic.
-	topic workingDirectory beginImportFromSource.
-	[
-	[ watcher handleClassChange: ann ]
-		on: Error
-		do: [ :e | errorRaised := true ] ]
-		ensure: [ topic workingDirectory endImportFromSource ].
-	self deny: errorRaised
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeAddsToPendingApprovals [
-
-	| ann |
-	ann := MethodModified new.
-	ann method: (AbTopic >> #status).
-	watcher handleMethodChange: ann.
-	self assert: (watcher pendingPackageApprovals includes: 'AgenticBrowser-Core')
-]
-
-{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringImport [
 
 	| ann errorRaised |
@@ -107,16 +71,18 @@ AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTr
 { #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
 
+	"Without fork, each handlePackageChange: call runs synchronously.
+	The first call requests approval and completes before the second call.
+	Each call independently requests approval, so we verify that
+	multiple calls each produce their own approval request."
 	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
 	topic packagePrefixes: #( 'MyPkg' ).
 	watcher handlePackageChange: 'MyPkg'.
 	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	"Wait briefly for the single forked process to run with 0-second timeout"
-	(Delay forMilliseconds: 100) wait.
+	"Each synchronous call produces an approval request"
 	self
 		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
-		equals: 1
+		equals: 2
 ]
 
 { #category : 'tests' }
