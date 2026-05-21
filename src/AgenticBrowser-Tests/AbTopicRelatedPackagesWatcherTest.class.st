@@ -120,6 +120,22 @@ AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStartCreatesWorkerProcess [
+
+	watcher start.
+	self assert: watcher workerProcess notNil.
+	self assert: watcher workerProcess isTerminated not
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	watcher start.
+	watcher stop.
+	self assert: watcher workerProcess isTerminated
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesItem [
 
 	watcher handleClassChangeNamed: 'MyClass' in: 'MyPkg'.
