@@ -463,16 +463,14 @@ AbChatPresenter >> stopDotsAnimation [
 AbChatPresenter >> syncModeDropListFromTopic: aTopic [
 
 	| modeOption selectedMode |
-	modeOption := aTopic ifNil: [ nil ] ifNotNil: [ aTopic modeConfigOption ].
-	self isUpdatingModes: true.
-	[
+	modeOption := aTopic ifNotNil: [ :t | t modeConfigOption ].
 	modeOption ifNil: [
-		self modeConfigId: 'mode'.
 		self modeOptions: #().
 		self modeDropList items: #().
 		self modeDropList startWithoutSelection.
 		^ self ].
-
+	self isUpdatingModes: true.
+	[
 	self modeConfigId: modeOption id.
 	self modeOptions: modeOption options.
 	self modeDropList items: (self modeOptions collect: [ :option | option name ]).

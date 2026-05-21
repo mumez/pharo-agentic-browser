@@ -246,13 +246,7 @@ AbTopicSession >> updateCurrentModelFromConfigOptions: aCollection [
 { #category : 'operations' }
 AbTopicSession >> updateCurrentModeFromConfigOptions: aCollection [
 
-	| modeOption |
-	modeOption := aCollection
-		              detect: [ :opt | opt isModeCategory ]
-		              ifNone: [
-			              self currentMode: nil.
-			              ^ self ].
-	self currentMode: modeOption currentValue
+	self currentMode: (self modeConfigOption ifNotNil: [ :opt | opt currentValue ])
 ]
 
 { #category : 'operations' }

@@ -24,26 +24,6 @@ AbTopicSessionTest >> mockSessionResultWithId: aSessionId [
 	^ sessionResult
 ]
 
-{ #category : 'private' }
-AbTopicSessionTest >> modeOptionWithCurrentValue: aString [
-
-	| modeOption |
-	modeOption := ACPConfigOption new beModeCategory.
-	modeOption rawValues
-		at: 'id' put: 'mode';
-		at: 'currentValue' put: aString;
-		at: 'options' put: {
-				(Dictionary new
-					 at: 'value' put: 'ask';
-					 at: 'name' put: 'Ask';
-					 yourself).
-				(Dictionary new
-					 at: 'value' put: 'code';
-					 at: 'name' put: 'Code';
-					 yourself) }.
-	^ modeOption
-]
-
 { #category : 'tests' }
 AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 

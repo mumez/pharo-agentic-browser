@@ -86,7 +86,7 @@ AbTopicRelatedPackagesWatcher >> initialize [
 
 	self isWatching: false.
 	lastAnnouncedAtByPackage := Dictionary new.
-	changeQueue := SharedQueue new.
+	changeQueue := nil.
 	workerProcess := nil
 ]
 
@@ -114,7 +114,7 @@ AbTopicRelatedPackagesWatcher >> logger [
 
 { #category : 'accessing' }
 AbTopicRelatedPackagesWatcher >> changeQueue [
-	^ changeQueue
+	^ changeQueue ifNil: [ changeQueue := SharedQueue new ]
 ]
 
 { #category : 'accessing' }
