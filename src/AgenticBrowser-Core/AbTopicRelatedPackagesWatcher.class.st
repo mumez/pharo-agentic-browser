@@ -35,7 +35,7 @@ AbTopicRelatedPackagesWatcher >> doHandleClassChange: aClassName in: aPackageNam
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
 
-	^ ('Package "{1}" was modified.') format: {aPackageName})
+	^ ('Package "{1}" was modified.' format: {aPackageName})
 	  , String cr
 	  , 'Export .st files now? (yes/no)'
 ]
@@ -125,7 +125,7 @@ AbTopicRelatedPackagesWatcher >> workerProcess [
 { #category : 'private' }
 AbTopicRelatedPackagesWatcher >> messageThrottleDuration [
 
-	^ selt topic watcherMessageThrottleDuration
+	^ self topic settings watcherMessageThrottleDuration
 ]
 
 { #category : 'private' }
