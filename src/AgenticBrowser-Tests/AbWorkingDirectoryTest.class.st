@@ -181,3 +181,19 @@ AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
 	workDir := AbWorkingDirectory forTopic: topic.
 	self assert: workDir srcDirectory equals: 'src'
 ]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testExportClassNamedWritesClassFile [
+
+	| topic workDir path classFile |
+	topic := AbTopic new title: 'Test-Export-Class'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	[
+	workDir exportClassNamed: 'AbTopic' in: 'AgenticBrowser-Core'.
+	classFile := workDir sourcePath / 'AgenticBrowser-Core' / 'AbTopic.class.st'.
+	self assert: classFile exists.
+	self assert: (classFile contents includesSubstring: 'AbTopic') ]
+		ensure: [ workDir path deleteAll ]
+]
