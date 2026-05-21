@@ -112,27 +112,36 @@ AbTopicRelatedPackagesWatcherTest >> testStartSetsIsWatching [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
 
+	| process |
 	watcher start.
+	process := watcher workerProcess.
 	watcher stop.
-	self deny: watcher isWatching
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStartCreatesWorkerProcess [
-
-	watcher start.
-	self assert: watcher workerProcess notNil.
-	self assert: watcher workerProcess isTerminated not
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
 ]
 
 { #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
 
+	| process |
 	watcher start.
+	process := watcher workerProcess.
 	watcher stop.
-	self assert: watcher workerProcess isTerminated
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
 ]
 
 { #category : 'tests' }
@@ -150,4 +159,35 @@ AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesInFifoOrd
 	watcher handleClassChangeNamed: 'ClassB' in: 'Pkg2'.
 	self assert: watcher changeQueue next equals: 'ClassA' -> 'Pkg1'.
 	self assert: watcher changeQueue next equals: 'ClassB' -> 'Pkg2'
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testDoubleStartDoesNotLeakProcess [
+
+	| firstProcess |
+	watcher start.
+	firstProcess := watcher workerProcess.
+	watcher start.
+	self assert: watcher workerProcess identicalTo: firstProcess
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testDoubleStopDoesNotError [
+
+	watcher start.
+	watcher stop.
+	self shouldnt: [ watcher stop ] raise: Error.
+	self deny: watcher isWatching.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
 ]

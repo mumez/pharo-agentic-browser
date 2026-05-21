@@ -33,7 +33,7 @@ AbTopicRelatedPackagesWatcher >> doHandleClassChange: aClassName in: aPackageNam
 ]
 
 { #category : 'private' }
-AbTopicRelatedPackagesWatcher >> exportPackageApprovalPromptFor: aPackageName [
+AbTopicRelatedPackagesWatcher >> exportApprovalPromptFor: aPackageName [
 
 	^ ('Package "{1}" was modified.' format: {aPackageName})
 	  , String cr
@@ -147,7 +147,7 @@ AbTopicRelatedPackagesWatcher >> requestApprovalToExportClass: aClassName in: aP
 	| approvalOption |
 	self logger debug: 'requestApprovalToExportClass:in: ' , aClassName , ' in ' , aPackageName.
 	approvalOption := self topic requestPackageExport:
-		                    (self exportPackageApprovalPromptFor: aPackageName).
+		                    (self exportApprovalPromptFor: aPackageName).
 	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName
 ]
 
@@ -185,6 +185,7 @@ AbTopicRelatedPackagesWatcher >> runWorkerLoop [
 { #category : 'operations' }
 AbTopicRelatedPackagesWatcher >> start [
 
+	self isWatching ifTrue: [ ^ self ].
 	changeQueue := SharedQueue new.
 	self isWatching: true.
 	workerProcess := [ self runWorkerLoop ] newProcess
@@ -205,10 +206,12 @@ AbTopicRelatedPackagesWatcher >> start [
 { #category : 'operations' }
 AbTopicRelatedPackagesWatcher >> stop [
 
+	self isWatching ifFalse: [ ^ self ].
 	SystemAnnouncer uniqueInstance unsubscribe: self.
-	self isWatching: false.
 	changeQueue nextPut: nil.
-	workerProcess ifNotNil: [ :p | p terminate ]
+	workerProcess ifNotNil: [ :p | p terminate ].
+	workerProcess := nil.
+	self isWatching: false
 ]
 
 { #category : 'accessing' }
