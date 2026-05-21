@@ -173,10 +173,26 @@ AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aRe
 	  or: [ aResponseSymbol = AbConstants allowAlways ]
 ]
 
+{ #category : 'private' }
+AbTopicRelatedPackagesWatcher >> runWorkerLoop [
+
+	[ isWatching ] whileTrue: [
+		| item |
+		item := changeQueue next.
+		item ifNotNil: [
+			self doHandleClassChange: item key in: item value ] ]
+]
+
 { #category : 'operations' }
 AbTopicRelatedPackagesWatcher >> start [
 
+	changeQueue := SharedQueue new.
 	self isWatching: true.
+	workerProcess := [ self runWorkerLoop ] newProcess
+		name: 'AgenticBrowser package watcher';
+		priority: Processor userBackgroundPriority;
+		yourself.
+	workerProcess resume.
 	SystemAnnouncer uniqueInstance
 		when: MethodAnnouncement
 		do: [ :ann | self handleMethodChange: ann ]
@@ -191,7 +207,9 @@ AbTopicRelatedPackagesWatcher >> start [
 AbTopicRelatedPackagesWatcher >> stop [
 
 	SystemAnnouncer uniqueInstance unsubscribe: self.
-	self isWatching: false
+	self isWatching: false.
+	changeQueue nextPut: nil.
+	workerProcess ifNotNil: [ :p | p terminate ]
 ]
 
 { #category : 'accessing' }
