@@ -155,7 +155,9 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 AbChatPresenter >> exitApprovalMode [
 
 	self pendingApprovalMessage: nil.
-	self layout: self defaultLayout
+	self layout: self defaultLayout.
+	self syncModelDropListFromTopic: self currentTopic.
+	self syncModeDropListFromTopic: self currentTopic
 ]
 
 { #category : 'initialization' }
@@ -528,10 +530,7 @@ AbChatPresenter >> stopDotsAnimation [
 { #category : 'private' }
 AbChatPresenter >> applyModelCurrentValue: aString [
 
-	aString ifNil: [
-		self modelDropList items: #().
-		self modelDropList startWithoutSelection.
-		^ self ].
+	aString ifNil: [ ^ self syncModelDropListEmpty ].
 	self modelDropList items: { aString }.
 	self modelDropList selectIndex: 1
 ]
@@ -567,18 +566,19 @@ AbChatPresenter >> flattenedOptionsFrom: aCollection [
 	| result |
 	result := OrderedCollection new.
 	aCollection do: [ :item |
-		(item respondsTo: #value)
-			ifTrue: [ result add: item ]
-			ifFalse: [ result addAllLast: item options ] ].
+		(item isKindOf: ACPConfigSelectGroup)
+			ifTrue: [ result addAllLast: item options ]
+			ifFalse: [ result add: item ] ].
 	^ result asArray
 ]
 
 { #category : 'private' }
 AbChatPresenter >> syncModelDropListEmpty [
 
-	self modelOptions: #().
-	self modelDropList items: #().
-	self modelDropList startWithoutSelection
+	self isUpdatingModels: true.
+	self modelDropList items: #('- model -').
+	self modelDropList selectIndex: 1.
+	self isUpdatingModels: false
 ]
 
 { #category : 'private' }
@@ -602,27 +602,32 @@ AbChatPresenter >> updateDropListsEnabled: aBoolean [
 ]
 
 { #category : 'private' }
+AbChatPresenter >> syncModeDropListEmpty [
+
+	self isUpdatingModes: true.
+	self modeDropList items: #('- mode -').
+	self modeDropList selectIndex: 1.
+	self isUpdatingModes: false
+]
+
+{ #category : 'private' }
 AbChatPresenter >> syncModeDropListFromTopic: aTopic [
 
 	| modeOption selectedMode |
 	modeOption := aTopic ifNotNil: [ :t | t modeConfigOption ].
-	modeOption ifNil: [
-		self modeOptions: #().
-		self modeDropList items: #().
-		self modeDropList startWithoutSelection.
-		^ self ].
+	modeOption ifNil: [ ^ self syncModeDropListEmpty ].
 	self isUpdatingModes: true.
 	[
-	self modeConfigId: modeOption id.
-	self modeOptions: modeOption options.
-	self modeDropList items: (self modeOptions collect: [ :option | option name ]).
-	selectedMode := self modeOptions
-			            detect: [ :option | option value = modeOption currentValue ]
-			            ifNone: [ nil ].
-	selectedMode
-		ifNil: [ self modeDropList startWithoutSelection ]
-		ifNotNil: [ self modeDropList selectItem: selectedMode name ] ]
-		ensure: [ self isUpdatingModes: false ]
+		self modeConfigId: modeOption id.
+		self modeOptions: modeOption options.
+		self modeDropList items: (self modeOptions collect: [ :option | option name ]).
+		selectedMode := self modeOptions
+			                detect: [ :option | option value = modeOption currentValue ]
+			                ifNone: [ nil ].
+		selectedMode
+			ifNil: [ self modeDropList startWithoutSelection ]
+			ifNotNil: [ self modeDropList selectItem: selectedMode name ]
+	] ensure: [ self isUpdatingModes: false ]
 ]
 
 { #category : 'subscriptions' }

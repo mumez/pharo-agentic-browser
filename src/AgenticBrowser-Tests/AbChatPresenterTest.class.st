@@ -576,3 +576,51 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
 	presenter topic: topic.
 	self assert: presenter normalInputPresenter isCancelEnabled
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelDropListShowsPlaceholderWhenTopicHasNoModelOption [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	self assert: presenter modelNames asArray equals: #( '- model -' ).
+	self assert: presenter selectedModelName equals: '- model -'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModeDropListShowsPlaceholderWhenTopicHasNoModeOption [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	self assert: presenter modeNames asArray equals: #( '- mode -' ).
+	self assert: presenter selectedModeName equals: '- mode -'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelDropListRetainsSelectionWhenDisabled [
+
+	| topic options |
+	topic := AbTopic new.
+	options := OrderedCollection
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
+		           with: (self modeOptionWithCurrentValue: 'ask').
+	topic updateConfigOptions: options.
+	presenter topic: topic.
+	presenter updateDropListsEnabled: false.
+	self assert: presenter selectedModelName equals: 'claude-sonnet-4-6'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModeDropListRetainsSelectionWhenDisabled [
+
+	| topic options |
+	topic := AbTopic new.
+	options := OrderedCollection
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
+		           with: (self modeOptionWithCurrentValue: 'ask').
+	topic updateConfigOptions: options.
+	presenter topic: topic.
+	presenter updateDropListsEnabled: false.
+	self assert: presenter selectedModeName equals: 'Ask'
+]
