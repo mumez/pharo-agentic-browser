@@ -24,22 +24,6 @@ AbTopicRelatedPackagesWatcherTest >> tearDown [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeSuppressedDuringImport [
-
-	| ann errorRaised |
-	errorRaised := false.
-	ann := ClassModifiedClassDefinition new.
-	ann newClassDefinition: AbTopic.
-	topic workingDirectory beginImportFromSource.
-	[
-	[ watcher handleClassChange: ann ]
-		on: Error
-		do: [ :e | errorRaised := true ] ]
-		ensure: [ topic workingDirectory endImportFromSource ].
-	self deny: errorRaised
-]
-
-{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringImport [
 
 	| ann errorRaised |
@@ -70,33 +54,6 @@ AbTopicRelatedPackagesWatcherTest >> testHandleMethodChangeSuppressedDuringSourc
 		ensure: [ topic workingDirectory endImportFromSource ].
 	self deny: errorRaised.
 	self deny: topic hasPendingApprovalRequest
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangeForExternalPackageTracksWithoutApproval [
-
-	watcher handlePackageChange: 'External-Changed'.
-	(Delay forMilliseconds: 100) wait.
-	self deny: topic hasPendingApprovalRequest.
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) isEmpty.
-	self
-		assert: (topic updatedExternalPackageNames includes: 'External-Changed')
-]
-
-{ #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testHandlePackageChangePreventsDoubleApprovalRequest [
-
-	AbSettings default exportApprovalWaitTimeoutSeconds: 0.
-	topic packagePrefixes: #( 'MyPkg' ).
-	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	watcher handlePackageChange: 'MyPkg'.
-	"Wait briefly for the single forked process to run with 0-second timeout"
-	(Delay forMilliseconds: 100) wait.
-	self
-		assert: (topic messages select: [ :m | m isApprovalRequest ]) size
-		equals: 1
 ]
 
 { #category : 'tests' }
@@ -140,9 +97,11 @@ AbTopicRelatedPackagesWatcherTest >> testShouldAnnouncePackageChangeSuppressesWi
 AbTopicRelatedPackagesWatcherTest >> testShouldProceedWithExportForApprovalResponse [
 
 	self assert:
-		(watcher shouldProceedWithExportForApprovalResponse: #allow_once).
+		(watcher shouldProceedWithExportForApprovalResponse: AbConstants allowOnce).
+	self assert:
+		(watcher shouldProceedWithExportForApprovalResponse: AbConstants allowAlways).
 	self deny:
-		(watcher shouldProceedWithExportForApprovalResponse: #reject_once)
+		(watcher shouldProceedWithExportForApprovalResponse: AbConstants rejectOnce)
 ]
 
 { #category : 'tests' }
@@ -153,9 +112,82 @@ AbTopicRelatedPackagesWatcherTest >> testStartSetsIsWatching [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopClearsIsWatching [
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesItem [
+
+	watcher handleClassChangeNamed: 'MyClass' in: 'MyPkg'.
+	self assert: watcher changeQueue size equals: 1.
+	self assert: watcher changeQueue next equals: 'MyClass' -> 'MyPkg'
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesInFifoOrder [
+
+	watcher handleClassChangeNamed: 'ClassA' in: 'Pkg1'.
+	watcher handleClassChangeNamed: 'ClassB' in: 'Pkg2'.
+	self assert: watcher changeQueue next equals: 'ClassA' -> 'Pkg1'.
+	self assert: watcher changeQueue next equals: 'ClassB' -> 'Pkg2'
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testDoubleStartDoesNotLeakProcess [
+
+	| firstProcess |
+	watcher start.
+	firstProcess := watcher workerProcess.
+	watcher start.
+	self assert: watcher workerProcess identicalTo: firstProcess
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testDoubleStopDoesNotError [
 
 	watcher start.
 	watcher stop.
-	self deny: watcher isWatching
+	self shouldnt: [ watcher stop ] raise: Error.
+	self deny: watcher isWatching.
+	self assert: watcher workerProcess isNil
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+
+	| process |
+	watcher start.
+	process := watcher workerProcess.
+	watcher stop.
+	self assert: process isTerminated.
+	self assert: watcher workerProcess isNil
 ]

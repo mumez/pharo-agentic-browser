@@ -187,7 +187,7 @@ AbTopicTest >> testDisconnectKeepsSessionIdAndClearsTransientSessionData [
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 
 	topic disconnect.
 
@@ -381,7 +381,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once.
+	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #initial
 ]
 
@@ -397,7 +397,24 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: option equals: #reject_once.
+	self assert: option equals: AbConstants rejectOnce.
+	self assert: topic status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPackageExportTimesOutUsingExportApprovalTimeoutOption [
+
+	| topic option done timedOut |
+	topic := AbTopic new.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	topic settings exportApprovalTimeoutOption: AbConstants allowAlways.
+	done := Semaphore new.
+	[
+	option := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: option equals: AbConstants allowAlways.
 	self assert: topic status equals: #initial
 ]
 
@@ -416,7 +433,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once.
+	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -433,7 +450,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 		(Delay forMilliseconds: 1) wait ].
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
-	self assert: option equals: #allow_once
+	self assert: option equals: AbConstants allowOnce
 ]
 
 { #category : 'tests' }
@@ -448,7 +465,24 @@ AbTopicTest >> testRequestPermissionTimesOutUsingTopicSettings [
 	done signal ] fork.
 	timedOut := done waitTimeoutMilliseconds: 200.
 	self deny: timedOut.
-	self assert: option equals: #reject_once.
+	self assert: option equals: AbConstants rejectOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testRequestPermissionTimesOutUsingAiPermissionTimeoutOption [
+
+	| topic option done timedOut |
+	topic := AbTopic new.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	topic settings aiPermissionTimeoutOption: AbConstants allowAlways.
+	done := Semaphore new.
+	[
+	option := topic requestPermission: 'Approve this action?'.
+	done signal ] fork.
+	timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: option equals: AbConstants allowAlways.
 	self assert: topic status equals: #working
 ]
 
@@ -462,7 +496,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants allowOnce.
-	self assert: msg approvalOption equals: #allow_once.
+	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -476,7 +510,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
 	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
-	self assert: msg approvalOption equals: #reject_once.
+	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -501,11 +535,11 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 	msg := AbMessage
 		       aiPermissionRequestText: 'Choose an option'
 		       options: {
-				       'Allow once' -> #allow_once.
-				       'Deny' -> #reject_once }.
+				       'Allow once' -> AbConstants allowOnce.
+				       'Deny' -> AbConstants rejectOnce }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: #allow_once.
-	self assert: msg approvalOption equals: #allow_once.
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
@@ -514,8 +548,8 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 	| topic msg |
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: #reject_once.
-	self assert: msg approvalOption equals: #reject_once.
+	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #initial
 ]
 
@@ -619,19 +653,19 @@ AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsExtractsModelCurrentValue [
+AbTopicTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| topic options modelOption |
 	topic := AbTopic new.
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
 	options := OrderedCollection with: modelOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 	self assert: topic currentModel equals: 'claude-opus-4'
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
+AbTopicTest >> testUpdateConfigOptionsFiresAnnouncement [
 
 	| topic announced announcedModel options modelOption |
 	topic := AbTopic new.
@@ -645,21 +679,21 @@ AbTopicTest >> testUpdateCurrentModelFromConfigOptionsFiresAnnouncement [
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
 	options := OrderedCollection with: modelOption.
-	[ topic updateCurrentModelFromConfigOptions: options.
+	[ topic updateConfigOptions: options.
 	self assert: announced.
 	self assert: announcedModel equals: 'claude-sonnet-4' ]
 		ensure: [ topic announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testUpdateCurrentModelFromConfigOptionsIgnoresNonModelCategory [
+AbTopicTest >> testUpdateConfigOptionsIgnoresNonModelCategory [
 
 	| topic options modeOption |
 	topic := AbTopic new.
 	modeOption := ACPConfigOption new beModeCategory.
 	modeOption rawValues at: 'currentValue' put: 'ask'.
 	options := OrderedCollection with: modeOption.
-	topic updateCurrentModelFromConfigOptions: options.
+	topic updateConfigOptions: options.
 	self assert: topic currentModel isNil
 ]
 
@@ -715,7 +749,7 @@ AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
 AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
 
 	| topic expectedPath |
-	topic := AbTopic new title: 'Topic Name'.
+	topic := AbTopic new title: 'ab-test-topic-name'.
 	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
 	                 / topic workingDirectory directoryName) fullName.
 	self assert: topic workingDirectoryPath equals: expectedPath
@@ -743,5 +777,11 @@ AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
 		equals: AbSettings default aiPermissionWaitTimeoutSeconds.
 	self
 		assert: topic settings exportApprovalWaitTimeoutSeconds
-		equals: AbSettings default exportApprovalWaitTimeoutSeconds
+		equals: AbSettings default exportApprovalWaitTimeoutSeconds.
+	self
+		assert: topic settings exportApprovalTimeoutOption
+		equals: AbSettings default exportApprovalTimeoutOption.
+	self
+		assert: topic settings aiPermissionTimeoutOption
+		equals: AbSettings default aiPermissionTimeoutOption
 ]

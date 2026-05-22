@@ -27,9 +27,9 @@ AbConfirmPresenterTest >> tearDown [
 AbConfirmPresenterTest >> testApprovalOptionsWithThreeItemsUsesSubmitMode [
 
 	presenter approvalOptions: {
-			'Allow once' -> #allow_once.
-			'Allow always' -> #allow_always.
-			'Deny once' -> #reject_once }.
+			'Allow once' -> AbConstants allowOnce.
+			'Allow always' -> AbConstants allowAlways.
+			'Deny once' -> AbConstants rejectOnce }.
 
 	self assert: presenter confirmButtonLabel equals: 'Submit'.
 	self deny: presenter showsDenyButton
@@ -39,8 +39,8 @@ AbConfirmPresenterTest >> testApprovalOptionsWithThreeItemsUsesSubmitMode [
 AbConfirmPresenterTest >> testApprovalOptionsWithTwoItemsUsesConfirmDenyMode [
 
 	presenter approvalOptions: {
-			'Allow once' -> #allow_once.
-			'Deny once' -> #reject_once }.
+			'Allow once' -> AbConstants allowOnce.
+			'Deny once' -> AbConstants rejectOnce }.
 
 	self assert: presenter confirmButtonLabel equals: 'Confirm'.
 	self assert: presenter denyButtonLabel equals: 'Deny'.

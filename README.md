@@ -124,7 +124,7 @@ Two hooks fire when a goal is achieved:
   ```
 - **Callback block** — register an optional block on the topic with `whenGoalAchieved:`. The block receives the `AbTopicGoal` as its argument (or takes zero arguments):
   ```smalltalk
-  topic whenGoalAchieved: [:goal | Transcript crShow: goal resultText].
+  topic whenGoalAchieved: [:goal | Transcript crShow: goal result].
   ```
 
 ### Session Persistence

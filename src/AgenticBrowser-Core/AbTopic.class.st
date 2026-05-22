@@ -239,6 +239,21 @@ AbTopic >> currentModel [
 	^ self session currentModel
 ]
 
+{ #category : 'accessing' }
+AbTopic >> currentMode [
+	^ self session currentMode
+]
+
+{ #category : 'accessing' }
+AbTopic >> configOptions [
+	^ self session configOptions
+]
+
+{ #category : 'accessing' }
+AbTopic >> modeConfigOption [
+	^ self session modeConfigOption
+]
+
 { #category : 'operations' }
 AbTopic >> disconnect [
 
@@ -409,28 +424,30 @@ AbTopic >> pendingExportApprovalMessage [
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectAiPermissionOnTimeout: aMessage [
+AbTopic >> respondAiPermissionOnTimeout: aMessage [
 
 	self
-		rejectOnTimeout: aMessage
-		logMessage: 'requestPermission: timeout reached, auto rejecting'
+		respondOnTimeout: aMessage
+		approvalOption: self settings aiPermissionTimeoutOption
+		logMessage: 'requestPermission: timeout reached, auto resolving by timeout option'
 		changeToHumanResponded: true
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectExportOnTimeout: aMessage [
+AbTopic >> respondExportOnTimeout: aMessage [
 
 	self
-		rejectOnTimeout: aMessage
-		logMessage: 'requestPackageExport: timeout reached, auto rejecting'
+		respondOnTimeout: aMessage
+		approvalOption: self settings exportApprovalTimeoutOption
+		logMessage: 'requestPackageExport: timeout reached, auto resolving by timeout option'
 		changeToHumanResponded: false
 ]
 
 { #category : 'approval-private' }
-AbTopic >> rejectOnTimeout: aMessage logMessage: aString changeToHumanResponded: aBoolean [
+AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
 	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
-	aMessage approvalOption: AbConstants rejectOnce.
+	aMessage approvalOption: anOptionSymbol.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]
@@ -460,7 +477,7 @@ AbTopic >> requestPackageExport: aDescription [
 	self logger debug: 'requestPackageExport: waiting for human. description=' , aDescription printString.
 	msg := self addExportApprovalRequest: aDescription options: AbConstants defaultApprovalOptions.
 	responseOnTime := self waitForExportApprovalOf: msg.
-	responseOnTime ifNil: [self rejectExportOnTimeout: msg].
+	responseOnTime ifNil: [self respondExportOnTimeout: msg].
 	self logger debug: 'requestPackageExport: done. response=' , msg approvalOption printString.
 	^ msg approvalOption
 ]
@@ -478,7 +495,7 @@ AbTopic >> requestPermission: aDescription options: approvalOptions [
 	self logger debug: 'requestPermission: waiting for human. description=' , aDescription printString.
 	msg := self addAiPermissionRequestAndWaitForHuman: aDescription options: approvalOptions.
 	responseOnTime := self waitForAiPermissionOf: msg.
-	responseOnTime ifNil: [self rejectAiPermissionOnTimeout: msg].
+	responseOnTime ifNil: [self respondAiPermissionOnTimeout: msg].
 	self logger debug: 'requestPermission: done. response=' , msg approvalOption printString.
 	^ msg approvalOption
 ]
@@ -603,9 +620,15 @@ AbTopic >> updateAvailableCommands: aCollection [
 ]
 
 { #category : 'operations' }
-AbTopic >> updateCurrentModelFromConfigOptions: aCollection [
+AbTopic >> updateConfigOptions: aCollection [
 
-	self session updateCurrentModelFromConfigOptions: aCollection
+	self session updateConfigOptions: aCollection
+]
+
+{ #category : 'operations' }
+AbTopic >> setConfigOptionId: aConfigId value: aValue [
+
+	self session setConfigOptionId: aConfigId value: aValue
 ]
 
 { #category : 'accessing' }

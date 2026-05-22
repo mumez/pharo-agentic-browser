@@ -41,7 +41,7 @@ AbTopicHandler >> permissionOptionsFor: anACPRequestPermission [
 	options ifNotEmpty: [ ^ options asArray ].
 	^ {
 		  'Allow once' -> AbConstants allowOnce.
-		  'Always allow' -> #allow_always.
+		  'Always allow' -> AbConstants allowAlways.
 		  'Deny' -> AbConstants rejectOnce }
 ]
 
@@ -96,7 +96,7 @@ AbTopicHandler >> sessionUpdate: aSessionUpdate [
 	aSessionUpdate isAvailableCommandsUpdate
 		ifTrue: [ ^ self topic updateAvailableCommands: aSessionUpdate availableCommands ].
 	aSessionUpdate isConfigOptionUpdate
-		ifTrue: [ ^ self topic updateCurrentModelFromConfigOptions: aSessionUpdate configOptions ]
+		ifTrue: [ ^ self topic updateConfigOptions: aSessionUpdate configOptions ]
 ]
 
 { #category : 'accessing' }

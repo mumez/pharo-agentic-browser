@@ -3,6 +3,7 @@
 .agents/
 .cursor/
 .opencode/
+.antigravitycli/
 CLAUDE.md
 CLAUDE.local.md
 AGENTS.md
