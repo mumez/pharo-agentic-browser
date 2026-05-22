@@ -388,7 +388,7 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 { #category : 'event handling' }
 AbChatPresenter >> onModelSelectedName: aModelName [
 
-	| topic　selectedOption |
+	| topic selectedOption |
 	topic := self currentTopic ifNil: [ ^ self ].
 	self modelOptions ifEmpty: [
 		^ topic setConfigOptionId: self modelConfigId value: aModelName ].
