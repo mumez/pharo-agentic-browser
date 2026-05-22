@@ -388,12 +388,14 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 { #category : 'event handling' }
 AbChatPresenter >> onModelSelectedName: aModelName [
 
-	| selectedOption |
+	| topic　selectedOption |
+	topic := self currentTopic ifNil: [ ^ self ].
+	self modelOptions ifEmpty: [
+		^ topic setConfigOptionId: self modelConfigId value: aModelName ].
 	selectedOption := self modelOptions
-				          detect: [ :option | option name = aModelName ]
-				          ifNone: [ ^ self ].
-	self currentTopic ifNil: [ ^ self ].
-	self currentTopic
+		                  detect: [ :option | option name = aModelName ]
+		                  ifNone: [ ^ self ].
+	topic
 		setConfigOptionId: self modelConfigId
 		value: selectedOption value
 ]
@@ -428,7 +430,7 @@ AbChatPresenter >> onSendButtonClicked [
 ]
 
 { #category : 'event handling' }
-AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+AbChatPresenter >> onTopicCurrentModelChanged: aTopic [
 
 	self syncModelDropListFromTopic: aTopic
 ]
@@ -526,11 +528,12 @@ AbChatPresenter >> stopDotsAnimation [
 { #category : 'private' }
 AbChatPresenter >> applyModelCurrentValue: aString [
 
-	self modelOptions: #().
-	self modelDropList items: (aString ifNil: [ #() ] ifNotNil: [ :v | { v } ]).
-	aString
-		ifNil: [ self modelDropList startWithoutSelection ]
-		ifNotNil: [ self modelDropList selectIndex: 1 ]
+	aString ifNil: [
+		self modelDropList items: #().
+		self modelDropList startWithoutSelection.
+		^ self ].
+	self modelDropList items: { aString }.
+	self modelDropList selectIndex: 1
 ]
 
 { #category : 'private' }
@@ -639,7 +642,7 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
-		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic model: ann model ] ]
+		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic ] ]
 		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModeChanged
@@ -654,7 +657,7 @@ AbChatPresenter >> topic: anAbTopic [
 	self currentTopic: anAbTopic.
 	anAbTopic ifNil: [
 		self commandNames: #().
-		self onTopicCurrentModelChanged: nil model: nil.
+		self onTopicCurrentModelChanged: nil.
 		self onTopicCurrentModeChanged: nil mode: nil.
 		normalInputPresenter cancelEnabled: false.
 		self updateDropListsEnabled: false.
@@ -663,7 +666,7 @@ AbChatPresenter >> topic: anAbTopic [
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages.
 	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
-	self onTopicCurrentModelChanged: anAbTopic model: anAbTopic currentModel.
+	self onTopicCurrentModelChanged: anAbTopic.
 	self onTopicCurrentModeChanged: anAbTopic mode: anAbTopic currentMode.
 	self onTopicStatusChanged: anAbTopic status: anAbTopic status
 ]

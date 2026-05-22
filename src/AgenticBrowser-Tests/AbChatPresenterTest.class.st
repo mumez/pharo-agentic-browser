@@ -483,7 +483,7 @@ AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelDropList [
 	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')).
 	presenter topic: topic.
 	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-opus-4-7')).
-	presenter onTopicCurrentModelChanged: topic model: 'claude-opus-4-7'.
+	presenter onTopicCurrentModelChanged: topic.
 	self assert: presenter selectedModelName equals: 'claude-opus-4-7'
 ]
 
