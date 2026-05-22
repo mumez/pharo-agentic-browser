@@ -52,6 +52,7 @@ AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 { #category : 'class initialization' }
 AbTopicManager class >> initialize [
 
+	default ifNotNil: [ default cleanupAllTopics ].
 	default := forTest := nil
 ]
 
@@ -59,6 +60,7 @@ AbTopicManager class >> initialize [
 AbTopicManager class >> load [
 
 	self defaultFileReference exists ifFalse: [ ^ self ].
+	default ifNotNil: [ default cleanupAllTopics ].
 	default := self loadFrom: self defaultFileReference
 ]
 

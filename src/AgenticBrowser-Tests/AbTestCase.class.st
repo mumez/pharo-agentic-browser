@@ -23,6 +23,27 @@ AbTestCase >> tearDown [
 ]
 
 { #category : 'private' }
+AbTestCase >> modelOptionWithCurrentValue: aString [
+
+	| modelOption |
+	modelOption := ACPConfigOption new beModelCategory.
+	modelOption rawValues
+		at: 'id' put: 'model';
+		at: 'currentValue' put: aString;
+		at: 'type' put: 'select';
+		at: 'options' put: {
+				(Dictionary new
+					 at: 'value' put: 'claude-sonnet-4-6';
+					 at: 'name' put: 'claude-sonnet-4-6';
+					 yourself).
+				(Dictionary new
+					 at: 'value' put: 'claude-opus-4-7';
+					 at: 'name' put: 'claude-opus-4-7';
+					 yourself) }.
+	^ modelOption
+]
+
+{ #category : 'private' }
 AbTestCase >> modeOptionWithCurrentValue: aString [
 
 	| modeOption |

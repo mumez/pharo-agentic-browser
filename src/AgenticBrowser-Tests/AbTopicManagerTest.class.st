@@ -81,6 +81,20 @@ AbTopicManagerTest >> testDefaultReturnsSameInstance [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testInitializeStopsActiveWatchersBeforeReset [
+
+	| topic watcher |
+	topic := AbTopic new title: 'Orphan during init'.
+	AbTopicManager default addTopic: topic.
+	topic startWatching.
+	watcher := topic relatedPackagesWatcher.
+	self assert: watcher isWatching.
+	[ AbTopicManager initialize.
+	  self deny: watcher isWatching ]
+		ensure: [ AbTopicManager initialize ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testForTestReturnsSameInstance [
 
 	self assert: AbTopicManager forTest == AbTopicManager forTest

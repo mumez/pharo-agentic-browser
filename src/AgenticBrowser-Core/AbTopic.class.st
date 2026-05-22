@@ -250,6 +250,11 @@ AbTopic >> configOptions [
 ]
 
 { #category : 'accessing' }
+AbTopic >> modelConfigOption [
+	^ self session modelConfigOption
+]
+
+{ #category : 'accessing' }
 AbTopic >> modeConfigOption [
 	^ self session modeConfigOption
 ]
