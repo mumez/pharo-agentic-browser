@@ -7,7 +7,10 @@ Class {
 		'aiTimeoutField',
 		'exportTimeoutField',
 		'aiTimeoutOptionDropList',
-		'exportTimeoutOptionDropList'
+		'exportTimeoutOptionDropList',
+		'useDefaultMcpServersCheckbox',
+		'saveButton',
+		'cancelButton'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -64,6 +67,39 @@ AbSettingsPresenter >> exportTimeoutOptionDropList [
 	^ exportTimeoutOptionDropList
 ]
 
+{ #category : 'accessing' }
+AbSettingsPresenter >> useDefaultMcpServersCheckbox [
+	^ useDefaultMcpServersCheckbox
+]
+
+{ #category : 'accessing' }
+AbSettingsPresenter >> saveButton [
+	^ saveButton
+]
+
+{ #category : 'accessing' }
+AbSettingsPresenter >> cancelButton [
+	^ cancelButton
+]
+
+{ #category : 'actions' }
+AbSettingsPresenter >> saveSettings [
+	self settings watcherMessageThrottleSeconds: watcherThrottleField text asInteger.
+	self settings aiPermissionWaitTimeoutSeconds: aiTimeoutField text asInteger.
+	self settings exportApprovalWaitTimeoutSeconds: exportTimeoutField text asInteger.
+	self settings aiPermissionTimeoutOption: (self optionIdForLabel: aiTimeoutOptionDropList selectedItem).
+	self settings exportApprovalTimeoutOption: (self optionIdForLabel: exportTimeoutOptionDropList selectedItem).
+	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
+	self saveAction value
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> optionIdForLabel: aLabel [
+	^ (AbConstants defaultApprovalOptions
+		detect: [ :assoc | assoc key = aLabel ]
+		ifNone: [ AbConstants defaultApprovalOptions first ]) value
+]
+
 { #category : 'private' }
 AbSettingsPresenter >> approvalOptionLabels [
 	^ AbConstants defaultApprovalOptions collect: [ :assoc | assoc key ]
@@ -98,7 +134,19 @@ AbSettingsPresenter >> initializePresenters [
 	exportTimeoutOptionDropList := self newDropList.
 	exportTimeoutOptionDropList items: self approvalOptionLabels.
 	exportTimeoutOptionDropList
-		selectItem: (self labelForOptionId: self settings exportApprovalTimeoutOption)
+		selectItem: (self labelForOptionId: self settings exportApprovalTimeoutOption).
+
+	useDefaultMcpServersCheckbox := self newCheckBox.
+	useDefaultMcpServersCheckbox label: 'Use default MCP servers'.
+	useDefaultMcpServersCheckbox state: self settings useDefaultMcpServers.
+
+	saveButton := self newButton.
+	saveButton label: 'Save'.
+	saveButton action: [ self saveSettings. self window close ].
+
+	cancelButton := self newButton.
+	cancelButton label: 'Cancel'.
+	cancelButton action: [ self window close ]
 ]
 
 { #category : 'layout' }

@@ -55,3 +55,55 @@ AbSettingsPresenterTest >> testExportTimeoutOptionDropListShowsDefaultSelection 
 		equals: (AbConstants defaultApprovalOptions
 			detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
 ]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testUseDefaultMcpServersCheckboxShowsDefaultValue [
+	self assert: presenter useDefaultMcpServersCheckbox state equals: true
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesIntegerFieldsToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter watcherThrottleField text: '5'.
+	presenter aiTimeoutField text: '600'.
+	presenter exportTimeoutField text: '60'.
+	presenter saveSettings.
+	self assert: s watcherMessageThrottleSeconds equals: 5.
+	self assert: s aiPermissionWaitTimeoutSeconds equals: 600.
+	self assert: s exportApprovalWaitTimeoutSeconds equals: 60
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesOptionDropListsToSettings [
+	| s allowOnceLabel |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	allowOnceLabel := (AbConstants defaultApprovalOptions
+		detect: [ :assoc | assoc value = AbConstants allowOnce ]) key.
+	presenter aiTimeoutOptionDropList selectItem: allowOnceLabel.
+	presenter exportTimeoutOptionDropList selectItem: allowOnceLabel.
+	presenter saveSettings.
+	self assert: s aiPermissionTimeoutOption equals: AbConstants allowOnce.
+	self assert: s exportApprovalTimeoutOption equals: AbConstants allowOnce
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesBooleanCheckboxToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter useDefaultMcpServersCheckbox state: false.
+	presenter saveSettings.
+	self assert: s useDefaultMcpServers equals: false
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testOnSaveActionCalledOnSave [
+	| called |
+	called := false.
+	presenter onSaveAction: [ called := true ].
+	presenter saveSettings.
+	self assert: called
+]
