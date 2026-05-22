@@ -3,7 +3,10 @@ Class {
 	#superclass : 'SpPresenter',
 	#instVars : [
 		'settings',
-		'saveAction'
+		'saveAction',
+		'watcherThrottleField',
+		'aiTimeoutField',
+		'exportTimeoutField'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -35,8 +38,9 @@ AbSettingsPresenter >> onSaveAction: aBlock [
 
 { #category : 'initialization' }
 AbSettingsPresenter >> initialize [
-	super initialize.
-	self saveAction: []
+	settings := AbSettings new.
+	saveAction := [].
+	super initialize
 ]
 
 { #category : 'private' }
@@ -49,9 +53,32 @@ AbSettingsPresenter >> saveAction: aBlock [
 	saveAction := aBlock
 ]
 
+{ #category : 'accessing' }
+AbSettingsPresenter >> watcherThrottleField [
+	^ watcherThrottleField
+]
+
+{ #category : 'accessing' }
+AbSettingsPresenter >> aiTimeoutField [
+	^ aiTimeoutField
+]
+
+{ #category : 'accessing' }
+AbSettingsPresenter >> exportTimeoutField [
+	^ exportTimeoutField
+]
+
 { #category : 'initialization' }
 AbSettingsPresenter >> initializePresenters [
-	super initializePresenters
+	super initializePresenters.
+	watcherThrottleField := self newTextInput.
+	watcherThrottleField text: self settings watcherMessageThrottleSeconds printString.
+
+	aiTimeoutField := self newTextInput.
+	aiTimeoutField text: self settings aiPermissionWaitTimeoutSeconds printString.
+
+	exportTimeoutField := self newTextInput.
+	exportTimeoutField text: self settings exportApprovalWaitTimeoutSeconds printString
 ]
 
 { #category : 'layout' }
