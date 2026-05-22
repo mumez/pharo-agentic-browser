@@ -9,7 +9,7 @@ Class {
 AbWorkingDirectoryTest >> testDirectoryNameContainsSafeTopicName [
 
 	| topic workDir |
-	topic := AbTopic new title: 'My Cool Feature'.
+	topic := AbTopic new title: 'ab-test-My Cool Feature'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self assert: (workDir directoryName includesSubstring: 'My-Cool-Feature')
 ]
@@ -18,7 +18,7 @@ AbWorkingDirectoryTest >> testDirectoryNameContainsSafeTopicName [
 AbWorkingDirectoryTest >> testDirectoryNameContainsTopicIdPrefix [
 
 	| topic workDir expectedIdPrefix |
-	topic := AbTopic new title: 'My Cool Feature'.
+	topic := AbTopic new title: 'ab-test-My Cool Feature'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	expectedIdPrefix := topic topicId copyFrom: 1 to: 8.
 	self assert: (workDir directoryName includesSubstring: expectedIdPrefix)
@@ -28,7 +28,7 @@ AbWorkingDirectoryTest >> testDirectoryNameContainsTopicIdPrefix [
 AbWorkingDirectoryTest >> testEnsureExists [
 
 	| topic workDir |
-	topic := AbTopic new title: 'Test-WD-Creation'.
+	topic := AbTopic new title: 'ab-test-wd-creation'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	workDir ensureExists.
 	self assert: workDir path exists.
@@ -39,7 +39,7 @@ AbWorkingDirectoryTest >> testEnsureExists [
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementBeginImport [
 
 	| topic workDir path znReq teaReq ann |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
@@ -57,7 +57,7 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementBeginImport [
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementEndImport [
 
 	| topic workDir path znReq teaReq ann |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
@@ -75,7 +75,7 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementEndImport [
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresDifferentPath [
 
 	| topic workDir path znReq teaReq ann |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
@@ -91,7 +91,7 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresDifferentPath [
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresOtherUrls [
 
 	| topic workDir path znReq teaReq ann |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
@@ -107,7 +107,7 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresOtherUrls [
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesSourcePath [
 
 	| topic workDir path znReq teaReq ann |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.
@@ -128,7 +128,7 @@ AbWorkingDirectoryTest >> testNewTopicWorkingDirectoryDoesNotExist [
 	 This is the precondition for auto-export when a package prefix is first set."
 
 	| topic workDir |
-	topic := AbTopic new title: 'Brand-New-Topic'.
+	topic := AbTopic new title: 'ab-test-brand-new-topic'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self deny: workDir path exists
 ]
@@ -137,7 +137,7 @@ AbWorkingDirectoryTest >> testNewTopicWorkingDirectoryDoesNotExist [
 AbWorkingDirectoryTest >> testPathIsInsideAgenticBrowserSubdir [
 
 	| topic workDir |
-	topic := AbTopic new title: 'My Feature'.
+	topic := AbTopic new title: 'ab-test-my-feature'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self
 		assert: workDir path parent fullName
@@ -157,16 +157,16 @@ AbWorkingDirectoryTest >> testSafeTopicNameEmptyFallback [
 AbWorkingDirectoryTest >> testSafeTopicNameReplacesSpecialChars [
 
 	| topic workDir |
-	topic := AbTopic new title: 'My Cool Topic!'.
+	topic := AbTopic new title: 'ab-test-My Cool Topic!'.
 	workDir := AbWorkingDirectory forTopic: topic.
-	self assert: workDir safeTopicName equals: 'My-Cool-Topic-'
+	self assert: workDir safeTopicName equals: 'ab-test-My-Cool-Topic-'
 ]
 
 { #category : 'tests' }
 AbWorkingDirectoryTest >> testSourcePathAppendsSrcDirectory [
 
 	| topic workDir |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self
 		assert: workDir sourcePath fullName
@@ -177,7 +177,7 @@ AbWorkingDirectoryTest >> testSourcePathAppendsSrcDirectory [
 AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
 
 	| topic workDir |
-	topic := AbTopic new title: 'Test'.
+	topic := AbTopic new title: 'ab-test'.
 	workDir := AbWorkingDirectory forTopic: topic.
 	self assert: workDir srcDirectory equals: 'src'
 ]
@@ -186,7 +186,7 @@ AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
 AbWorkingDirectoryTest >> testExportClassNamedWritesClassFile [
 
 	| topic workDir path classFile |
-	topic := AbTopic new title: 'Test-Export-Class'.
+	topic := AbTopic new title: 'ab-test-export-class'.
 	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	workDir := AbWorkingDirectory forTopic: topic.

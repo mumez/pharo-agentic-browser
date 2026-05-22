@@ -749,7 +749,7 @@ AbTopicTest >> testWorkingDirectoryPathUsesDefaultSrcWhenProjectMissing [
 AbTopicTest >> testWorkingDirectoryPathUsesGeneratedPathByDefault [
 
 	| topic expectedPath |
-	topic := AbTopic new title: 'Topic Name'.
+	topic := AbTopic new title: 'ab-test-topic-name'.
 	expectedPath := (Smalltalk imageDirectory / 'agentic-browser'
 	                 / topic workingDirectory directoryName) fullName.
 	self assert: topic workingDirectoryPath equals: expectedPath

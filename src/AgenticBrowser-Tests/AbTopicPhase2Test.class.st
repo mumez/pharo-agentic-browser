@@ -150,7 +150,7 @@ AbTopicPhase2Test >> testWorkingDirectoryReturnsSameInstance [
 AbTopicPhase2Test >> testWorkingDirectoryWasCreatedForConnection [
 
 	| topic path |
-	topic := AbTopic new title: 'money calc'.
+	topic := AbTopic new title: 'ab-test-money-calc'.
 	path := topic workingDirectory path.
 	self deny: path exists.
 	self deny: topic relatedPackagesWatcher isWatching.

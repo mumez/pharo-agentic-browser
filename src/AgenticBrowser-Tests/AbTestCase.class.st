@@ -14,10 +14,11 @@ AbTestCase >> setUp [
 { #category : 'running' }
 AbTestCase >> tearDown [
 
-	AbTopicManager default topicsDo: [ :topic |
+	AbTopicManager forTest topicsDo: [ :topic |
 		| dir |
 		dir := topic workingDirectory path.
-		dir exists ifTrue: [ dir deleteAll ] ].
+		(dir basename beginsWith: 'ab-test-') ifTrue: [
+			dir exists ifTrue: [ dir deleteAll ] ] ].
 	AbTopicManager forTest: nil
 ]
 
