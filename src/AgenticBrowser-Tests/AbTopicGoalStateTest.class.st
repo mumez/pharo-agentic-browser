@@ -10,7 +10,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenFileAbsent [
 
 	| topic |
 	topic := AbTopic new.
-	topic goalDescription: 'all tests pass'.
+	topic topicGoal description: 'all tests pass'.
 	self deny: topic checkGoalAchievement
 ]
 
@@ -27,8 +27,8 @@ AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFil
 
 	| topic resultFile |
 	topic := AbTopic new.
-	topic goalDescription: 'all tests pass'.
-	"State is already #working because goalDescription: called sendPrompt: which fired #promptSent"
+	topic topicGoal description: 'all tests pass'.
+	topic stateMachine handleEvent: #promptSent.
 	resultFile := topic topicGoal resultFile.
 	resultFile parent ensureCreateDirectory.
 	resultFile writeStreamDo: [ :s | s nextPutAll: 'Done.' ].
@@ -83,7 +83,7 @@ AbTopicGoalStateTest >> testGoalDescriptionCreatesAbTopicGoal [
 
 	| topic |
 	topic := AbTopic new.
-	topic goalDescription: 'all tests pass'.
+	topic topicGoal description: 'all tests pass'.
 	self assert: (topic topicGoal isKindOf: AbTopicGoal).
 	self assert: topic topicGoal description equals: 'all tests pass'
 ]

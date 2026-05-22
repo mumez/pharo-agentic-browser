@@ -238,22 +238,92 @@ AbChatPresenterTest >> testInitialAnswerPresenterIsNormalInput [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testModelTextInitiallyEmpty [
+AbChatPresenterTest >> testDropListsDisabledInitially [
 
-	self assert: presenter modelText isEmpty
+	self deny: presenter commandsDropList isEnabled.
+	self deny: presenter modelDropList isEnabled.
+	self deny: presenter modeDropList isEnabled
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testModelTextShowsCurrentModelWhenTopicSet [
+AbChatPresenterTest >> testDropListsDisabledWhenTopicWorking [
 
-	| topic options modelOption |
+	| topic |
 	topic := AbTopic new.
-	modelOption := ACPConfigOption new beModelCategory.
-	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
-	options := OrderedCollection with: modelOption.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #working.
+	self deny: presenter commandsDropList isEnabled.
+	self deny: presenter modelDropList isEnabled.
+	self deny: presenter modeDropList isEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testDropListsEnabledWhenTopicEndTurn [
+
+	| topic |
+	topic := AbTopic new.
+	presenter topic: topic.
+	presenter onTopicStatusChanged: topic status: #endTurn.
+	self assert: presenter commandsDropList isEnabled.
+	self assert: presenter modelDropList isEnabled.
+	self assert: presenter modeDropList isEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelNamesInitiallyEmpty [
+
+	self assert: presenter modelNames isEmpty
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testModelNamesShowCurrentModelWhenTopicSet [
+
+	| topic options |
+	topic := AbTopic new.
+	options := OrderedCollection
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
+		           with: (self modeOptionWithCurrentValue: 'ask').
 	topic updateConfigOptions: options.
 	presenter topic: topic.
-	self assert: presenter modelText equals: 'claude-sonnet-4'
+	self assert: presenter modelNames asArray equals: #( 'claude-sonnet-4-6' 'claude-opus-4-7' ).
+	self assert: presenter selectedModelName equals: 'claude-sonnet-4-6'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSelectingModelCallsSetConfigOption [
+
+	| topic session mockClient options result resultOptions |
+	topic := AbTopic new.
+	session := topic session.
+	session sessionId: 'session-1'.
+	options := OrderedCollection
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
+		           with: (self modeOptionWithCurrentValue: 'ask').
+	topic updateConfigOptions: options.
+	resultOptions := OrderedCollection
+		                 with: (self modelOptionWithCurrentValue: 'claude-opus-4-7')
+		                 with: (self modeOptionWithCurrentValue: 'ask').
+	result := MockObject new.
+	result on: #configOptions verify: [ resultOptions ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSetSessionConfigOptionParams buildBy: aBlock.
+			self assert: params sessionId equals: 'session-1'.
+			self assert: params configId equals: 'model'.
+			self assert: params value equals: 'claude-opus-4-7'.
+			result ].
+	session client: mockClient.
+	presenter topic: topic.
+
+	presenter modelDropList selectItem: 'claude-opus-4-7'.
+
+	self verify: result.
+	self verify: mockClient.
+	self assert: presenter selectedModelName equals: 'claude-opus-4-7'
 ]
 
 { #category : 'tests' }
@@ -265,12 +335,10 @@ AbChatPresenterTest >> testModeNamesInitiallyEmpty [
 { #category : 'tests' }
 AbChatPresenterTest >> testModeNamesShowsCurrentModeWhenTopicSet [
 
-	| topic options modelOption |
+	| topic options |
 	topic := AbTopic new.
-	modelOption := ACPConfigOption new beModelCategory.
-	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
 	options := OrderedCollection
-		           with: modelOption
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').
 	topic updateConfigOptions: options.
 	presenter topic: topic.
@@ -281,18 +349,16 @@ AbChatPresenterTest >> testModeNamesShowsCurrentModeWhenTopicSet [
 { #category : 'tests' }
 AbChatPresenterTest >> testSelectingModeCallsSetConfigOption [
 
-	| topic session mockClient options result resultOptions modelOption |
+	| topic session mockClient options result resultOptions |
 	topic := AbTopic new.
 	session := topic session.
 	session sessionId: 'session-1'.
-	modelOption := ACPConfigOption new beModelCategory.
-	modelOption rawValues at: 'currentValue' put: 'claude-sonnet-4'.
 	options := OrderedCollection
-		           with: modelOption
+		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').
 	topic updateConfigOptions: options.
 	resultOptions := OrderedCollection
-		                 with: modelOption
+		                 with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		                 with: (self modeOptionWithCurrentValue: 'code').
 	result := MockObject new.
 	result on: #configOptions verify: [ resultOptions ].
@@ -410,13 +476,15 @@ AbChatPresenterTest >> testOnMessageAddedWithAiMessageUpdatesCount [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelText [
+AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelDropList [
 
 	| topic |
 	topic := AbTopic new.
+	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')).
 	presenter topic: topic.
-	presenter onTopicCurrentModelChanged: topic model: 'claude-opus-4'.
-	self assert: presenter modelText equals: 'claude-opus-4'
+	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-opus-4-7')).
+	presenter onTopicCurrentModelChanged: topic.
+	self assert: presenter selectedModelName equals: 'claude-opus-4-7'
 ]
 
 { #category : 'tests' }

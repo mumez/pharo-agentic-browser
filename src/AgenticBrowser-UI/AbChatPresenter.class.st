@@ -13,7 +13,10 @@ Class {
 		'statusLabel',
 		'commandsDropList',
 		'isUpdatingCommands',
-		'modelLabel',
+		'modelDropList',
+		'modelConfigId',
+		'modelOptions',
+		'isUpdatingModels',
 		'modeDropList',
 		'isUpdatingModes',
 		'modeOptions',
@@ -77,10 +80,15 @@ AbChatPresenter >> connectPresenters [
 	commandsDropList whenSelectedItemChangedDo: [ :cmd |
 		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
 			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ].
+	modelDropList startWithoutSelection.
+	modelDropList whenSelectedItemChangedDo: [ :modelName |
+		(modelName notNil and: [ self isUpdatingModels not ]) ifTrue: [
+			self onModelSelectedName: modelName ] ].
 	modeDropList startWithoutSelection.
 	modeDropList whenSelectedItemChangedDo: [ :modeName |
 		(modeName notNil and: [ self isUpdatingModes not ]) ifTrue: [
-			self onModeSelectedName: modeName ] ]
+			self onModeSelectedName: modeName ] ].
+	self updateDropListsEnabled: false
 ]
 
 { #category : 'accessing' }
@@ -169,7 +177,8 @@ AbChatPresenter >> initializeStatusBar [
 				 vAlignCenter;
 				 add: (commandsDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
-				 add: (modelLabel := statusBarPresenter newLabel) expand: false;
+				 add: (modelDropList := statusBarPresenter newDropList)
+				 withConstraints: [ :c | c width: 220 ];
 				 add: (modeDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
 				 add: statusBarPresenter newNullPresenter;
@@ -227,21 +236,57 @@ AbChatPresenter >> messagesPresenter [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> modelLabel [
+AbChatPresenter >> modelConfigId [
 
-	^ modelLabel
+	^ modelConfigId ifNil: [ 'model' ]
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> modelText [
+AbChatPresenter >> modelConfigId: aString [
 
-	^ self modelLabel label
+	modelConfigId := aString
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> modelText: aString [
+AbChatPresenter >> modelDropList [
 
-	self modelLabel label: aString
+	^ modelDropList
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelNames [
+
+	^ self modelDropList items
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelOptions [
+
+	^ modelOptions ifNil: [ #() ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> modelOptions: aCollection [
+
+	modelOptions := (aCollection ifNil: [ #() ]) asArray
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> selectedModelName [
+
+	^ self modelDropList selectedItem
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingModels [
+
+	^ isUpdatingModels ifNil: [ false ]
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> isUpdatingModels: aBoolean [
+
+	isUpdatingModels := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -341,6 +386,21 @@ AbChatPresenter >> onMessageAdded: anAbMessage [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onModelSelectedName: aModelName [
+
+	| topic selectedOption |
+	topic := self currentTopic ifNil: [ ^ self ].
+	self modelOptions ifEmpty: [
+		^ topic setConfigOptionId: self modelConfigId value: aModelName ].
+	selectedOption := self modelOptions
+		                  detect: [ :option | option name = aModelName ]
+		                  ifNone: [ ^ self ].
+	topic
+		setConfigOptionId: self modelConfigId
+		value: selectedOption value
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onModeSelectedName: aModeName [
 
 	| selectedOption |
@@ -370,9 +430,9 @@ AbChatPresenter >> onSendButtonClicked [
 ]
 
 { #category : 'event handling' }
-AbChatPresenter >> onTopicCurrentModelChanged: aTopic model: aModelString [
+AbChatPresenter >> onTopicCurrentModelChanged: aTopic [
 
-	self modelText: (aModelString ifNil: [ '' ])
+	self syncModelDropListFromTopic: aTopic
 ]
 
 { #category : 'event handling' }
@@ -389,6 +449,7 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 		, ' status='
 		, aStatus printString.
 	self normalInputPresenter cancelEnabled: aStatus = #working.
+	self updateDropListsEnabled: aStatus = #endTurn.
 	aStatus = #working
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
@@ -465,6 +526,82 @@ AbChatPresenter >> stopDotsAnimation [
 ]
 
 { #category : 'private' }
+AbChatPresenter >> applyModelCurrentValue: aString [
+
+	aString ifNil: [
+		self modelDropList items: #().
+		self modelDropList startWithoutSelection.
+		^ self ].
+	self modelDropList items: { aString }.
+	self modelDropList selectIndex: 1
+]
+
+{ #category : 'private' }
+AbChatPresenter >> applyModelOption: aModelOption [
+
+	| flatOptions |
+	flatOptions := self flattenedOptionsFrom: aModelOption options.
+	flatOptions
+		ifEmpty: [ self applyModelCurrentValue: aModelOption currentValue ]
+		ifNotEmpty: [
+		self applyModelOptions: flatOptions currentValue: aModelOption currentValue ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> applyModelOptions: flatOptions currentValue: aString [
+
+	| selectedModel |
+	self modelOptions: flatOptions.
+	self modelDropList items: (self modelOptions collect: [ :option | option name ]).
+	selectedModel := self modelOptions
+		                 detect: [ :option | option value = aString ]
+		                 ifNone: [ nil ].
+	selectedModel
+		ifNil: [ self modelDropList startWithoutSelection ]
+		ifNotNil: [ self modelDropList selectItem: selectedModel name ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> flattenedOptionsFrom: aCollection [
+
+	| result |
+	result := OrderedCollection new.
+	aCollection do: [ :item |
+		(item respondsTo: #value)
+			ifTrue: [ result add: item ]
+			ifFalse: [ result addAllLast: item options ] ].
+	^ result asArray
+]
+
+{ #category : 'private' }
+AbChatPresenter >> syncModelDropListEmpty [
+
+	self modelOptions: #().
+	self modelDropList items: #().
+	self modelDropList startWithoutSelection
+]
+
+{ #category : 'private' }
+AbChatPresenter >> syncModelDropListFromTopic: aTopic [
+
+	| modelOption |
+	modelOption := aTopic ifNotNil: [ :t | t modelConfigOption ].
+	modelOption ifNil: [ ^ self syncModelDropListEmpty ].
+	self isUpdatingModels: true.
+	[ self modelConfigId: modelOption id.
+	self applyModelOption: modelOption ]
+		ensure: [ self isUpdatingModels: false ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> updateDropListsEnabled: aBoolean [
+
+	self commandsDropList enabled: aBoolean.
+	self modelDropList enabled: aBoolean.
+	self modeDropList enabled: aBoolean
+]
+
+{ #category : 'private' }
 AbChatPresenter >> syncModeDropListFromTopic: aTopic [
 
 	| modeOption selectedMode |
@@ -505,7 +642,7 @@ AbChatPresenter >> subscribeToTopic: aTopic [
 		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
-		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic model: ann model ] ]
+		do: [ :ann | self defer: [ self onTopicCurrentModelChanged: ann topic ] ]
 		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModeChanged
@@ -520,15 +657,16 @@ AbChatPresenter >> topic: anAbTopic [
 	self currentTopic: anAbTopic.
 	anAbTopic ifNil: [
 		self commandNames: #().
-		self modelText: ''.
+		self onTopicCurrentModelChanged: nil.
 		self onTopicCurrentModeChanged: nil mode: nil.
 		normalInputPresenter cancelEnabled: false.
+		self updateDropListsEnabled: false.
 		self stopDotsAnimation.
 		^ self ].
 	self subscribeToTopic: anAbTopic.
 	self rerenderMessages.
 	self onAvailableCommandsChanged: anAbTopic commands: anAbTopic availableCommands.
-	self onTopicCurrentModelChanged: anAbTopic model: anAbTopic currentModel.
+	self onTopicCurrentModelChanged: anAbTopic.
 	self onTopicCurrentModeChanged: anAbTopic mode: anAbTopic currentMode.
 	self onTopicStatusChanged: anAbTopic status: anAbTopic status
 ]

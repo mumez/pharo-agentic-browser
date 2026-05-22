@@ -139,6 +139,11 @@ AbTopicSession >> configOptions: aCollection [
 ]
 
 { #category : 'accessing' }
+AbTopicSession >> modelConfigOption [
+	^ self detectModelFrom: self configOptions
+]
+
+{ #category : 'accessing' }
 AbTopicSession >> modeConfigOption [
 	^ self detectModeFrom: self configOptions
 ]
