@@ -152,6 +152,34 @@ AbSettingsPresenter >> initializePresenters [
 { #category : 'layout' }
 AbSettingsPresenter >> defaultLayout [
 	^ SpBoxLayout newTopToBottom
+		borderWidth: 10;
+		spacing: 6;
+		add: (self labeledRow: 'Watcher throttle (seconds):' field: watcherThrottleField);
+		add: (self labeledRow: 'AI permission timeout (seconds):' field: aiTimeoutField);
+		add: (self labeledRow: 'AI timeout option:' field: aiTimeoutOptionDropList);
+		add: (self labeledRow: 'Export timeout (seconds):' field: exportTimeoutField);
+		add: (self labeledRow: 'Export timeout option:' field: exportTimeoutOptionDropList);
+		add: useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
+		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
+		yourself
+]
+
+{ #category : 'layout' }
+AbSettingsPresenter >> labeledRow: aLabelString field: aPresenter [
+	^ SpBoxLayout newLeftToRight
+		spacing: 6;
+		add: (self newLabel label: aLabelString)
+			withConstraints: [ :c | c width: 230 ];
+		add: aPresenter;
+		yourself
+]
+
+{ #category : 'layout' }
+AbSettingsPresenter >> actionButtonsLayout [
+	^ SpBoxLayout newLeftToRight
+		addLast: saveButton withConstraints: [ :c | c width: 80 ];
+		addLast: cancelButton withConstraints: [ :c | c width: 80 ];
+		yourself
 ]
 
 { #category : 'initialization' }
