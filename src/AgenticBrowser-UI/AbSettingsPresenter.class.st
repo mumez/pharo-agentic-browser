@@ -1,8 +1,7 @@
 Class {
 	#name : 'AbSettingsPresenter',
-	#superclass : 'SpPresenter',
+	#superclass : 'SpPresenterWithModel',
 	#instVars : [
-		'settings',
 		'saveAction',
 		'watcherThrottleField',
 		'aiTimeoutField',
@@ -12,23 +11,9 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
-{ #category : 'instance creation' }
-AbSettingsPresenter class >> openOn: anAbSettings [
-	| presenter |
-	presenter := self new.
-	presenter settings: anAbSettings.
-	presenter open.
-	^ presenter
-]
-
 { #category : 'accessing' }
 AbSettingsPresenter >> settings [
-	^ settings
-]
-
-{ #category : 'accessing' }
-AbSettingsPresenter >> settings: anAbSettings [
-	settings := anAbSettings
+	^ self model
 ]
 
 { #category : 'actions' }
@@ -38,7 +23,6 @@ AbSettingsPresenter >> onSaveAction: aBlock [
 
 { #category : 'initialization' }
 AbSettingsPresenter >> initialize [
-	settings := AbSettings new.
 	saveAction := [].
 	super initialize
 ]
@@ -71,6 +55,8 @@ AbSettingsPresenter >> exportTimeoutField [
 { #category : 'initialization' }
 AbSettingsPresenter >> initializePresenters [
 	super initializePresenters.
+	self model ifNil: [ ^ self ].
+
 	watcherThrottleField := self newTextInput.
 	watcherThrottleField text: self settings watcherMessageThrottleSeconds printString.
 

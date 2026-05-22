@@ -11,9 +11,7 @@ Class {
 { #category : 'running' }
 AbSettingsPresenterTest >> setUp [
 	super setUp.
-	presenter := AbSettingsPresenter new.
-	presenter settings: AbSettings new.
-	presenter initializePresenters
+	presenter := AbSettingsPresenter on: AbSettings new
 ]
 
 { #category : 'running' }
