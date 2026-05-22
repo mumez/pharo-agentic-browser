@@ -115,12 +115,12 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupporte
 			self assert: params sessionId equals: 'session-1'.
 			loadResult ].
 
-	session doConnectWithClient: mockClient.
-
-	self verify: initializeResponse.
-	self verify: loadResult.
-	self verify: mockClient.
-	self assert: session sessionId equals: 'session-1-loaded'
+	[ session doConnectWithClient: mockClient.
+	  self verify: initializeResponse.
+	  self verify: loadResult.
+	  self verify: mockClient.
+	  self assert: session sessionId equals: 'session-1-loaded' ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
@@ -151,12 +151,12 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 		with: MockObject any
 		verify: [ :unused | newSessionResult ].
 
-	session doConnectWithClient: mockClient.
-
-	self verify: initializeResponse.
-	self verify: newSessionResult.
-	self verify: mockClient.
-	self assert: session sessionId equals: 'session-2-new'
+	[ session doConnectWithClient: mockClient.
+	  self verify: initializeResponse.
+	  self verify: newSessionResult.
+	  self verify: mockClient.
+	  self assert: session sessionId equals: 'session-2-new' ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
@@ -191,11 +191,11 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersWhenMcpCapabilities
 			capturedMcpServers := params mcpServers.
 			newSessionResult ].
 
-	session doConnectWithClient: mockClient.
-
-	self verify: mockClient.
-	self assert: capturedMcpServers isCollection.
-	self assert: capturedMcpServers notEmpty
+	[ session doConnectWithClient: mockClient.
+	  self verify: mockClient.
+	  self assert: capturedMcpServers isCollection.
+	  self assert: capturedMcpServers notEmpty ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
@@ -226,10 +226,10 @@ AbTopicSessionTest >> testDoConnectWithClientSkipsMcpServersWhenMcpCapabilitiesA
 			capturedMcpServers := params mcpServers.
 			newSessionResult ].
 
-	session doConnectWithClient: mockClient.
-
-	self verify: mockClient.
-	self assert: capturedMcpServers isEmpty
+	[ session doConnectWithClient: mockClient.
+	  self verify: mockClient.
+	  self assert: capturedMcpServers isEmpty ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
@@ -266,12 +266,12 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 			self assert: params sessionId equals: 'session-1'.
 			resumeResult ].
 
-	session doConnectWithClient: mockClient.
-
-	self verify: initializeResponse.
-	self verify: resumeResult.
-	self verify: mockClient.
-	self assert: session sessionId equals: 'session-1-resumed'
+	[ session doConnectWithClient: mockClient.
+	  self verify: initializeResponse.
+	  self verify: resumeResult.
+	  self verify: mockClient.
+	  self assert: session sessionId equals: 'session-1-resumed' ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
