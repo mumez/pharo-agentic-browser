@@ -39,3 +39,19 @@ AbSettingsPresenterTest >> testAiTimeoutFieldShowsDefaultValue [
 AbSettingsPresenterTest >> testExportTimeoutFieldShowsDefaultValue [
 	self assert: presenter exportTimeoutField text equals: '30'
 ]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testAiTimeoutOptionDropListShowsDefaultSelection [
+	self
+		assert: presenter aiTimeoutOptionDropList selectedItem
+		equals: (AbConstants defaultApprovalOptions
+			detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testExportTimeoutOptionDropListShowsDefaultSelection [
+	self
+		assert: presenter exportTimeoutOptionDropList selectedItem
+		equals: (AbConstants defaultApprovalOptions
+			detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
+]
