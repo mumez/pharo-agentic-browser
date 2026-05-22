@@ -155,7 +155,9 @@ AbChatPresenter >> enterApprovalMode: anAbMessage [
 AbChatPresenter >> exitApprovalMode [
 
 	self pendingApprovalMessage: nil.
-	self layout: self defaultLayout
+	self layout: self defaultLayout.
+	self syncModelDropListFromTopic: self currentTopic.
+	self syncModeDropListFromTopic: self currentTopic
 ]
 
 { #category : 'initialization' }
