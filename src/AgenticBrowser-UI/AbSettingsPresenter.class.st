@@ -16,14 +16,21 @@ Class {
 	#package : 'AgenticBrowser-UI'
 }
 
+{ #category : 'instance creation' }
+AbSettingsPresenter class >> openOnDefault [
+	| settingsCopy presenter |
+	settingsCopy := AbSettings defaultCopied.
+	presenter := self on: settingsCopy.
+	presenter saveAction: [ :editedSettings |
+		AbSettings default initFrom: editedSettings.
+		AbSettings save ].
+	presenter open.
+	^ presenter
+]
+
 { #category : 'accessing' }
 AbSettingsPresenter >> settings [
 	^ self model
-]
-
-{ #category : 'actions' }
-AbSettingsPresenter >> onSaveAction: aBlock [
-	self saveAction: aBlock
 ]
 
 { #category : 'initialization' }
@@ -32,14 +39,14 @@ AbSettingsPresenter >> initialize [
 	super initialize
 ]
 
-{ #category : 'private' }
-AbSettingsPresenter >> saveAction [
-	^ saveAction
+{ #category : 'accessing' }
+AbSettingsPresenter >> saveAction: aBlock [
+	saveAction := aBlock
 ]
 
 { #category : 'private' }
-AbSettingsPresenter >> saveAction: aBlock [
-	saveAction := aBlock
+AbSettingsPresenter >> saveAction [
+	^ saveAction
 ]
 
 { #category : 'accessing' }
@@ -90,7 +97,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings aiPermissionTimeoutOption: (self optionIdForLabel: aiTimeoutOptionDropList selectedItem).
 	self settings exportApprovalTimeoutOption: (self optionIdForLabel: exportTimeoutOptionDropList selectedItem).
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
-	self saveAction value
+	self saveAction cull: self settings
 ]
 
 { #category : 'private' }
@@ -103,6 +110,15 @@ AbSettingsPresenter >> optionIdForLabel: aLabel [
 { #category : 'private' }
 AbSettingsPresenter >> approvalOptionLabels [
 	^ AbConstants defaultApprovalOptions collect: [ :assoc | assoc key ]
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> newApprovalOptionDropListFor: anOptionSymbol [
+	| dl |
+	dl := self newDropList.
+	dl items: self approvalOptionLabels.
+	dl selectItem: (self labelForOptionId: anOptionSymbol).
+	^ dl
 ]
 
 { #category : 'private' }
@@ -126,15 +142,8 @@ AbSettingsPresenter >> initializePresenters [
 	exportTimeoutField := self newTextInput.
 	exportTimeoutField text: self settings exportApprovalWaitTimeoutSeconds printString.
 
-	aiTimeoutOptionDropList := self newDropList.
-	aiTimeoutOptionDropList items: self approvalOptionLabels.
-	aiTimeoutOptionDropList
-		selectItem: (self labelForOptionId: self settings aiPermissionTimeoutOption).
-
-	exportTimeoutOptionDropList := self newDropList.
-	exportTimeoutOptionDropList items: self approvalOptionLabels.
-	exportTimeoutOptionDropList
-		selectItem: (self labelForOptionId: self settings exportApprovalTimeoutOption).
+	aiTimeoutOptionDropList := self newApprovalOptionDropListFor: self settings aiPermissionTimeoutOption.
+	exportTimeoutOptionDropList := self newApprovalOptionDropListFor: self settings exportApprovalTimeoutOption.
 
 	useDefaultMcpServersCheckbox := self newCheckBox.
 	useDefaultMcpServersCheckbox label: 'Use default MCP servers'.

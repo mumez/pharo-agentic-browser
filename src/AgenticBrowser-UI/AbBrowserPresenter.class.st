@@ -72,10 +72,7 @@ AbBrowserPresenter >> buildMenuBar [
 
 { #category : 'actions' }
 AbBrowserPresenter >> openSettings [
-	| presenter |
-	presenter := AbSettingsPresenter on: AbSettings default.
-	presenter onSaveAction: [ AbSettings save ].
-	presenter open
+	AbSettingsPresenter openOnDefault
 ]
 
 { #category : 'accessing' }

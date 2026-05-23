@@ -100,10 +100,10 @@ AbSettingsPresenterTest >> testSaveWritesBooleanCheckboxToSettings [
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testOnSaveActionCalledOnSave [
+AbSettingsPresenterTest >> testSaveActionCalledOnSave [
 	| called |
 	called := false.
-	presenter onSaveAction: [ called := true ].
+	presenter saveAction: [ called := true ].
 	presenter saveSettings.
 	self assert: called
 ]
