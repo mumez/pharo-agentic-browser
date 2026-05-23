@@ -10,7 +10,7 @@ AbTopicManagerTest >> testAddTopic [
 
 	| manager topic |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Test topic'.
+	topic := self newTopic: 'Test topic'.
 	manager addTopic: topic.
 	self assert: (manager topics includes: topic)
 ]
@@ -25,7 +25,7 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 		when: AbTopicAdded
 		do: [ :ann | received := ann topic ]
 		for: self.
-	[ topic := AbTopic new title: 'Test'.
+	[ topic := self newTopic: 'Test'.
 	manager addTopic: topic.
 	self assert: received == topic ]
 		ensure: [ manager announcer unsubscribe: self ]
@@ -36,7 +36,7 @@ AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 
 	| manager topic |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Lookup topic by at:'.
+	topic := self newTopic: 'Lookup topic by at:'.
 	manager addTopic: topic.
 	self assert: (manager at: topic topicId) == topic
 ]
@@ -46,7 +46,7 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 
 	| manager topic hasSubscription |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Cleanup topic'.
+	topic := self newTopic: 'Cleanup topic'.
 	manager addTopic: topic.
 	topic startWatching.
 	topic workingDirectory subscribeToSisServerImportEvents.
@@ -84,7 +84,7 @@ AbTopicManagerTest >> testDefaultReturnsSameInstance [
 AbTopicManagerTest >> testInitializeStopsActiveWatchersBeforeReset [
 
 	| topic watcher |
-	topic := AbTopic new title: 'Orphan during init'.
+	topic := self newTopic: 'Orphan during init'.
 	AbTopicManager default addTopic: topic.
 	topic startWatching.
 	watcher := topic relatedPackagesWatcher.
@@ -120,7 +120,7 @@ AbTopicManagerTest >> testLoadFromRestoresTopicStatus [
 
 	| manager topic file loaded |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'End turn topic'.
+	topic := self newTopic: 'End turn topic'.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
 	manager addTopic: topic.
@@ -137,7 +137,7 @@ AbTopicManagerTest >> testLoadFromRestoresWorkingDirectoryPath [
 
 	| manager topic path file loaded |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Path topic'.
+	topic := self newTopic: 'Path topic'.
 	path := (FileLocator temp / ('ab-path-test-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	manager addTopic: topic.
@@ -154,7 +154,7 @@ AbTopicManagerTest >> testRemoveTopic [
 
 	| manager topic |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Test topic'.
+	topic := self newTopic: 'Test topic'.
 	manager addTopic: topic.
 	manager removeTopic: topic.
 	self deny: (manager topics includes: topic)
@@ -165,7 +165,7 @@ AbTopicManagerTest >> testRemoveTopicStopsrelatedPackagesWatcher [
 
 	| manager topic |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Test topic'.
+	topic := self newTopic: 'Test topic'.
 	manager addTopic: topic.
 	topic startWatching.
 	self assert: topic relatedPackagesWatcher isWatching.
@@ -180,7 +180,7 @@ AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
 
 	| manager topic hasSubscription |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Test topic'.
+	topic := self newTopic: 'Test topic'.
 	manager addTopic: topic.
 	topic workingDirectory subscribeToSisServerImportEvents.
 	hasSubscription := SisServer current announcer subscriptions subscriptions
@@ -199,14 +199,14 @@ AbTopicManagerTest >> testSaveToAndLoadFromRoundTrip [
 
 	| manager topic file loaded |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Persisted topic'.
+	topic := self newTopic: 'Persisted topic'.
 	manager addTopic: topic.
 	file := FileReference newTempFilePrefix: 'ab-topics-test-' suffix: '.fuel'.
 	[
 	AbTopicManager saveTo: file manager: manager.
 	loaded := AbTopicManager loadFrom: file.
 	self assert: loaded topics size equals: 1.
-	self assert: loaded topics first title equals: 'Persisted topic'.
+	self assert: loaded topics first title equals: 'ab-test-Persisted topic'.
 	self assert: loaded topics first topicId equals: topic topicId.
 	self assert: (loaded instVarNamed: 'announcer') isNil ]
 		ensure: [ file ensureDelete ]
@@ -216,7 +216,7 @@ AbTopicManagerTest >> testSaveToAndLoadFromRoundTrip [
 AbTopicManagerTest >> testSessionClientIsNilAndSessionIdIsPreservedAfterFuelRoundTrip [
 
 	| topic session bytes materialized |
-	topic := AbTopic new title: 'Session round-trip'.
+	topic := self newTopic: 'Session round-trip'.
 	session := topic session.
 	"Simulate a connected state by manually setting non-nil stand-ins"
 	session client: 'fake-client'.
@@ -232,7 +232,7 @@ AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 
 	| manager topic path |
 	manager := AbTopicManager forTest.
-	topic := AbTopic new title: 'Path Lookup'.
+	topic := self newTopic: 'Path Lookup'.
 	path := (FileLocator temp / ('ab-topic-path-' , UUID new asString36)) fullName.
 	topic workingDirectoryPath: path.
 	manager addTopic: topic.
@@ -243,7 +243,7 @@ AbTopicManagerTest >> testTopicForWorkingDirectoryPath [
 AbTopicManagerTest >> testTopicLazyInstVarsAreNilAfterFuelRoundTrip [
 
 	| topic bytes materialized |
-	topic := AbTopic new title: 'Lazy instVars'.
+	topic := self newTopic: 'Lazy instVars'.
 	"Force-create the lazy instVars so they are non-nil before serialization"
 	topic announcer.
 	topic workingDirectory.
@@ -261,7 +261,7 @@ AbTopicManagerTest >> testTopicLazyInstVarsAreNilAfterFuelRoundTrip [
 AbTopicManagerTest >> testTopicStatusIsPreservedAfterFuelRoundTrip [
 
 	| topic bytes materialized |
-	topic := AbTopic new title: 'Status round-trip'.
+	topic := self newTopic: 'Status round-trip'.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #turnEnded.
 	self assert: topic status equals: #endTurn.

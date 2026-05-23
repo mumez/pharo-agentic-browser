@@ -23,6 +23,18 @@ AbTestCase >> tearDown [
 ]
 
 { #category : 'private' }
+AbTestCase >> newTopic [
+
+	^ self newTopic: 'unnamed'
+]
+
+{ #category : 'private' }
+AbTestCase >> newTopic: aString [
+
+	^ AbTopic new title: 'ab-test-' , aString
+]
+
+{ #category : 'private' }
 AbTestCase >> modelOptionWithCurrentValue: aString [
 
 	| modelOption |

@@ -28,7 +28,7 @@ AbTopicSessionTest >> mockSessionResultWithId: aSessionId [
 AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 
 	| topic session |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	self assert: session announcer equals: topic announcer
 ]
@@ -37,7 +37,7 @@ AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 AbTopicSessionTest >> testClearSessionIdClearsSessionId [
 
 	| topic session |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
 
@@ -59,7 +59,7 @@ AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
 AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
 
 	| topic session mockClient |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	mockClient := MockObject new.
 	mockClient on: #disconnect verify: [ ].
@@ -85,7 +85,7 @@ AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
 AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupported [
 
 	| topic session capabilities initializeResponse loadResult mockClient |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
 	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
@@ -127,7 +127,7 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupporte
 AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndLoadUnsupported [
 
 	| topic session capabilities initializeResponse newSessionResult mockClient |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
 	capabilities := ACPAgentCapabilities fromDictionary: Dictionary new.
@@ -163,7 +163,7 @@ AbTopicSessionTest >> testDoConnectWithClientFallsBackToNewSessionWhenResumeAndL
 AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersWhenMcpCapabilitiesPresent [
 
 	| topic session newSessionResult mockClient capturedMcpServers capabilities initializeResponse |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	newSessionResult := self mockSessionResultWithId: 'session-new'.
 	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
@@ -202,7 +202,7 @@ AbTopicSessionTest >> testDoConnectWithClientPassesMcpServersWhenMcpCapabilities
 AbTopicSessionTest >> testDoConnectWithClientSkipsMcpServersWhenMcpCapabilitiesAbsent [
 
 	| topic session newSessionResult mockClient capturedMcpServers |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	newSessionResult := self mockSessionResultWithId: 'session-new'.
 	mockClient := MockObject new.
@@ -236,7 +236,7 @@ AbTopicSessionTest >> testDoConnectWithClientSkipsMcpServersWhenMcpCapabilitiesA
 AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndResumeSupported [
 
 	| topic session capabilities initializeResponse resumeResult mockClient |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	session sessionId: 'session-1'.
 	capabilities := ACPAgentCapabilities fromDictionary: (Dictionary new
@@ -278,7 +278,7 @@ AbTopicSessionTest >> testDoConnectWithClientUsesResumeWhenSessionIdExistsAndRes
 AbTopicSessionTest >> testOnCreatesSessionWithTopicBackReference [
 
 	| topic session |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	self assert: session topic equals: topic
 ]
@@ -287,7 +287,7 @@ AbTopicSessionTest >> testOnCreatesSessionWithTopicBackReference [
 AbTopicSessionTest >> testOnInitializesTransientFields [
 
 	| topic session |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := AbTopicSession on: topic.
 	self assert: session sessionId isNil.
 	self assert: session currentModel isNil.
@@ -298,7 +298,7 @@ AbTopicSessionTest >> testOnInitializesTransientFields [
 AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 
 	| session topic commands |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	commands := OrderedCollection
 		with: (ACPAvailableCommand new rawValues: (Dictionary new
@@ -319,7 +319,7 @@ AbTopicSessionTest >> testUpdateAvailableCommandsStoresCommands [
 AbTopicSessionTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| session topic options modelOption |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	modelOption := ACPConfigOption new beModelCategory.
 	modelOption rawValues at: 'currentValue' put: 'claude-opus-4'.
@@ -334,7 +334,7 @@ AbTopicSessionTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 AbTopicSessionTest >> testUpdateConfigOptionsExtractsModeCurrentValue [
 
 	| session topic options |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	options := OrderedCollection with: (self modeOptionWithCurrentValue: 'ask').
 
@@ -347,7 +347,7 @@ AbTopicSessionTest >> testUpdateConfigOptionsExtractsModeCurrentValue [
 AbTopicSessionTest >> testSetConfigOptionIdValueCallsAcpClient [
 
 	| topic session mockClient result resultOptions |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	session sessionId: 'session-1'.
 	resultOptions := OrderedCollection with: (self modeOptionWithCurrentValue: 'code').
