@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbMessagesPresenterTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'presenter'
 	],
@@ -10,6 +10,8 @@ Class {
 
 { #category : 'running' }
 AbMessagesPresenterTest >> setUp [
+
+	super setUp.
 
 	presenter := AbMessagesPresenter new.
 	presenter initializePresenters

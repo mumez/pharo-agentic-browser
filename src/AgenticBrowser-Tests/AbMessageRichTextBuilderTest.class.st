@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbMessageRichTextBuilderTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'builder'
 	],
@@ -10,6 +10,8 @@ Class {
 
 { #category : 'running' }
 AbMessageRichTextBuilderTest >> setUp [
+
+	super setUp.
 
 	builder := AbMessageRichTextBuilder new
 ]

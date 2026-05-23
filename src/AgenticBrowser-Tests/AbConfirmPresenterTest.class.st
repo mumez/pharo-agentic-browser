@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbConfirmPresenterTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'presenter'
 	],

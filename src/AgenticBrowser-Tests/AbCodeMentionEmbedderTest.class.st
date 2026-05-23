@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbCodeMentionEmbedderTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }

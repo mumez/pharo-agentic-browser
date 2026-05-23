@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicPhase2Test',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }

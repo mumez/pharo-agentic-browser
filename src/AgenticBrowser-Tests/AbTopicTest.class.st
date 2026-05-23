@@ -1,12 +1,14 @@
 Class {
 	#name : 'AbTopicTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
 
 { #category : 'running' }
 AbTopicTest >> setUp [
+
+	super setUp.
 
 	AbSettings initialize
 ]
