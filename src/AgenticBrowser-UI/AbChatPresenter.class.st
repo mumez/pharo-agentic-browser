@@ -12,13 +12,11 @@ Class {
 		'statusBarPresenter',
 		'statusLabel',
 		'commandsDropList',
-		'isUpdatingCommands',
+		'isRefreshingDropdownItems',
 		'modelDropList',
 		'modelConfigId',
 		'modelOptions',
-		'isUpdatingModels',
 		'modeDropList',
-		'isUpdatingModes',
 		'modeOptions',
 		'modeConfigId'
 	],
@@ -41,9 +39,8 @@ AbChatPresenter >> commandNames [
 { #category : 'accessing' }
 AbChatPresenter >> commandNames: aCollection [
 
-	self isUpdatingCommands: true.
-	[ self commandsDropList items: aCollection asArray ] ensure: [
-		self isUpdatingCommands: false ]
+	self refreshDropdownItems: [
+		self commandsDropList items: aCollection asSortedCollection asArray ]
 ]
 
 { #category : 'accessing' }
@@ -78,15 +75,15 @@ AbChatPresenter >> connectPresenters [
 	normalInputPresenter cancelEnabled: false.
 	commandsDropList startWithoutSelection.
 	commandsDropList whenSelectedItemChangedDo: [ :cmd |
-		(cmd notNil and: [ self isUpdatingCommands not ]) ifTrue: [
+		(cmd notNil and: [ self isRefreshingDropdownItems not ]) ifTrue: [
 			normalInputPresenter inputField text: (self inputTextForCommand: cmd) ] ].
 	modelDropList startWithoutSelection.
 	modelDropList whenSelectedItemChangedDo: [ :modelName |
-		(modelName notNil and: [ self isUpdatingModels not ]) ifTrue: [
+		(modelName notNil and: [ self isRefreshingDropdownItems not ]) ifTrue: [
 			self onModelSelectedName: modelName ] ].
 	modeDropList startWithoutSelection.
 	modeDropList whenSelectedItemChangedDo: [ :modeName |
-		(modeName notNil and: [ self isUpdatingModes not ]) ifTrue: [
+		(modeName notNil and: [ self isRefreshingDropdownItems not ]) ifTrue: [
 			self onModeSelectedName: modeName ] ].
 	self updateDropListsEnabled: false
 ]
@@ -202,27 +199,9 @@ AbChatPresenter >> isFirstMessageInTopic [
 ]
 
 { #category : 'accessing' }
-AbChatPresenter >> isUpdatingCommands [
+AbChatPresenter >> isRefreshingDropdownItems [
 
-	^ isUpdatingCommands ifNil: [ false ]
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingCommands: aBoolean [
-
-	isUpdatingCommands := aBoolean
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingModes [
-
-	^ isUpdatingModes ifNil: [ false ]
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingModes: aBoolean [
-
-	isUpdatingModes := aBoolean
+	^ isRefreshingDropdownItems ifNil: [ false ]
 ]
 
 { #category : 'accessing' }
@@ -279,16 +258,11 @@ AbChatPresenter >> selectedModelName [
 	^ self modelDropList selectedItem
 ]
 
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingModels [
+{ #category : 'private' }
+AbChatPresenter >> refreshDropdownItems: aBlock [
 
-	^ isUpdatingModels ifNil: [ false ]
-]
-
-{ #category : 'accessing' }
-AbChatPresenter >> isUpdatingModels: aBoolean [
-
-	isUpdatingModels := aBoolean
+	[ isRefreshingDropdownItems := true.
+	aBlock value ] ensure: [ isRefreshingDropdownItems := false ]
 ]
 
 { #category : 'accessing' }
@@ -575,10 +549,9 @@ AbChatPresenter >> flattenedOptionsFrom: aCollection [
 { #category : 'private' }
 AbChatPresenter >> syncModelDropListEmpty [
 
-	self isUpdatingModels: true.
-	self modelDropList items: #('- model -').
-	self modelDropList selectIndex: 1.
-	self isUpdatingModels: false
+	self refreshDropdownItems: [
+		self modelDropList items: #('- model -').
+		self modelDropList selectIndex: 1 ]
 ]
 
 { #category : 'private' }
@@ -587,10 +560,9 @@ AbChatPresenter >> syncModelDropListFromTopic: aTopic [
 	| modelOption |
 	modelOption := aTopic ifNotNil: [ :t | t modelConfigOption ].
 	modelOption ifNil: [ ^ self syncModelDropListEmpty ].
-	self isUpdatingModels: true.
-	[ self modelConfigId: modelOption id.
-	self applyModelOption: modelOption ]
-		ensure: [ self isUpdatingModels: false ]
+	self refreshDropdownItems: [
+		self modelConfigId: modelOption id.
+		self applyModelOption: modelOption ]
 ]
 
 { #category : 'private' }
@@ -604,10 +576,9 @@ AbChatPresenter >> updateDropListsEnabled: aBoolean [
 { #category : 'private' }
 AbChatPresenter >> syncModeDropListEmpty [
 
-	self isUpdatingModes: true.
-	self modeDropList items: #('- mode -').
-	self modeDropList selectIndex: 1.
-	self isUpdatingModes: false
+	self refreshDropdownItems: [
+		self modeDropList items: #('- mode -').
+		self modeDropList selectIndex: 1 ]
 ]
 
 { #category : 'private' }
@@ -616,8 +587,7 @@ AbChatPresenter >> syncModeDropListFromTopic: aTopic [
 	| modeOption selectedMode |
 	modeOption := aTopic ifNotNil: [ :t | t modeConfigOption ].
 	modeOption ifNil: [ ^ self syncModeDropListEmpty ].
-	self isUpdatingModes: true.
-	[
+	self refreshDropdownItems: [
 		self modeConfigId: modeOption id.
 		self modeOptions: modeOption options.
 		self modeDropList items: (self modeOptions collect: [ :option | option name ]).
@@ -626,8 +596,7 @@ AbChatPresenter >> syncModeDropListFromTopic: aTopic [
 			                ifNone: [ nil ].
 		selectedMode
 			ifNil: [ self modeDropList startWithoutSelection ]
-			ifNotNil: [ self modeDropList selectItem: selectedMode name ]
-	] ensure: [ self isUpdatingModes: false ]
+			ifNotNil: [ self modeDropList selectItem: selectedMode name ] ]
 ]
 
 { #category : 'subscriptions' }
