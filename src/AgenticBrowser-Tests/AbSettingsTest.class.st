@@ -151,5 +151,38 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'aiPermissionTimeoutOption').
 	self assert: (dict includesKey: 'useDefaultMcpServers').
 	self assert: (dict includesKey: 'watcherMessageThrottleSeconds').
+	self assert: (dict includesKey: 'codingAgents').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsIsNotEmpty [
+
+	self assert: AbSettings default codingAgents notEmpty
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsContainsClaudeAgentAcp [
+
+	| agents |
+	agents := AbSettings default codingAgents.
+	self assert: (agents anySatisfy: [ :each | (each at: 'name') = 'claude-agent-acp' ])
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsEachHasNameAndCommand [
+
+	AbSettings default codingAgents do: [ :each |
+		self assert: (each includesKey: 'name').
+		self assert: (each includesKey: 'command') ]
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCodingAgentsSettable [
+
+	| settings custom |
+	settings := AbSettings defaultCopied.
+	custom := { Dictionary new at: 'name' put: 'my-agent'; at: 'command' put: #('my-agent'); yourself }.
+	settings codingAgents: custom.
+	self assert: ((settings codingAgents first) at: 'name') equals: 'my-agent'
 ]

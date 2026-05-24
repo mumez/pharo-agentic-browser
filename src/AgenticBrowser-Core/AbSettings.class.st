@@ -85,6 +85,18 @@ AbSettings >> saveFullTo: aFileReference [
 ]
 
 { #category : 'accessing' }
+AbSettings >> codingAgents [
+
+	^ self at: #codingAgents ifAbsent: [ self defaultCodingAgents ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> codingAgents: anArray [
+
+	self at: #codingAgents put: anArray
+]
+
+{ #category : 'accessing' }
 AbSettings >> aiPermissionWaitTimeoutSeconds [
 
 	^ self
@@ -144,6 +156,25 @@ AbSettings >> at: aKey put: aValue [
 AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultAiPermissionWaitTimeoutSeconds ].
 	^ 1800
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultCodingAgents [
+	self isDefault ifFalse: [ ^ self class default defaultCodingAgents ].
+	^ STONJSON fromString: self defaultCodingAgentsJsonString
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultCodingAgentsJsonString [
+	^ '
+[
+  {"name": "claude-agent-acp", "command": ["claude-agent-acp"]},
+  {"name": "Gemini CLI", "command": ["gemini", "--acp"]},
+  {"name": "OpenCode", "command": ["opencode", "acp"]},
+  {"name": "Copilot CLI", "command": ["copilot", "--acp", "--stdio"]},
+  {"name": "codex-acp", "command": ["codex-acp"]}
+]
+'
 ]
 
 { #category : 'defaults' }

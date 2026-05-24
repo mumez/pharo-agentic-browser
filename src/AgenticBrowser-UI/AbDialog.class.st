@@ -8,11 +8,6 @@ Class {
 { #category : 'private' }
 AbDialog >> agentOptions [
 
-	^ OrderedCollection new
-		  add: 'claude-agent-acp' -> #( 'claude-agent-acp' );
-		  add: 'Gemini CLI' -> #( 'gemini' '--acp' );
-		  add: 'OpenCode' -> #( 'opencode' 'acp' );
-		  add: 'Copilot CLI' -> #( 'copilot' '--acp' '--stdio' );
-		  add: 'codex-acp' -> #( 'codex-acp' );
-		  yourself
+	^ AbSettings default codingAgents collect: [ :each |
+		(each at: 'name') -> (each at: 'command') ]
 ]
