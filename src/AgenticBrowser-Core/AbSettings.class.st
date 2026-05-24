@@ -38,7 +38,7 @@ AbSettings class >> defaultFileReference [
 { #category : 'persistence' }
 AbSettings class >> fileName [
 
-	^ 'ab-settings.ston'
+	^ 'ab-settings.json'
 ]
 
 { #category : 'class initialization' }
@@ -58,9 +58,9 @@ AbSettings class >> load [
 AbSettings class >> loadFrom: aFileReference [
 
 	| dict settings |
-	dict := aFileReference readStreamDo: [ :stream | STON fromStream: stream ].
+	dict := STONJSON fromString: aFileReference contents.
 	settings := self new.
-	dict keysAndValuesDo: [ :k :v | settings at: k put: v ].
+	dict keysAndValuesDo: [ :k :v | settings perform: k asSymbol asMutator with: v ].
 	^ settings
 ]
 
@@ -81,9 +81,19 @@ AbSettings >> saveFullTo: aFileReference [
 
 	aFileReference parent ensureCreateDirectory.
 	aFileReference writeStreamDo: [ :stream |
-		(STONWriter on: stream)
-			prettyPrint: true;
-			nextPut: self asFullStonDictionary ]
+		stream nextPutAll: (STONJSON toStringPretty: self asFullJsonDictionary) ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> codingAgents [
+
+	^ self at: #codingAgents ifAbsent: [ self defaultCodingAgents ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> codingAgents: anArray [
+
+	self at: #codingAgents put: anArray
 ]
 
 { #category : 'accessing' }
@@ -103,9 +113,9 @@ AbSettings >> aiPermissionTimeoutOption [
 ]
 
 { #category : 'accessing' }
-AbSettings >> aiPermissionTimeoutOption: anOptionSymbol [
+AbSettings >> aiPermissionTimeoutOption: anOption [
 
-	self at: #aiPermissionTimeoutOption put: anOptionSymbol
+	self at: #aiPermissionTimeoutOption put: (anOption ifNotNil: [ anOption asSymbol ])
 ]
 
 { #category : 'accessing' }
@@ -115,7 +125,7 @@ AbSettings >> aiPermissionWaitTimeoutSeconds: anInteger [
 ]
 
 { #category : 'converting' }
-AbSettings >> asFullStonDictionary [
+AbSettings >> asFullJsonDictionary [
 	| selectors |
 	selectors := (self class selectorsInProtocol: 'accessing') select: [ :each | each isUnary ].
 	^ selectors inject: Dictionary new into: [:dic :each |
@@ -149,6 +159,25 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultCodingAgents [
+	self isDefault ifFalse: [ ^ self class default defaultCodingAgents ].
+	^ STONJSON fromString: self defaultCodingAgentsJsonString
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultCodingAgentsJsonString [
+	^ '
+[
+  {"name": "claude-agent-acp", "command": ["claude-agent-acp"]},
+  {"name": "Gemini CLI", "command": ["gemini", "--acp"]},
+  {"name": "OpenCode", "command": ["opencode", "acp"]},
+  {"name": "Copilot CLI", "command": ["copilot", "--acp", "--stdio"]},
+  {"name": "codex-acp", "command": ["codex-acp"]}
+]
+'
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultAiPermissionTimeoutOption [
 	self isDefault ifFalse: [ ^ self class default defaultAiPermissionTimeoutOption ].
 	^ AbConstants rejectOnce
@@ -173,9 +202,9 @@ AbSettings >> defaultUseDefaultMcpServers [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultWatcherMessageThrottleDuration [
-	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleDuration ].
-	^ 2 seconds
+AbSettings >> defaultWatcherMessageThrottleSeconds [
+	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleSeconds ].
+	^ 2
 ]
 
 { #category : 'accessing' }
@@ -195,9 +224,9 @@ AbSettings >> exportApprovalTimeoutOption [
 ]
 
 { #category : 'accessing' }
-AbSettings >> exportApprovalTimeoutOption: anOptionSymbol [
+AbSettings >> exportApprovalTimeoutOption: anOption [
 
-	self at: #exportApprovalTimeoutOption put: anOptionSymbol
+	self at: #exportApprovalTimeoutOption put: (anOption ifNotNil: [ anOption asSymbol ])
 ]
 
 { #category : 'accessing' }
@@ -254,15 +283,21 @@ AbSettings >> useDefaultMcpServers: aBoolean [
 ]
 
 { #category : 'accessing' }
-AbSettings >> watcherMessageThrottleDuration [
+AbSettings >> watcherMessageThrottleSeconds [
 
 	^ self
-		  at: #watcherMessageThrottleDuration
-		  ifAbsent: [ self defaultWatcherMessageThrottleDuration ]
+		  at: #watcherMessageThrottleSeconds
+		  ifAbsent: [ self defaultWatcherMessageThrottleSeconds ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> watcherMessageThrottleDuration: aDuration [
+AbSettings >> watcherMessageThrottleSeconds: anInteger [
 
-	self at: #watcherMessageThrottleDuration put: aDuration
+	self at: #watcherMessageThrottleSeconds put: anInteger
+]
+
+{ #category : 'accessing-convenient' }
+AbSettings >> watcherMessageThrottleDuration [
+
+	^ self watcherMessageThrottleSeconds seconds
 ]

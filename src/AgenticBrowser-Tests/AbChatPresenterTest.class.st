@@ -28,7 +28,7 @@ AbChatPresenterTest >> tearDown [
 AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	presenter onCancelButtonClicked.
@@ -46,7 +46,7 @@ AbChatPresenterTest >> testCancelButtonDisabledInitially [
 AbChatPresenterTest >> testCancelButtonDisabledWhenTopicEndTurn [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	presenter onTopicStatusChanged: topic status: #endTurn.
@@ -57,7 +57,7 @@ AbChatPresenterTest >> testCancelButtonDisabledWhenTopicEndTurn [
 AbChatPresenterTest >> testCancelButtonDisabledWhenTopicWaitingForHuman [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #waitingForHuman.
 	self deny: presenter normalInputPresenter isCancelEnabled
@@ -67,7 +67,7 @@ AbChatPresenterTest >> testCancelButtonDisabledWhenTopicWaitingForHuman [
 AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	self assert: presenter normalInputPresenter isCancelEnabled
@@ -91,7 +91,7 @@ AbChatPresenterTest >> testInputTextForCommandFormatsAsSlashCommand [
 AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
@@ -106,7 +106,7 @@ AbChatPresenterTest >> testConfirmApprovalExitsApprovalMode [
 AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic
 		                   addAiPermissionRequest: 'Pick an option'
@@ -123,7 +123,7 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic addAiPermissionRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
@@ -135,7 +135,7 @@ AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic addAiPermissionRequest: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
@@ -147,7 +147,7 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 AbChatPresenterTest >> testDenyApprovalUsesSecondOptionInTwoItemMode [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic
 		                   addAiPermissionRequest: 'Pick an option'
@@ -163,7 +163,7 @@ AbChatPresenterTest >> testDenyApprovalUsesSecondOptionInTwoItemMode [
 AbChatPresenterTest >> testDenyButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	approvalMessage := topic addAiPermissionRequest: 'Allow?'.
 	presenter enterApprovalMode: approvalMessage.
@@ -249,7 +249,7 @@ AbChatPresenterTest >> testDropListsDisabledInitially [
 AbChatPresenterTest >> testDropListsDisabledWhenTopicWorking [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	self deny: presenter commandsDropList isEnabled.
@@ -261,7 +261,7 @@ AbChatPresenterTest >> testDropListsDisabledWhenTopicWorking [
 AbChatPresenterTest >> testDropListsEnabledWhenTopicEndTurn [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #endTurn.
 	self assert: presenter commandsDropList isEnabled.
@@ -279,7 +279,7 @@ AbChatPresenterTest >> testModelNamesInitiallyEmpty [
 AbChatPresenterTest >> testModelNamesShowCurrentModelWhenTopicSet [
 
 	| topic options |
-	topic := AbTopic new.
+	topic := self newTopic.
 	options := OrderedCollection
 		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').
@@ -293,7 +293,7 @@ AbChatPresenterTest >> testModelNamesShowCurrentModelWhenTopicSet [
 AbChatPresenterTest >> testSelectingModelCallsSetConfigOption [
 
 	| topic session mockClient options result resultOptions |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	session sessionId: 'session-1'.
 	options := OrderedCollection
@@ -336,7 +336,7 @@ AbChatPresenterTest >> testModeNamesInitiallyEmpty [
 AbChatPresenterTest >> testModeNamesShowsCurrentModeWhenTopicSet [
 
 	| topic options |
-	topic := AbTopic new.
+	topic := self newTopic.
 	options := OrderedCollection
 		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').
@@ -350,7 +350,7 @@ AbChatPresenterTest >> testModeNamesShowsCurrentModeWhenTopicSet [
 AbChatPresenterTest >> testSelectingModeCallsSetConfigOption [
 
 	| topic session mockClient options result resultOptions |
-	topic := AbTopic new.
+	topic := self newTopic.
 	session := topic session.
 	session sessionId: 'session-1'.
 	options := OrderedCollection
@@ -417,7 +417,7 @@ AbChatPresenterTest >> testNormalInputHasCancelButton [
 AbChatPresenterTest >> testOnAvailableCommandsChangedDoesNotInsertIntoInputImmediately [
 
 	| topic commands |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter normalInputPresenter inputField text: 'keep'.
 	commands := OrderedCollection
@@ -430,7 +430,7 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedDoesNotInsertIntoInputImmed
 AbChatPresenterTest >> testOnAvailableCommandsChangedUpdatesInput [
 
 	| topic commands |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	commands := OrderedCollection
 		with: (ACPAvailableCommand new rawValues: (Dictionary new at: 'name' put: '/help'; at: 'description' put: 'Show help'; yourself))
@@ -443,7 +443,7 @@ AbChatPresenterTest >> testOnAvailableCommandsChangedUpdatesInput [
 AbChatPresenterTest >> testOnAvailableCommandsChangedWithEmptyListClearsCommands [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onAvailableCommandsChanged: topic commands: OrderedCollection new.
 	self assert: presenter commandNames isEmpty
@@ -479,7 +479,7 @@ AbChatPresenterTest >> testOnMessageAddedWithAiMessageUpdatesCount [
 AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelDropList [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')).
 	presenter topic: topic.
 	topic updateConfigOptions: (OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-opus-4-7')).
@@ -491,7 +491,7 @@ AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelDropList [
 AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter normalInputPresenter inputField text: 'explain @OrderedCollection'.
 	presenter onSendButtonClicked.
@@ -503,7 +503,7 @@ AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
 AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter normalInputPresenter inputField text: 'hello world'.
 	presenter onSendButtonClicked.
@@ -515,7 +515,7 @@ AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	presenter onTopicStatusChanged: topic status: #endTurn.
@@ -526,7 +526,7 @@ AbChatPresenterTest >> testStatusTextClearedWhenTopicEndTurn [
 AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	presenter onTopicStatusChanged: topic status: #waitingForHuman.
@@ -537,7 +537,7 @@ AbChatPresenterTest >> testStatusTextClearedWhenTopicWaitingForHuman [
 AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
@@ -549,7 +549,7 @@ AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
 	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
@@ -561,7 +561,7 @@ AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	self assert: presenter dotsAnimationProcess notNil
@@ -571,7 +571,7 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingStartsDotsAnimation [
 AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic stateMachine handleEvent: #promptSent.
 	presenter topic: topic.
 	self assert: presenter normalInputPresenter isCancelEnabled
@@ -581,7 +581,7 @@ AbChatPresenterTest >> testTopicWhenAlreadyWorkingSyncsCancelButton [
 AbChatPresenterTest >> testModelDropListShowsPlaceholderWhenTopicHasNoModelOption [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	self assert: presenter modelNames asArray equals: #( '- model -' ).
 	self assert: presenter selectedModelName equals: '- model -'
@@ -591,7 +591,7 @@ AbChatPresenterTest >> testModelDropListShowsPlaceholderWhenTopicHasNoModelOptio
 AbChatPresenterTest >> testModeDropListShowsPlaceholderWhenTopicHasNoModeOption [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	presenter topic: topic.
 	self assert: presenter modeNames asArray equals: #( '- mode -' ).
 	self assert: presenter selectedModeName equals: '- mode -'
@@ -601,7 +601,7 @@ AbChatPresenterTest >> testModeDropListShowsPlaceholderWhenTopicHasNoModeOption 
 AbChatPresenterTest >> testModelDropListRetainsSelectionWhenDisabled [
 
 	| topic options |
-	topic := AbTopic new.
+	topic := self newTopic.
 	options := OrderedCollection
 		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').
@@ -615,7 +615,7 @@ AbChatPresenterTest >> testModelDropListRetainsSelectionWhenDisabled [
 AbChatPresenterTest >> testModeDropListRetainsSelectionWhenDisabled [
 
 	| topic options |
-	topic := AbTopic new.
+	topic := self newTopic.
 	options := OrderedCollection
 		           with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')
 		           with: (self modeOptionWithCurrentValue: 'ask').

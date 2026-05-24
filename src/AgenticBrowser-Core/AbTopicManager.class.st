@@ -19,6 +19,12 @@ AbTopicManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
+{ #category : 'instance creation' }
+AbTopicManager class >> default: anInstance [
+
+	default := anInstance
+]
+
 { #category : 'persistence' }
 AbTopicManager class >> defaultFileReference [
 

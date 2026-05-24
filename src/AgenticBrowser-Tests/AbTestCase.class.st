@@ -19,7 +19,30 @@ AbTestCase >> tearDown [
 		dir := topic workingDirectory path.
 		(dir basename beginsWith: 'ab-test-') ifTrue: [
 			dir exists ifTrue: [ dir deleteAll ] ] ].
-	AbTopicManager forTest: nil
+	AbTopicManager forTest: nil.
+	self cleanupTestDirectories
+]
+
+{ #category : 'running' }
+AbTestCase >> cleanupTestDirectories [
+
+	| agenticBrowserDir |
+	agenticBrowserDir := AbSettings defaultAgenticBrowserRootDirectory.
+	agenticBrowserDir exists ifFalse: [ ^ self ].
+	agenticBrowserDir children do: [ :each |
+		(each basename beginsWith: 'ab-test-') ifTrue: [ each deleteAll ] ]
+]
+
+{ #category : 'private' }
+AbTestCase >> newTopic [
+
+	^ self newTopic: 'unnamed'
+]
+
+{ #category : 'private' }
+AbTestCase >> newTopic: aString [
+
+	^ AbTopic new title: 'ab-test-' , aString
 ]
 
 { #category : 'private' }

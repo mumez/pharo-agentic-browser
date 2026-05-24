@@ -100,7 +100,7 @@ The referenced class definition or method source is attached as ACP **text resou
 
 ---
 
-## 3. Queue-Based Package Change Processing in AbTopicRelatedPackagesWatcher
+## 3. Queue-Based Package Change Processing in AbTopicRelatedPackagesWatcher - DONE
 
 Replace the current `fork`-per-change approach with a `SharedQueue` + single worker process (producer-consumer pattern).
 

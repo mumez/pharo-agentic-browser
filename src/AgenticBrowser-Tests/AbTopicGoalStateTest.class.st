@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicGoalStateTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
@@ -9,7 +9,7 @@ Class {
 AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenFileAbsent [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic topicGoal description: 'all tests pass'.
 	self deny: topic checkGoalAchievement
 ]
@@ -18,7 +18,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenFileAbsent [
 AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenNoGoal [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	self deny: topic checkGoalAchievement
 ]
 
@@ -26,7 +26,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementReturnsFalseWhenNoGoal [
 AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFilePresent [
 
 	| topic resultFile |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic topicGoal description: 'all tests pass'.
 	topic stateMachine handleEvent: #promptSent.
 	resultFile := topic topicGoal resultFile.
@@ -44,7 +44,7 @@ AbTopicGoalStateTest >> testCheckGoalAchievementTransitionsToGoalAchievedWhenFil
 AbTopicGoalStateTest >> testGoalAchievedAnnouncementCarriesTopicAndGoal [
 
 	| ann topic goal |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	ann := AbTopicGoalAchieved new topic: topic; goal: goal; yourself.
 	self assert: ann topic == topic.
@@ -55,7 +55,7 @@ AbTopicGoalStateTest >> testGoalAchievedAnnouncementCarriesTopicAndGoal [
 AbTopicGoalStateTest >> testGoalAchievedStatusAnnouncementFired [
 
 	| topic announced |
-	topic := AbTopic new.
+	topic := self newTopic.
 	announced := false.
 	topic announcer
 		when: AbTopicStatusChanged
@@ -72,7 +72,7 @@ AbTopicGoalStateTest >> testGoalAchievedStatusAnnouncementFired [
 AbTopicGoalStateTest >> testGoalAchievedTransitionFromWorking [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #goalReached.
 	self assert: topic status equals: #goalAchieved
@@ -82,7 +82,7 @@ AbTopicGoalStateTest >> testGoalAchievedTransitionFromWorking [
 AbTopicGoalStateTest >> testGoalDescriptionCreatesAbTopicGoal [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic topicGoal description: 'all tests pass'.
 	self assert: (topic topicGoal isKindOf: AbTopicGoal).
 	self assert: topic topicGoal description equals: 'all tests pass'
@@ -92,7 +92,7 @@ AbTopicGoalStateTest >> testGoalDescriptionCreatesAbTopicGoal [
 AbTopicGoalStateTest >> testIsGoalAchievedPredicate [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	self deny: topic isGoalAchieved.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #goalReached.
@@ -103,7 +103,7 @@ AbTopicGoalStateTest >> testIsGoalAchievedPredicate [
 AbTopicGoalStateTest >> testResetFromGoalAchievedTransitionsToInitial [
 
 	| topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	topic stateMachine handleEvent: #promptSent.
 	topic stateMachine handleEvent: #goalReached.
 	topic resetFromGoalAchieved.

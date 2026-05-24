@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicRelatedPackagesWatcherTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#instVars : [
 		'topic',
 		'watcher'
@@ -11,6 +11,8 @@ Class {
 
 { #category : 'running' }
 AbTopicRelatedPackagesWatcherTest >> setUp [
+
+	super setUp.
 
 	topic := AbTopic new.
 	watcher := AbTopicRelatedPackagesWatcher forTopic: topic

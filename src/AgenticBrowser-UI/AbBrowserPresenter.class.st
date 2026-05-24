@@ -54,8 +54,25 @@ AbBrowserPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Agentic Browser';
-		initialExtent: 900 @ 600.
+		initialExtent: 900 @ 600;
+		menu: self buildMenuBar.
 	aWindowPresenter whenClosedDo: [ self onWindowClosed ]
+]
+
+{ #category : 'private' }
+AbBrowserPresenter >> buildMenuBar [
+	| menu |
+	menu := self newMenuBar.
+	menu addGroup: [ :group |
+		group addItem: [ :item |
+			item name: 'Settings…'.
+			item action: [ self openSettings ] ] ].
+	^ menu
+]
+
+{ #category : 'actions' }
+AbBrowserPresenter >> openSettings [
+	AbSettingsPresenter openOnDefault
 ]
 
 { #category : 'accessing' }

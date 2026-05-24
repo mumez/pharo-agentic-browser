@@ -1,12 +1,14 @@
 Class {
 	#name : 'AbSettingsTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
 
 { #category : 'running' }
 AbSettingsTest >> setUp [
+
+	super setUp.
 
 	AbSettings initialize
 ]
@@ -46,8 +48,8 @@ AbSettingsTest >> testDefaultCopiedDoesNotMutateDefault [
 
 	| copied |
 	copied := AbSettings defaultCopied.
-	copied watcherMessageThrottleDuration: 5 seconds.
-	self assert: AbSettings default watcherMessageThrottleDuration equals: 2 seconds
+	copied watcherMessageThrottleSeconds: 5.
+	self assert: AbSettings default watcherMessageThrottleSeconds equals: 2
 ]
 
 { #category : 'tests' }
@@ -102,16 +104,23 @@ AbSettingsTest >> testUseDefaultMcpServersSettable [
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testWatcherMessageThrottleDurationDefault [
+AbSettingsTest >> testWatcherMessageThrottleSecondsDefault [
 
-	self assert: AbSettings default watcherMessageThrottleDuration equals: 2 seconds
+	self assert: AbSettings default watcherMessageThrottleSeconds equals: 2
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testWatcherMessageThrottleDurationSettable [
+AbSettingsTest >> testWatcherMessageThrottleSecondsSettable [
 
-	AbSettings default watcherMessageThrottleDuration: 7 seconds.
-	self assert: AbSettings default watcherMessageThrottleDuration equals: 7 seconds
+	AbSettings default watcherMessageThrottleSeconds: 7.
+	self assert: AbSettings default watcherMessageThrottleSeconds equals: 7
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testWatcherMessageThrottleDurationDerivedFromSeconds [
+
+	AbSettings default watcherMessageThrottleSeconds: 5.
+	self assert: AbSettings default watcherMessageThrottleDuration equals: 5 seconds
 ]
 
 { #category : 'tests' }
@@ -132,14 +141,48 @@ AbSettingsTest >> testReadingValueDoesNotModifySettingsDict [
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testAsFullStonDictionaryContainsAllAccessingKeys [
+AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 
 	| dict |
-	dict := AbSettings default asFullStonDictionary.
+	dict := AbSettings default asFullJsonDictionary.
 	self assert: (dict includesKey: 'exportApprovalWaitTimeoutSeconds').
 	self assert: (dict includesKey: 'aiPermissionWaitTimeoutSeconds').
 	self assert: (dict includesKey: 'exportApprovalTimeoutOption').
 	self assert: (dict includesKey: 'aiPermissionTimeoutOption').
 	self assert: (dict includesKey: 'useDefaultMcpServers').
-	self assert: (dict includesKey: 'watcherMessageThrottleDuration')
+	self assert: (dict includesKey: 'watcherMessageThrottleSeconds').
+	self assert: (dict includesKey: 'codingAgents').
+	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsIsNotEmpty [
+
+	self assert: AbSettings default codingAgents notEmpty
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsContainsClaudeAgentAcp [
+
+	| agents |
+	agents := AbSettings default codingAgents.
+	self assert: (agents anySatisfy: [ :each | (each at: 'name') = 'claude-agent-acp' ])
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCodingAgentsEachHasNameAndCommand [
+
+	AbSettings default codingAgents do: [ :each |
+		self assert: (each includesKey: 'name').
+		self assert: (each includesKey: 'command') ]
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCodingAgentsSettable [
+
+	| settings custom |
+	settings := AbSettings defaultCopied.
+	custom := { Dictionary new at: 'name' put: 'my-agent'; at: 'command' put: #('my-agent'); yourself }.
+	settings codingAgents: custom.
+	self assert: ((settings codingAgents first) at: 'name') equals: 'my-agent'
 ]

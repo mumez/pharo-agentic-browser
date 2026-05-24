@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicGoalTest',
-	#superclass : 'TestCase',
+	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
@@ -9,7 +9,7 @@ Class {
 AbTopicGoalTest >> testCheckAchievementReturnsFalseWhenNoFile [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self deny: goal checkAchievement
@@ -19,7 +19,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsFalseWhenNoFile [
 AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsResultAndDeletesFile [
 
 	| goal topic resultFile |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	resultFile := goal resultFile.
@@ -38,7 +38,7 @@ AbTopicGoalTest >> testCheckAchievementReturnsTrueAndSetsResultAndDeletesFile [
 AbTopicGoalTest >> testDescriptionAccessor [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: goal description equals: 'all tests pass'
@@ -48,7 +48,7 @@ AbTopicGoalTest >> testDescriptionAccessor [
 AbTopicGoalTest >> testIsAchievedFalseByDefault [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	self deny: goal isAchieved
 ]
@@ -57,7 +57,7 @@ AbTopicGoalTest >> testIsAchievedFalseByDefault [
 AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
@@ -68,7 +68,7 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 AbTopicGoalTest >> testOnTopicCreatesInstance [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	self assert: (goal isKindOf: AbTopicGoal)
 ]
@@ -77,7 +77,7 @@ AbTopicGoalTest >> testOnTopicCreatesInstance [
 AbTopicGoalTest >> testResultFileBasenameMatchesTopicId [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	self assert: goal resultFileBasename equals: 'result-' , topic topicId , '.md'
 ]
@@ -86,7 +86,7 @@ AbTopicGoalTest >> testResultFileBasenameMatchesTopicId [
 AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 
 	| goal topic |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	self assert: goal resultFile parent = topic workingDirectory path.
 	self assert: goal resultFile basename equals: 'result-' , topic topicId , '.md'
@@ -96,7 +96,7 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 AbTopicGoalTest >> testwhenAchievedIsCalledAfterCheckAchievement [
 
 	| goal topic resultFile called |
-	topic := AbTopic new.
+	topic := self newTopic.
 	goal := AbTopicGoal on: topic.
 	goal description: 'done'.
 	called := false.

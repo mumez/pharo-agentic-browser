@@ -20,7 +20,7 @@ AbTopicListPresenterTest >> setUp [
 
 	super setUp.
 	self presenter: AbTopicListPresenter new.
-	self topic: (AbTopic new title: 'TestTopic').
+	self topic: (self newTopic: 'TestTopic').
 ]
 
 { #category : 'running' }
@@ -141,12 +141,10 @@ AbTopicListPresenterTest >> testOnSetWorkingDirectorySetsWorkingDirectoryPath [
 AbTopicListPresenterTest >> testSortedTopicsByLastUpdatedNewestFirst [
 
 	| older newer sorted |
-	older := AbTopic new.
-	older title: 'Older'.
+	older := self newTopic: 'Older'.
 	older addSystemMessage: 'first'.
 	(Delay forMilliseconds: 1) wait.
-	newer := AbTopic new.
-	newer title: 'Newer'.
+	newer := self newTopic: 'Newer'.
 	newer addSystemMessage: 'second'.
 	presenter sortMode: #lastUpdated.
 	sorted := presenter sortedTopics: {
@@ -160,10 +158,8 @@ AbTopicListPresenterTest >> testSortedTopicsByLastUpdatedNewestFirst [
 AbTopicListPresenterTest >> testSortedTopicsByTitle [
 
 	| alpha beta sorted |
-	alpha := AbTopic new.
-	alpha title: 'Alpha'.
-	beta := AbTopic new.
-	beta title: 'Beta'.
+	alpha := self newTopic: 'Alpha'.
+	beta := self newTopic: 'Beta'.
 	presenter sortMode: #title.
 	sorted := presenter sortedTopics: {
 			          beta.
@@ -176,17 +172,17 @@ AbTopicListPresenterTest >> testSortedTopicsByTitle [
 AbTopicListPresenterTest >> testTopicListLabelForIncludesAgentName [
 
 	topic agentArguments: #( 'opencode' ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (opencode)'.
+	self assert: (presenter topicListLabelFor: topic) equals: 'ab-test-TestTopic (opencode)'.
 
 	topic agentArguments: #( 'claude-agent-acp' ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic (claude-agent-acp)'
+	self assert: (presenter topicListLabelFor: topic) equals: 'ab-test-TestTopic (claude-agent-acp)'
 ]
 
 { #category : 'tests' }
 AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
 
 	topic agentArguments: #(  ).
-	self assert: (presenter topicListLabelFor: topic) equals: 'TestTopic'
+	self assert: (presenter topicListLabelFor: topic) equals: 'ab-test-TestTopic'
 ]
 
 { #category : 'accessing' }
