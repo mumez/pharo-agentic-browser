@@ -703,7 +703,7 @@ AbTopicTest >> testAcpRequestErrorTextFromAcpErrorWithCodeAndData [
 	topic := AbTopic new.
 	err := ACPRequestError code: -32600 message: 'bad request' data: 'extra detail'.
 	info := topic acpRequestErrorTextFrom: err.
-	self assert: info equals: 'bad request (code: -32600) (data: ''extra detail'')'
+	self assert: info equals: 'bad request (code: -32600) (data: extra detail)'
 ]
 
 { #category : 'tests' }

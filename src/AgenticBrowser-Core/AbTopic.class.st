@@ -566,13 +566,12 @@ AbTopic >> handlePromptError: errorInfo [
 { #category : 'private' }
 AbTopic >> acpRequestErrorTextFrom: anACPRequestError [
 
-	| text |
-	text := anACPRequestError messageText.
-	anACPRequestError code ifNotNil: [ :c |
-		text := '{1} (code: {2})' format: { text. c } ].
-	anACPRequestError data ifNotNil: [ :d |
-		text := '{1} (data: {2})' format: { text. d printString } ].
-	^ text
+	^ String streamContents: [ :strm |
+		strm << anACPRequestError messageText.
+		anACPRequestError code ifNotNil: [ :code |
+			strm << (' (code: {1})' format: { code }) ].
+		anACPRequestError data ifNotNil: [ :data |
+			strm << (' (data: {1})' format: { data }) ] ]
 ]
 
 { #category : 'private' }
