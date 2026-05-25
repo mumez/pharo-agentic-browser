@@ -28,6 +28,17 @@ AbSettingsPresenter class >> openOnDefault [
 	^ presenter
 ]
 
+{ #category : 'instance creation' }
+AbSettingsPresenter class >> openOnTopic: aTopic [
+	| settingsCopy presenter |
+	settingsCopy := AbSettings new initFrom: aTopic settings.
+	presenter := self on: settingsCopy.
+	presenter saveAction: [ :editedSettings |
+		aTopic settings: editedSettings ].
+	presenter open.
+	^ presenter
+]
+
 { #category : 'accessing' }
 AbSettingsPresenter >> settings [
 	^ self model

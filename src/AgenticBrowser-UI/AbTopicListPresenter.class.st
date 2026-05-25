@@ -50,6 +50,9 @@ AbTopicListPresenter >> buildTopicContextMenu [
 			  group
 				  addItem: [ :item | item name: 'Set Target Packages...'; enabled: notWorking; action: [ self onSetTargetPackagesRequest ] ];
 				  addItem: [ :item | item name: 'Apply Updated External Packages'; enabled: notWorking; action: [ self onApplyUpdatedExternalPackagesRequest ] ] ];
+		  addGroup: [ :group |
+			  group
+				  addItem: [ :item | item name: 'Edit Settings...'; action: [ self onEditSettingsRequest ] ] ];
 		  yourself
 ]
 
@@ -123,6 +126,15 @@ AbTopicListPresenter >> initializePresenters [
 AbTopicListPresenter >> newTopicButton [
 
 	^ newTopicButton
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onEditSettingsRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	AbSettingsPresenter openOnTopic: topic
 ]
 
 { #category : 'private' }

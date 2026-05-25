@@ -9,3 +9,7 @@ CLAUDE.local.md
 AGENTS.md
 opencode.json
 .worktrees/
+
+
+# APM dependencies
+apm_modules/
