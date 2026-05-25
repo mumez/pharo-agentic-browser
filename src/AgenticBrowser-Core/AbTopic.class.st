@@ -576,8 +576,17 @@ AbTopic >> errorInfoFrom: acpEx [
 { #category : 'private' }
 AbTopic >> doExecutePrompt: aString withResources: aCollection [
 
+	[[ self runPrompt: aString withResources: aCollection ]
+		on: NetworkError
+		do: [ :netEx | self handlePromptError: netEx description ] ]
+	on: ACPRequestError
+	do: [ :acpEx | self handlePromptError: (self errorInfoFrom: acpEx) ]
+]
+
+{ #category : 'private' }
+AbTopic >> runPrompt: aString withResources: aCollection [
+
 	| result |
-	[[
 	self session ensureConnected.
 	result := self client promptBy: [ :params |
 		params sessionId: self sessionId.
@@ -586,11 +595,7 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 			params resourcePrompt: assoc key text: assoc value ] ].
 	result stopReason = 'end_turn' ifTrue: [
 		self checkGoalAchievement ifFalse: [
-			self stateMachine handleEvent: #turnEnded ] ] ]
-		on: NetworkError
-		do: [ :netEx | self handlePromptError: netEx description ] ]
-	on: ACPRequestError
-	do: [ :acpEx | self handlePromptError: (self errorInfoFrom: acpEx) ]
+			self stateMachine handleEvent: #turnEnded ] ]
 ]
 
 { #category : 'private' }
