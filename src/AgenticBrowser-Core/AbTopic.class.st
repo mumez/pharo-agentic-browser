@@ -537,17 +537,7 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 	self messages add: msg.
 	self announceMessageAdded: msg.
 	self stateMachine handleEvent: #promptSent.
-	[
-	| result |
-	self session ensureConnected.
-		result := self client promptBy: [ :params |
-				  params sessionId: self sessionId.
-				  params textPrompt: aString.
-				  aCollection do: [ :assoc |
-				      params resourcePrompt: assoc key text: assoc value ] ].
-		result stopReason = 'end_turn' ifTrue: [
-			self checkGoalAchievement ifFalse: [
-				self stateMachine handleEvent: #turnEnded ] ] ] fork
+	self executePrompt: aString withResources: aCollection
 ]
 
 { #category : 'accessing' }
@@ -556,8 +546,57 @@ AbTopic >> session [
 ]
 
 { #category : 'accessing' }
+AbTopic >> session: aSession [
+	session := aSession
+]
+
+{ #category : 'accessing' }
 AbTopic >> sessionId [
 	^ self session sessionId
+]
+
+{ #category : 'private' }
+AbTopic >> handlePromptError: errorInfo [
+
+	self logger error: errorInfo.
+	self addSystemMessage: errorInfo.
+	self stateMachine handleEvent: #turnEnded
+]
+
+{ #category : 'private' }
+AbTopic >> errorInfoFrom: acpEx [
+
+	| info |
+	info := acpEx messageText.
+	acpEx code ifNotNil: [ :c | info := info , ' (code: ' , c printString , ')' ].
+	acpEx data ifNotNil: [ :d | info := info , ' (data: ' , d printString , ')' ].
+	^ info
+]
+
+{ #category : 'private' }
+AbTopic >> doExecutePrompt: aString withResources: aCollection [
+
+	| result |
+	[[
+	self session ensureConnected.
+	result := self client promptBy: [ :params |
+		params sessionId: self sessionId.
+		params textPrompt: aString.
+		aCollection do: [ :assoc |
+			params resourcePrompt: assoc key text: assoc value ] ].
+	result stopReason = 'end_turn' ifTrue: [
+		self checkGoalAchievement ifFalse: [
+			self stateMachine handleEvent: #turnEnded ] ] ]
+		on: NetworkError
+		do: [ :netEx | self handlePromptError: netEx description ] ]
+	on: ACPRequestError
+	do: [ :acpEx | self handlePromptError: (self errorInfoFrom: acpEx) ]
+]
+
+{ #category : 'private' }
+AbTopic >> executePrompt: aString withResources: aCollection [
+
+	[ self doExecutePrompt: aString withResources: aCollection ] fork
 ]
 
 { #category : 'accessing' }
