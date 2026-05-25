@@ -677,32 +677,32 @@ AbTopicTest >> testHandlePromptErrorTransitionsToEndTurn [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAcpErrorTextAcpErrorWithMessageTextOnly [
+AbTopicTest >> testAcpRequestErrorTextAcpErrorWithMessageTextOnly [
 
 	| topic err info |
 	topic := AbTopic new.
 	err := ACPRequestError new rpcMessage: 'invalid session'.
-	info := topic acpErrorText: err.
+	info := topic acpRequestErrorText: err.
 	self assert: info equals: 'invalid session'
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAcpErrorTextAcpErrorWithCode [
+AbTopicTest >> testAcpRequestErrorTextAcpErrorWithCode [
 
 	| topic err info |
 	topic := AbTopic new.
 	err := ACPRequestError code: -32600 message: 'bad request'.
-	info := topic acpErrorText: err.
+	info := topic acpRequestErrorText: err.
 	self assert: info equals: 'bad request (code: -32600)'
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testAcpErrorTextAcpErrorWithCodeAndData [
+AbTopicTest >> testAcpRequestErrorTextAcpErrorWithCodeAndData [
 
 	| topic err info |
 	topic := AbTopic new.
 	err := ACPRequestError code: -32600 message: 'bad request' data: 'extra detail'.
-	info := topic acpErrorText: err.
+	info := topic acpRequestErrorText: err.
 	self assert: info equals: 'bad request (code: -32600) (data: ''extra detail'')'
 ]
 

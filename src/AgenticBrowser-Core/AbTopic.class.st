@@ -564,12 +564,12 @@ AbTopic >> handlePromptError: errorInfo [
 ]
 
 { #category : 'private' }
-AbTopic >> acpErrorText: anAcpError [
+AbTopic >> acpRequestErrorText: anACPRequestError [
 
 	| text |
-	text := anAcpError messageText.
-	anAcpError code ifNotNil: [ :c | text := text , ' (code: ' , c printString , ')' ].
-	anAcpError data ifNotNil: [ :d | text := text , ' (data: ' , d printString , ')' ].
+	text := anACPRequestError messageText.
+	anACPRequestError code ifNotNil: [ :c | text := text , ' (code: ' , c printString , ')' ].
+	anACPRequestError data ifNotNil: [ :d | text := text , ' (data: ' , d printString , ')' ].
 	^ text
 ]
 
@@ -580,7 +580,7 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 		on: NetworkError
 		do: [ :netEx | self handlePromptError: netEx description ] ]
 	on: ACPRequestError
-	do: [ :acpEx | self handlePromptError: (self acpErrorText: acpEx) ]
+	do: [ :acpEx | self handlePromptError: (self acpRequestErrorText: acpEx) ]
 ]
 
 { #category : 'private' }
