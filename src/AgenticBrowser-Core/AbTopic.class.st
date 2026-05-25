@@ -576,7 +576,7 @@ AbTopic >> errorInfoFrom: acpEx [
 { #category : 'private' }
 AbTopic >> doExecutePrompt: aString withResources: aCollection [
 
-	[[ self runPrompt: aString withResources: aCollection ]
+	[[ self trySendPrompt: aString withResources: aCollection ]
 		on: NetworkError
 		do: [ :netEx | self handlePromptError: netEx description ] ]
 	on: ACPRequestError
@@ -584,7 +584,7 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 ]
 
 { #category : 'private' }
-AbTopic >> runPrompt: aString withResources: aCollection [
+AbTopic >> trySendPrompt: aString withResources: aCollection [
 
 	| result |
 	self session ensureConnected.
