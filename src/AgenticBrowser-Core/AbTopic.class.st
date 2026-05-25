@@ -556,11 +556,10 @@ AbTopic >> sessionId [
 ]
 
 { #category : 'private' }
-AbTopic >> handlePromptError: errorInfo [
+AbTopic >> addErrorSystemMessage: aString [
 
-	self logger error: errorInfo.
-	self addSystemMessage: errorInfo.
-	self stateMachine handleEvent: #turnEnded
+	self logger error: aString.
+	self addSystemMessage: aString
 ]
 
 { #category : 'private' }
@@ -579,9 +578,13 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 
 	[[ self trySendPrompt: aString withResources: aCollection ]
 		on: NetworkError
-		do: [ :netEx | self handlePromptError: netEx description ] ]
+		do: [ :netEx |
+			self addErrorSystemMessage: netEx description.
+			self stateMachine handleEvent: #turnEnded ] ]
 	on: ACPRequestError
-	do: [ :acpEx | self handlePromptError: (self acpRequestErrorTextFrom: acpEx) ]
+	do: [ :acpEx |
+		self addErrorSystemMessage: (self acpRequestErrorTextFrom: acpEx).
+		self stateMachine handleEvent: #turnEnded ]
 ]
 
 { #category : 'private' }

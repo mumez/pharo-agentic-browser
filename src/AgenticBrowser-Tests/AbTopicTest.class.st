@@ -655,25 +655,14 @@ AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testHandlePromptErrorAddsSystemMessage [
+AbTopicTest >> testAddErrorSystemMessageAddsSystemMessage [
 
 	| topic |
 	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic handlePromptError: 'something went wrong'.
+	topic addErrorSystemMessage: 'something went wrong'.
 	self assert: topic messages size equals: 1.
 	self assert: topic messages last sender equals: #system.
 	self assert: topic messages last text equals: 'something went wrong'
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testHandlePromptErrorTransitionsToEndTurn [
-
-	| topic |
-	topic := AbTopic new.
-	topic stateMachine handleEvent: #promptSent.
-	topic handlePromptError: 'oops'.
-	self assert: topic status equals: #endTurn
 ]
 
 { #category : 'tests' }
