@@ -491,7 +491,7 @@ AbChatPresenterTest >> testOnTopicCurrentModelChangedUpdatesModelDropList [
 AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
 
 	| topic |
-	topic := self newTopic.
+	topic := self newMockTopic: 'classMention'.
 	presenter topic: topic.
 	presenter normalInputPresenter inputField text: 'explain @OrderedCollection'.
 	presenter onSendButtonClicked.

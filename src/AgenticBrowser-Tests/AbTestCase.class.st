@@ -34,6 +34,18 @@ AbTestCase >> cleanupTestDirectories [
 ]
 
 { #category : 'private' }
+AbTestCase >> newMockTopic [
+
+	^ self newMockTopic: 'unnamed'
+]
+
+{ #category : 'private' }
+AbTestCase >> newMockTopic: aString [
+
+	^ AbMockTopicNoPromptSend new title: 'ab-test-' , aString
+]
+
+{ #category : 'private' }
 AbTestCase >> newTopic [
 
 	^ self newTopic: 'unnamed'
