@@ -188,11 +188,10 @@ Select a Pharo window and send its screenshot to the AI agent as an ACP **binary
 
 - Encode as PNG
 ```
-stream := ByteArray new writeStream.
-(PNGReadWriter on: stream)
-	nextPutImage: form;
-	close.
-bytes := stream contents.
-]
+"write PNG file"
+PNGReadWriter
+			putForm: form
+			onFileNamed: aFileRederence
 ```
 - Attach as ACP binary resource in the prompt
+  -　ACPContentBlock class >> resource:blob:mimeType:
