@@ -578,13 +578,23 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 
 	[[ self trySendPrompt: aString withResources: aCollection ]
 		on: NetworkError
-		do: [ :netEx |
-			self addErrorSystemMessage: netEx description.
-			self stateMachine handleEvent: #turnEnded ] ]
+		do: [ :netEx | self handleNetworkError: netEx ] ]
 	on: ACPRequestError
-	do: [ :acpEx |
-		self addErrorSystemMessage: (self acpRequestErrorTextFrom: acpEx).
-		self stateMachine handleEvent: #turnEnded ]
+	do: [ :acpEx | self handleAcpRequestError: acpEx ]
+]
+
+{ #category : 'private' }
+AbTopic >> handleNetworkError: aNetworkError [
+
+	self addErrorSystemMessage: aNetworkError description.
+	self stateMachine handleEvent: #turnEnded
+]
+
+{ #category : 'private' }
+AbTopic >> handleAcpRequestError: anACPRequestError [
+
+	self addErrorSystemMessage: (self acpRequestErrorTextFrom: anACPRequestError).
+	self stateMachine handleEvent: #turnEnded
 ]
 
 { #category : 'private' }
