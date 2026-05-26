@@ -503,7 +503,7 @@ AbChatPresenterTest >> testSendButtonWithClassMentionAddsMessage [
 AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 
 	| topic |
-	topic := self newTopic.
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithNoMentions'.
 	presenter topic: topic.
 	presenter normalInputPresenter inputField text: 'hello world'.
 	presenter onSendButtonClicked.
