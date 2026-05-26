@@ -185,5 +185,14 @@ Select a Pharo window and send its screenshot to the AI agent as an ACP **binary
 **Implementation sketch:**
 - Add a window-picker UI (list of open windows/morphs)
 - Capture via `Screenshot new formScreenshotFromUserSelection` or morph rendering
+
 - Encode as PNG
+```
+stream := ByteArray new writeStream.
+(PNGReadWriter on: stream)
+	nextPutImage: form;
+	close.
+bytes := stream contents.
+]
+```
 - Attach as ACP binary resource in the prompt
