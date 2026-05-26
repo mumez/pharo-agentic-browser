@@ -583,14 +583,14 @@ AbTopic >> doExecutePrompt: aString withResources: aCollection [
 	do: [ :acpEx | self handleAcpRequestError: acpEx ]
 ]
 
-{ #category : 'private' }
+{ #category : 'error handling' }
 AbTopic >> handleNetworkError: aNetworkError [
 
 	self addErrorSystemMessage: aNetworkError description.
 	self stateMachine handleEvent: #turnEnded
 ]
 
-{ #category : 'private' }
+{ #category : 'error handling' }
 AbTopic >> handleAcpRequestError: anACPRequestError [
 
 	self addErrorSystemMessage: (self acpRequestErrorTextFrom: anACPRequestError).
