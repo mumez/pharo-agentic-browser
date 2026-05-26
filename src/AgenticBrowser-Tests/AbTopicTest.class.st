@@ -655,6 +655,82 @@ AbTopicTest >> testUpdateAvailableCommandsStoresCommands [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testAddErrorSystemMessageAddsSystemMessage [
+
+	| topic |
+	topic := AbTopic new.
+	topic addErrorSystemMessage: 'something went wrong'.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #system.
+	self assert: topic messages last text equals: 'something went wrong'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAcpRequestErrorTextFromAcpErrorWithMessageTextOnly [
+
+	| topic err info |
+	topic := AbTopic new.
+	err := ACPRequestError new rpcMessage: 'invalid session'.
+	info := topic acpRequestErrorTextFrom: err.
+	self assert: info equals: 'invalid session'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAcpRequestErrorTextFromAcpErrorWithCode [
+
+	| topic err info |
+	topic := AbTopic new.
+	err := ACPRequestError code: -32600 message: 'bad request'.
+	info := topic acpRequestErrorTextFrom: err.
+	self assert: info equals: 'bad request (code: -32600)'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAcpRequestErrorTextFromAcpErrorWithCodeAndData [
+
+	| topic err info |
+	topic := AbTopic new.
+	err := ACPRequestError code: -32600 message: 'bad request' data: 'extra detail'.
+	info := topic acpRequestErrorTextFrom: err.
+	self assert: info equals: 'bad request (code: -32600) (data: extra detail)'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDoExecutePromptHandlesNetworkError [
+
+	| topic mockSession |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [ NetworkError signal: 'connection failed' ].
+	topic session: mockSession.
+	topic doExecutePrompt: 'hello' withResources: #().
+	self assert: topic status equals: #endTurn.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #system
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testDoExecutePromptHandlesAcpRequestError [
+
+	| topic mockSession mockClient |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockClient := MockObject new.
+	mockClient on: #promptBy: verify: [
+		(ACPRequestError code: -32600 message: 'agent error') signal ].
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [  ].
+	mockSession on: #client verify: [ mockClient ].
+	topic session: mockSession.
+	topic doExecutePrompt: 'hello' withResources: #().
+	self assert: topic status equals: #endTurn.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #system.
+	self assert: (topic messages last text includesSubstring: 'agent error')
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testUpdateConfigOptionsExtractsModelCurrentValue [
 
 	| topic options modelOption |

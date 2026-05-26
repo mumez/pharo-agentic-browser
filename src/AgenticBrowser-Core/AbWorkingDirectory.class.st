@@ -18,7 +18,7 @@ AbWorkingDirectory class >> forTopic: anAbTopic [
 		  yourself
 ]
 
-{ #category : 'operations' }
+{ #category : 'private' }
 AbWorkingDirectory >> beginImportFromSource [
 
 	self importNestingCount: self importNestingCount + 1
@@ -56,7 +56,7 @@ AbWorkingDirectory >> directoryName [
 	^ self safeTopicName , '-' , (topic topicId copyFrom: 1 to: 8)
 ]
 
-{ #category : 'operations' }
+{ #category : 'private' }
 AbWorkingDirectory >> endImportFromSource [
 
 	self importNestingCount: ((self importNestingCount - 1) max: 0)
@@ -162,17 +162,6 @@ AbWorkingDirectory >> srcDirectory: aString [
 	srcDirectory := aString
 ]
 
-{ #category : 'operations' }
-AbWorkingDirectory >> subscribeToSisServerImportEvents [
-
-	| server |
-	server := SisServer current.
-	server unsubscribe: self.
-	server
-		subscribeOnRequest: [ :ann | self handleSisRequestAnnouncement: ann ]
-		for: self
-]
-
 { #category : 'accessing' }
 AbWorkingDirectory >> topic [
 	^ topic
@@ -183,7 +172,18 @@ AbWorkingDirectory >> topic: anAbTopic [
 	topic := anAbTopic
 ]
 
-{ #category : 'operations' }
+{ #category : 'subscribing' }
+AbWorkingDirectory >> subscribeToSisServerImportEvents [
+
+	| server |
+	server := SisServer current.
+	server unsubscribe: self.
+	server
+		subscribeOnRequest: [ :ann | self handleSisRequestAnnouncement: ann ]
+		for: self
+]
+
+{ #category : 'subscribing' }
 AbWorkingDirectory >> unsubscribeFromSisServerImportEvents [
 
 	SisServer current unsubscribe: self
