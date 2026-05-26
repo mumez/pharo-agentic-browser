@@ -537,17 +537,7 @@ AbTopic >> sendPrompt: aString withResources: aCollection [
 	self messages add: msg.
 	self announceMessageAdded: msg.
 	self stateMachine handleEvent: #promptSent.
-	[
-	| result |
-	self session ensureConnected.
-		result := self client promptBy: [ :params |
-				  params sessionId: self sessionId.
-				  params textPrompt: aString.
-				  aCollection do: [ :assoc |
-				      params resourcePrompt: assoc key text: assoc value ] ].
-		result stopReason = 'end_turn' ifTrue: [
-			self checkGoalAchievement ifFalse: [
-				self stateMachine handleEvent: #turnEnded ] ] ] fork
+	self executePrompt: aString withResources: aCollection
 ]
 
 { #category : 'accessing' }
@@ -556,8 +546,76 @@ AbTopic >> session [
 ]
 
 { #category : 'accessing' }
+AbTopic >> session: aSession [
+	session := aSession
+]
+
+{ #category : 'accessing' }
 AbTopic >> sessionId [
 	^ self session sessionId
+]
+
+{ #category : 'private' }
+AbTopic >> addErrorSystemMessage: aString [
+
+	self logger error: aString.
+	self addSystemMessage: aString
+]
+
+{ #category : 'private' }
+AbTopic >> acpRequestErrorTextFrom: anACPRequestError [
+
+	^ String streamContents: [ :strm |
+		strm << anACPRequestError messageText.
+		anACPRequestError code ifNotNil: [ :code |
+			strm << (' (code: {1})' format: { code }) ].
+		anACPRequestError data ifNotNil: [ :data |
+			strm << (' (data: {1})' format: { data }) ] ]
+]
+
+{ #category : 'private' }
+AbTopic >> doExecutePrompt: aString withResources: aCollection [
+
+	[[ self trySendPrompt: aString withResources: aCollection ]
+		on: NetworkError
+		do: [ :netEx | self handleNetworkError: netEx ] ]
+	on: ACPRequestError
+	do: [ :acpEx | self handleAcpRequestError: acpEx ]
+]
+
+{ #category : 'error handling' }
+AbTopic >> handleNetworkError: aNetworkError [
+
+	self addErrorSystemMessage: aNetworkError description.
+	self stateMachine handleEvent: #turnEnded
+]
+
+{ #category : 'error handling' }
+AbTopic >> handleAcpRequestError: anACPRequestError [
+
+	self addErrorSystemMessage: (self acpRequestErrorTextFrom: anACPRequestError).
+	self stateMachine handleEvent: #turnEnded
+]
+
+{ #category : 'private' }
+AbTopic >> trySendPrompt: aString withResources: aCollection [
+
+	| result |
+	self session ensureConnected.
+	result := self client promptBy: [ :params |
+		params sessionId: self sessionId.
+		params textPrompt: aString.
+		aCollection do: [ :assoc |
+			params resourcePrompt: assoc key text: assoc value ] ].
+	result stopReason = 'end_turn' ifTrue: [
+		self checkGoalAchievement ifFalse: [
+			self stateMachine handleEvent: #turnEnded ] ]
+]
+
+{ #category : 'private' }
+AbTopic >> executePrompt: aString withResources: aCollection [
+
+	[ self doExecutePrompt: aString withResources: aCollection ] fork
 ]
 
 { #category : 'accessing' }
