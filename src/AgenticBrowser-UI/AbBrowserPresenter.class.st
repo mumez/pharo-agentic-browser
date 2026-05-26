@@ -65,8 +65,9 @@ AbBrowserPresenter >> buildMenuBar [
 	menu := self newMenuBar.
 	menu addGroup: [ :group |
 		group addItem: [ :item |
-			item name: 'Settings…'.
-			item action: [ self openSettings ] ] ].
+			item name: 'Settings…';
+			    icon: AbUiConstants gear;
+				action: [ self openSettings ] ] ].
 	^ menu
 ]
 
