@@ -56,7 +56,7 @@ AbChatPresenter >> confirmModeLayout [
 	^ SpBoxLayout newTopToBottom
 		  add: self messagesPresenter;
 		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 28 ];
 		  yourself
 ]
 
@@ -116,8 +116,8 @@ AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
 		  add: self messagesPresenter;
-		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: self normalInputPresenter withConstraints: [ :c | c height: 90 ];
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 28 ];
 		  yourself
 ]
 
