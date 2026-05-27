@@ -661,12 +661,13 @@ AbChatPresenterTest >> testSendWithoutScreenshotMentionHasNoImageResource [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testSendWithDeletedScreenshotMentionHasNoImageResource [
+AbChatPresenterTest >> testSendWithMissingFileScreenshotMentionHasNoImageResource [
 
-	| topic capturedResources |
+	| topic capturedResources fakeName |
 	topic := self newMockTopic.
 	presenter topic: topic.
-	presenter normalInputPresenter inputField text: 'no screenshot here'.
+	fakeName := '@sc-19000101-999.png'.
+	presenter normalInputPresenter inputField text: 'check this ' , fakeName.
 	capturedResources := nil.
 	topic onSendBlock: [ :txt :res | capturedResources := res ].
 	presenter onSendButtonClicked.
