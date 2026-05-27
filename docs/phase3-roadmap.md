@@ -176,7 +176,7 @@ Surface agent-side errors (rate limits, invalid params, connection failures) to 
 
 ---
 
-## 5. Screenshot Attachment
+## 5. Screenshot Attachment - DONE
 
 Select a Pharo window and send its screenshot to the AI agent as an ACP **binary resource**.
 
