@@ -2,9 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a screenshot button to the chat status bar that lets users capture a screen region, inserts a `[Screenshot-yyyymmdd-nnn]` tag into the input, and attaches the PNG to the prompt when sent.
+**Goal:** Add a screenshot button to the chat status bar that lets users capture a screen region, inserts a `@sc-yyyymmdd-nnn.png` mention into the input, and attaches the PNG to the prompt when sent.
 
-**Architecture:** `AbScreenshotAttachment` manages capture/save/load; `AbScreenshotParser` extracts tags from text; `AbChatPresenter` adds the button and wires the flow; `AbTopic >> trySendPrompt:withResources:` is extended to dispatch image resources via `ACPPromptParams >> imagePrompt:mimeType:`.
+**Architecture:** `AbScreenshotAttachment` manages capture/save/load; `AbScreenshotParser` extracts `@sc-` mentions from text; `AbChatPresenter` adds the button and wires the flow; `AbTopic >> trySendPrompt:withResources:` dispatches each resource via `resource applyToPromptParams: params` (double dispatch — no `isKindOf:` checks). `AbCodeMentionEmbedder` is refactored to return `AbCodeMentionResource` objects instead of raw `Association` so they participate in the same protocol.
+
+**Mention format:** `@sc-yyyymmdd-nnn.png` (e.g. `@sc-20260527-001.png`). Lowercase prefix avoids collision with `AbCodeMentionParser` which only processes `@` followed by an uppercase letter.
 
 **Tech Stack:** Pharo 13 Spec2 UI, PNGReadWriter, Screenshot (for region capture), ACPPromptParams (ACP library)
 
@@ -14,14 +16,17 @@
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `src/AgenticBrowser-Core/AbScreenshotAttachment.class.st` | Create | Directory, name generation, PNG save/load, base64 |
-| `src/AgenticBrowser-Core/AbScreenshotParser.class.st` | Create | Parse `[Screenshot-XXX]` tags from text |
-| `src/AgenticBrowser-Core/AbTopic.class.st` | Modify | Dispatch image vs text resources in `trySendPrompt:withResources:` |
+| `src/AgenticBrowser-Core/AbScreenshotAttachment.class.st` | Create | Directory, name generation, PNG save/load, base64, `applyToPromptParams:` |
+| `src/AgenticBrowser-Core/AbScreenshotParser.class.st` | Create | Parse `@sc-XXX.png` mentions from text |
+| `src/AgenticBrowser-Core/AbCodeMentionResource.class.st` | Create | Wraps url+text; implements `applyToPromptParams:` for text resources |
+| `src/AgenticBrowser-Core/AbCodeMentionEmbedder.class.st` | Modify | Return `AbCodeMentionResource` instead of `Association` |
+| `src/AgenticBrowser-Core/AbTopic.class.st` | Modify | Simplify `trySendPrompt:withResources:` to double-dispatch |
 | `src/AgenticBrowser-UI/AbChatPresenter.class.st` | Modify | Add `screenshotButton` instVar, button in status bar, click handler, updated `onSendButtonClicked` |
 | `src/AgenticBrowser-Tests/AbScreenshotAttachmentTest.class.st` | Create | Tests for name generation and PNG save/load |
-| `src/AgenticBrowser-Tests/AbScreenshotParserTest.class.st` | Create | Tests for tag parsing |
+| `src/AgenticBrowser-Tests/AbScreenshotParserTest.class.st` | Create | Tests for mention parsing |
+| `src/AgenticBrowser-Tests/AbCodeMentionEmbedderTest.class.st` | Modify | Update expectations from `Association` to `AbCodeMentionResource` |
 | `src/AgenticBrowser-Tests/AbChatPresenterTest.class.st` | Modify | Tests for button and screenshot resource collection |
-| `src/AgenticBrowser-Tests/AbTopicTest.class.st` | Modify | Test that `imagePrompt:mimeType:` is called for `AbScreenshotAttachment` resources |
+| `src/AgenticBrowser-Tests/AbTopicTest.class.st` | Modify | Test double-dispatch for both text and image resources |
 
 ---
 
@@ -48,20 +53,19 @@ AbScreenshotAttachmentTest >> testNameFormat [
 
 	| name |
 	name := AbScreenshotAttachment nextNameForDate: (Date year: 2026 month: 5 day: 27).
-	self assert: (name beginsWith: 'Screenshot-20260527-').
+	self assert: (name beginsWith: 'sc-20260527-').
 	self assert: (name endsWith: '001')
 ]
 
 { #category : 'tests' }
 AbScreenshotAttachmentTest >> testNextNameIncrementsSequence [
 
-	| dir date a1 a2 |
+	| date a1 nextName |
 	date := Date year: 2026 month: 5 day: 27.
-	dir := AbScreenshotAttachment screenshotDirectory.
-	dir ensureCreateDirectory.
+	AbScreenshotAttachment screenshotDirectory ensureCreateDirectory.
 	a1 := AbScreenshotAttachment saveForm: (Form extent: 2@2 depth: 32) forDate: date.
-	a2 := AbScreenshotAttachment nextNameForDate: date.
-	self assert: (a2 endsWith: '002').
+	nextName := AbScreenshotAttachment nextNameForDate: date.
+	self assert: (nextName endsWith: '002').
 	a1 fileReference delete
 ]
 
@@ -121,15 +125,15 @@ AbScreenshotAttachment class >> nextNameForDate: aDate [
 	dateString := aDate year printString
 		, (aDate month printString padded: #left to: 2 with: $0)
 		, (aDate dayOfMonth printString padded: #left to: 2 with: $0).
-	prefix := 'Screenshot-' , dateString , '-'.
+	prefix := 'sc-' , dateString , '-'.
 	existing := self screenshotDirectory exists
 		ifTrue: [
 			self screenshotDirectory fileNames
 				select: [ :n | (n beginsWith: prefix) and: [ n endsWith: '.png' ] ] ]
 		ifFalse: [ #() ].
-	maxSeq := existing inject: 0 into: [ :max :name |
+	maxSeq := existing inject: 0 into: [ :max :each |
 		| seqStr seq |
-		seqStr := name copyFrom: prefix size + 1 to: name size - 4.
+		seqStr := each copyFrom: prefix size + 1 to: each size - 4.
 		seq := seqStr asInteger ifNil: [ 0 ].
 		max max: seq ].
 	^ prefix , ((maxSeq + 1) printString padded: #left to: 3 with: $0)
@@ -138,13 +142,13 @@ AbScreenshotAttachment class >> nextNameForDate: aDate [
 { #category : 'factory' }
 AbScreenshotAttachment class >> saveForm: aForm forDate: aDate [
 
-	| name fileRef |
+	| attachmentName fileRef |
 	self screenshotDirectory ensureCreateDirectory.
-	name := self nextNameForDate: aDate.
-	fileRef := self screenshotDirectory / (name , '.png').
+	attachmentName := self nextNameForDate: aDate.
+	fileRef := self screenshotDirectory / (attachmentName , '.png').
 	PNGReadWriter putForm: aForm onFileNamed: fileRef fullName.
 	^ self new
-		name: name;
+		name: attachmentName;
 		fileReference: fileRef;
 		yourself
 ]
@@ -158,6 +162,15 @@ AbScreenshotAttachment class >> named: aString [
 		name: aString;
 		fileReference: fileRef;
 		yourself
+]
+
+{ #category : 'factory' }
+AbScreenshotAttachment class >> captureAndSave [
+
+	| form |
+	form := Screenshot new formScreenshotFromUserSelection.
+	form ifNil: [ ^ nil ].
+	^ self saveForm: form forDate: Date today
 ]
 
 { #category : 'accessing' }
@@ -185,9 +198,21 @@ AbScreenshotAttachment >> fileReference: aFileReference [
 ]
 
 { #category : 'accessing' }
+AbScreenshotAttachment >> mentionString [
+
+	^ '@' , name , '.png'
+]
+
+{ #category : 'accessing' }
 AbScreenshotAttachment >> base64PngString [
 
 	^ fileReference binaryReadStream contents base64Encoded
+]
+
+{ #category : 'prompt' }
+AbScreenshotAttachment >> applyToPromptParams: params [
+
+	params imagePrompt: self base64PngString mimeType: 'image/png'
 ]
 ```
 
@@ -205,7 +230,7 @@ git commit -m "feat: add AbScreenshotAttachment for PNG save/load and name gener
 
 ---
 
-## Task 2: AbScreenshotParser — parse [Screenshot-XXX] tags from text
+## Task 2: AbScreenshotParser — parse @sc-XXX.png mentions from text
 
 **Files:**
 - Create: `src/AgenticBrowser-Core/AbScreenshotParser.class.st`
@@ -235,28 +260,37 @@ AbScreenshotParserTest >> testParseNone [
 AbScreenshotParserTest >> testParseSingle [
 
 	| result |
-	result := AbScreenshotParser parseFrom: 'look at [Screenshot-20260527-001] please'.
+	result := AbScreenshotParser parseFrom: 'look at @sc-20260527-001.png please'.
 	self assert: result size equals: 1.
-	self assert: result first name equals: 'Screenshot-20260527-001'
+	self assert: result first name equals: 'sc-20260527-001'
 ]
 
 { #category : 'tests' }
 AbScreenshotParserTest >> testParseMultiple [
 
 	| result |
-	result := AbScreenshotParser parseFrom: '[Screenshot-20260527-001] and [Screenshot-20260527-002]'.
+	result := AbScreenshotParser parseFrom: '@sc-20260527-001.png and @sc-20260527-002.png'.
 	self assert: result size equals: 2.
-	self assert: result first name equals: 'Screenshot-20260527-001'.
-	self assert: result last name equals: 'Screenshot-20260527-002'
+	self assert: result first name equals: 'sc-20260527-001'.
+	self assert: result last name equals: 'sc-20260527-002'
 ]
 
 { #category : 'tests' }
-AbScreenshotParserTest >> testParseIgnoresNonScreenshotBrackets [
+AbScreenshotParserTest >> testParseIgnoresOtherMentions [
 
 	| result |
-	result := AbScreenshotParser parseFrom: '[something-else] and [Screenshot-20260527-001]'.
+	result := AbScreenshotParser parseFrom: '@SomeClass and @sc-20260527-001.png'.
 	self assert: result size equals: 1.
-	self assert: result first name equals: 'Screenshot-20260527-001'
+	self assert: result first name equals: 'sc-20260527-001'
+]
+
+{ #category : 'tests' }
+AbScreenshotParserTest >> testParseAtEndOfString [
+
+	| result |
+	result := AbScreenshotParser parseFrom: 'see @sc-20260527-001.png'.
+	self assert: result size equals: 1.
+	self assert: result first name equals: 'sc-20260527-001'
 ]
 ```
 
@@ -284,41 +318,189 @@ AbScreenshotParser class >> parseFrom: aString [
 	results := OrderedCollection new.
 	stream := ReadStream on: aString.
 	[ stream atEnd ] whileFalse: [
-		(stream next = $[ and: [ stream peek notNil ]) ifTrue: [
-			(self tryParseScreenshotFrom: stream) ifNotNil: [ :att | results add: att ] ] ].
+		stream next = $@ ifTrue: [
+			(self tryParseFrom: stream) ifNotNil: [ :att | results add: att ] ] ].
 	^ results
 ]
 
 { #category : 'private' }
-AbScreenshotParser class >> tryParseScreenshotFrom: stream [
+AbScreenshotParser class >> tryParseFrom: stream [
 
-	| saved token |
+	| saved token name |
 	saved := stream position.
 	token := String streamContents: [ :out |
-		[ stream atEnd or: [ stream peek = $] ] ] whileFalse: [ out nextPut: stream next ] ].
-	(stream atEnd not and: [ stream peek = $] ]) ifTrue: [ stream next ].
-	(token beginsWith: 'Screenshot-') ifFalse: [
+		[ stream atEnd or: [ stream peek isSeparator ] ] whileFalse: [
+			out nextPut: stream next ] ].
+	((token beginsWith: 'sc-') and: [ token endsWith: '.png' ]) ifFalse: [
 		stream position: saved.
 		^ nil ].
-	^ AbScreenshotAttachment named: token
+	name := token copyFrom: 1 to: token size - 4.
+	^ AbScreenshotAttachment named: name
 ]
 ```
 
 - [ ] **Step 2.4: Import and run tests**
 
 Use skill: `smalltalk-dev:st-import` then `smalltalk-dev:st-test` with `AbScreenshotParserTest`.
-Expected: all 4 tests pass.
+Expected: all 5 tests pass.
 
 - [ ] **Step 2.5: Commit**
 
 ```bash
 git add src/AgenticBrowser-Core/AbScreenshotParser.class.st src/AgenticBrowser-Tests/AbScreenshotParserTest.class.st
-git commit -m "feat: add AbScreenshotParser to extract screenshot tags from text"
+git commit -m "feat: add AbScreenshotParser to extract @sc- mentions from text"
 ```
 
 ---
 
-## Task 3: AbChatPresenter — screenshot button in status bar
+## Task 3: AbCodeMentionResource — introduce resource protocol, refactor AbCodeMentionEmbedder
+
+**Files:**
+- Create: `src/AgenticBrowser-Core/AbCodeMentionResource.class.st`
+- Modify: `src/AgenticBrowser-Core/AbCodeMentionEmbedder.class.st`
+- Modify: `src/AgenticBrowser-Tests/AbCodeMentionEmbedderTest.class.st`
+
+First, read the existing `AbCodeMentionEmbedderTest.class.st` to understand what assertions need updating.
+
+- [ ] **Step 3.1: Write failing test for AbCodeMentionResource**
+
+Add to `AbCodeMentionEmbedderTest` (or create a dedicated `AbCodeMentionResourceTest` if the file doesn't exist):
+
+```smalltalk
+{ #category : 'tests' }
+AbCodeMentionEmbedderTest >> testResourcesForReturnsAbCodeMentionResources [
+
+	| mentions resources |
+	mentions := AbCodeMentionParser parseFrom: '@OrderedCollection'.
+	resources := AbCodeMentionEmbedder resourcesFor: mentions.
+	self assert: resources size equals: 1.
+	self assert: (resources first isKindOf: AbCodeMentionResource)
+]
+```
+
+- [ ] **Step 3.2: Run test to confirm it fails**
+
+Use skill: `smalltalk-dev:st-test` with the relevant test class.
+Expected: `resources first` is an `Association`, not `AbCodeMentionResource`.
+
+- [ ] **Step 3.3: Implement AbCodeMentionResource**
+
+Create `src/AgenticBrowser-Core/AbCodeMentionResource.class.st`:
+
+```smalltalk
+Class {
+	#name : 'AbCodeMentionResource',
+	#superclass : 'Object',
+	#instVars : [
+		'uri',
+		'text'
+	],
+	#category : 'AgenticBrowser-Core',
+	#package : 'AgenticBrowser-Core'
+}
+
+{ #category : 'factory' }
+AbCodeMentionResource class >> uri: aUriString text: aTextString [
+
+	^ self new
+		uri: aUriString;
+		text: aTextString;
+		yourself
+]
+
+{ #category : 'accessing' }
+AbCodeMentionResource >> uri [
+
+	^ uri
+]
+
+{ #category : 'accessing' }
+AbCodeMentionResource >> uri: aString [
+
+	uri := aString
+]
+
+{ #category : 'accessing' }
+AbCodeMentionResource >> text [
+
+	^ text
+]
+
+{ #category : 'accessing' }
+AbCodeMentionResource >> text: aString [
+
+	text := aString
+]
+
+{ #category : 'prompt' }
+AbCodeMentionResource >> applyToPromptParams: params [
+
+	params resourcePrompt: uri text: text
+]
+```
+
+- [ ] **Step 3.4: Update AbCodeMentionEmbedder to return AbCodeMentionResource**
+
+Read `src/AgenticBrowser-Core/AbCodeMentionEmbedder.class.st` first, then replace the two private methods:
+
+```smalltalk
+{ #category : 'private' }
+AbCodeMentionEmbedder class >> classResourceFor: mention [
+
+	| className cls url tonel |
+	className := mention className.
+	cls := Smalltalk globals at: className asSymbol.
+	url := '{1}/get-class-source?class_name={2}' format: { self mcpBaseUrl. className }.
+	tonel := TonelWriter sourceCodeOf: cls.
+	^ AbCodeMentionResource uri: url text: tonel
+]
+
+{ #category : 'private' }
+AbCodeMentionEmbedder class >> methodResourceFor: mention [
+
+	| className methodName isClassSide cls url tonel |
+	className := mention className.
+	methodName := mention methodName.
+	isClassSide := mention isClassSide.
+	cls := Smalltalk globals at: className asSymbol.
+	isClassSide ifTrue: [ cls := cls class ].
+	url := '{1}/get-method-source?class_name={2}&method_name={3}&is_class_method={4}' format: { self mcpBaseUrl. className. methodName. isClassSide printString }.
+	tonel := String streamContents: [ :str |
+		TonelWriter new
+			writeMethodDefinition: ((cls >> methodName asSymbol) asMCMethodDefinition)
+			on: str ].
+	^ AbCodeMentionResource uri: url text: tonel
+]
+```
+
+- [ ] **Step 3.5: Update existing tests that assert on Association**
+
+Read `AbCodeMentionEmbedderTest.class.st` and update any test that checks `resource key` or `resource value` (Association API) to use `resource uri` or `resource text` instead.
+
+Example: if a test has:
+```smalltalk
+self assert: resources first key equals: '...'
+```
+Change to:
+```smalltalk
+self assert: resources first uri equals: '...'
+```
+
+- [ ] **Step 3.6: Import and run tests**
+
+Use skill: `smalltalk-dev:st-import` (AgenticBrowser-Core then AgenticBrowser-Tests) then `smalltalk-dev:st-test` with `AbCodeMentionEmbedderTest`.
+Expected: all tests pass.
+
+- [ ] **Step 3.7: Commit**
+
+```bash
+git add src/AgenticBrowser-Core/AbCodeMentionResource.class.st src/AgenticBrowser-Core/AbCodeMentionEmbedder.class.st src/AgenticBrowser-Tests/AbCodeMentionEmbedderTest.class.st
+git commit -m "refactor: introduce AbCodeMentionResource with applyToPromptParams: protocol"
+```
+
+---
+
+## Task 4: AbChatPresenter — screenshot button in status bar  <!-- was Task 3 -->
 
 **Files:**
 - Modify: `src/AgenticBrowser-UI/AbChatPresenter.class.st`
@@ -343,7 +525,7 @@ Expected: `doesNotUnderstand: #screenshotButton`.
 
 - [ ] **Step 3.3: Add screenshotButton instVar and update initializeStatusBar**
 
-In `AbChatPresenter.class.st`, update the class definition to add `screenshotButton` to `instVars`:
+In `AbChatPresenter.class.st`, add `screenshotButton` to `instVars`:
 
 ```smalltalk
 Class {
@@ -374,7 +556,7 @@ Class {
 }
 ```
 
-Replace `initializeStatusBar` (the method in the `initialization` category):
+Replace `initializeStatusBar`:
 
 ```smalltalk
 { #category : 'initialization' }
@@ -401,7 +583,7 @@ AbChatPresenter >> initializeStatusBar [
 ]
 ```
 
-Add accessor method (in `accessing` category):
+Add accessor (in `accessing` category):
 
 ```smalltalk
 { #category : 'accessing' }
@@ -425,29 +607,14 @@ git commit -m "feat: add screenshot button to chat status bar"
 
 ---
 
-## Task 4: AbChatPresenter — onScreenshotButtonClicked handler
+## Task 5: AbChatPresenter — onScreenshotButtonClicked handler  <!-- was Task 4 -->
 
 **Files:**
 - Modify: `src/AgenticBrowser-UI/AbChatPresenter.class.st`
 
-The actual screen capture (`Screenshot new formScreenshotFromUserSelection`) requires user interaction and cannot be unit tested. The method delegates capture to `AbScreenshotAttachment captureAndSave` (added in step below), and the insertion uses existing `insertMention:`.
+The actual screen capture (`Screenshot new formScreenshotFromUserSelection`) requires user interaction and cannot be unit tested directly. The method delegates to `AbScreenshotAttachment captureAndSave` (already defined in Task 1) and inserts the mention via `insertMention:`.
 
-- [ ] **Step 4.1: Add captureAndSave to AbScreenshotAttachment**
-
-Add to `AbScreenshotAttachment.class.st` (in `factory` category):
-
-```smalltalk
-{ #category : 'factory' }
-AbScreenshotAttachment class >> captureAndSave [
-
-	| form |
-	form := Screenshot new formScreenshotFromUserSelection.
-	form ifNil: [ ^ nil ].
-	^ self saveForm: form forDate: Date today
-]
-```
-
-- [ ] **Step 4.2: Add onScreenshotButtonClicked to AbChatPresenter**
+- [ ] **Step 4.1: Add onScreenshotButtonClicked to AbChatPresenter**
 
 Add in `event handling` category:
 
@@ -458,57 +625,55 @@ AbChatPresenter >> onScreenshotButtonClicked [
 	| attachment |
 	attachment := AbScreenshotAttachment captureAndSave.
 	attachment ifNil: [ ^ self ].
-	self normalInputPresenter insertMention: '[' , attachment name , ']'
+	self normalInputPresenter insertMention: attachment mentionString
 ]
 ```
 
-- [ ] **Step 4.3: Import and smoke test manually**
+- [ ] **Step 4.2: Import and smoke test manually**
 
 Use skill: `smalltalk-dev:st-import` (AgenticBrowser-Core then AgenticBrowser-UI).
 
-Open the browser:
 ```smalltalk
 AbBrowserPresenter open
 ```
 
-Use skill: `smalltalk-dev:st-eval` to run `AbBrowserPresenter open`, then `smalltalk-dev:st-eval` to run `mcp__smalltalk-interop__read_screen` to verify the button appears in the status bar.
-Expected: boxSelection icon button is visible to the right of the mode dropdown.
+Use `mcp__smalltalk-interop__read_screen` to verify the boxSelection icon button is visible to the right of the mode dropdown in the status bar.
 
 Then close:
 ```smalltalk
 AbBrowserPresenter allInstances do: [:e | e window close]
 ```
 
-- [ ] **Step 4.4: Commit**
+- [ ] **Step 4.3: Commit**
 
 ```bash
-git add src/AgenticBrowser-Core/AbScreenshotAttachment.class.st src/AgenticBrowser-UI/AbChatPresenter.class.st
+git add src/AgenticBrowser-UI/AbChatPresenter.class.st
 git commit -m "feat: implement screenshot capture button click handler"
 ```
 
 ---
 
-## Task 5: AbChatPresenter — collect screenshot resources on send
+## Task 6: AbChatPresenter — collect screenshot resources on send  <!-- was Task 5 -->
 
 **Files:**
 - Modify: `src/AgenticBrowser-UI/AbChatPresenter.class.st`
 - Modify: `src/AgenticBrowser-Tests/AbChatPresenterTest.class.st`
+- Modify: `src/AgenticBrowser-Tests/AbMockTopicNoPromptSend.class.st`
 
-- [ ] **Step 5.1: Write failing test**
+- [ ] **Step 5.1: Write failing tests**
 
 Add to `AbChatPresenterTest`:
 
 ```smalltalk
 { #category : 'tests' }
-AbChatPresenterTest >> testSendWithScreenshotTagAddsImageResource [
+AbChatPresenterTest >> testSendWithScreenshotMentionAddsImageResource [
 
 	| topic capturedResources form attachment |
 	topic := self newMockTopic.
 	presenter topic: topic.
 	form := Form extent: 2@2 depth: 32.
 	attachment := AbScreenshotAttachment saveForm: form forDate: (Date year: 2026 month: 5 day: 27).
-	presenter normalInputPresenter inputField
-		text: 'check this [' , attachment name , ']'.
+	presenter normalInputPresenter inputField text: 'check this ' , attachment mentionString.
 	capturedResources := nil.
 	topic onSendBlock: [ :text :resources | capturedResources := resources ].
 	presenter onSendButtonClicked.
@@ -517,7 +682,7 @@ AbChatPresenterTest >> testSendWithScreenshotTagAddsImageResource [
 ]
 
 { #category : 'tests' }
-AbChatPresenterTest >> testSendWithoutScreenshotTagHasNoImageResource [
+AbChatPresenterTest >> testSendWithoutScreenshotMentionHasNoImageResource [
 
 	| topic capturedResources |
 	topic := self newMockTopic.
@@ -530,21 +695,9 @@ AbChatPresenterTest >> testSendWithoutScreenshotTagHasNoImageResource [
 ]
 ```
 
-Note: these tests require `AbMockTopicNoPromptSend` to support `onSendBlock:`. Add that support:
-
-In `src/AgenticBrowser-Tests/AbMockTopicNoPromptSend.class.st`, add an `onSendBlock:` setter and override `sendPrompt:withResources:` to call it:
+Read the existing `src/AgenticBrowser-Tests/AbMockTopicNoPromptSend.class.st` first, then add `sendBlock` instVar and these two methods without removing existing content:
 
 ```smalltalk
-Class {
-	#name : 'AbMockTopicNoPromptSend',
-	#superclass : 'AbTopic',
-	#instVars : [
-		'sendBlock'
-	],
-	#category : 'AgenticBrowser-Tests',
-	#package : 'AgenticBrowser-Tests'
-}
-
 { #category : 'accessing' }
 AbMockTopicNoPromptSend >> onSendBlock: aBlock [
 
@@ -559,14 +712,12 @@ AbMockTopicNoPromptSend >> sendPrompt: aString withResources: aCollection [
 ]
 ```
 
-(Read the existing `AbMockTopicNoPromptSend.class.st` first to ensure you add these methods without losing existing content.)
-
 - [ ] **Step 5.2: Run tests to confirm they fail**
 
 Use skill: `smalltalk-dev:st-import` (AgenticBrowser-Tests) then `smalltalk-dev:st-test` with `AbChatPresenterTest`.
 Expected: new tests fail with `doesNotUnderstand: #onSendBlock:`.
 
-- [ ] **Step 5.3: Update onSendButtonClicked to collect screenshot resources**
+- [ ] **Step 5.3: Update onSendButtonClicked**
 
 Replace `onSendButtonClicked` in `AbChatPresenter.class.st`:
 
@@ -593,7 +744,7 @@ AbChatPresenter >> onSendButtonClicked [
 - [ ] **Step 5.4: Import and run tests**
 
 Use skill: `smalltalk-dev:st-import` (all packages) then `smalltalk-dev:st-test` with `AbChatPresenterTest`.
-Expected: all tests including new ones pass.
+Expected: all tests pass.
 
 - [ ] **Step 5.5: Commit**
 
@@ -604,13 +755,13 @@ git commit -m "feat: collect screenshot attachments from input text on send"
 
 ---
 
-## Task 6: AbTopic — dispatch image resources via imagePrompt:mimeType:
+## Task 7: AbTopic — simplify trySendPrompt:withResources: via double dispatch  <!-- was Task 6 -->
 
 **Files:**
 - Modify: `src/AgenticBrowser-Core/AbTopic.class.st`
 - Modify: `src/AgenticBrowser-Tests/AbTopicTest.class.st`
 
-- [ ] **Step 6.1: Write failing test**
+- [ ] **Step 7.1: Write failing tests**
 
 Add to `AbTopicTest.class.st`:
 
@@ -618,7 +769,7 @@ Add to `AbTopicTest.class.st`:
 { #category : 'tests' }
 AbTopicTest >> testSendWithImageResourceCallsImagePrompt [
 
-	| topic mockSession mockClient imagePromptBase64 imagePromptMime form attachment |
+	| topic mockSession mockClient promptEntries form attachment |
 	topic := AbTopic new.
 	topic stateMachine handleEvent: #promptSent.
 	mockClient := MockObject new.
@@ -628,7 +779,7 @@ AbTopicTest >> testSendWithImageResourceCallsImagePrompt [
 			| params |
 			params := ACPPromptParams new.
 			block value: params.
-			imagePromptBase64 := params rawValues at: 'prompt' ifAbsent: [ #() ].
+			promptEntries := params rawValues at: 'prompt' ifAbsent: [ #() ].
 			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ].
 	mockSession := MockObject new.
 	mockSession on: #ensureConnected verify: [  ].
@@ -637,18 +788,43 @@ AbTopicTest >> testSendWithImageResourceCallsImagePrompt [
 	form := Form extent: 2@2 depth: 32.
 	attachment := AbScreenshotAttachment saveForm: form forDate: (Date year: 2026 month: 5 day: 27).
 	topic doExecutePrompt: 'hello' withResources: (OrderedCollection with: attachment).
-	self assert: (imagePromptBase64 anySatisfy: [ :entry |
+	self assert: (promptEntries anySatisfy: [ :entry |
 		(entry at: 'type' ifAbsent: [ '' ]) = 'image' ]).
 	attachment fileReference delete
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendWithTextResourceCallsResourcePrompt [
+
+	| topic mockSession mockClient promptEntries resource |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockClient := MockObject new.
+	mockClient
+		on: #promptBy:
+		verify: [ :block |
+			| params |
+			params := ACPPromptParams new.
+			block value: params.
+			promptEntries := params rawValues at: 'prompt' ifAbsent: [ #() ].
+			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ].
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [  ].
+	mockSession on: #client verify: [ mockClient ].
+	topic session: mockSession.
+	resource := AbCodeMentionResource uri: 'http://example/foo' text: 'source'.
+	topic doExecutePrompt: 'hello' withResources: (OrderedCollection with: resource).
+	self assert: (promptEntries anySatisfy: [ :entry |
+		(entry at: 'type' ifAbsent: [ '' ]) = 'resource' ]).
+]
 ```
 
-- [ ] **Step 6.2: Run test to confirm it fails**
+- [ ] **Step 7.2: Run tests to confirm they fail**
 
-Use skill: `smalltalk-dev:st-test` with `AbTopicTest >> testSendWithImageResourceCallsImagePrompt`.
-Expected: test fails because no image entry is in the prompt array (only text).
+Use skill: `smalltalk-dev:st-test` with the two new tests.
+Expected: both fail — `trySendPrompt:withResources:` still uses `isKindOf:` and `resource key`.
 
-- [ ] **Step 6.3: Update trySendPrompt:withResources: to dispatch image resources**
+- [ ] **Step 7.3: Simplify trySendPrompt:withResources: to double dispatch**
 
 Replace `trySendPrompt:withResources:` in `AbTopic.class.st`:
 
@@ -661,52 +837,47 @@ AbTopic >> trySendPrompt: aString withResources: aCollection [
 	result := self client promptBy: [ :params |
 		params sessionId: self sessionId.
 		params textPrompt: aString.
-		aCollection do: [ :resource |
-			(resource isKindOf: AbScreenshotAttachment)
-				ifTrue: [ params imagePrompt: resource base64PngString mimeType: 'image/png' ]
-				ifFalse: [ params resourcePrompt: resource key text: resource value ] ] ].
+		aCollection do: [ :resource | resource applyToPromptParams: params ] ].
 	result stopReason = 'end_turn' ifTrue: [
 		self checkGoalAchievement ifFalse: [
 			self stateMachine handleEvent: #turnEnded ] ]
 ]
 ```
 
-- [ ] **Step 6.4: Import and run all tests**
+- [ ] **Step 7.4: Import and run all tests**
 
 Use skill: `smalltalk-dev:st-import` (AgenticBrowser-Core) then `smalltalk-dev:st-test` with package `AgenticBrowser-Tests`.
-Expected: all tests pass including the new image resource test.
+Expected: all tests pass.
 
-- [ ] **Step 6.5: Commit**
+- [ ] **Step 7.5: Commit**
 
 ```bash
 git add src/AgenticBrowser-Core/AbTopic.class.st src/AgenticBrowser-Tests/AbTopicTest.class.st
-git commit -m "feat: dispatch screenshot attachments as imagePrompt in ACP prompt params"
+git commit -m "refactor: simplify trySendPrompt:withResources: via applyToPromptParams: double dispatch"
 ```
 
 ---
 
-## Task 7: End-to-end smoke test
+## Task 8: End-to-end smoke test  <!-- was Task 7 -->
 
-- [ ] **Step 7.1: Open browser and verify flow**
+- [ ] **Step 7.1: Open browser and verify full flow**
 
 ```smalltalk
 AbBrowserPresenter open
 ```
 
-1. Open browser, select a topic (or create one)
+1. Select a topic with a working directory set
 2. Click the boxSelection icon button in the status bar
-3. Draw a rectangle to capture a region
-4. Verify `[Screenshot-yyyymmdd-nnn]` appears in the input field
-5. Edit the message text as desired
-6. Click Send
-7. Verify the message is sent (visible in message list)
-8. Verify screenshot file exists at `Smalltalk imageDirectory / 'agentic-browser' / 'screenshots'`
+3. Draw a rectangle to capture a screen region
+4. Verify `@sc-yyyymmdd-nnn.png` appears in the input field
+5. Edit the message text as desired and click Send
+6. Verify the message appears in the message list
+7. Verify the PNG file exists at `Smalltalk imageDirectory / 'agentic-browser' / 'screenshots'`
 
-To verify deletion removes the attachment:
+To verify deletion suppresses attachment:
 1. Click screenshot button, draw region
-2. Delete the `[Screenshot-...]` tag from the input
-3. Send the message
-4. Verify no image resource was included (check via `topic messages last text` — should not contain any screenshot reference)
+2. Delete the `@sc-...png` token from the input
+3. Send — no image resource should be attached
 
 - [ ] **Step 7.2: Close browser**
 
@@ -716,7 +887,7 @@ AbBrowserPresenter allInstances do: [:e | e window close]
 
 ---
 
-## Task 8: Export package
+## Task 9: Export packages  <!-- was Task 8 -->
 
 - [ ] **Step 8.1: Export all modified packages**
 
@@ -729,5 +900,5 @@ Use skill: `smalltalk-dev:st-export` to export:
 
 ```bash
 git add src/
-git commit -m "feat: screenshot attachment — capture, insert tag, send as image resource"
+git commit -m "feat: screenshot attachment — capture, insert @sc- mention, send as image resource"
 ```
