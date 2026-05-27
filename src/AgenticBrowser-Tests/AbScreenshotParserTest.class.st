@@ -49,3 +49,21 @@ AbScreenshotParserTest >> testParseAtEndOfString [
 	self assert: result size equals: 1.
 	self assert: result first name equals: 'sc-20260527-001'
 ]
+
+{ #category : 'tests' }
+AbScreenshotParserTest >> testParseDuplicateMentionDeduplicates [
+
+	| result |
+	result := AbScreenshotParser parseFrom: '@sc-20260527-001.png @sc-20260527-001.png'.
+	self assert: result size equals: 1.
+	self assert: result first name equals: 'sc-20260527-001'
+]
+
+{ #category : 'tests' }
+AbScreenshotParserTest >> testParseMentionFollowedByPunctuation [
+
+	| result |
+	result := AbScreenshotParser parseFrom: '(see @sc-20260527-001.png) and done'.
+	self assert: result size equals: 1.
+	self assert: result first name equals: 'sc-20260527-001'
+]
