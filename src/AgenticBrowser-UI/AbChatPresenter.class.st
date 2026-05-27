@@ -18,7 +18,8 @@ Class {
 		'modelOptions',
 		'modeDropList',
 		'modeOptions',
-		'modeConfigId'
+		'modeConfigId',
+		'screenshotButton'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -180,9 +181,14 @@ AbChatPresenter >> initializeStatusBar [
 				 withConstraints: [ :c | c width: 220 ];
 				 add: (modeDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
+				 add: (screenshotButton := statusBarPresenter newButton)
+				 withConstraints: [ :c | c width: 28 ];
 				 add: statusBarPresenter newNullPresenter;
 				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
-				 yourself)
+				 yourself).
+	screenshotButton
+		icon: AbUiConstants boxSelection;
+		action: [ self onScreenshotButtonClicked ]
 ]
 
 { #category : 'private' }
@@ -281,6 +287,12 @@ AbChatPresenter >> modeConfigId: aString [
 AbChatPresenter >> modeDropList [
 
 	^ modeDropList
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> screenshotButton [
+
+	^ screenshotButton
 ]
 
 { #category : 'accessing' }
@@ -390,9 +402,18 @@ AbChatPresenter >> onModeSelectedName: aModeName [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onScreenshotButtonClicked [
+
+	| attachment |
+	attachment := AbScreenshotAttachment captureAndSave.
+	attachment ifNil: [ ^ self ].
+	self normalInputPresenter insertMention: attachment mentionString
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText mentions resources |
+	| text promptText mentions resources screenshots |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
@@ -402,6 +423,8 @@ AbChatPresenter >> onSendButtonClicked [
 		              ifFalse: [ text ].
 	mentions := AbCodeMentionParser parseFrom: text.
 	resources := AbCodeMentionEmbedder resourcesFor: mentions.
+	screenshots := AbScreenshotParser parseFrom: text.
+	screenshots do: [ :att | att fileReference exists ifTrue: [ resources add: att ] ].
 	self currentTopic sendPrompt: promptText withResources: resources
 ]
 
