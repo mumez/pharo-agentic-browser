@@ -18,18 +18,20 @@ AbScreenshotAttachment class >> screenshotDirectory [
 { #category : 'accessing' }
 AbScreenshotAttachment class >> nextNameForDate: aDate [
 
-	| dateString prefix existing maxSeq |
-	dateString := aDate year printString
-		, (aDate monthIndex printString padLeftTo: 2 with: $0)
-		, (aDate dayOfMonth printString padLeftTo: 2 with: $0).
-	prefix := 'sc-' , dateString , '-'.
+	| prefix existing maxSeq |
+	prefix := 'sc-{1}{2}{3}-' format: {
+			aDate year printString.
+			aDate monthIndex printString padLeftTo: 2 with: $0.
+			aDate dayOfMonth printString padLeftTo: 2 with: $0 }.
 	existing := self screenshotDirectory exists
 		ifTrue: [ self screenshotDirectory fileNames select: [ :n | (n beginsWith: prefix) and: [ n endsWith: '.png' ] ] ]
 		ifFalse: [ #() ].
 	maxSeq := existing inject: 0 into: [ :max :each |
-		| seqStr seq |
-		seqStr := each copyFrom: prefix size + 1 to: each size - 4.
-		seq := seqStr asInteger ifNil: [ 0 ].
+		| parts seq |
+		parts := each splitOn: '[-.]' asRegex.
+		seq := (parts size >= 3 and: [ (parts at: 3) isAllDigits ])
+			ifTrue: [ (parts at: 3) asInteger ]
+			ifFalse: [ 0 ].
 		max max: seq ].
 	^ prefix , ((maxSeq + 1) printString padLeftTo: 3 with: $0)
 ]
@@ -101,7 +103,7 @@ AbScreenshotAttachment >> mentionString [
 { #category : 'accessing' }
 AbScreenshotAttachment >> base64PngString [
 
-	^ fileReference binaryReadStream contents base64Encoded
+	^ fileReference binaryReadStreamDo: [ :stream | stream contents base64Encoded ]
 ]
 
 { #category : 'prompt' }
