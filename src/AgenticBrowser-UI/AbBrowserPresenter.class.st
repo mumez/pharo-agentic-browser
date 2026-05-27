@@ -34,8 +34,9 @@ AbBrowserPresenter >> connectPresenters [
 { #category : 'layout' }
 AbBrowserPresenter >> defaultLayout [
 
-	^ SpBoxLayout newLeftToRight
-		  add: self topicListPresenter withConstraints: [ :c | c width: 220 ];
+	^ SpPanedLayout newLeftToRight
+		  positionOfSlider: 0.25;
+		  add: self topicListPresenter;
 		  add: self chatPresenter;
 		  yourself
 ]
