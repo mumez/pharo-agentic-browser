@@ -13,7 +13,7 @@ AbCodeMentionEmbedder class >> classResourceFor: mention [
 	cls := Smalltalk globals at: className asSymbol.
 	url := '{1}/get-class-source?class_name={2}' format: { self mcpBaseUrl. className }.
 	tonel := TonelWriter sourceCodeOf: cls.
-	^ url -> tonel
+	^ AbCodeMentionResource uri: url text: tonel
 ]
 
 { #category : 'private' }
@@ -36,7 +36,7 @@ AbCodeMentionEmbedder class >> methodResourceFor: mention [
 		TonelWriter new
 			writeMethodDefinition: ((cls >> methodName asSymbol) asMCMethodDefinition)
 			on: str ].
-	^ url -> tonel
+	^ AbCodeMentionResource uri: url text: tonel
 ]
 
 { #category : 'private' }
