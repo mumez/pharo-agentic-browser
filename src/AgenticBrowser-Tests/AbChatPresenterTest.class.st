@@ -624,3 +624,54 @@ AbChatPresenterTest >> testModeDropListRetainsSelectionWhenDisabled [
 	presenter updateDropListsEnabled: false.
 	self assert: presenter selectedModeName equals: 'Ask'
 ]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testScreenshotButtonExistsInStatusBar [
+
+	self assert: presenter screenshotButton isNotNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithScreenshotMentionAddsImageResource [
+
+	| topic capturedResources form attachment |
+	topic := self newMockTopic.
+	presenter topic: topic.
+	form := Form extent: 2@2 depth: 32.
+	attachment := AbScreenshotAttachment saveForm: form forDate: (Date year: 2026 month: 5 day: 27).
+	[ presenter normalInputPresenter inputField text: 'check this ' , attachment mentionString.
+	  capturedResources := nil.
+	  topic onSendBlock: [ :txt :res | capturedResources := res ].
+	  presenter onSendButtonClicked.
+	  self assert: (capturedResources anySatisfy: [ :r | r isKindOf: AbScreenshotAttachment ]) ]
+		ensure: [ attachment fileReference delete ]
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithoutScreenshotMentionHasNoImageResource [
+
+	| topic capturedResources |
+	topic := self newMockTopic.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'just text'.
+	capturedResources := nil.
+	topic onSendBlock: [ :txt :res | capturedResources := res ].
+	presenter onSendButtonClicked.
+	self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
+	self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbScreenshotAttachment ])
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithMissingFileScreenshotMentionHasNoImageResource [
+
+	| topic capturedResources fakeName |
+	topic := self newMockTopic.
+	presenter topic: topic.
+	fakeName := '@sc-19000101-999.png'.
+	presenter normalInputPresenter inputField text: 'check this ' , fakeName.
+	capturedResources := nil.
+	topic onSendBlock: [ :txt :res | capturedResources := res ].
+	presenter onSendButtonClicked.
+	self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
+	self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbScreenshotAttachment ])
+]

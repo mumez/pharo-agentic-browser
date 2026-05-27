@@ -605,8 +605,7 @@ AbTopic >> trySendPrompt: aString withResources: aCollection [
 	result := self client promptBy: [ :params |
 		params sessionId: self sessionId.
 		params textPrompt: aString.
-		aCollection do: [ :assoc |
-			params resourcePrompt: assoc key text: assoc value ] ].
+		aCollection do: [ :resource | resource applyToPromptParams: params ] ].
 	result stopReason = 'end_turn' ifTrue: [
 		self checkGoalAchievement ifFalse: [
 			self stateMachine handleEvent: #turnEnded ] ]

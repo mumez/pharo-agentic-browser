@@ -146,7 +146,7 @@ stop [
 
 ---
 
-## 4. Agent Error Visibility
+## 4. Agent Error Visibility - DONE
 
 Surface agent-side errors (rate limits, invalid params, connection failures) to the user in the chat UI instead of silently failing or going to `end_turn`.
 
@@ -184,6 +184,14 @@ Select a Pharo window and send its screenshot to the AI agent as an ACP **binary
 
 **Implementation sketch:**
 - Add a window-picker UI (list of open windows/morphs)
-- Capture via `Display screenshot` or morph rendering
+- Capture via `Screenshot new formScreenshotFromUserSelection` or morph rendering
+
 - Encode as PNG
+```
+"write PNG file"
+PNGReadWriter
+			putForm: form
+			onFileNamed: aFileRederence
+```
 - Attach as ACP binary resource in the prompt
+  -　ACPContentBlock class >> resource:blob:mimeType:

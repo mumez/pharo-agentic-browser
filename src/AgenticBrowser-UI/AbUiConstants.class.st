@@ -65,7 +65,19 @@ AbUiConstants class >> redCircleBase64 [
 AbUiConstants class >> sparkleBase64 [
 
  ^ 'iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IB2cksfwAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAOwA7ADsHSMWNgAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAAd0SU1FB+oFDAsrLyjJjV0AAACmSURBVCjPjZAxCsJAEEXfhlQGG1NZWO1VrPQc8T6pFASbXEEb8SpTWdjZBExjGJtVlmRWffBhhz/8/btgoEKlQmV5GTaroBHOSJ8B1zAunOf+64YamATVpFChVKFRQQdqVCg/lVTYAGtgGVItHsAFOGVABzyBnjR92OniSoUKe6PSVoXi21sO0fLun2+dArcwzp2njf18lOBpVTi/z0M/TzQ7piq/ADKAUgjKJidIAAAAAElFTkSuQmCC'
- ]
+]
+
+{ #category : 'icons-base64' }
+AbUiConstants class >> gearBase64 [
+
+ ^ 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IB2cksfwAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAOwA7ADsHSMWNgAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+oFGg46IwEfKM4AAAJKSURBVDjLrZOxSxtxFMc/7xclOS2cXkz0QkAHS4cKXVw61T+gdJBChVK3ltKltShNmqHXIc0Ngl2EDrpYqE5C/wM3F5eCpRQcKoScRqPcEE+R3OtgoosupW98/N77ve/7fp5wQ+RnNlPYeQuAsBpVF+6fXvdOrku63pYl1sgukGmnDjT6Mxx449GNDQZnf/QkBnJfEWkoeiwwq614EkASZl1hXpB+VNOtw9qz/fl7JwBdnQaJgdyKCg8EbQK2xloK3g9+B3Ar9RJGCqChCr2JgdwK8BjAXM0iRwJNs7dzJ4gW+4Ni1sfbSOBtJIJi1g+ixX6zt3NHoInIUafMdDSjeqRgV+2zc4ent1y/vpxLjYW51FiY8+tL6ZOp3qp9dq5go3rkelsWgMnPbKbEGtlFmCNWH2+ilUzZnwXzUFVfK/oGMY+SjrOAN9EiVh9hTqyR3fzMZsq0rcpoK57sjC2YJ4qWgmJmOShkljRulRAz1ZHTXm4GO2+ZmzhA40uHVK63+8KFsBph3T6QhFl3K/VSUMz6+PVVMYmyW9lve23KKN/wJlpupV4QI2XggLAaySU4qeEPKrwMop/p9MmQlXScBcRMtT9aPWscvm307EWudbchyhc93f0YeOORAQi88QgRRyDMh8nuRs9as1bIPq9F2321aLuv9m7gRaNnrZkPk90CISJOh8quK83qqNAbD43+dhm1qbzyg2LWb4NUwEghtggVekXVudpBO1qHtekOyqDHYqTsftr/BSBGygrzIP1ygfL0/z+mfz3nv3sPCvgL1MQbAAAAAElFTkSuQmCC'
+]
+
+{ #category : 'icons-base64' }
+AbUiConstants class >> boxSelectionBase64 [
+
+ ^ 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IB2cksfwAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAOwA7ADsHSMWNgAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+oFGg8IJHPJgysAAAE8SURBVDjLzZMxawJBEIXfGzyvCZITjpz3EwxpEsFWMBD/SypJEe2uW1OkzH+RkMI2SGzE/AQvRnCDpNHAbgr3xFgdXJNX7cCbtzPwDZEkjMq3HRGcwMnS6PT+7AUHqj0srmklyGpj8P2xfRoyUp83IjLEkazZXqX9eAIANTW/pJTfjj3GmE5JyAoAWGtfCYzc+yvY6GnqjMFGT7Uf9kmeAoAFWiSbQlZKWRqB0bwX9rI6PfjpPTn/ATDI6niwHABoAoCgoATWrNzYq7xNe6/rRaTSRj2ZeXkD6snMi1TawP9RkRUkVou2iDfWftjNG6D9sCvijWO1aAsoVQAgWc0bsPdSqoU52JNogZYjzKG8fHQEop7MPO2Hd39QzgKMtWshQbKZ4UkS2g+eAUx2OwcXFFEH2O+Oydo1i57zLz7/iWRNmmChAAAAAElFTkSuQmCC'
+]
 
 { #category : 'icons' }
 AbUiConstants class >> blueCircle [
@@ -95,4 +107,14 @@ AbUiConstants class >> question [
 { #category : 'icons' }
 AbUiConstants class >> sparkle [
     ^ self icons at: #sparkle ifAbsentPut: [ self buildIconNamed: #sparkle with: self sparkleBase64 ]
+]
+
+{ #category : 'icons' }
+AbUiConstants class >> gear [
+    ^ self icons at: #gear ifAbsentPut: [ self buildIconNamed: #gear with: self gearBase64 ]
+]
+
+{ #category : 'icons' }
+AbUiConstants class >> boxSelection [
+    ^ self icons at: #boxSelection ifAbsentPut: [ self buildIconNamed: #boxSelection with: self boxSelectionBase64 ]
 ]
