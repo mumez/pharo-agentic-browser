@@ -657,6 +657,7 @@ AbChatPresenterTest >> testSendWithoutScreenshotMentionHasNoImageResource [
 	capturedResources := nil.
 	topic onSendBlock: [ :txt :res | capturedResources := res ].
 	presenter onSendButtonClicked.
+	self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
 	self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbScreenshotAttachment ])
 ]
 
@@ -671,5 +672,6 @@ AbChatPresenterTest >> testSendWithMissingFileScreenshotMentionHasNoImageResourc
 	capturedResources := nil.
 	topic onSendBlock: [ :txt :res | capturedResources := res ].
 	presenter onSendButtonClicked.
+	self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
 	self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbScreenshotAttachment ])
 ]
