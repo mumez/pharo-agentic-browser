@@ -72,6 +72,57 @@ AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementEndImport [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresMissingPackageName [
+
+	| topic workDir path znReq teaReq ann |
+	topic := AbTopic new title: 'ab-test'.
+	path := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	topic workingDirectoryPath: path.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?path=' , path , '/src'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	workDir handleSisRequestAnnouncement: ann.
+	self deny: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesSuffixPath [
+	"Verify that a path with a different prefix but matching /src/<packageName> suffix
+	 is handled. This simulates symlink or Docker mount scenarios."
+
+	| topic workDir znReq teaReq ann |
+	topic := AbTopic new title: 'ab-test'.
+	topic workingDirectoryPath: '/local/real/path/wd'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path=/docker/mounted/path/src'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	self deny: workDir isImportingFromSource.
+	workDir handleSisRequestAnnouncement: ann.
+	self assert: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementMatchesWindowsPath [
+	"Verify that Windows-style backslash paths are normalized and matched correctly."
+
+	| topic workDir teaReq ann znReq |
+	topic := AbTopic new title: 'ab-test'.
+	topic workingDirectoryPath: '/local/real/path/wd'.
+	workDir := AbWorkingDirectory forTopic: topic.
+	znReq := ZnRequest get:
+		         'http://localhost:1234/import-package?package_name=Foo&path=C:\Users\user\work\src'.
+	teaReq := TeaRequest new setZnRequest: znReq pathParams: Dictionary new.
+	ann := SisRequestAnnouncement before: teaReq.
+	self deny: workDir isImportingFromSource.
+	workDir handleSisRequestAnnouncement: ann.
+	self assert: workDir isImportingFromSource
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testHandleSisRequestAnnouncementIgnoresDifferentPath [
 
 	| topic workDir path znReq teaReq ann |
