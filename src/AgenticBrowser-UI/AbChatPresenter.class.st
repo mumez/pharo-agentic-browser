@@ -131,7 +131,8 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> release [
 
 	self stopDotsAnimation.
-	self unsubscribeFromTopic: self currentTopic
+	self unsubscribeFromTopic: self currentTopic.
+	currentTopic := nil
 ]
 
 { #category : 'accessing' }
@@ -449,6 +450,7 @@ AbChatPresenter >> onTopicCurrentModeChanged: aTopic mode: aModeString [
 { #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
+	aTopic == self currentTopic ifFalse: [ ^ self ].
 	self logger debug: 'onTopicStatusChanged: topic='
 		, aTopic title printString
 		, ' status='
@@ -488,7 +490,7 @@ AbChatPresenter >> startDotsAnimation [
 	process := [
 		| dots |
 		dots := ''.
-		[ true ] whileTrue: [
+		[ self dotsAnimationProcess notNil ] whileTrue: [
 			dots := self nextDotsTextAfter: dots.
 			self defer: [ self statusText: dots ].
 			500 milliSeconds wait ] ] newProcess.
@@ -524,9 +526,7 @@ AbChatPresenter >> statusText: aString [
 { #category : 'private' }
 AbChatPresenter >> stopDotsAnimation [
 
-	self dotsAnimationProcess ifNotNil: [ :p |
-		p terminate.
-		self dotsAnimationProcess: nil ].
+	self dotsAnimationProcess: nil.
 	self clearStatusText
 ]
 
