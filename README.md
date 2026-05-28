@@ -108,6 +108,17 @@ You can also drag and drop directly from Pharo tools into the input field:
 - Drag a **class** from the System Browser class list → inserts `@ClassName`
 - Drag a **method** from the System Browser method list → inserts `@ClassName>>methodName`
 
+### Screen Captures
+
+Click the **`[ ]`** button in the status bar to capture a screen area and attach it to your next message.
+
+1. Click the button — the cursor changes to a crosshair
+2. Drag to select the area you want to capture
+3. A mention like `@sc-20260528-001.png` is inserted into the input field
+4. Send — the PNG is attached to the prompt as an image resource
+
+The file is saved to `<agenticBrowserRoot>/screenshots/sc-YYYYMMDD-NNN.png`. You can also reference a previously captured file manually by typing `@sc-YYYYMMDD-NNN.png` in the input field.
+
 ### Goal Setting
 
 Right-click a topic and choose **Set Goal...** to enter a completion condition (e.g., `all tests pass`). AgenticBrowser sends a goal notification prompt to the AI:
