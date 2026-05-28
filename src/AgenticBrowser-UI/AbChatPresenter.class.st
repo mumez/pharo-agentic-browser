@@ -18,7 +18,8 @@ Class {
 		'modelOptions',
 		'modeDropList',
 		'modeOptions',
-		'modeConfigId'
+		'modeConfigId',
+		'screenshotButton'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -53,9 +54,12 @@ AbChatPresenter >> commandsDropList [
 AbChatPresenter >> confirmModeLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: self messagesPresenter;
-		  add: self confirmPresenter withConstraints: [ :c | c height: 90 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: (SpPanedLayout newTopToBottom
+				   positionOfSlider: 0.82;
+				   add: self messagesPresenter;
+				   add: self confirmPresenter;
+				   yourself);
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 28 ];
 		  yourself
 ]
 
@@ -114,9 +118,12 @@ AbChatPresenter >> currentTopic: aTopic [
 AbChatPresenter >> defaultLayout [
 
 	^ SpBoxLayout newTopToBottom
-		  add: self messagesPresenter;
-		  add: self normalInputPresenter withConstraints: [ :c | c height: 60 ];
-		  add: self statusBarPresenter withConstraints: [ :c | c height: 24 ];
+		  add: (SpPanedLayout newTopToBottom
+				   positionOfSlider: 0.82;
+				   add: self messagesPresenter;
+				   add: self normalInputPresenter;
+				   yourself);
+		  add: self statusBarPresenter withConstraints: [ :c | c height: 28 ];
 		  yourself
 ]
 
@@ -124,7 +131,8 @@ AbChatPresenter >> defaultLayout [
 AbChatPresenter >> release [
 
 	self stopDotsAnimation.
-	self unsubscribeFromTopic: self currentTopic
+	self unsubscribeFromTopic: self currentTopic.
+	currentTopic := nil
 ]
 
 { #category : 'accessing' }
@@ -180,9 +188,14 @@ AbChatPresenter >> initializeStatusBar [
 				 withConstraints: [ :c | c width: 220 ];
 				 add: (modeDropList := statusBarPresenter newDropList)
 				 withConstraints: [ :c | c width: 120 ];
+				 add: (screenshotButton := statusBarPresenter newButton)
+				 withConstraints: [ :c | c width: 28 ];
 				 add: statusBarPresenter newNullPresenter;
 				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
-				 yourself)
+				 yourself).
+	screenshotButton
+		icon: AbUiConstants boxSelection;
+		action: [ self onScreenshotButtonClicked ]
 ]
 
 { #category : 'private' }
@@ -281,6 +294,12 @@ AbChatPresenter >> modeConfigId: aString [
 AbChatPresenter >> modeDropList [
 
 	^ modeDropList
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> screenshotButton [
+
+	^ screenshotButton
 ]
 
 { #category : 'accessing' }
@@ -390,9 +409,18 @@ AbChatPresenter >> onModeSelectedName: aModeName [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onScreenshotButtonClicked [
+
+	| attachment |
+	attachment := AbScreenshotAttachment captureAndSave.
+	attachment ifNil: [ ^ self ].
+	self normalInputPresenter insertMention: attachment mentionString
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText mentions resources |
+	| text promptText mentions resources screenshots |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
@@ -402,6 +430,8 @@ AbChatPresenter >> onSendButtonClicked [
 		              ifFalse: [ text ].
 	mentions := AbCodeMentionParser parseFrom: text.
 	resources := AbCodeMentionEmbedder resourcesFor: mentions.
+	screenshots := AbScreenshotParser parseFrom: text.
+	screenshots do: [ :att | att fileReference exists ifTrue: [ resources add: att ] ].
 	self currentTopic sendPrompt: promptText withResources: resources
 ]
 
@@ -420,6 +450,7 @@ AbChatPresenter >> onTopicCurrentModeChanged: aTopic mode: aModeString [
 { #category : 'event handling' }
 AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 
+	aTopic == self currentTopic ifFalse: [ ^ self ].
 	self logger debug: 'onTopicStatusChanged: topic='
 		, aTopic title printString
 		, ' status='
@@ -459,7 +490,7 @@ AbChatPresenter >> startDotsAnimation [
 	process := [
 		| dots |
 		dots := ''.
-		[ true ] whileTrue: [
+		[ self dotsAnimationProcess notNil ] whileTrue: [
 			dots := self nextDotsTextAfter: dots.
 			self defer: [ self statusText: dots ].
 			500 milliSeconds wait ] ] newProcess.
@@ -495,9 +526,7 @@ AbChatPresenter >> statusText: aString [
 { #category : 'private' }
 AbChatPresenter >> stopDotsAnimation [
 
-	self dotsAnimationProcess ifNotNil: [ :p |
-		p terminate.
-		self dotsAnimationProcess: nil ].
+	self dotsAnimationProcess: nil.
 	self clearStatusText
 ]
 

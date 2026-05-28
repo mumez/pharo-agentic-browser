@@ -34,8 +34,9 @@ AbBrowserPresenter >> connectPresenters [
 { #category : 'layout' }
 AbBrowserPresenter >> defaultLayout [
 
-	^ SpBoxLayout newLeftToRight
-		  add: self topicListPresenter withConstraints: [ :c | c width: 220 ];
+	^ SpPanedLayout newLeftToRight
+		  positionOfSlider: 0.25;
+		  add: self topicListPresenter;
 		  add: self chatPresenter;
 		  yourself
 ]
@@ -46,7 +47,7 @@ AbBrowserPresenter >> initializePresenters [
 	super initializePresenters.
 	topicListPresenter := self instantiate: AbTopicListPresenter.
 	chatPresenter := self instantiate: AbChatPresenter.
-	AbTopicManager uniqueInstance subscribeAllTopicsToSisServer
+	AbTopicManager uniqueInstance startAllTopicsWatching
 ]
 
 { #category : 'initialization' }
@@ -65,8 +66,9 @@ AbBrowserPresenter >> buildMenuBar [
 	menu := self newMenuBar.
 	menu addGroup: [ :group |
 		group addItem: [ :item |
-			item name: 'Settings…'.
-			item action: [ self openSettings ] ] ].
+			item name: 'Settings…';
+			    icon: AbUiConstants gear;
+				action: [ self openSettings ] ] ].
 	^ menu
 ]
 

@@ -90,14 +90,18 @@ AbWorkingDirectory >> exportPackageNamed: aPackageName [
 ]
 
 { #category : 'private' }
-AbWorkingDirectory >> handleSisRequestAnnouncement: ann [
+AbWorkingDirectory >> handleSisRequestAnnouncement: requestAnnouncement [
 
-	| urlPath sourcePath |
-	urlPath := ann teapotRequest url pathPrintString.
+	| urlPath importPath packageName matchingPathParts wholePathParts |
+	urlPath := requestAnnouncement teapotRequest url pathPrintString.
 	urlPath = '/import-package' ifFalse: [ ^ self ].
-	sourcePath := ann teapotRequest at: #path ifAbsent: [ ^ self ].
-	self sourcePath fullName = sourcePath ifFalse: [ ^ self ].
-	ann type = #before
+	importPath := requestAnnouncement teapotRequest at: #path ifAbsent: [ ^ self ].
+	packageName := requestAnnouncement teapotRequest at: #package_name ifAbsent: [ ^ self ].
+	packageName isEmptyOrNil ifTrue: [ ^ self ].
+	matchingPathParts := {self srcDirectory. packageName}.
+	wholePathParts := (importPath findTokens: '/\'), {packageName}.
+	(wholePathParts endsWith: matchingPathParts) ifFalse: [ ^ self ].
+	requestAnnouncement type = #before
 		ifTrue: [ self beginImportFromSource ]
 		ifFalse: [ self endImportFromSource ]
 ]

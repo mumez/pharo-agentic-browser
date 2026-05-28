@@ -140,16 +140,15 @@ AbTopicManager >> removeTopic: anAbTopic [
 ]
 
 { #category : 'operations' }
-AbTopicManager >> subscribeAllTopicsToSisServer [
+AbTopicManager >> startAllTopicsWatching [
 
-	topics valuesDo: [ :t | t workingDirectory subscribeToSisServerImportEvents ]
+	topics valuesDo: [ :t | t startWatching ]
 ]
 
 { #category : 'private' }
 AbTopicManager >> teardownTopic: aTopic [
 
 	aTopic stopWatching.
-	aTopic workingDirectory unsubscribeFromSisServerImportEvents.
 	[ aTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ]
 ]
 
@@ -176,7 +175,7 @@ AbTopicManager >> topicsDo: aBlock [
 ]
 
 { #category : 'operations' }
-AbTopicManager >> unsubscribeAllTopicsFromSisServer [
+AbTopicManager >> stopAllTopicsWatching [
 
-	topics valuesDo: [ :t | t workingDirectory unsubscribeFromSisServerImportEvents ]
+	topics valuesDo: [ :t | t stopWatching ]
 ]

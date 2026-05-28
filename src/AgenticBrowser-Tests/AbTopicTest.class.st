@@ -845,6 +845,58 @@ AbTopicTest >> testWorkingDirectoryPathUsesProvidedPathWhenSet [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testSendWithImageResourceCallsImagePrompt [
+
+	| topic mockSession mockClient promptEntries form attachment |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockClient := MockObject new.
+	mockClient
+		on: #promptBy:
+		verify: [ :block |
+			| params |
+			params := ACPPromptParams new.
+			block value: params.
+			promptEntries := params rawValues at: 'prompt' ifAbsent: [ #() ].
+			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ].
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [  ].
+	mockSession on: #client verify: [ mockClient ].
+	topic session: mockSession.
+	form := Form extent: 2@2 depth: 32.
+	attachment := AbScreenshotAttachment saveForm: form forDate: (Date year: 2026 month: 5 day: 27).
+	[ topic doExecutePrompt: 'hello' withResources: (OrderedCollection with: attachment).
+	  self assert: (promptEntries anySatisfy: [ :entry |
+		  (entry at: 'type' ifAbsent: [ '' ]) = 'image' ]) ]
+		ensure: [ attachment fileReference delete ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testSendWithTextResourceCallsResourcePrompt [
+
+	| topic mockSession mockClient promptEntries resource |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockClient := MockObject new.
+	mockClient
+		on: #promptBy:
+		verify: [ :block |
+			| params |
+			params := ACPPromptParams new.
+			block value: params.
+			promptEntries := params rawValues at: 'prompt' ifAbsent: [ #() ].
+			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ].
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [  ].
+	mockSession on: #client verify: [ mockClient ].
+	topic session: mockSession.
+	resource := AbCodeMentionResource uri: 'http://example/foo' text: 'source'.
+	topic doExecutePrompt: 'hello' withResources: (OrderedCollection with: resource).
+	self assert: (promptEntries anySatisfy: [ :entry |
+		(entry at: 'type' ifAbsent: [ '' ]) = 'resource' ])
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
 
 	| topic |

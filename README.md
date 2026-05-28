@@ -103,6 +103,22 @@ In the chat input, you can reference Pharo classes or methods by prefixing them 
 
 When you send the message, AgenticBrowser resolves each mention to its Tonel source and attaches it as an ACP text resource alongside the prompt. The AI agent receives the exact code without any copy-paste.
 
+You can also drag and drop directly from Pharo tools into the input field:
+
+- Drag a **class** from the System Browser class list → inserts `@ClassName`
+- Drag a **method** from the System Browser method list → inserts `@ClassName>>methodName`
+
+### Screen Captures
+
+Click the **`[ ]`** button in the status bar to capture a screen area and attach it to your next message.
+
+1. Click the button — the cursor changes to a crosshair
+2. Drag to select the area you want to capture
+3. A mention like `@sc-20260528-001.png` is inserted into the input field
+4. Send — the PNG is attached to the prompt as an image resource
+
+The file is saved to `<agenticBrowserRoot>/screenshots/sc-YYYYMMDD-NNN.png`. You can also reference a previously captured file manually by typing `@sc-YYYYMMDD-NNN.png` in the input field.
+
 ### Goal Setting
 
 Right-click a topic and choose **Set Goal...** to enter a completion condition (e.g., `all tests pass`). AgenticBrowser sends a goal notification prompt to the AI:
@@ -176,7 +192,7 @@ Watching starts automatically when a topic first connects (on the first **Send**
 |---------|----------|
 | `AgenticBrowser-Core` | Domain model: `AbTopic`, `AbTopicSession`, `AbTopicManager`, `AbTopicGoal`, `AbMessage`, `AbWorkingDirectory`, `AbMcpServersLoader`, `AbCodeMentionParser`, `AbCodeMentionEmbedder`, `AbTopicRelatedPackagesWatcher`, announcements |
 | `AgenticBrowser-Handler` | ACP callback bridge: `AbTopicHandler` |
-| `AgenticBrowser-UI` | Spec2 presenters: browser, topic list, chat, new-topic dialog |
+| `AgenticBrowser-UI` | Spec2 presenters: browser, topic list, chat, new-topic dialog, settings dialog, and other dialogs |
 | `AgenticBrowser-Tests` | SUnit tests for Core |
 | `BaselineOfAgenticBrowser` | Metacello baseline |
 
@@ -184,7 +200,7 @@ Watching starts automatically when a topic first connects (on the first **Send**
 
 ### State Machine (SState)
 
-Each topic has an FSM with six states:
+Each topic has an FSM with five states:
 
 ```
 #initial ──promptSent──▶ #working ──permissionRequested──▶ #waitingForHuman
@@ -225,9 +241,42 @@ You can also set a custom working directory path when creating a topic from an e
 
 `AbTopicRelatedPackagesWatcher` subscribes to `SystemAnnouncer` for `MethodAnnouncement` and `ClassAnnouncement`. When a method or class is saved:
 
-- If the package matches any of the topic's `packagePrefixes`, it inserts a system message into the chat (e.g. `"AgenticBrowser-Core was modified; .st files have been updated"`) and exports the package
-- If the package does **not** match, it shows a confirmation asking whether to add the package to tracked prefixes
+- If the package matches any of the topic's `packagePrefixes`, it inserts a message into the chat (e.g. `"AgenticBrowser-Core was modified; .st files have been updated"`) and confirms exporting the package
+- If the package does **not** match, it add the package to `updatedExternalPackageNames`. They can be moved to tracked packages by 'Apply Updated External Packages' menu 
 - Changes during import are suppressed to avoid re-export loops
+
+## Settings
+
+Settings are managed by `AbSettings` and persisted as `ab-settings.json` in the AgenticBrowser root directory. There are two levels: global defaults and per-topic overrides.
+
+### Global Settings
+
+Open the Settings dialog from the **Settings…** menu in the browser window's menu bar. The dialog covers timeout values, timeout options, and MCP server preferences.
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `codingAgents` | (built-in list) | Array of `{name, command}` dicts shown in the New Topic dialog |
+| `useDefaultMcpServers` | `true` | Merge built-in Smalltalk MCP servers into `mcp.json` |
+| `aiPermissionWaitTimeoutSeconds` | `1800` | Seconds to wait for human response to an AI permission request |
+| `aiPermissionTimeoutOption` | `#reject_once` | Auto-response on timeout: `#allow_once`, `#allow_always`, or `#reject_once` |
+| `exportApprovalWaitTimeoutSeconds` | `30` | Seconds to wait for human approval of a package export |
+| `exportApprovalTimeoutOption` | `#reject_once` | Auto-response on export timeout |
+| `watcherMessageThrottleSeconds` | `2` | Minimum seconds between watcher system messages for the same package |
+
+To add a custom agent, edit `ab-settings.json` directly in a text editor. Alternatively, from a Playground:
+
+```smalltalk
+AbSettings default codingAgents: (AbSettings default codingAgents copyWith:
+    {'name' -> 'my-agent'.
+    'command' -> #('my-agent' '--acp')} asDictionary).
+AbSettings save.
+```
+
+### Per-Topic Settings
+
+Each topic starts with a copy of the global settings. Right-click a topic in the sidebar and choose **Edit Settings...** to open the settings dialog for that topic alone.
+
+Per-topic settings are persisted with the topic via Fuel when `AbTopicManager save` is called.
 
 ## Related Projects
 

@@ -270,8 +270,7 @@ AbTopic >> disconnect [
 AbTopic >> ensureWorkingDirectoryForConnection [
 
 	self workingDirectory ensureExists.
-	self workingDirectory subscribeToSisServerImportEvents.
-	self relatedPackagesWatcher isWatching ifFalse: [ self startWatching ].
+	self startWatching.
 	^ self workingDirectory path fullName
 ]
 
@@ -605,8 +604,7 @@ AbTopic >> trySendPrompt: aString withResources: aCollection [
 	result := self client promptBy: [ :params |
 		params sessionId: self sessionId.
 		params textPrompt: aString.
-		aCollection do: [ :assoc |
-			params resourcePrompt: assoc key text: assoc value ] ].
+		aCollection do: [ :resource | resource applyToPromptParams: params ] ].
 	result stopReason = 'end_turn' ifTrue: [
 		self checkGoalAchievement ifFalse: [
 			self stateMachine handleEvent: #turnEnded ] ]
@@ -632,7 +630,8 @@ AbTopic >> settings: anAbSettings [
 { #category : 'operations' }
 AbTopic >> startWatching [
 
-	self relatedPackagesWatcher start
+	self workingDirectory subscribeToSisServerImportEvents.
+	self relatedPackagesWatcher isWatching ifFalse: [ self relatedPackagesWatcher start ]
 ]
 
 { #category : 'accessing' }
@@ -648,7 +647,8 @@ AbTopic >> status [
 { #category : 'operations' }
 AbTopic >> stopWatching [
 
-	self relatedPackagesWatcherIfPresent ifNotNil: [ :watcher | watcher stop ]
+	self relatedPackagesWatcherIfPresent ifNotNil: [ :watcher | watcher stop ].
+	self workingDirectory unsubscribeFromSisServerImportEvents
 ]
 
 { #category : 'accessing' }

@@ -49,7 +49,6 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 	topic := self newTopic: 'Cleanup topic'.
 	manager addTopic: topic.
 	topic startWatching.
-	topic workingDirectory subscribeToSisServerImportEvents.
 	hasSubscription := SisServer current announcer subscriptions subscriptions
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
 	self assert: topic relatedPackagesWatcher isWatching.
@@ -60,9 +59,7 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
 	self deny: topic relatedPackagesWatcher isWatching.
 	self deny: hasSubscription ]
-		ensure: [
-		topic stopWatching.
-		topic workingDirectory unsubscribeFromSisServerImportEvents ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
@@ -186,7 +183,7 @@ AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
 	manager := AbTopicManager forTest.
 	topic := self newTopic: 'Test topic'.
 	manager addTopic: topic.
-	topic workingDirectory subscribeToSisServerImportEvents.
+	topic startWatching.
 	hasSubscription := SisServer current announcer subscriptions subscriptions
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
 	self assert: hasSubscription.
@@ -195,7 +192,7 @@ AbTopicManagerTest >> testRemoveTopicUnsubscribesWorkingDirectoryFromSisServer [
 	hasSubscription := SisServer current announcer subscriptions subscriptions
 		anySatisfy: [ :each | each subscriber == topic workingDirectory ].
 	self deny: hasSubscription ]
-		ensure: [ topic workingDirectory unsubscribeFromSisServerImportEvents ]
+		ensure: [ topic stopWatching ]
 ]
 
 { #category : 'tests' }
