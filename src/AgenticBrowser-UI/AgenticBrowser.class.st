@@ -7,7 +7,7 @@ Class {
 
 { #category : 'instance creation' }
 AgenticBrowser class >> open [
-
+	<script>
 	AbSettings load.
 	AbTopicManager load.
 	^ AbBrowserPresenter open
