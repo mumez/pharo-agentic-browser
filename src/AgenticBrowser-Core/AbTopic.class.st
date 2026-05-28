@@ -270,8 +270,7 @@ AbTopic >> disconnect [
 AbTopic >> ensureWorkingDirectoryForConnection [
 
 	self workingDirectory ensureExists.
-	self workingDirectory subscribeToSisServerImportEvents.
-	self relatedPackagesWatcher isWatching ifFalse: [ self startWatching ].
+	self startWatching.
 	^ self workingDirectory path fullName
 ]
 
@@ -631,7 +630,8 @@ AbTopic >> settings: anAbSettings [
 { #category : 'operations' }
 AbTopic >> startWatching [
 
-	self relatedPackagesWatcher start
+	self workingDirectory subscribeToSisServerImportEvents.
+	self relatedPackagesWatcher isWatching ifFalse: [ self relatedPackagesWatcher start ]
 ]
 
 { #category : 'accessing' }
@@ -647,7 +647,8 @@ AbTopic >> status [
 { #category : 'operations' }
 AbTopic >> stopWatching [
 
-	self relatedPackagesWatcherIfPresent ifNotNil: [ :watcher | watcher stop ]
+	self relatedPackagesWatcherIfPresent ifNotNil: [ :watcher | watcher stop ].
+	self workingDirectory unsubscribeFromSisServerImportEvents
 ]
 
 { #category : 'accessing' }

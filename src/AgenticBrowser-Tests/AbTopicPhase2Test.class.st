@@ -154,11 +154,13 @@ AbTopicPhase2Test >> testWorkingDirectoryWasCreatedForConnection [
 	path := topic workingDirectory path.
 	self deny: path exists.
 	self deny: topic relatedPackagesWatcher isWatching.
+	[
 	topic ensureWorkingDirectoryForConnection.
 	self assert: path exists.
-	self assert: topic relatedPackagesWatcher isWatching.
-	topic stopWatching.
-	path deleteAll
+	self assert: topic relatedPackagesWatcher isWatching ]
+		ensure: [
+			topic stopWatching.
+			path exists ifTrue: [ path deleteAll ] ]
 ]
 
 { #category : 'tests' }
