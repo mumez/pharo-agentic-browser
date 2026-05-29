@@ -159,6 +159,18 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultGoalSettingsCommand [
+	self isDefault ifFalse: [ ^ self class default defaultGoalSettingsCommand ].
+	^ '/goal'
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultUseCommandOnGoalSettings [
+	self isDefault ifFalse: [ ^ self class default defaultUseCommandOnGoalSettings ].
+	^ false
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultCodingAgents [
 	self isDefault ifFalse: [ ^ self class default defaultCodingAgents ].
 	^ STONJSON fromString: self defaultCodingAgentsJsonString
@@ -205,6 +217,30 @@ AbSettings >> defaultUseDefaultMcpServers [
 AbSettings >> defaultWatcherMessageThrottleSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleSeconds ].
 	^ 2
+]
+
+{ #category : 'accessing' }
+AbSettings >> goalSettingsCommand [
+
+	^ self at: #goalSettingsCommand ifAbsent: [ self defaultGoalSettingsCommand ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> goalSettingsCommand: aString [
+
+	self at: #goalSettingsCommand put: aString
+]
+
+{ #category : 'accessing' }
+AbSettings >> useCommandOnGoalSettings [
+
+	^ self at: #useCommandOnGoalSettings ifAbsent: [ self defaultUseCommandOnGoalSettings ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useCommandOnGoalSettings: aBoolean [
+
+	self at: #useCommandOnGoalSettings put: aBoolean
 ]
 
 { #category : 'accessing' }
