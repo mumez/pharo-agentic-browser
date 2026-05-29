@@ -65,18 +65,18 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testNotificationPromptPrependsGoalSettingsCommandWhenConfigured [
+AbTopicGoalTest >> testNotificationPromptPrependsGoalSettingsCommandWhenEnabled [
 
 	| goal topic |
 	topic := self newTopic.
-	topic settings goalSettingsCommand: '/goal'.
+	topic settings useCommandOnGoalSettings: true.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt beginsWith: '/goal ')
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testNotificationPromptOmitsCommandWhenGoalSettingsCommandIsEmpty [
+AbTopicGoalTest >> testNotificationPromptOmitsCommandWhenUseCommandIsFalse [
 
 	| goal topic |
 	topic := self newTopic.
@@ -90,11 +90,23 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileNameWithComma
 
 	| goal topic |
 	topic := self newTopic.
-	topic settings goalSettingsCommand: '/goal'.
+	topic settings useCommandOnGoalSettings: true.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
 	self assert: (goal notificationPrompt includesSubstring: 'result-' , topic topicId , '.md')
+]
+
+{ #category : 'tests' }
+AbTopicGoalTest >> testNotificationPromptUsesConfiguredCommandWhenEnabled [
+
+	| goal topic |
+	topic := self newTopic.
+	topic settings useCommandOnGoalSettings: true.
+	topic settings goalSettingsCommand: '/mygoal'.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	self assert: (goal notificationPrompt beginsWith: '/mygoal ')
 ]
 
 { #category : 'tests' }

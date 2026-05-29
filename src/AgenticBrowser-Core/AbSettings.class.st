@@ -161,7 +161,13 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 { #category : 'defaults' }
 AbSettings >> defaultGoalSettingsCommand [
 	self isDefault ifFalse: [ ^ self class default defaultGoalSettingsCommand ].
-	^ ''
+	^ '/goal'
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultUseCommandOnGoalSettings [
+	self isDefault ifFalse: [ ^ self class default defaultUseCommandOnGoalSettings ].
+	^ false
 ]
 
 { #category : 'defaults' }
@@ -223,6 +229,18 @@ AbSettings >> goalSettingsCommand [
 AbSettings >> goalSettingsCommand: aString [
 
 	self at: #goalSettingsCommand put: aString
+]
+
+{ #category : 'accessing' }
+AbSettings >> useCommandOnGoalSettings [
+
+	^ self at: #useCommandOnGoalSettings ifAbsent: [ self defaultUseCommandOnGoalSettings ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useCommandOnGoalSettings: aBoolean [
+
+	self at: #useCommandOnGoalSettings put: aBoolean
 ]
 
 { #category : 'accessing' }

@@ -9,6 +9,7 @@ Class {
 		'aiTimeoutOptionDropList',
 		'exportTimeoutOptionDropList',
 		'useDefaultMcpServersCheckbox',
+		'useCommandOnGoalSettingsCheckbox',
 		'goalSettingsCommandField',
 		'saveButton',
 		'cancelButton'
@@ -92,6 +93,11 @@ AbSettingsPresenter >> useDefaultMcpServersCheckbox [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> useCommandOnGoalSettingsCheckbox [
+	^ useCommandOnGoalSettingsCheckbox
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> goalSettingsCommandField [
 	^ goalSettingsCommandField
 ]
@@ -114,6 +120,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings aiPermissionTimeoutOption: (self optionIdForLabel: aiTimeoutOptionDropList selectedItem).
 	self settings exportApprovalTimeoutOption: (self optionIdForLabel: exportTimeoutOptionDropList selectedItem).
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
+	self settings useCommandOnGoalSettings: useCommandOnGoalSettingsCheckbox state.
 	self settings goalSettingsCommand: goalSettingsCommandField text.
 	self saveAction cull: self settings
 ]
@@ -167,6 +174,10 @@ AbSettingsPresenter >> initializePresenters [
 	useDefaultMcpServersCheckbox label: 'Use default MCP servers'.
 	useDefaultMcpServersCheckbox state: self settings useDefaultMcpServers.
 
+	useCommandOnGoalSettingsCheckbox := self newCheckBox.
+	useCommandOnGoalSettingsCheckbox label: 'Use command on goal settings'.
+	useCommandOnGoalSettingsCheckbox state: self settings useCommandOnGoalSettings.
+
 	goalSettingsCommandField := self newTextInput.
 	goalSettingsCommandField text: self settings goalSettingsCommand.
 
@@ -190,6 +201,7 @@ AbSettingsPresenter >> defaultLayout [
 		add: (self labeledRow: 'Export timeout (seconds):' field: exportTimeoutField);
 		add: (self labeledRow: 'Export timeout option:' field: exportTimeoutOptionDropList);
 		add: useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
+		add: useCommandOnGoalSettingsCheckbox withConstraints: [ :c | c height: 28 ];
 		add: (self labeledRow: 'Goal settings command:' field: goalSettingsCommandField);
 		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
 		yourself
@@ -218,5 +230,5 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ 355
+		initialExtent: 420 @ 385
 ]

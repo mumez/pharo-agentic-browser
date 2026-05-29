@@ -56,14 +56,13 @@ AbTopicGoal >> isAchieved [
 { #category : 'accessing' }
 AbTopicGoal >> notificationPrompt [
 
-	| basePrompt goalCommand |
+	| basePrompt |
 	basePrompt := 'Goal has been set: ' , description
 		, '. When the goal is achieved, summarize and report in result-'
 		, self resultFileBasename
 		, '. Keep retrying until the goal is achieved.'.
-	goalCommand := self topic settings goalSettingsCommand.
-	(goalCommand isNil or: [ goalCommand isEmpty ]) ifTrue: [ ^ basePrompt ].
-	^ goalCommand , ' ' , basePrompt
+	self topic settings useCommandOnGoalSettings ifFalse: [ ^ basePrompt ].
+	^ self topic settings goalSettingsCommand , ' ' , basePrompt
 ]
 
 { #category : 'accessing' }
