@@ -107,3 +107,18 @@ AbSettingsPresenterTest >> testSaveActionCalledOnSave [
 	presenter saveSettings.
 	self assert: called
 ]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testGoalSettingsCommandFieldShowsDefaultValue [
+	self assert: presenter goalSettingsCommandField text equals: ''
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesGoalSettingsCommandToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter goalSettingsCommandField text: '/goal'.
+	presenter saveSettings.
+	self assert: s goalSettingsCommand equals: '/goal'
+]

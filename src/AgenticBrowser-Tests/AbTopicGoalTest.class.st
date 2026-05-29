@@ -65,6 +65,39 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 ]
 
 { #category : 'tests' }
+AbTopicGoalTest >> testNotificationPromptPrependsGoalSettingsCommandWhenConfigured [
+
+	| goal topic |
+	topic := self newTopic.
+	topic settings goalSettingsCommand: '/goal'.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	self assert: (goal notificationPrompt beginsWith: '/goal ')
+]
+
+{ #category : 'tests' }
+AbTopicGoalTest >> testNotificationPromptOmitsCommandWhenGoalSettingsCommandIsEmpty [
+
+	| goal topic |
+	topic := self newTopic.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	self deny: (goal notificationPrompt beginsWith: '/')
+]
+
+{ #category : 'tests' }
+AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileNameWithCommand [
+
+	| goal topic |
+	topic := self newTopic.
+	topic settings goalSettingsCommand: '/goal'.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
+	self assert: (goal notificationPrompt includesSubstring: 'result-' , topic topicId , '.md')
+]
+
+{ #category : 'tests' }
 AbTopicGoalTest >> testOnTopicCreatesInstance [
 
 	| goal topic |

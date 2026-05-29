@@ -152,6 +152,7 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'useDefaultMcpServers').
 	self assert: (dict includesKey: 'watcherMessageThrottleSeconds').
 	self assert: (dict includesKey: 'codingAgents').
+	self assert: (dict includesKey: 'goalSettingsCommand').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
 ]
 
@@ -185,4 +186,19 @@ AbSettingsTest >> testCodingAgentsSettable [
 	custom := { Dictionary new at: 'name' put: 'my-agent'; at: 'command' put: #('my-agent'); yourself }.
 	settings codingAgents: custom.
 	self assert: ((settings codingAgents first) at: 'name') equals: 'my-agent'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testGoalSettingsCommandDefaultIsEmpty [
+
+	self assert: AbSettings default goalSettingsCommand equals: ''
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testGoalSettingsCommandSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings goalSettingsCommand: '/goal'.
+	self assert: settings goalSettingsCommand equals: '/goal'
 ]

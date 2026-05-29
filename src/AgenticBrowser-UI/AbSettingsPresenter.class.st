@@ -9,6 +9,7 @@ Class {
 		'aiTimeoutOptionDropList',
 		'exportTimeoutOptionDropList',
 		'useDefaultMcpServersCheckbox',
+		'goalSettingsCommandField',
 		'saveButton',
 		'cancelButton'
 	],
@@ -91,6 +92,11 @@ AbSettingsPresenter >> useDefaultMcpServersCheckbox [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> goalSettingsCommandField [
+	^ goalSettingsCommandField
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> saveButton [
 	^ saveButton
 ]
@@ -108,6 +114,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings aiPermissionTimeoutOption: (self optionIdForLabel: aiTimeoutOptionDropList selectedItem).
 	self settings exportApprovalTimeoutOption: (self optionIdForLabel: exportTimeoutOptionDropList selectedItem).
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
+	self settings goalSettingsCommand: goalSettingsCommandField text.
 	self saveAction cull: self settings
 ]
 
@@ -160,6 +167,9 @@ AbSettingsPresenter >> initializePresenters [
 	useDefaultMcpServersCheckbox label: 'Use default MCP servers'.
 	useDefaultMcpServersCheckbox state: self settings useDefaultMcpServers.
 
+	goalSettingsCommandField := self newTextInput.
+	goalSettingsCommandField text: self settings goalSettingsCommand.
+
 	saveButton := self newButton.
 	saveButton label: 'Save'.
 	saveButton action: [ self saveSettings. self window close ].
@@ -180,6 +190,7 @@ AbSettingsPresenter >> defaultLayout [
 		add: (self labeledRow: 'Export timeout (seconds):' field: exportTimeoutField);
 		add: (self labeledRow: 'Export timeout option:' field: exportTimeoutOptionDropList);
 		add: useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
+		add: (self labeledRow: 'Goal settings command:' field: goalSettingsCommandField);
 		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
 		yourself
 ]
@@ -207,5 +218,5 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ 320
+		initialExtent: 420 @ 355
 ]
