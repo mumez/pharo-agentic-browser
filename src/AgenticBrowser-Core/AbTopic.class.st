@@ -16,7 +16,8 @@ Class {
 		'logger',
 		'topicGoal',
 		'session',
-		'settings'
+		'settings',
+		'name'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -393,6 +394,16 @@ AbTopic >> matchingPackageNames [
 { #category : 'accessing' }
 AbTopic >> messages [
 	^ messages
+]
+
+{ #category : 'accessing' }
+AbTopic >> name [
+	^ name
+]
+
+{ #category : 'accessing' }
+AbTopic >> name: aString [
+	name := aString
 ]
 
 { #category : 'accessing' }
