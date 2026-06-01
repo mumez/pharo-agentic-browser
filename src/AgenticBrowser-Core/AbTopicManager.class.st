@@ -164,8 +164,23 @@ AbTopicManager >> topicForWorkingDirectoryPath: aString [
 ]
 
 { #category : 'accessing' }
+AbTopicManager >> topicNamed: aString [
+
+	| matches |
+	matches := self topicsNamed: aString.
+	matches ifEmpty: [ ^ nil ].
+	^ (matches asSortedCollection: [ :a :b | a topicId < b topicId ]) first
+]
+
+{ #category : 'accessing' }
 AbTopicManager >> topics [
 	^ topics values asArray
+]
+
+{ #category : 'accessing' }
+AbTopicManager >> topicsNamed: aString [
+
+	^ topics values select: [ :each | each name = aString ]
 ]
 
 { #category : 'operations' }

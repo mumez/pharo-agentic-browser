@@ -272,7 +272,71 @@ AbTopicManagerTest >> testTopicStatusIsPreservedAfterFuelRoundTrip [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testTopicNamedReturnsNilWhenNoMatch [
+
+	| manager |
+	manager := AbTopicManager forTest.
+	self assert: (manager topicNamed: 'nonexistent') isNil
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicNamedReturnsTopic [
+
+	| manager topic |
+	manager := AbTopicManager forTest.
+	topic := self newTopic: 'Named topic'.
+	topic name: 'my-topic'.
+	manager addTopic: topic.
+	self assert: (manager topicNamed: 'my-topic') == topic
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicNamedWithDuplicatesReturnsByTopicIdOrder [
+
+	| manager topic1 topic2 result |
+	manager := AbTopicManager forTest.
+	topic1 := self newTopic: 'First'.
+	topic2 := self newTopic: 'Second'.
+	topic1 name: 'shared-name'.
+	topic2 name: 'shared-name'.
+	manager addTopic: topic1.
+	manager addTopic: topic2.
+	result := manager topicNamed: 'shared-name'.
+	self assert: result name equals: 'shared-name'.
+	self assert: result topicId equals: ({ topic1. topic2 } asSortedCollection: [ :a :b | a topicId < b topicId ]) first topicId
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testTopicsInitiallyEmpty [
 
 	self assert: AbTopicManager forTest topics isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicsNamedReturnsAllMatchingTopics [
+
+	| manager topic1 topic2 topic3 result |
+	manager := AbTopicManager forTest.
+	topic1 := self newTopic: 'First'.
+	topic2 := self newTopic: 'Second'.
+	topic3 := self newTopic: 'Third'.
+	topic1 name: 'shared-name'.
+	topic2 name: 'shared-name'.
+	topic3 name: 'other-name'.
+	manager addTopic: topic1.
+	manager addTopic: topic2.
+	manager addTopic: topic3.
+	result := manager topicsNamed: 'shared-name'.
+	self assert: result size equals: 2.
+	self assert: (result includes: topic1).
+	self assert: (result includes: topic2).
+	self deny: (result includes: topic3)
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testTopicsNamedReturnsEmptyWhenNoMatch [
+
+	| manager |
+	manager := AbTopicManager forTest.
+	self assert: (manager topicsNamed: 'nonexistent') isEmpty
 ]
