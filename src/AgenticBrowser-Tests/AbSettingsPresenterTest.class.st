@@ -107,3 +107,33 @@ AbSettingsPresenterTest >> testSaveActionCalledOnSave [
 	presenter saveSettings.
 	self assert: called
 ]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testGoalSettingsCommandFieldShowsDefaultValue [
+	self assert: presenter goalSettingsCommandField text equals: '/goal'
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testUseCommandOnGoalSettingsCheckboxShowsDefaultValue [
+	self assert: presenter useCommandOnGoalSettingsCheckbox state equals: false
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesGoalSettingsCommandToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter goalSettingsCommandField text: '/mygoal'.
+	presenter saveSettings.
+	self assert: s goalSettingsCommand equals: '/mygoal'
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesUseCommandOnGoalSettingsToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter useCommandOnGoalSettingsCheckbox state: true.
+	presenter saveSettings.
+	self assert: s useCommandOnGoalSettings equals: true
+]

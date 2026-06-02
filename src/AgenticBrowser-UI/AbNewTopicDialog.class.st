@@ -1,3 +1,23 @@
+"
+I am a modal dialog for creating a new AbTopic.
+
+Responsibility:
+- I collect a topic title, an agent selection, and an optional working directory path from the user.
+- When a working directory is provided I scan its src/ subdirectory to auto-detect package prefix patterns (e.g. 'Foo-*') and pre-populate the new topic's packagePrefixes.
+- On OK I build and expose an AbTopic instance; the caller (AbTopicListPresenter) registers it with AbTopicManager.
+
+Collaborators:
+- AbTopic: I create and configure a new instance on confirmation.
+- AbTopicListPresenter: It opens me modally and reads the resulting #topic.
+- AbDialog: My superclass providing the modal window infrastructure.
+
+Public API and Key Messages:
+- #topic - The newly created AbTopic after the dialog closes; nil if the user cancelled.
+
+Internal Representation:
+- topic - Holds the created AbTopic instance; nil until the OK button is clicked with valid input.
+- agentDropList - Drop-list populated from AgentOptions; the selected item supplies the agent argument array.
+"
 Class {
 	#name : 'AbNewTopicDialog',
 	#superclass : 'AbDialog',

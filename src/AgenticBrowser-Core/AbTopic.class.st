@@ -1,3 +1,41 @@
+"
+I represent a single AI agent conversation session, called a topic.
+
+Responsibility:
+- I maintain the conversation history (messages), agent configuration, and FSM lifecycle state.
+- I coordinate sending prompts to the agent and handling responses.
+- I manage human-in-the-loop approval flows for AI permission and package export requests.
+- I track per-topic settings, working directory, and goal completion.
+
+Collaborators:
+- AbTopicSession: I delegate ACP client connections and session lifecycle to it.
+- AbTopicManager: I am registered and persisted through it.
+- AbWorkingDirectory: I manage the filesystem workspace for the agent via it.
+- AbTopicRelatedPackagesWatcher: I use it to monitor Pharo image changes.
+- AbTopicGoal: I delegate goal-setting and achievement detection to it.
+- AbSettings: I hold a per-topic copy of settings, initialized from global defaults.
+- AbMessage: I store messages in my conversation history.
+
+Public API and Key Messages:
+- #sendPrompt: / #sendPrompt:withResources: - Send a human message and execute the agent.
+- #requestPermission: / #requestPermission:options: - Block the agent thread for human approval.
+- #resolveApprovalWithOptionId: - Resolve a pending approval from the UI.
+- #goalDescription: - Set a goal and notify the agent.
+- #status - Return the current FSM state name (#initial, #working, #waitingForHuman, #endTurn, #goalAchieved).
+
+Internal Representation:
+- stateMachine - SsStateMachine with 5 states driven by events (#promptSent, #permissionRequested, etc.)
+- session - Lazy AbTopicSession; holds the ACP client and config options.
+- messages - OrderedCollection of AbMessage; conversation history.
+- workingDirectory - Lazy AbWorkingDirectory; manages the agent filesystem workspace.
+- topicGoal - Lazy AbTopicGoal; nil until a goal is set.
+- settings - Lazy copy of AbSettings.default; per-topic overrides global config.
+
+Implementation Points:
+- Approval waits are blocking (poll loop on agent thread); the UI thread is never blocked.
+- announcer, logger, workingDirectory, and relatedPackagesWatcher are excluded from Fuel serialization and recreated lazily after load.
+- topic name (short identifier) is separate from title (display label); name supports programmatic lookup via AbTopicManager>>topicsNamed:.
+"
 Class {
 	#name : 'AbTopic',
 	#superclass : 'Object',
@@ -16,7 +54,8 @@ Class {
 		'logger',
 		'topicGoal',
 		'session',
-		'settings'
+		'settings',
+		'name'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -393,6 +432,16 @@ AbTopic >> matchingPackageNames [
 { #category : 'accessing' }
 AbTopic >> messages [
 	^ messages
+]
+
+{ #category : 'accessing' }
+AbTopic >> name [
+	^ name
+]
+
+{ #category : 'accessing' }
+AbTopic >> name: aString [
+	name := aString
 ]
 
 { #category : 'accessing' }

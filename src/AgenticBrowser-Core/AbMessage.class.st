@@ -1,3 +1,31 @@
+"
+I represent a single message in a topic's conversation history.
+
+Responsibility:
+- I store the sender role (#human, #ai, or #system), message text, and last-updated timestamp.
+- I distinguish regular AI text, AI thinking/reasoning text, AI permission requests, and package export approval requests.
+- I track the chosen approval option once a human (or timeout) has resolved an approval request.
+
+Collaborators:
+- AbTopic: It adds me to its messages collection and reads me for pending approvals.
+- AbTopicRelatedPackagesWatcher: It creates export approval request messages via class>>exportApprovalRequestText:.
+- AbMessageRichTextBuilder (AgenticBrowser-UI): It renders me as rich text via #asPresenter.
+
+Public API and Key Messages:
+- AbMessage class>>sender:text: - Create a regular human or system message.
+- AbMessage class>>aiPermissionRequestText:options: - Create an AI permission request message.
+- AbMessage class>>exportApprovalRequestText:options: - Create a package export approval request.
+- #isApprovalRequest - Returns true for either type of approval request.
+- #approvalOption / #approvalOption: - The response chosen by the human (or set on timeout); nil until resolved.
+- #appendText: - Extend AI message text incrementally as streaming chunks arrive.
+
+Internal Representation:
+- sender - Symbol: #human, #ai, or #system.
+- isAiPermission / isExportApproval - Mutually exclusive booleans distinguishing the two request types.
+- approvalOptions - Array of available option associations displayed in the UI.
+- isThink - true for AI thinking/reasoning text (rendered differently in the UI).
+- lastUpdated - Refreshed on every #text: to support last-updated sorting of topics.
+"
 Class {
 	#name : 'AbMessage',
 	#superclass : 'Object',

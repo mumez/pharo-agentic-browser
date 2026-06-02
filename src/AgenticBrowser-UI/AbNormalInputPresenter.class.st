@@ -1,3 +1,22 @@
+"
+I provide the standard text-input row used when no approval is pending.
+
+Responsibility:
+- I render a multi-line text field flanked by Send and Cancel buttons.
+- I support drag-and-drop of compiled methods and classes from the system browser; dropped objects are converted to '@ClassName>>selector' or '@ClassName' mention strings and appended to the input field.
+- I expose #insertMention: so AbChatPresenter can programmatically append screenshot mention strings after capture.
+- Cancel is disabled by default; AbChatPresenter enables it while a topic is in the #working state.
+
+Collaborators:
+- AbChatPresenter: It wires #onSendAction:, #onCancelAction:, and #cancelEnabled:, and calls #insertMention: for screenshot mentions.
+- AbNormalInputPresenter has no domain dependencies; it is purely a UI component.
+
+Public API and Key Messages:
+- #onSendAction: / #onCancelAction: - Register button callbacks.
+- #cancelEnabled: - Enable or disable the Cancel button.
+- #inputText / #clearInput - Read and clear the current text.
+- #insertMention: - Append a mention string to the input field content.
+"
 Class {
 	#name : 'AbNormalInputPresenter',
 	#superclass : 'SpPresenter',

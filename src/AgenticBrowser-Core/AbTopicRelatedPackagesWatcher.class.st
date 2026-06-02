@@ -1,3 +1,33 @@
+"
+I monitor Pharo image changes for packages related to a topic and coordinate export approval with the agent.
+
+Responsibility:
+- I subscribe to SystemAnnouncer for MethodAnnouncement and ClassAnnouncement events.
+- When a changed package matches the topic's packagePrefixes, I ask the topic for export approval before writing .st files.
+- When a changed package does not match, I record it in the topic's updatedExternalPackageNames for later manual action.
+- I suppress all change handling while a package import from source is in progress, preventing re-export loops.
+- I throttle chat notifications per package using a configurable minimum interval.
+
+Collaborators:
+- AbTopic: I am owned by a topic and delegate approval requests and system messages back to it.
+- AbWorkingDirectory: I call it to export classes when approval is granted.
+- SystemAnnouncer: I subscribe to image change events while watching.
+
+Public API and Key Messages:
+- #start - Begin watching; subscribes to SystemAnnouncer and starts the worker process.
+- #stop - Cease watching; unsubscribes and terminates the worker process.
+- #isWatching - Returns whether watching is currently active.
+
+Internal Representation:
+- changeQueue - SharedQueue of (className -> packageName) pairs consumed by the worker process.
+- workerProcess - Background Smalltalk process that drains changeQueue and handles each change.
+- lastAnnouncedAtByPackage - Dictionary tracking last notification timestamp per package for throttling.
+- isWatching - Guard flag; prevents double-start and ensures clean shutdown.
+
+Implementation Points:
+- Change events arrive on the SystemAnnouncer thread and are put on changeQueue immediately; a dedicated background process handles them to avoid blocking the announcer.
+- Import suppression uses AbWorkingDirectory>>importNestingCount (a nesting counter) rather than a simple boolean to handle nested imports correctly.
+"
 Class {
 	#name : 'AbTopicRelatedPackagesWatcher',
 	#superclass : 'Object',

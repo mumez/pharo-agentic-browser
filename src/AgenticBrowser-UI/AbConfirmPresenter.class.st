@@ -1,3 +1,26 @@
+"
+I render the approval pane shown when the agent requests human confirmation.
+
+Responsibility:
+- I display the permission or export-approval prompt text in a read-only text area.
+- I present an option drop-list populated from the message's approvalOptions associations (key = label, value = option-id symbol).
+- I show a Confirm button and, when exactly two options are present, a Deny button; with a single option the button label changes to ""Submit"".
+- I expose the selected option id so AbChatPresenter can forward it to the topic on button click.
+
+Collaborators:
+- AbChatPresenter: It instantiates me, sets #confirmationText: and #approvalOptions:, and wires #onConfirmAction: / #onDenyAction:.
+- AbConstants: I use #defaultApprovalOptions as the fallback when no options are provided.
+
+Public API and Key Messages:
+- #confirmationText: - Set the prompt text displayed to the user.
+- #approvalOptions: - Populate the drop-list; passing nil or empty uses the default options.
+- #selectedOptionId - The option-id symbol corresponding to the currently selected drop-list item (used by Confirm).
+- #selectedOptionIdForDenyAction - The second option's id when Deny is shown; otherwise same as #selectedOptionId.
+
+Internal Representation:
+- approvalOptions - Array of label→optionId associations driving the drop-list.
+- showsDenyButton - True when exactly two options exist; controls layout and button labels.
+"
 Class {
 	#name : 'AbConfirmPresenter',
 	#superclass : 'SpPresenter',
