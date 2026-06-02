@@ -1,3 +1,35 @@
+"
+I am the chat pane for a single topic, occupying the right side of the Agentic Browser window.
+
+Responsibility:
+- I display the message history through AbMessagesPresenter and route input through AbNormalInputPresenter or AbConfirmPresenter depending on whether approval is pending.
+- I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, and animated dots label.
+- I subscribe to topic announcements (AbMessageAdded, AbTopicStatusChanged, AbTopicCurrentModelChanged, AbTopicCurrentModeChanged, AbTopicAvailableCommandsChanged) and update the UI accordingly.
+- I switch layouts dynamically between ""normal"" and ""approval"" mode when an AbMessage with isApprovalRequest = true arrives.
+- I prepend '/st-buddy ' to the first human message sent in a topic.
+- I collect @mention resources (code and screenshots) from the input text before sending a prompt.
+
+Collaborators:
+- AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApprovalWithOptionId:, setConfigOptionId:value:).
+- AbMessagesPresenter: I delegate message rendering to it.
+- AbNormalInputPresenter: My default input widget; I enable/disable Cancel based on topic status.
+- AbConfirmPresenter: Replaces the input area during approval mode.
+- AbScreenshotAttachment: I call #captureAndSave on click and insert the mention string.
+- AbCodeMentionParser / AbCodeMentionEmbedder / AbScreenshotParser: I parse @mentions from text before sending.
+
+Public API and Key Messages:
+- #topic: - Bind to a new AbTopic; unsubscribes from the old one and re-renders.
+- #enterApprovalMode: / #exitApprovalMode - Switch between input layouts.
+- #statusText: / #clearStatusText - Update the animated status label.
+
+Internal Representation:
+- currentTopic - The currently displayed AbTopic; nil when no selection.
+- pendingApprovalMessage - The AbMessage awaiting resolution; nil in normal mode.
+- dotsAnimationProcess - Background process cycling '.', '..', '...'; nil when stopped.
+- modelConfigId / modeConfigId - The config key strings used when pushing selections back to the topic.
+- modelOptions / modeOptions - Cached ACPConfigSelectOption arrays for current model/mode.
+- isRefreshingDropdownItems - Guard preventing spurious config-change events during programmatic drop-list updates.
+"
 Class {
 	#name : 'AbChatPresenter',
 	#superclass : 'SpPresenter',

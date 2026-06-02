@@ -1,3 +1,23 @@
+"
+I bridge ACP client callbacks to an AbTopic, translating protocol objects into domain calls.
+
+Responsibility:
+- I implement the ACPClientHandler interface: #sessionUpdate: and #requestPermission:.
+- For session updates I dispatch AI message chunks, thought chunks, available-command updates, and config-option updates to the topic's corresponding methods.
+- For permission requests I extract the human-readable prompt and option associations from the ACPRequestPermission object, delegate to the topic to obtain a human-approved option id, then build and return the ACP response.
+
+Collaborators:
+- AbTopic: I call #addAiTextChunk:, #addAiThoughtChunk:, #updateAvailableCommands:, #updateConfigOptions:, and #requestPermission:options: on it.
+- ACPClientHandler: My superclass; defines the callback interface expected by ACPClient.
+- ACPRequestPermission / ACPRequestPermissionResponse: ACP protocol objects I receive and respond to.
+- AbConstants: I fall back to its default allow/deny option symbols when the permission request carries no options.
+
+Public API and Key Messages:
+- #topic: - Bind this handler to a specific AbTopic before the session starts.
+
+Internal Representation:
+- topic - The AbTopic this handler forwards all callbacks to.
+"
 Class {
 	#name : 'AbTopicHandler',
 	#superclass : 'ACPClientHandler',

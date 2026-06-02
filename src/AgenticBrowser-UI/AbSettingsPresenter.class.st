@@ -1,3 +1,25 @@
+"
+I am a settings editor that presents and saves an AbSettings instance.
+
+Responsibility:
+- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, and goal-settings command fields.
+- I support two entry points: editing the global default settings (via #openOnDefault) and editing a per-topic copy (via #openOnTopic:).
+- On save I invoke a configurable saveAction block; for the global path this writes the fuel file, for the topic path it replaces the topic's in-memory settings only.
+
+Collaborators:
+- AbSettings: I am the SpPresenterWithModel model; I read initial values from it and write back on save.
+- AbBrowserPresenter: It opens me for global settings via the ""Settings..."" menu item.
+- AbTopicListPresenter: It opens me for per-topic settings via the ""Edit Settings..."" context menu item.
+
+Public API and Key Messages:
+- AbSettingsPresenter class>>openOnDefault - Open editor for the global AbSettings singleton; saves to fuel on confirm.
+- AbSettingsPresenter class>>openOnTopic: - Open editor for a topic's settings copy; replaces the topic's settings on confirm without a global save.
+- #saveAction: - Inject a custom save block (receives the edited AbSettings as argument).
+
+Internal Representation:
+- saveAction - Block called with the edited AbSettings on save; defaults to a no-op.
+- All field/widget instVars hold the Spec2 presenters for each individual setting.
+"
 Class {
 	#name : 'AbSettingsPresenter',
 	#superclass : 'SpPresenterWithModel',

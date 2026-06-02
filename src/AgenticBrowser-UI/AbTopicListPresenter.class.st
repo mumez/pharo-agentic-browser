@@ -1,3 +1,29 @@
+"
+I render the left-sidebar topic list and dispatch all topic-level operations via a context menu.
+
+Responsibility:
+- I display all registered AbTopics as a sorted list with status icons and agent-name labels.
+- I support two sort modes: alphabetical by title and descending by last-updated timestamp.
+- I provide a context menu with operations: Rename, Delete, Inspect, Change Agent, Set Goal, Set Working Directory, Clear Session ID, Set Target Packages, Apply Updated External Packages, and Edit Settings.
+- I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and new topic additions.
+- I fire a user-supplied block when a topic is selected, allowing AbBrowserPresenter to update AbChatPresenter.
+
+Collaborators:
+- AbTopicManager: I query it for the full topic list and subscribe to AbTopicAdded announcements.
+- AbTopic: I subscribe to AbTopicStatusChanged on each topic to trigger list refresh.
+- AbSettingsPresenter: I open it via #openOnTopic: for per-topic settings editing.
+- AbNewTopicDialog / AbSetAgentDialog / AbPackagePrefixesDialog: I open these dialogs for the relevant context-menu actions.
+- AbChatPresenter: Indirectly notified via the onTopicSelected callback set by AbBrowserPresenter.
+
+Public API and Key Messages:
+- #onTopicSelected: - Register a one-argument block called when the user selects a topic.
+- #refresh - Reload and re-sort the topic list from AbTopicManager.
+
+Internal Representation:
+- topicList - The SpListPresenter showing topics with icons.
+- sortMode - Symbol (#title or #lastUpdated) controlling current sort order.
+- onTopicSelectedBlock - Optional callback block; receives the selected AbTopic.
+"
 Class {
 	#name : 'AbTopicListPresenter',
 	#superclass : 'SpPresenter',

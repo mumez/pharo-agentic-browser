@@ -1,3 +1,37 @@
+"
+I manage the ACP client connection to an AI agent on behalf of an AbTopic.
+
+Responsibility:
+- I handle connecting, disconnecting, and reconnecting to the ACP agent process.
+- I resume or create agent sessions, preferring resume when the agent supports it.
+- I load and register MCP servers on session establishment via AbMcpServersLoader.
+- I track the agent's current model, mode, and available slash commands via config options.
+- I fire announcements when model, mode, or available commands change.
+
+Collaborators:
+- AbTopic: I am owned by a topic; I delegate back to it for working directory setup and as handler target.
+- AbTopicHandler: I set it as the ACP client handler to receive agent callbacks.
+- AbMcpServersLoader: I call it to resolve the MCP server list on every connect.
+- ACPClient: I create and manage the low-level ACP protocol client.
+
+Public API and Key Messages:
+- #ensureConnected - Connect lazily on first use; resume existing session if possible.
+- #disconnect - Cleanly disconnect the ACP client and reset derived state.
+- #setConfigOptionId:value: - Send a config change to the agent (e.g. model/mode selection).
+- #updateConfigOptions: - Synchronize config options and announce model/mode changes.
+- #sessionId - The persistent ACP session identifier used for resume/load.
+
+Internal Representation:
+- client - The ACPClient instance; nil when not connected (excluded from Fuel serialization).
+- sessionId - Persisted across image restarts; used to resume agent sessions.
+- configOptions - OrderedCollection of ACPConfigOption from the agent; drives the UI droplists.
+- currentModel / currentMode - Cached current values; suppress no-op announcements.
+
+Implementation Points:
+- client is excluded from Fuel serialization (fuelIgnoredInstanceVariableNames) and is recreated on next #ensureConnected.
+- If the agent does not support MCP server registration, MCP servers are silently skipped and a system message is inserted into the topic.
+- Session resume falls back to load, then to new session creation, based on agent capability flags.
+"
 Class {
 	#name : 'AbTopicSession',
 	#superclass : 'Object',

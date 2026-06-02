@@ -1,3 +1,28 @@
+"
+I render the conversation history for a topic as a single scrolling rich-text area.
+
+Responsibility:
+- I maintain an ordered collection of AbMessage instances and re-render them as combined rich text whenever the collection changes.
+- I delegate per-message rendering to AbMessageRichTextBuilder and concatenate the results with CRLF separators.
+- I provide a ""Hide think"" checkbox that filters out isThink messages from the visible set without removing them from the internal collection.
+- I auto-scroll to the bottom whenever a message is added or updated.
+
+Collaborators:
+- AbChatPresenter: It calls #addOrUpdateMessage:, #setMessages:, and #refreshMessages on me.
+- AbMessageRichTextBuilder: I call it to convert each AbMessage into formatted rich text.
+- MicTextPresenter: My internal read-only text presenter that displays the combined rich text.
+
+Public API and Key Messages:
+- #addOrUpdateMessage: - Append a new message or redisplay an existing one (handles streaming chunks via identity check).
+- #setMessages: - Full replacement of the message list (used on topic switch).
+- #refreshMessages - Re-render all messages without scrolling (used when approval state changes).
+- #hideThinkEnabled: - Toggle think-message filtering.
+
+Internal Representation:
+- messages - OrderedCollection of all AbMessage instances for the current topic.
+- messageTextPresenter - MicTextPresenter rendering the combined rich text.
+- hideThinkCheckBox - User control for filtering isThink messages.
+"
 Class {
 	#name : 'AbMessagesPresenter',
 	#superclass : 'SpPresenter',

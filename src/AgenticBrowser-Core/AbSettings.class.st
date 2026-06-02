@@ -1,3 +1,33 @@
+"
+I hold configuration for AgenticBrowser with a two-level hierarchy: a global singleton and per-topic copies.
+
+Responsibility:
+- I store timeout durations and options for AI permission and package export approvals.
+- I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
+- I persist the list of available coding agents shown in the New Topic dialog.
+- I load from and save to ab-settings.json using STON/JSON serialization.
+- I delegate defaults to the global instance when I am a non-default (per-topic) copy.
+
+Collaborators:
+- AbTopic: It holds a per-topic copy created via AbSettings class>>defaultCopied.
+- AbMcpServersLoader: It reads #useDefaultMcpServers to decide whether to merge built-in servers.
+- AbTopicRelatedPackagesWatcher: It reads #watcherMessageThrottleDuration for throttle control.
+- AbTopicGoal: It reads #useCommandOnGoalSettings and #goalSettingsCommand.
+
+Public API and Key Messages:
+- AbSettings class>>default - Global singleton; created lazily.
+- AbSettings class>>defaultCopied - Creates a fresh copy of the global settings for per-topic use.
+- AbSettings class>>load / #save - Load from / save to ab-settings.json.
+- #initFrom: - Copy all keys from another settings instance into self.
+
+Internal Representation:
+- settingsDict - Dictionary keyed by Symbol storing all explicitly set values.
+- default (class inst var) - Cached global singleton; reset on class initialize.
+
+Implementation Points:
+- Non-default instances delegate missing keys to the global instance via #isDefault checks in every #defaultXxx method, so per-topic copies only override keys that are explicitly set.
+- #asFullJsonDictionary collects all unary 'accessing' protocol selectors dynamically, so new settings keys are automatically included in the JSON output when a getter is added to that protocol.
+"
 Class {
 	#name : 'AbSettings',
 	#superclass : 'Object',

@@ -1,3 +1,37 @@
+"
+I am the singleton registry and persistence manager for all AbTopic instances.
+
+Responsibility:
+- I maintain the collection of active topics keyed by their topicId.
+- I persist topics to and load them from a Fuel binary file (ab-topics.fuel).
+- I announce AbTopicAdded when a topic is registered.
+- I clean up (stop watching, disconnect) topics on removal or image re-initialization.
+- I provide topic lookup by topicId, working directory path, and name.
+
+Collaborators:
+- AbTopic: I own and lifecycle-manage all topic instances.
+- AbTopicAdded: I announce it when a new topic is added.
+- FLSerializer / FLMaterializer: I use the Fuel framework for binary serialization.
+
+Public API and Key Messages:
+- AbTopicManager class>>uniqueInstance / #default - Access the global singleton.
+- AbTopicManager class>>load / #save - Load from / save to ab-topics.fuel.
+- #addTopic: - Register a topic and announce AbTopicAdded.
+- #removeTopic: - Teardown and deregister a topic.
+- #topics - All registered topics as an Array.
+- #topicNamed: - Look up the first topic by name (lexicographic topicId order).
+- #topicForWorkingDirectoryPath: - Look up a topic by its working directory path.
+
+Internal Representation:
+- topics - Dictionary keyed by topicId String, valued by AbTopic.
+- announcer - Lazy Announcer; excluded from Fuel and recreated lazily after load.
+- default (class inst var) - The global singleton instance.
+- forTest (class inst var) - Isolated instance used by the test suite; does not affect the global instance.
+
+Implementation Points:
+- announcer is excluded from Fuel serialization; subscribers must re-subscribe after each load.
+- #cleanupAllTopics stops watchers and disconnects agents; called before replacing the default instance on load.
+"
 Class {
 	#name : 'AbTopicManager',
 	#superclass : 'Object',

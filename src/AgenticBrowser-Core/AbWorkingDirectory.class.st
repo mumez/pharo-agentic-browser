@@ -1,3 +1,31 @@
+"
+I manage the filesystem working directory used by an AI agent topic.
+
+Responsibility:
+- I provide and ensure the existence of the per-topic directory under <imageDir>/agentic-browser/.
+- I resolve the Tonel source subdirectory by reading the .project metafile (defaults to 'src/').
+- I export Pharo classes and packages to Tonel .st files in the source subdirectory.
+- I track whether a package import from source is in progress via a nesting counter, suppressing re-export loops.
+- I subscribe to SisServer import lifecycle events to maintain the nesting counter.
+
+Collaborators:
+- AbTopic: I am owned by a topic; I read its workingDirectoryPath for all file operations.
+- AbTopicRelatedPackagesWatcher: It calls #exportClassNamed:in: and reads #isImportingFromSource.
+- SisServer (PharoSmalltalkInteropServer): I subscribe to its request announcements to detect import start/end.
+- TonelWriter: I use it to write class and package .st files.
+
+Public API and Key Messages:
+- #path - The FileReference for the topic's working directory root.
+- #sourcePath - path / srcDirectory (e.g. .../MyTopic-abc123/src).
+- #ensureExists - Create the directory if it does not exist.
+- #exportClassNamed:in: - Write one class to its Tonel .class.st file.
+- #exportPackageNamed: - Write an entire package snapshot to the source path.
+- #isImportingFromSource - True while a Tonel import through SisServer is in progress.
+
+Internal Representation:
+- importNestingCount - Integer; incremented on import start and decremented on end to support nested imports.
+- srcDirectory - Cached source subdirectory name; resolved once from the .project metafile then cached.
+"
 Class {
 	#name : 'AbWorkingDirectory',
 	#superclass : 'Object',
