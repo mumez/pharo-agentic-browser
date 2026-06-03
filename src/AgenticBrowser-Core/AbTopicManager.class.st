@@ -119,20 +119,20 @@ AbTopicManager class >> save [
 { #category : 'persistence' }
 AbTopicManager class >> saveTo: aFileReference [
 
-	self saveTo: aFileReference manager: self default
-]
-
-{ #category : 'persistence' }
-AbTopicManager class >> saveTo: aFileReference manager: aManager [
-
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
+	self default saveTo: aFileReference
 ]
 
 { #category : 'instance creation' }
 AbTopicManager class >> uniqueInstance [
 
 	^ self default
+]
+
+{ #category : 'persistence' }
+AbTopicManager >> saveTo: aFileReference [
+
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: aFileReference fullName
 ]
 
 { #category : 'operations' }
