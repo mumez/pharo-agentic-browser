@@ -193,6 +193,7 @@ AbChatPresenter >> exitApprovalMode [
 
 	self pendingApprovalMessage: nil.
 	self layout: self defaultLayout.
+	self messagesPresenter scrollToBottom.
 	self syncModelDropListFromTopic: self currentTopic.
 	self syncModeDropListFromTopic: self currentTopic
 ]
