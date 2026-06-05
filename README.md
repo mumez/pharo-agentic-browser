@@ -176,6 +176,8 @@ Watching starts automatically when a topic first connects (on the first **Send**
 
 ## Supported Agents
 
+Any ACP compatible coding agent can be used. The following agents are available as presets in the New Topic dialog:
+
 | Agent | Arguments | Install |
 |-------|-----------| ----------- |
 | Claude Code | [`claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp) | `npm install -g @agentclientprotocol/claude-agent-acp` |
@@ -183,8 +185,21 @@ Watching starts automatically when a topic first connects (on the first **Send**
 | Gemini CLI | [`gemini --acp`](https://github.com/google-gemini/gemini-cli) | ACP is built-in |
 | OpenCode | [`opencode acp`](https://github.com/anomalyco/opencode) | ACP is built-in |
 | GitHub Copilot CLI | [`copilot --acp --stdio`](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) | ACP is built-in |
+| Cursor CLI | [`agent acp`](https://cursor.com/cli) | ACP is built-in |
+| Kilo Code | [`kilo acp`](https://kilo.ai/cli) | ACP is built-in |
 
 > **Strongly Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and MCP servers that agents can use to work directly with Pharo inside the session.
+
+### Adding a Custom Agent
+
+To add a custom agent, edit `ab-settings.json` directly in a text editor. Alternatively, from a Playground:
+
+```smalltalk
+AbSettings default codingAgents: (AbSettings default codingAgents copyWith:
+    {'name' -> 'my-agent'.
+    'command' -> #('my-agent' '--acp')} asDictionary).
+AbSettings save.
+```
 
 ## Package Structure
 
@@ -262,15 +277,6 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 | `exportApprovalWaitTimeoutSeconds` | `30` | Seconds to wait for human approval of a package export |
 | `exportApprovalTimeoutOption` | `#reject_once` | Auto-response on export timeout |
 | `watcherMessageThrottleSeconds` | `2` | Minimum seconds between watcher system messages for the same package |
-
-To add a custom agent, edit `ab-settings.json` directly in a text editor. Alternatively, from a Playground:
-
-```smalltalk
-AbSettings default codingAgents: (AbSettings default codingAgents copyWith:
-    {'name' -> 'my-agent'.
-    'command' -> #('my-agent' '--acp')} asDictionary).
-AbSettings save.
-```
 
 ### Per-Topic Settings
 
