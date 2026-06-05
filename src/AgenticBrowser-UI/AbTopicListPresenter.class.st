@@ -65,6 +65,7 @@ AbTopicListPresenter >> buildTopicContextMenu [
 			  group
 				  addItem: [ :item | item name: 'Rename...'; action: [ self onRenameTopicRequest ] ];
 				  addItem: [ :item | item name: 'Delete'; enabled: notWorking; action: [ self onDeleteTopicRequest ] ];
+				  addItem: [ :item | item name: 'Copy'; action: [ self onCopyTopicRequest ] ];
 				  addItem: [ :item | item name: 'Inspect...'; action: [ self onInspectTopicRequest ] ] ];
 		  addGroup: [ :group |
 			  group
@@ -182,6 +183,17 @@ AbTopicListPresenter >> onClearSessionIdRequest [
 ]
 
 { #category : 'private' }
+AbTopicListPresenter >> onCopyTopicRequest [
+
+	| selectedTopic newTopic |
+	selectedTopic := self topicList selectedItem.
+	selectedTopic ifNil: [ ^ self ].
+	newTopic := selectedTopic copyForNewSession.
+	AbTopicManager default addTopic: newTopic.
+	self defer: [ self refresh. self topicList selectItem: newTopic ]
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> onDeleteTopicRequest [
 
 	| selectedTopic |
@@ -191,7 +203,7 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		 confirm: 'Delete topic "' , selectedTopic title , '"?'
 		 label: 'Confirm Delete')
 		ifTrue: [
-			AbTopicManager uniqueInstance removeTopic: selectedTopic.
+			AbTopicManager default removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
 ]
 
@@ -211,7 +223,7 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog := AbNewTopicDialog new.
 	dialog openModal.
 	dialog topic ifNotNil: [ :topic |
-		AbTopicManager uniqueInstance addTopic: topic.
+		AbTopicManager default addTopic: topic.
 		self defer: [ self refresh. self topicList selectItem: topic ] ]
 ]
 
@@ -319,7 +331,7 @@ AbTopicListPresenter >> onTopicSelected: aBlock [
 AbTopicListPresenter >> refresh [
 
 	| items |
-	items := AbTopicManager uniqueInstance topics asArray.
+	items := AbTopicManager default topics asArray.
 	self topicList items: (self sortedTopics: items)
 ]
 
@@ -371,12 +383,12 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
-	AbTopicManager uniqueInstance topicsDo: [ :t |
+	AbTopicManager default topicsDo: [ :t |
 		t announcer
 			when: AbTopicStatusChanged
 			do: [ self defer: [ self refresh ] ]
 			for: self ].
-	AbTopicManager uniqueInstance announcer
+	AbTopicManager default announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			ann topic announcer
@@ -413,7 +425,7 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> unsubscribeFromTopicManager [
 
-	AbTopicManager uniqueInstance topicsDo: [ :t |
+	AbTopicManager default topicsDo: [ :t |
 		t announcer unsubscribe: self ].
-	AbTopicManager uniqueInstance announcer unsubscribe: self
+	AbTopicManager default announcer unsubscribe: self
 ]

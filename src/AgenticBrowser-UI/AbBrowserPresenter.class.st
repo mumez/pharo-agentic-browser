@@ -67,7 +67,7 @@ AbBrowserPresenter >> initializePresenters [
 	super initializePresenters.
 	topicListPresenter := self instantiate: AbTopicListPresenter.
 	chatPresenter := self instantiate: AbChatPresenter.
-	AbTopicManager uniqueInstance startAllTopicsWatching
+	AbTopicManager default startAllTopicsWatching
 ]
 
 { #category : 'initialization' }
@@ -109,7 +109,7 @@ AbBrowserPresenter >> onWindowClosed [
 	| manager |
 	topicListPresenter release.
 	chatPresenter release.
-	manager := AbTopicManager uniqueInstance.
+	manager := AbTopicManager default.
 	manager cleanupAllTopics.
 	AbSettings save.
 	AbTopicManager save
