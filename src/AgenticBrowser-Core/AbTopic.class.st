@@ -231,6 +231,21 @@ AbTopic >> availableCommands: aCollection [
 ]
 
 { #category : 'operations' }
+AbTopic >> copyForNewSession [
+
+	| copy |
+	copy := self class new.
+	copy title: '(Copy) ' , self title.
+	copy agentArguments: self agentArguments copy.
+	copy workingDirectoryPath: self workingDirectoryPath.
+	copy packagePrefixes: self packagePrefixes copy.
+	copy settings: (AbSettings new initFrom: self settings).
+	self updatedExternalPackageNames do: [ :each |
+		copy addUpdatedExternalPackageName: each ].
+	^ copy
+]
+
+{ #category : 'operations' }
 AbTopic >> cancelPrompt [
 
 	self isWorking ifFalse: [ ^ self ].

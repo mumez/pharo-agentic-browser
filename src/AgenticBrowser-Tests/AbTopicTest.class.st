@@ -915,3 +915,57 @@ AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
 		assert: topic settings aiPermissionTimeoutOption
 		equals: AbSettings default aiPermissionTimeoutOption
 ]
+
+{ #category : 'tests' }
+AbTopicTest >> testCopyForNewSessionPrefixesTitle [
+
+	| topic copy |
+	topic := AbTopic new.
+	topic title: 'My Topic'.
+	copy := topic copyForNewSession.
+	self assert: copy title equals: '(Copy) My Topic'
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testCopyForNewSessionInheritsConfiguration [
+
+	| topic copy |
+	topic := AbTopic new.
+	topic title: 'Original'.
+	topic agentArguments: #( 'my-agent' '--flag' ).
+	topic workingDirectoryPath: '/tmp/mywork'.
+	topic packagePrefixes: #( 'Foo-*' 'Bar-*' ) asSet.
+	topic addUpdatedExternalPackageName: 'SomePkg'.
+	copy := topic copyForNewSession.
+	self assert: copy agentArguments equals: #( 'my-agent' '--flag' ).
+	self deny: copy agentArguments == topic agentArguments.
+	self assert: copy workingDirectoryPath equals: '/tmp/mywork'.
+	self assert: copy packagePrefixes equals: #( 'Foo-*' 'Bar-*' ) asSet.
+	self deny: copy packagePrefixes == topic packagePrefixes.
+	self assert: copy updatedExternalPackageNames equals: #( 'SomePkg' ) asSet
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testCopyForNewSessionCopiesSettings [
+
+	| topic copy |
+	topic := AbTopic new.
+	copy := topic copyForNewSession.
+	self deny: copy settings == topic settings.
+	self
+		assert: copy settings aiPermissionWaitTimeoutSeconds
+		equals: topic settings aiPermissionWaitTimeoutSeconds
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testCopyForNewSessionClearsSessionState [
+
+	| topic copy |
+	topic := AbTopic new.
+	topic title: 'Original'.
+	topic addAiTextChunk: 'Hello'.
+	copy := topic copyForNewSession.
+	self assert: copy messages isEmpty.
+	self assert: copy status equals: #initial.
+	self deny: copy topicId equals: topic topicId
+]
