@@ -164,7 +164,7 @@ AbMessagesPresenter >> richTextFor: anAbMessage [
 	^ AbMessageRichTextBuilder new richTextFor: anAbMessage
 ]
 
-{ #category : 'private' }
+{ #category : 'rendering' }
 AbMessagesPresenter >> scrollToBottom [
 	"Scroll the list to show the last (newest) message."
 

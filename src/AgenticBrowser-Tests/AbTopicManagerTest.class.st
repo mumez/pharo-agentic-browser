@@ -127,7 +127,7 @@ AbTopicManagerTest >> testLoadFromRestoresTopicStatus [
 	manager addTopic: topic.
 	file := FileReference newTempFilePrefix: 'ab-topics-status-' suffix: '.fuel'.
 	[
-	AbTopicManager saveTo: file manager: manager.
+	manager saveTo: file.
 	loaded := AbTopicManager loadFrom: file.
 	self assert: loaded topics first status equals: #endTurn ]
 		ensure: [ file ensureDelete ]
@@ -144,7 +144,7 @@ AbTopicManagerTest >> testLoadFromRestoresWorkingDirectoryPath [
 	manager addTopic: topic.
 	file := FileReference newTempFilePrefix: 'ab-topics-path-' suffix: '.fuel'.
 	[
-	AbTopicManager saveTo: file manager: manager.
+	manager saveTo: file.
 	loaded := AbTopicManager loadFrom: file.
 	self assert: loaded topics first workingDirectoryPath equals: path ]
 		ensure: [ file ensureDelete ]
@@ -204,7 +204,7 @@ AbTopicManagerTest >> testSaveToAndLoadFromRoundTrip [
 	manager addTopic: topic.
 	file := FileReference newTempFilePrefix: 'ab-topics-test-' suffix: '.fuel'.
 	[
-	AbTopicManager saveTo: file manager: manager.
+	manager saveTo: file.
 	loaded := AbTopicManager loadFrom: file.
 	self assert: loaded topics size equals: 1.
 	self assert: loaded topics first title equals: 'ab-test-Persisted topic'.

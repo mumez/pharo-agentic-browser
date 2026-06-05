@@ -110,6 +110,7 @@ AbSettings class >> saveTo: aFileReference [
 AbSettings >> saveFullTo: aFileReference [
 
 	aFileReference parent ensureCreateDirectory.
+	aFileReference ensureDelete.
 	aFileReference writeStreamDo: [ :stream |
 		stream nextPutAll: (STONJSON toStringPretty: self asFullJsonDictionary) ]
 ]
@@ -214,7 +215,9 @@ AbSettings >> defaultCodingAgentsJsonString [
   {"name": "Gemini CLI", "command": ["gemini", "--acp"]},
   {"name": "OpenCode", "command": ["opencode", "acp"]},
   {"name": "Copilot CLI", "command": ["copilot", "--acp", "--stdio"]},
-  {"name": "codex-acp", "command": ["codex-acp"]}
+  {"name": "codex-acp", "command": ["codex-acp"]},
+  {"name": "Cursor CLI", "command": ["agent", "acp"]},
+  {"name": "Kilo Code", "command": ["kilo", "acp"]}
 ]
 '
 ]

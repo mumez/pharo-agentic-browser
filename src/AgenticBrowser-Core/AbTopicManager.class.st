@@ -14,7 +14,7 @@ Collaborators:
 - FLSerializer / FLMaterializer: I use the Fuel framework for binary serialization.
 
 Public API and Key Messages:
-- AbTopicManager class>>uniqueInstance / #default - Access the global singleton.
+- AbTopicManager class>>#default - Access the global singleton.
 - AbTopicManager class>>load / #save - Load from / save to ab-topics.fuel.
 - #addTopic: - Register a topic and announce AbTopicAdded.
 - #removeTopic: - Teardown and deregister a topic.
@@ -119,20 +119,14 @@ AbTopicManager class >> save [
 { #category : 'persistence' }
 AbTopicManager class >> saveTo: aFileReference [
 
-	self saveTo: aFileReference manager: self default
+	self default saveTo: aFileReference
 ]
 
 { #category : 'persistence' }
-AbTopicManager class >> saveTo: aFileReference manager: aManager [
+AbTopicManager >> saveTo: aFileReference [
 
 	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: aManager toFileNamed: aFileReference fullName
-]
-
-{ #category : 'instance creation' }
-AbTopicManager class >> uniqueInstance [
-
-	^ self default
+	FLSerializer serialize: self toFileNamed: aFileReference fullName
 ]
 
 { #category : 'operations' }

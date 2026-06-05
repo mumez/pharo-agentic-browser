@@ -24,6 +24,7 @@ Public API and Key Messages:
 Internal Representation:
 - client - The ACPClient instance; nil when not connected (excluded from Fuel serialization).
 - sessionId - Persisted across image restarts; used to resume agent sessions.
+- availableCommands - Slash commands reported by the agent; persisted so the UI dropdown is populated before the next session connects.
 - configOptions - OrderedCollection of ACPConfigOption from the agent; drives the UI droplists.
 - currentModel / currentMode - Cached current values; suppress no-op announcements.
 
@@ -158,8 +159,7 @@ AbTopicSession >> initClientDerived [
     client := nil.
     currentModel := nil.
     currentMode := nil.
-    configOptions := nil.
-    availableCommands := nil
+    configOptions := nil
 ]
 
 { #category : 'accessing' }

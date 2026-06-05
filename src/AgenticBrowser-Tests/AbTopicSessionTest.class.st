@@ -56,7 +56,7 @@ AbTopicSessionTest >> testConnectResponsibilityMovedToSession [
 ]
 
 { #category : 'tests' }
-AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
+AbTopicSessionTest >> testDisconnectKeepsSessionIdAndAvailableCommandsAndClearsOtherTransientFields [
 
 	| topic session mockClient |
 	topic := self newTopic.
@@ -78,7 +78,7 @@ AbTopicSessionTest >> testDisconnectKeepsSessionIdAndClearsTransientFields [
 	self assert: session client isNil.
 	self assert: session sessionId equals: 'session-1'.
 	self assert: session currentModel isNil.
-	self assert: session availableCommands isEmpty
+	self assert: session availableCommands size equals: 1
 ]
 
 { #category : 'tests' }
