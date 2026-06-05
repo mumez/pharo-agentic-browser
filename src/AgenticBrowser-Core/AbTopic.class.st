@@ -236,6 +236,7 @@ AbTopic >> copyForNewSession [
 	| copy |
 	copy := self class new.
 	copy title: '(Copy) ' , self title.
+	self name ifNotNil: [ :n | copy name: n , '-copy' ].
 	copy agentArguments: self agentArguments copy.
 	copy workingDirectoryPath: self workingDirectoryPath.
 	copy packagePrefixes: self packagePrefixes copy.
