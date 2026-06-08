@@ -6,10 +6,11 @@ Responsibility:
 - When a changed package matches the topic's packagePrefixes, I ask the topic for export approval before writing .st files.
 - When a changed package does not match, I record it in the topic's updatedExternalPackageNames for later manual action.
 - I suppress all change handling while a package import from source is in progress, preventing re-export loops.
+- I throttle approval requests per package: if approval was granted recently, subsequent changes are exported without prompting again.
 - I throttle chat notifications per package using a configurable minimum interval.
 
 Collaborators:
-- AbTopic: I am owned by a topic and delegate approval requests and system messages back to it.
+- AbTopic: I am owned by a topic and delegate approval requests, logging, and system messages back to it.
 - AbWorkingDirectory: I call it to export classes when approval is granted.
 - SystemAnnouncer: I subscribe to image change events while watching.
 
@@ -21,12 +22,14 @@ Public API and Key Messages:
 Internal Representation:
 - changeQueue - SharedQueue of (className -> packageName) pairs consumed by the worker process.
 - workerProcess - Background Smalltalk process that drains changeQueue and handles each change.
-- lastAnnouncedAtByPackage - Dictionary tracking last notification timestamp per package for throttling.
+- lastAnnouncedAtByPackage - Dictionary tracking last notification timestamp per package for chat throttling.
+- lastApprovalGrantedAtByPackage - Dictionary tracking last approval-granted timestamp per package for approval throttling.
 - isWatching - Guard flag; prevents double-start and ensures clean shutdown.
 
 Implementation Points:
 - Change events arrive on the SystemAnnouncer thread and are put on changeQueue immediately; a dedicated background process handles them to avoid blocking the announcer.
 - Import suppression uses AbWorkingDirectory>>importNestingCount (a nesting counter) rather than a simple boolean to handle nested imports correctly.
+- Class-side method changes produce a 'ClassName class' key; normalizedClassNameFrom: strips the ' class' suffix before processing.
 "
 Class {
 	#name : 'AbTopicRelatedPackagesWatcher',
