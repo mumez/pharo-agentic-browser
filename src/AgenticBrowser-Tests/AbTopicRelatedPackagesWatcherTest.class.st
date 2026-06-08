@@ -125,25 +125,19 @@ AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+AbTopicRelatedPackagesWatcherTest >> testNormalizedClassNameStripsClassSuffix [
 
-	| process |
-	watcher start.
-	process := watcher workerProcess.
-	watcher stop.
-	self assert: process isTerminated.
-	self assert: watcher workerProcess isNil
+	self
+		assert: (watcher normalizedClassNameFrom: 'SomeClass class')
+		equals: 'SomeClass'
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+AbTopicRelatedPackagesWatcherTest >> testNormalizedClassNameLeavesInstanceNameUnchanged [
 
-	| process |
-	watcher start.
-	process := watcher workerProcess.
-	watcher stop.
-	self assert: process isTerminated.
-	self assert: watcher workerProcess isNil
+	self
+		assert: (watcher normalizedClassNameFrom: 'SomeClass')
+		equals: 'SomeClass'
 ]
 
 { #category : 'tests' }

@@ -203,13 +203,19 @@ AbTopicRelatedPackagesWatcher >> shouldProceedWithExportForApprovalResponse: aRe
 ]
 
 { #category : 'private' }
+AbTopicRelatedPackagesWatcher >> normalizedClassNameFrom: aClassName [
+
+	^ aClassName copyReplaceAll: ' class' with: ''
+]
+
+{ #category : 'private' }
 AbTopicRelatedPackagesWatcher >> runWorkerLoop [
 
 	[ isWatching ] whileTrue: [
 		| item |
 		item := self changeQueue next.
 		item ifNotNil: [
-			self doHandleClassChange: item key in: item value ] ]
+			self doHandleClassChange: (self normalizedClassNameFrom: item key) in: item value ] ]
 ]
 
 { #category : 'operations' }
