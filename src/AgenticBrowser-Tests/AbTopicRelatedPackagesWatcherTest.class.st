@@ -158,6 +158,28 @@ AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesInFifoOrd
 ]
 
 { #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledWhenWithinWindow [
+
+	watcher lastApprovalGrantedAtByPackage at: 'MyPkg' put: DateAndTime now.
+	self assert: (watcher isApprovalThrottledFor: 'MyPkg')
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledFalseWhenWindowExpired [
+
+	watcher lastApprovalGrantedAtByPackage
+		at: 'MyPkg'
+		put: DateAndTime now - watcher messageThrottleDuration - 1 second.
+	self deny: (watcher isApprovalThrottledFor: 'MyPkg')
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledFalseWhenNeverGranted [
+
+	self deny: (watcher isApprovalThrottledFor: 'MyPkg')
+]
+
+{ #category : 'tests' }
 AbTopicRelatedPackagesWatcherTest >> testDoubleStartDoesNotLeakProcess [
 
 	| firstProcess |

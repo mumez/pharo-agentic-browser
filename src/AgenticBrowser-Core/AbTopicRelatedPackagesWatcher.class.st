@@ -35,6 +35,7 @@ Class {
 		'topic',
 		'isWatching',
 		'lastAnnouncedAtByPackage',
+		'lastApprovalGrantedAtByPackage',
 		'logger',
 		'changeQueue',
 		'workerProcess'
@@ -93,7 +94,9 @@ AbTopicRelatedPackagesWatcher >> handleExportClassApprovalResponse: approvalOpti
 
 	self logger debug: 'handleExportClassApprovalResponse:className: got approvalOption=' , approvalOption printString.
 	(self shouldProceedWithExportForApprovalResponse: approvalOption)
-		ifTrue: [ self exportClassWithPostIfNeeded: aClassName in: aPackageName ]
+		ifTrue: [
+			lastApprovalGrantedAtByPackage at: aPackageName put: DateAndTime now.
+			self exportClassWithPostIfNeeded: aClassName in: aPackageName ]
 		ifFalse: [
 			self topic addSystemMessage:
 				'Skipped export for ' , aPackageName , ' (approval denied).' ]
@@ -116,6 +119,7 @@ AbTopicRelatedPackagesWatcher >> initialize [
 
 	self isWatching: false.
 	lastAnnouncedAtByPackage := Dictionary new.
+	lastApprovalGrantedAtByPackage := Dictionary new.
 	changeQueue := nil.
 	workerProcess := nil
 ]
@@ -135,6 +139,12 @@ AbTopicRelatedPackagesWatcher >> isWatching: aBoolean [
 AbTopicRelatedPackagesWatcher >> lastAnnouncedAtByPackage [
 
 	^ lastAnnouncedAtByPackage
+]
+
+{ #category : 'accessing' }
+AbTopicRelatedPackagesWatcher >> lastApprovalGrantedAtByPackage [
+
+	^ lastApprovalGrantedAtByPackage
 ]
 
 { #category : 'accessing' }
@@ -172,10 +182,23 @@ AbTopicRelatedPackagesWatcher >> exportClassWithPostIfNeeded: aClassName in: aPa
 ]
 
 { #category : 'private' }
+AbTopicRelatedPackagesWatcher >> isApprovalThrottledFor: aPackageName [
+
+	| lastGranted |
+	lastGranted := lastApprovalGrantedAtByPackage at: aPackageName ifAbsent: [ nil ].
+	^ lastGranted notNil and: [ DateAndTime now - lastGranted < self messageThrottleDuration ]
+]
+
+{ #category : 'private' }
 AbTopicRelatedPackagesWatcher >> requestApprovalToExportClass: aClassName in: aPackageName [
 
 	| approvalOption |
 	self logger debug: 'requestApprovalToExportClass:in: ' , aClassName , ' in ' , aPackageName.
+	(self isApprovalThrottledFor: aPackageName)
+		ifTrue: [
+			self logger debug: 'requestApprovalToExportClass:in: throttled, exporting without approval'.
+			self exportClassWithPostIfNeeded: aClassName in: aPackageName.
+			^ self ].
 	approvalOption := self topic requestPackageExport:
 		                    (self exportApprovalPromptFor: aPackageName).
 	self handleExportClassApprovalResponse: approvalOption className: aClassName in: aPackageName
