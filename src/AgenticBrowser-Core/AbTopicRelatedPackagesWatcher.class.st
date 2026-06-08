@@ -36,7 +36,6 @@ Class {
 		'isWatching',
 		'lastAnnouncedAtByPackage',
 		'lastApprovalGrantedAtByPackage',
-		'logger',
 		'changeQueue',
 		'workerProcess'
 	],
@@ -149,7 +148,7 @@ AbTopicRelatedPackagesWatcher >> lastApprovalGrantedAtByPackage [
 
 { #category : 'accessing' }
 AbTopicRelatedPackagesWatcher >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
+	^ self topic logger
 ]
 
 { #category : 'accessing' }
