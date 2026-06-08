@@ -559,7 +559,7 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
 
 	| topic |
-	topic := AbTopic new.
+	topic := AbMockTopicNoPromptSend new.
 	topic sendPrompt: 'hi'.
 	self assert: topic messages size equals: 1.
 	self assert: topic messages first text equals: 'hi'
@@ -569,7 +569,7 @@ AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
 AbTopicTest >> testSendPromptWithResourcesAddsHumanMessage [
 
 	| topic |
-	topic := AbTopic new.
+	topic := AbMockTopicNoPromptSend new.
 	topic sendPrompt: 'hello' withResources: #().
 	self assert: topic messages size equals: 1.
 	self assert: topic messages first sender equals: #human.

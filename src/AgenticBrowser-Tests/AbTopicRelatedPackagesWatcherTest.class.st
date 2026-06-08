@@ -125,25 +125,19 @@ AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+AbTopicRelatedPackagesWatcherTest >> testNormalizedClassNameStripsClassSuffix [
 
-	| process |
-	watcher start.
-	process := watcher workerProcess.
-	watcher stop.
-	self assert: process isTerminated.
-	self assert: watcher workerProcess isNil
+	self
+		assert: (watcher normalizedClassNameFrom: 'SomeClass class')
+		equals: 'SomeClass'
 ]
 
 { #category : 'tests' }
-AbTopicRelatedPackagesWatcherTest >> testStopTerminatesWorkerProcess [
+AbTopicRelatedPackagesWatcherTest >> testNormalizedClassNameLeavesInstanceNameUnchanged [
 
-	| process |
-	watcher start.
-	process := watcher workerProcess.
-	watcher stop.
-	self assert: process isTerminated.
-	self assert: watcher workerProcess isNil
+	self
+		assert: (watcher normalizedClassNameFrom: 'SomeClass')
+		equals: 'SomeClass'
 ]
 
 { #category : 'tests' }
@@ -161,6 +155,28 @@ AbTopicRelatedPackagesWatcherTest >> testHandleClassChangeNamedEnqueuesInFifoOrd
 	watcher handleClassChangeNamed: 'ClassB' in: 'Pkg2'.
 	self assert: watcher changeQueue next equals: 'ClassA' -> 'Pkg1'.
 	self assert: watcher changeQueue next equals: 'ClassB' -> 'Pkg2'
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledWhenWithinWindow [
+
+	watcher lastApprovalGrantedAtByPackage at: 'MyPkg' put: DateAndTime now.
+	self assert: (watcher isApprovalThrottledFor: 'MyPkg')
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledFalseWhenWindowExpired [
+
+	watcher lastApprovalGrantedAtByPackage
+		at: 'MyPkg'
+		put: DateAndTime now - watcher messageThrottleDuration - 1 second.
+	self deny: (watcher isApprovalThrottledFor: 'MyPkg')
+]
+
+{ #category : 'tests' }
+AbTopicRelatedPackagesWatcherTest >> testIsApprovalThrottledFalseWhenNeverGranted [
+
+	self deny: (watcher isApprovalThrottledFor: 'MyPkg')
 ]
 
 { #category : 'tests' }
