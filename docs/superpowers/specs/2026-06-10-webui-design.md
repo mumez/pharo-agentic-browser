@@ -41,9 +41,12 @@ instVars:
 ```
 
 **Lifecycle:**
-- Connect → instance created with webSocket
+- Connect → instance created with webSocket; subscribe to `AbTopicManager` announcer for `AbTopicAdded`
 - `handleRequest:` / `handleSend:` dispatch by `aMessage address`
-- Disconnect → `announcementSubscriptions` all unsubscribed, `subscribedTopic` cleared
+- `/topics/select` → unsubscribe from previous `subscribedTopic` announcer (if any), then subscribe to the new topic's announcer
+- Disconnect → all `announcementSubscriptions` unsubscribed, `subscribedTopic` cleared
+
+**`topicAdded` broadcast**: Each `AbTopicManagerRipple` instance subscribes to `AbTopicManager`'s announcer independently. When `AbTopicAdded` fires, every connected instance pushes `topicAdded` to its own client's token — effectively broadcasting to all connected clients without a shared Ripple address.
 
 ---
 
