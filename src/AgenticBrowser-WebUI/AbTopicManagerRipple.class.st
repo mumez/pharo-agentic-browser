@@ -6,8 +6,9 @@ Responsibility:
 - I dispatch request messages to reply handlers (/topics/list, /topics/select, etc.).
 - I dispatch send messages to one-way handlers (/messages/getAll, /prompt/send, etc.).
 - I push real-time topic events (messageAdded, statusChanged, etc.) to the client via server-send.
-- I subscribe to AbTopicManager announcer to broadcast topicAdded events.
-- I subscribe to every topic's AbTopicStatusChanged at connect (broadcast scope).
+- I subscribe to ALL events for ALL topics at connect time and when new topics are added.
+  All connected clients receive messageAdded, statusChanged, modelChanged, modeChanged,
+  commandsChanged, and topicAdded for every topic (broadcast model).
 
 Public API and Key Messages:
 - AbTopicManagerRipple class>>roomName - 'agentic-browser' room identifier
@@ -17,14 +18,12 @@ Public API and Key Messages:
 - #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
 
 Internal Representation:
-- subscribedTopic - AbTopic currently watched by this client; nil if none selected
 - topicManager - The AbTopicManager used; defaults to AbTopicManager default
 "
 Class {
 	#name : 'AbTopicManagerRipple',
 	#superclass : 'RpRipple',
 	#instVars : [
-		'subscribedTopic',
 		'topicManager'
 	],
 	#category : 'AgenticBrowser-WebUI',
@@ -58,18 +57,6 @@ AbTopicManagerRipple >> topicManager: aManager [
 ]
 
 { #category : 'accessing' }
-AbTopicManagerRipple >> subscribedTopic [
-
-	^ subscribedTopic
-]
-
-{ #category : 'accessing' }
-AbTopicManagerRipple >> subscribedTopic: aTopic [
-
-	subscribedTopic := aTopic
-]
-
-{ #category : 'accessing' }
 AbTopicManagerRipple >> webSocket: aWebSocket [
 
 	super webSocket: aWebSocket.
@@ -83,40 +70,32 @@ AbTopicManagerRipple >> subscribeToTopicManager [
 		when: AbTopicAdded
 		do: [ :ann | self onTopicAdded: ann topic ]
 		for: self.
-	self topicManager topics do: [ :each | self subscribeToTopicStatus: each ]
+	self topicManager topics do: [ :each | self subscribeToTopic: each ]
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> subscribeToTopicStatus: aTopic [
+AbTopicManagerRipple >> subscribeToTopic: aTopic [
 
 	aTopic announcer
 		when: AbTopicStatusChanged
 		do: [ :ann | self onStatusChanged: ann ]
-		for: self
-]
-
-{ #category : 'private' }
-AbTopicManagerRipple >> subscribeToTopicView: aTopic [
-
-	self subscribedTopic ifNotNil: [ :old |
-		old announcer unsubscribe: self class ].
-	self subscribedTopic: aTopic.
+		for: self.
 	aTopic announcer
 		when: AbMessageAdded
-		do: [ :ann | self onMessageAdded: ann message ]
-		for: self class.
+		do: [ :ann | self onMessageAdded: ann ]
+		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
 		do: [ :ann | self onModelChanged: ann ]
-		for: self class.
+		for: self.
 	aTopic announcer
 		when: AbTopicCurrentModeChanged
 		do: [ :ann | self onModeChanged: ann ]
-		for: self class.
+		for: self.
 	aTopic announcer
 		when: AbTopicAvailableCommandsChanged
 		do: [ :ann | self onCommandsChanged: ann ]
-		for: self class
+		for: self
 ]
 
 { #category : 'lifecycle' }
@@ -124,10 +103,7 @@ AbTopicManagerRipple >> unregistered [
 
 	super unregistered.
 	self topicManager announcer unsubscribe: self.
-	self topicManager topics do: [ :each | each announcer unsubscribe: self ].
-	self subscribedTopic ifNotNil: [ :t |
-		t announcer unsubscribe: self class ].
-	self subscribedTopic: nil
+	self topicManager topics do: [ :each | each announcer unsubscribe: self ]
 ]
 
 { #category : 'private' }
@@ -357,15 +333,30 @@ AbTopicManagerRipple >> handleSelectTopic: aMessage [
 	topicId := aMessage body at: 'topicId'.
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
-	self subscribeToTopicView: topic.
 	self webSocket
-		sendReply: (Dictionary new
-			 at: 'ok' put: true;
-			 at: 'availableCommands' put: (self commandsJson: topic);
-			 at: 'modelOptions' put: (self modelOptionsJson: topic);
-			 at: 'modeOptions' put: (self modeOptionsJson: topic);
-			 yourself)
-		for: aMessage
+		sendReply: (Dictionary new at: 'ok' put: true; yourself)
+		for: aMessage.
+	self pushCurrentTopicViewState: topic
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> pushCurrentTopicViewState: aTopic [
+
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'commandsChanged';
+		 at: 'topicId' put: aTopic topicId;
+		 at: 'commands' put: (self commandsJson: aTopic);
+		 yourself).
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'modelChanged';
+		 at: 'topicId' put: aTopic topicId;
+		 at: 'options' put: (self modelOptionsJson: aTopic);
+		 yourself).
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'modeChanged';
+		 at: 'topicId' put: aTopic topicId;
+		 at: 'options' put: (self modeOptionsJson: aTopic);
+		 yourself)
 ]
 
 { #category : 'send handling' }
@@ -463,7 +454,7 @@ AbTopicManagerRipple >> pushToClient: aBody [
 { #category : 'topic events' }
 AbTopicManagerRipple >> onTopicAdded: aTopic [
 
-	self subscribeToTopicStatus: aTopic.
+	self subscribeToTopic: aTopic.
 	self pushToClient: (Dictionary new
 		 at: 'event' put: 'topicAdded';
 		 at: 'topic' put: (self topicAsJson: aTopic);
@@ -471,11 +462,12 @@ AbTopicManagerRipple >> onTopicAdded: aTopic [
 ]
 
 { #category : 'topic events' }
-AbTopicManagerRipple >> onMessageAdded: aMessage [
+AbTopicManagerRipple >> onMessageAdded: ann [
 
 	self pushToClient: (Dictionary new
 		 at: 'event' put: 'messageAdded';
-		 at: 'message' put: (self messageAsJson: aMessage);
+		 at: 'topicId' put: ann topic topicId;
+		 at: 'message' put: (self messageAsJson: ann message);
 		 yourself)
 ]
 

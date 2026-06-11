@@ -10,6 +10,8 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 - Default port: `8080`
 - No authentication required (LAN single-user).
 
+On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
+
 ---
 
 ## Message Format
@@ -188,22 +190,21 @@ Sets the goal description for a topic.
 
 ### `POST /topics/select`
 
-Selects a topic for real-time event streaming. After this call, the server starts pushing `messageAdded`, `modelChanged`, `modeChanged`, and `commandsChanged` events for this topic to the client. Only one topic can be selected at a time per connection.
+Signals the client's intent to view a topic. The server replies `{ ok: true }` and immediately pushes the topic's current `commandsChanged`, `modelChanged`, and `modeChanged` state as server-send events.
+
+Note: all push events are already broadcast to every connected client. `select` does **not** change the subscription; it only triggers an initial state snapshot for the chosen topic.
 
 **Request body:**
 ```json
 { "topicId": "abc123" }
 ```
 
-**Reply body:**
-```json
-{
-  "ok": true,
-  "availableCommands": [OptionData, ...],
-  "modelOptions": [OptionData, ...],
-  "modeOptions": [OptionData, ...]
-}
-```
+**Reply body:** `{ "ok": true }`
+
+**Immediately following pushes** (server-send, same format as the live events):
+- `commandsChanged` — current available commands
+- `modelChanged` — current model options
+- `modeChanged` — current mode options
 
 ---
 
@@ -265,20 +266,19 @@ Resolves the pending approval for a topic by selecting one of the available opti
 
 All push events arrive as `send` messages addressed to the client's `sessionId`. The `body` always contains an `event` field identifying the event type.
 
-### `messageAdded` — new message in the selected topic
+All events are **broadcast** to every connected client. The client uses `topicId` in each event to route it to the appropriate view.
 
-Scope: selected topic only.
+### `messageAdded` — new message added to a topic
 
 ```json
 {
   "event": "messageAdded",
+  "topicId": "abc123",
   "message": MessageData
 }
 ```
 
 ### `statusChanged` — topic status changed
-
-Scope: **broadcast** to all connected clients, for all topics.
 
 ```json
 {
@@ -288,11 +288,9 @@ Scope: **broadcast** to all connected clients, for all topics.
 }
 ```
 
-Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes and call `/messages/getAll` to reload the conversation (useful for tabs that are not currently selected to the topic).
+Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes and call `/messages/getAll` to reload the full conversation.
 
-### `modelChanged` — model options updated for the selected topic
-
-Scope: selected topic only.
+### `modelChanged` — model options updated for a topic
 
 ```json
 {
@@ -302,9 +300,7 @@ Scope: selected topic only.
 }
 ```
 
-### `modeChanged` — mode options updated for the selected topic
-
-Scope: selected topic only.
+### `modeChanged` — mode options updated for a topic
 
 ```json
 {
@@ -314,9 +310,7 @@ Scope: selected topic only.
 }
 ```
 
-### `commandsChanged` — available commands updated for the selected topic
-
-Scope: selected topic only.
+### `commandsChanged` — available commands updated for a topic
 
 ```json
 {
@@ -327,8 +321,6 @@ Scope: selected topic only.
 ```
 
 ### `topicAdded` — a new topic was created
-
-Scope: **broadcast** to all connected clients.
 
 ```json
 {
@@ -458,7 +450,7 @@ Errors on `request` messages include a `correlationId` matching the original req
    ← send     { event: "statusChanged", topicId, status: "endTurn" }
 
 6. Handle an approval:
-   ← send     { event: "messageAdded", message: { type: "aiPermission", approvalOptions: [...] } }
+   ← send     { event: "messageAdded", topicId, message: { type: "aiPermission", approvalOptions: [...] } }
    → send     /approval/resolve  { topicId, optionId: "allowOnce" }
 ```
 
@@ -466,6 +458,6 @@ Errors on `request` messages include a `correlationId` matching the original req
 
 ## Multi-tab Behavior
 
-Multiple browser tabs may connect simultaneously. Each gets its own `AbTopicManagerRipple` instance and push address (`token`). All tabs receive `topicAdded` and `statusChanged` broadcasts. For a given topic, only tabs that called `/topics/select` receive `messageAdded`, `modelChanged`, `modeChanged`, and `commandsChanged` events. No exclusive locking is enforced — two tabs may select the same topic independently.
+Multiple browser tabs may connect simultaneously. Each gets its own `AbTopicManagerRipple` instance and push address (`token`). All events for all topics are broadcast to every connected tab — no `select` call is needed to receive live pushes. No exclusive locking is enforced.
 
-After `statusChanged` with `status: "endTurn"`, a tab that did not receive real-time pushes can call `/messages/getAll` to catch up.
+A tab that was inactive (e.g. backgrounded) may have missed pushes; after `statusChanged` with `status: "endTurn"` it can call `/messages/getAll` to reload the full conversation for any topic.

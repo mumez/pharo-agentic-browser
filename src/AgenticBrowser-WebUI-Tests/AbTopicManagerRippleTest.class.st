@@ -157,21 +157,33 @@ AbTopicManagerRippleTest >> testListTopicsRepliesWithAllTopics [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testSelectTopicRepliesOkWithConfig [
+AbTopicManagerRippleTest >> testSelectTopicRepliesOk [
 
-	| topic msg reply body |
+	| topic msg body |
+	topic := self newTopic: 'Beta'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topics/select'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	body := (mockSocket lastReply) at: 'body'.
+	self assert: (body at: 'ok')
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSelectTopicPushesCurrentViewState [
+
+	| topic msg sends eventNames |
 	topic := self newTopic: 'Beta'.
 	AbTopicManager forTest addTopic: topic.
 	mockSocket reset.
 	msg := self requestMessage: '/topics/select'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
-	reply := mockSocket lastReply.
-	body := reply at: 'body'.
-	self assert: (body at: 'ok').
-	self assert: (body includesKey: 'availableCommands').
-	self assert: (body includesKey: 'modelOptions').
-	self assert: (body includesKey: 'modeOptions')
+	sends := mockSocket sentMessages select: [ :m | (m at: 'type') = 'send' ].
+	eventNames := sends collect: [ :m | (m at: 'body') at: 'event' ].
+	self assert: (eventNames includes: 'commandsChanged').
+	self assert: (eventNames includes: 'modelChanged').
+	self assert: (eventNames includes: 'modeChanged')
 ]
 
 { #category : 'tests' }
@@ -362,14 +374,11 @@ AbTopicManagerRippleTest >> testCancelPromptDoesNotRaiseWhenTopicNotWorking [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testMessageAddedPushesEventAfterSelectTopic [
+AbTopicManagerRippleTest >> testMessageAddedPushesEventToClient [
 
-	| topic selectMsg pushes |
+	| topic pushes |
 	topic := self newTopic: 'Push Test'.
 	AbTopicManager forTest addTopic: topic.
-	selectMsg := self requestMessage: '/topics/select'
-		             body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	ripple handleRequest: selectMsg.
 	mockSocket reset.
 	topic addSystemMessage: 'system message'.
 	pushes := mockSocket sentMessages select: [ :m | (m at: 'type') = 'send' ].
@@ -397,27 +406,37 @@ AbTopicManagerRippleTest >> testStatusChangedPushesEventAfterSelectTopic [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testSelectTopicReplacesExistingSubscription [
+AbTopicManagerRippleTest >> testMessageAddedIsBroadcastForAllTopics [
 
-	| topic1 topic2 selectMsg1 selectMsg2 pushes |
+	| topic1 topic2 pushes |
 	topic1 := self newTopic: 'Topic 1'.
 	topic2 := self newTopic: 'Topic 2'.
 	AbTopicManager forTest addTopic: topic1.
 	AbTopicManager forTest addTopic: topic2.
-	selectMsg1 := self requestMessage: '/topics/select'
-		              body: (Dictionary new at: 'topicId' put: topic1 topicId; yourself).
-	selectMsg2 := self requestMessage: '/topics/select'
-		              body: (Dictionary new at: 'topicId' put: topic2 topicId; yourself).
-	ripple handleRequest: selectMsg1.
-	ripple handleRequest: selectMsg2.
 	mockSocket reset.
 	topic1 addSystemMessage: 'from topic1'.
 	topic2 addSystemMessage: 'from topic2'.
-	pushes := mockSocket sentMessages select: [ :m | (m at: 'type') = 'send' ].
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'messageAdded' ] ].
+	self assert: pushes size equals: 2
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testMessageAddedIncludesTopicId [
+
+	| topic msg pushes |
+	topic := self newTopic: 'Push Test'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	topic addSystemMessage: 'hello'.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'messageAdded' ] ].
 	self assert: pushes size equals: 1.
 	self
-		assert: (((pushes first at: 'body') at: 'message') at: 'text')
-		equals: 'from topic2'
+		assert: ((pushes first at: 'body') at: 'topicId')
+		equals: topic topicId
 ]
 
 { #category : 'tests' }
@@ -435,14 +454,11 @@ AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromTopicManager [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromSubscribedTopic [
+AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromAllTopics [
 
-	| topic selectMsg |
+	| topic |
 	topic := self newTopic: 'Unregistered Topic'.
 	AbTopicManager forTest addTopic: topic.
-	selectMsg := self requestMessage: '/topics/select'
-		             body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	ripple handleRequest: selectMsg.
 	ripple unregistered.
 	mockSocket reset.
 	topic addSystemMessage: 'ignored message'.
