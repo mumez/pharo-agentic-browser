@@ -195,7 +195,7 @@ AbTopicManagerRippleTest >> testRenameTopicUpdatesTitle [
 	| topic msg reply |
 	topic := self newTopic: 'Old Title'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/rename'
+	msg := self requestMessage: '/topics/setTitle'
 		       body: (Dictionary new
 			        at: 'topicId' put: topic topicId;
 			        at: 'title' put: 'New Title';

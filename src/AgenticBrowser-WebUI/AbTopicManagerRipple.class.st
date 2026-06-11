@@ -257,7 +257,7 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 
 	aMessage address = '/topics/list' ifTrue: [ ^ self handleListTopics: aMessage ].
 	aMessage address = '/topics/create' ifTrue: [ ^ self handleCreateTopic: aMessage ].
-	aMessage address = '/topics/rename' ifTrue: [ ^ self handleRenameTopic: aMessage ].
+	aMessage address = '/topics/setTitle' ifTrue: [ ^ self handleRenameTopic: aMessage ].
 	aMessage address = '/topics/delete' ifTrue: [ ^ self handleDeleteTopic: aMessage ].
 	aMessage address = '/topics/setAgent' ifTrue: [ ^ self handleSetAgent: aMessage ].
 	aMessage address = '/topics/setGoal' ifTrue: [ ^ self handleSetGoal: aMessage ].
