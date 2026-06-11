@@ -18,7 +18,6 @@ Public API and Key Messages:
 
 Internal Representation:
 - subscribedTopic - AbTopic currently watched by this client; nil if none selected
-- viewSubscriptionToken (#abWebUIViewSubscription) - Symbol token for selective view-event unsubscribe on topic switch
 - topicManager - The AbTopicManager used; defaults to AbTopicManager default
 "
 Class {
@@ -44,12 +43,6 @@ AbTopicManagerRipple class >> startWebUIServer [
 AbTopicManagerRipple class >> roomName [
 
 	^ 'agentic-browser'
-]
-
-{ #category : 'accessing' }
-AbTopicManagerRipple class >> viewSubscriptionToken [
-
-	^ #abWebUIViewSubscription
 ]
 
 { #category : 'accessing' }
@@ -106,24 +99,24 @@ AbTopicManagerRipple >> subscribeToTopicStatus: aTopic [
 AbTopicManagerRipple >> subscribeToTopicView: aTopic [
 
 	self subscribedTopic ifNotNil: [ :old |
-		old announcer unsubscribe: self class viewSubscriptionToken ].
+		old announcer unsubscribe: self class ].
 	self subscribedTopic: aTopic.
 	aTopic announcer
 		when: AbMessageAdded
 		do: [ :ann | self onMessageAdded: ann message ]
-		for: self class viewSubscriptionToken.
+		for: self class.
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
 		do: [ :ann | self onModelChanged: ann ]
-		for: self class viewSubscriptionToken.
+		for: self class.
 	aTopic announcer
 		when: AbTopicCurrentModeChanged
 		do: [ :ann | self onModeChanged: ann ]
-		for: self class viewSubscriptionToken.
+		for: self class.
 	aTopic announcer
 		when: AbTopicAvailableCommandsChanged
 		do: [ :ann | self onCommandsChanged: ann ]
-		for: self class viewSubscriptionToken
+		for: self class
 ]
 
 { #category : 'lifecycle' }
@@ -133,7 +126,7 @@ AbTopicManagerRipple >> unregistered [
 	self topicManager announcer unsubscribe: self.
 	self topicManager topics do: [ :each | each announcer unsubscribe: self ].
 	self subscribedTopic ifNotNil: [ :t |
-		t announcer unsubscribe: self class viewSubscriptionToken ].
+		t announcer unsubscribe: self class ].
 	self subscribedTopic: nil
 ]
 
