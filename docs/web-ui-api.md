@@ -74,6 +74,29 @@ All messages are JSON. The `type` field determines the message kind.
 
 ## Request Endpoints (expect reply)
 
+### `GET /agents/list`
+
+Returns the list of available coding agent presets from `AbSettings`.
+
+**Request body:** _(empty)_
+
+**Reply body:**
+```json
+{
+  "agents": [
+    { "name": "claude-agent-acp", "command": ["claude-agent-acp"] },
+    { "name": "Gemini CLI",        "command": ["gemini", "--acp"] }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Display name for the dropdown |
+| `command` | array | CLI argument array to pass as `agentArguments` when creating a topic |
+
+---
+
 ### `GET /topics/list`
 
 Returns all topics.

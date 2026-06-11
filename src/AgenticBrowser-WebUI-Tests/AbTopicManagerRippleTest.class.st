@@ -118,6 +118,19 @@ AbTopicManagerRippleTest >> testMessageAsJsonAiPermissionMessage [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testListAgentsRepliesWithAgents [
+
+	| msg agents |
+	msg := self requestMessage: '/agents/list' body: nil.
+	ripple handleRequest: msg.
+	agents := (mockSocket lastReply at: 'body') at: 'agents'.
+	self assert: agents isCollection.
+	self deny: agents isEmpty.
+	self assert: (agents first includesKey: 'name').
+	self assert: (agents first includesKey: 'command')
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testListTopicsRepliesWithEmptyTopics [
 
 	| msg |

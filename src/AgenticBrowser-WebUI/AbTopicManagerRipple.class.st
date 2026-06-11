@@ -255,6 +255,7 @@ AbTopicManagerRipple >> commandsJson: aTopic [
 { #category : 'request handling' }
 AbTopicManagerRipple >> handleRequest: aMessage [
 
+	aMessage address = '/agents/list' ifTrue: [ ^ self handleListAgents: aMessage ].
 	aMessage address = '/topics/list' ifTrue: [ ^ self handleListTopics: aMessage ].
 	aMessage address = '/topics/create' ifTrue: [ ^ self handleCreateTopic: aMessage ].
 	aMessage address = '/topics/setTitle' ifTrue: [ ^ self handleRenameTopic: aMessage ].
@@ -263,6 +264,14 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/topics/setGoal' ifTrue: [ ^ self handleSetGoal: aMessage ].
 	aMessage address = '/topics/select' ifTrue: [ ^ self handleSelectTopic: aMessage ].
 	(RpError code: 0 type: 'general' message: 'Unknown address: ' , aMessage address) signal
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleListAgents: aMessage [
+
+	self webSocket
+		sendReply: (Dictionary new at: 'agents' put: AbSettings default codingAgents; yourself)
+		for: aMessage
 ]
 
 { #category : 'request handling' }
