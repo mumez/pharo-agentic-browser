@@ -51,6 +51,17 @@ AbTopicManagerRippleTest >> messageSends [
 		  and: [ ((m at: 'body') at: 'event') = 'messages' ] ]
 ]
 
+{ #category : 'private' }
+AbTopicManagerRippleTest >> dispatch: aMessage [
+
+	| handler |
+	handler := RpWebSocketEventBusHandler new.
+	handler rippleClass: AbTopicManagerRipple.
+	handler register: mockSocket.
+	handler ripples at: mockSocket token put: ripple.
+	(RpMessageDispatcher message: aMessage socket: mockSocket handler: handler) dispatch
+]
+
 { #category : 'tests' }
 AbTopicManagerRippleTest >> testTopicAsJsonContainsRequiredFields [
 
@@ -248,7 +259,7 @@ AbTopicManagerRippleTest >> testGetAllMessagesForEmptyTopicSendsDoneChunk [
 	mockSocket reset.
 	msg := self sendMessage: '/messages/getAll'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	ripple handleSend: msg.
+	self dispatch: msg.
 	sends := self messageSends.
 	self assert: sends size equals: 1.
 	self assert: ((sends last at: 'body') at: 'done').
@@ -265,7 +276,7 @@ AbTopicManagerRippleTest >> testGetAllMessagesSendsAllMessagesInChunks [
 	mockSocket reset.
 	msg := self sendMessage: '/messages/getAll'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	ripple handleSend: msg.
+	self dispatch: msg.
 	sends := self messageSends.
 	self assert: ((sends last at: 'body') at: 'done').
 	allMessages := sends
@@ -288,7 +299,7 @@ AbTopicManagerRippleTest >> testSendPromptDelegatesToTopic [
 			        at: 'topicId' put: topic topicId;
 			        at: 'text' put: 'Hello';
 			        yourself).
-	ripple handleSend: msg.
+	self dispatch: msg.
 	self assert: sentText equals: 'Hello'
 ]
 
@@ -301,7 +312,7 @@ AbTopicManagerRippleTest >> testSendPromptSignalsErrorWhenTopicNotFound [
 			        at: 'topicId' put: 'no-such-id';
 			        at: 'text' put: 'Hello';
 			        yourself).
-	ripple handleSend: msg.
+	self dispatch: msg.
 	self assert: mockSocket lastError notNil.
 	self assert: (mockSocket lastError at: 'error') code equals: 10001
 ]
@@ -318,7 +329,7 @@ AbTopicManagerRippleTest >> testResolveApprovalSignalsErrorWhenNoPendingApproval
 			        at: 'topicId' put: topic topicId;
 			        at: 'optionId' put: 'allowOnce';
 			        yourself).
-	ripple handleSend: msg.
+	self dispatch: msg.
 	self assert: mockSocket lastError notNil.
 	self assert: (mockSocket lastError at: 'error') code equals: 10003
 ]
@@ -333,8 +344,8 @@ AbTopicManagerRippleTest >> testCancelPromptDoesNotRaiseWhenTopicNotWorking [
 	mockSocket reset.
 	msg := self sendMessage: '/prompt/cancel'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	[ ripple handleSend: msg ] on: Error do: [ :e | errorCaught := true ].
-	self deny: errorCaught description: 'handleSend: should not propagate errors'
+	[ self dispatch: msg ] on: Error do: [ :e | errorCaught := true ].
+	self deny: errorCaught description: 'dispatch: should not propagate errors'
 ]
 
 { #category : 'tests' }
@@ -397,29 +408,29 @@ AbTopicManagerRippleTest >> testSelectTopicReplacesExistingSubscription [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testTeardownUnsubscribesFromTopicManager [
+AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromTopicManager [
 
 	| topic pushes |
-	ripple teardown.
-	topic := self newTopic: 'Post-teardown topic'.
+	ripple unregistered.
+	topic := self newTopic: 'Post-unregistered topic'.
 	AbTopicManager forTest addTopic: topic.
 	pushes := mockSocket sentMessages select: [ :m |
 		          (m at: 'type') = 'send'
 		          and: [ ((m at: 'body') at: 'event') = 'topicAdded' ] ].
 	self assert: pushes isEmpty
-		description: 'No topicAdded event should arrive after teardown'
+		description: 'No topicAdded event should arrive after unregistered'
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testTeardownUnsubscribesFromSubscribedTopic [
+AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromSubscribedTopic [
 
 	| topic selectMsg |
-	topic := self newTopic: 'Teardown Topic'.
+	topic := self newTopic: 'Unregistered Topic'.
 	AbTopicManager forTest addTopic: topic.
 	selectMsg := self requestMessage: '/topics/select'
 		             body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: selectMsg.
-	ripple teardown.
+	ripple unregistered.
 	mockSocket reset.
 	topic addSystemMessage: 'ignored message'.
 	self assert: (mockSocket sentMessages select: [ :m | (m at: 'type') = 'send' ]) isEmpty

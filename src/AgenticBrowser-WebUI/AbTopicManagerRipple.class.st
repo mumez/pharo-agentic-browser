@@ -14,7 +14,7 @@ Public API and Key Messages:
 - AbTopicManagerRipple class>>startWebUIServer - Start RpServer and register this room
 - #topicManager: - Inject a test AbTopicManager (defaults to AbTopicManager default)
 - #webSocket: - Sets socket and activates AbTopicManager subscription (call after topicManager:)
-- #teardown - Unsubscribes all announcer subscriptions (called by AbTopicManagerRippleHandler on disconnect)
+- #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
 
 Internal Representation:
 - subscribedTopic - AbTopic currently watched by this client; nil if none selected
@@ -39,17 +39,6 @@ AbTopicManagerRipple class >> startWebUIServer [
 	self putRouteToDefaultServer
 ]
 
-{ #category : 'instance creation' }
-AbTopicManagerRipple class >> room [
-
-	| aRoom handler |
-	aRoom := RpRippleRoom name: self roomName rippleClass: self.
-	handler := AbTopicManagerRippleHandler handlerNamed: self roomName.
-	handler rippleClass: self.
-	handler settings: self roomSettings.
-	aRoom handler: handler.
-	^ aRoom
-]
 
 { #category : 'accessing' }
 AbTopicManagerRipple class >> roomName [
@@ -138,8 +127,9 @@ AbTopicManagerRipple >> subscribeToTopicView: aTopic [
 ]
 
 { #category : 'lifecycle' }
-AbTopicManagerRipple >> teardown [
+AbTopicManagerRipple >> unregistered [
 
+	super unregistered.
 	self topicManager announcer unsubscribe: self.
 	self topicManager topics do: [ :each | each announcer unsubscribe: self ].
 	self subscribedTopic ifNotNil: [ :t |
@@ -379,14 +369,11 @@ AbTopicManagerRipple >> handleSelectTopic: aMessage [
 { #category : 'send handling' }
 AbTopicManagerRipple >> handleSend: aMessage [
 
-	[ [ aMessage address = '/messages/getAll' ifTrue: [ ^ self handleGetAllMessages: aMessage ].
+	aMessage address = '/messages/getAll' ifTrue: [ ^ self handleGetAllMessages: aMessage ].
 	aMessage address = '/prompt/send' ifTrue: [ ^ self handleSendPrompt: aMessage ].
 	aMessage address = '/prompt/cancel' ifTrue: [ ^ self handleCancelPrompt: aMessage ].
-	aMessage address = '/approval/resolve' ifTrue: [ ^ self handleResolveApproval: aMessage ] ]
-		on: RpError
-		do: [ :e | self webSocket sendError: e for: aMessage ] ]
-		on: Error
-		do: [ :e | self logger warn: { self class name. aMessage address. e messageText } ]
+	aMessage address = '/approval/resolve' ifTrue: [ ^ self handleResolveApproval: aMessage ].
+	(RpError code: 0 type: 'general' message: 'Unknown address: ' , aMessage address) signal
 ]
 
 { #category : 'send handling' }
@@ -468,7 +455,7 @@ AbTopicManagerRipple >> pushToClient: aBody [
 		on: Error
 		do: [ :e |
 			self logger warn: { self class name. #pushToClient. e messageText }.
-			self teardown ]
+			self unregistered ]
 ]
 
 { #category : 'topic events' }
