@@ -479,7 +479,7 @@ AbTopicManagerRipple >> logger [
 { #category : 'private' }
 AbTopicManagerRipple >> pushToClient: aBody [
 
-	[ self webSocket send: aBody to: self webSocket token ]
+	[ self send: aBody to: #serverEventPushed ]
 		on: Error
 		do: [ :e |
 			self logger warn: { self class name. #pushToClient. e messageText }.
