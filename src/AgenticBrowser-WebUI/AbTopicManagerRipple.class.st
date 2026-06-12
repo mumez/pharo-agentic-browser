@@ -171,6 +171,7 @@ AbTopicManagerRipple >> messageJson: aMessage [
 						        ifTrue: [ 'exportApproval' ]
 						        ifFalse: [ 'normal' ] ] ].
 	^ Dictionary new
+		  at: 'id' put: aMessage id;
 		  at: 'sender' put: aMessage sender asString;
 		  at: 'text' put: aMessage text;
 		  at: 'type' put: type;

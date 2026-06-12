@@ -30,6 +30,7 @@ Class {
 	#name : 'AbMessage',
 	#superclass : 'Object',
 	#instVars : [
+		'id',
 		'sender',
 		'text',
 		'lastUpdated',
@@ -92,6 +93,16 @@ AbMessage class >> sender: aSenderSymbol text: aString isThink: aBoolean [
 { #category : 'operations' }
 AbMessage >> appendText: aString [
 	self text: self text , aString
+]
+
+{ #category : 'accessing' }
+AbMessage >> id [
+	^ id ifNil: [ id := self generateId ]
+]
+
+{ #category : 'private' }
+AbMessage >> generateId [
+	^ UUID new asString
 ]
 
 { #category : 'accessing' }
