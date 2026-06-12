@@ -67,7 +67,7 @@ AbTopicManagerRippleTest >> testTopicAsJsonContainsRequiredFields [
 
 	| topic json |
 	topic := self newTopic: 'My Topic'.
-	json := ripple topicAsJson: topic.
+	json := ripple topicJson: topic.
 	self assert: (json at: 'topicId') equals: topic topicId.
 	self assert: (json at: 'title') equals: topic title.
 	self assert: (json at: 'status') equals: 'initial'.
@@ -82,7 +82,7 @@ AbTopicManagerRippleTest >> testMessageAsJsonNormalMessage [
 
 	| msg json |
 	msg := AbMessage sender: #human text: 'Hello'.
-	json := ripple messageAsJson: msg.
+	json := ripple messageJson: msg.
 	self assert: (json at: 'sender') equals: 'human'.
 	self assert: (json at: 'text') equals: 'Hello'.
 	self assert: (json at: 'type') equals: 'normal'.
@@ -95,7 +95,7 @@ AbTopicManagerRippleTest >> testMessageAsJsonThinkMessage [
 
 	| msg json |
 	msg := AbMessage sender: #ai text: 'Thinking...' isThink: true.
-	json := ripple messageAsJson: msg.
+	json := ripple messageJson: msg.
 	self assert: (json at: 'type') equals: 'think'
 ]
 
@@ -106,7 +106,7 @@ AbTopicManagerRippleTest >> testMessageAsJsonAiPermissionMessage [
 	msg := AbMessage
 		       aiPermissionRequestText: 'Allow tool?'
 		       options: { 'Allow once' -> #allowOnce. 'Deny' -> #rejectOnce }.
-	json := ripple messageAsJson: msg.
+	json := ripple messageJson: msg.
 	self assert: (json at: 'type') equals: 'aiPermission'.
 	self assert: (json at: 'approvalOptions') size equals: 2.
 	self

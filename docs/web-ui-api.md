@@ -12,6 +12,8 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 
 On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
 
+To receive `topicsUpdated` notifications (topic list changes from any tab), the client must send a `register` message for the `"topicsUpdated"` address immediately after connecting (see [Pub/Sub: register / unregister](#pubsub-register--unregister) below).
+
 ---
 
 ## Message Format
@@ -57,6 +59,27 @@ All messages are JSON. The `type` field determines the message kind.
   "type": "send",
   "address": "<sessionId>",
   "body": { "event": "messageAdded", "message": { ... } }
+}
+```
+
+### Client → Server: `register` / `unregister` (pub/sub subscription)
+
+Subscribe or unsubscribe the client to a named address. The server will deliver `publish` messages to all registered clients when it publishes to that address.
+
+```json
+{ "type": "register",   "address": "topicsUpdated" }
+{ "type": "unregister", "address": "topicsUpdated" }
+```
+
+### Server → Client: `publish` (broadcast to subscribers of an address)
+
+Delivered to all clients that have registered for the address.
+
+```json
+{
+  "type": "publish",
+  "address": "topicsUpdated",
+  "body": { "event": "topicsUpdated", "requesterId": "<sessionId>" }
 }
 ```
 
@@ -264,9 +287,16 @@ Resolves the pending approval for a topic by selecting one of the available opti
 
 ## Server Push Events
 
-All push events arrive as `send` messages addressed to the client's `sessionId`. The `body` always contains an `event` field identifying the event type.
+Push events arrive in two ways depending on the event type:
 
-All events are **broadcast** to every connected client. The client uses `topicId` in each event to route it to the appropriate view.
+| Delivery | Message type | Events |
+|----------|-------------|--------|
+| `send` to client's `sessionId` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded` |
+| `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
+
+For `send`-type events, the `body` always contains an `event` field. All `send`-type events are broadcast to every connected client immediately; the client uses `topicId` to route them.
+
+For `publish`-type events, only clients that sent `{ "type": "register", "address": "topicsUpdated" }` receive them.
 
 ### `messageAdded` — new message added to a topic
 
@@ -327,6 +357,42 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
   "event": "topicAdded",
   "topic": TopicData
 }
+```
+
+---
+
+## Pub/Sub: `register` / `unregister`
+
+Ripple supports a pub/sub subscription model in addition to the direct-push model. The client explicitly subscribes to named addresses using `register`, and receives `publish` messages when the server broadcasts to that address.
+
+### `"topicsUpdated"` — topic list has changed
+
+Sent by the server after any operation that modifies the topic list: `setTitle`, `delete`, `setAgent`, `setGoal`. (`create` is covered by `topicAdded` which carries the full topic data.)
+
+**Subscribe (send immediately after connect):**
+```json
+{ "type": "register", "address": "topicsUpdated" }
+```
+
+**Received as:**
+```json
+{
+  "type": "publish",
+  "address": "topicsUpdated",
+  "body": {
+    "event": "topicsUpdated",
+    "requesterId": "<sessionId-of-the-tab-that-made-the-change>"
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `requesterId` | `sessionId` of the tab that triggered the change. A client can skip re-fetching if `requesterId` matches its own token (it already received the `reply`). Other tabs should call `/topics/list` to refresh. |
+
+**Unsubscribe:**
+```json
+{ "type": "unregister", "address": "topicsUpdated" }
 ```
 
 ---
@@ -428,20 +494,26 @@ Errors on `request` messages include a `correlationId` matching the original req
 ```
 1. Connect:  ws://localhost:8080/ws/agentic-browser?token=<uuid>
 
-2. Load topic list:
+2. Subscribe to topic list changes (send immediately after connect):
+   → register  topicsUpdated
+
+3. Load topic list:
    → request  /topics/list
    ← reply    { topics: [...] }
 
-3. Select a topic to view:
+4. Select a topic to view:
    → request  /topics/select  { topicId }
-   ← reply    { ok, availableCommands, modelOptions, modeOptions }
+   ← reply    { ok }
+   ← send     { event: "commandsChanged", ... }
+   ← send     { event: "modelChanged", ... }
+   ← send     { event: "modeChanged", ... }
 
-4. Load message history:
+5. Load message history:
    → send     /messages/getAll  { topicId }
    ← send     { event: "messages", messages: [...], done: false }  (repeated)
    ← send     { event: "messages", messages: [...], done: true }
 
-5. Send a prompt:
+6. Send a prompt:
    → send     /prompt/send  { topicId, text }
    ← send     { event: "statusChanged", topicId, status: "working" }
    ← send     { event: "messageAdded", message: { sender: "human", ... } }
@@ -449,15 +521,22 @@ Errors on `request` messages include a `correlationId` matching the original req
    ...
    ← send     { event: "statusChanged", topicId, status: "endTurn" }
 
-6. Handle an approval:
+7. Handle an approval:
    ← send     { event: "messageAdded", topicId, message: { type: "aiPermission", approvalOptions: [...] } }
    → send     /approval/resolve  { topicId, optionId: "allowOnce" }
+
+8. Another tab renames a topic — this tab receives:
+   ← publish  topicsUpdated  { event: "topicsUpdated", requesterId: "<other-tab-token>" }
+   → request  /topics/list   (re-fetch to sync)
+   ← reply    { topics: [...] }
 ```
 
 ---
 
 ## Multi-tab Behavior
 
-Multiple browser tabs may connect simultaneously. Each gets its own `AbTopicManagerRipple` instance and push address (`token`). All events for all topics are broadcast to every connected tab — no `select` call is needed to receive live pushes. No exclusive locking is enforced.
+Multiple browser tabs may connect simultaneously. Each gets its own `AbTopicManagerRipple` instance and push address (`token`). All `send`-type events for all topics are broadcast to every connected tab — no `select` call is needed to receive live pushes. No exclusive locking is enforced.
+
+**Topic list synchronization across tabs:** Each tab should send `{ "type": "register", "address": "topicsUpdated" }` on connect. When any tab creates, renames, deletes, or reconfigures a topic, the server publishes `topicsUpdated` to all subscribed tabs. Tabs whose `requesterId` does not match their own token should re-fetch `/topics/list` to refresh their view.
 
 A tab that was inactive (e.g. backgrounded) may have missed pushes; after `statusChanged` with `status: "endTurn"` it can call `/messages/getAll` to reload the full conversation for any topic.

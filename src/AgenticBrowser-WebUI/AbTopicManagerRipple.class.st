@@ -137,7 +137,7 @@ AbTopicManagerRipple >> createTopicFailedError: aReason [
 ]
 
 { #category : 'json' }
-AbTopicManagerRipple >> topicAsJson: aTopic [
+AbTopicManagerRipple >> topicJson: aTopic [
 
 	^ Dictionary new
 		  at: 'topicId' put: aTopic topicId;
@@ -152,7 +152,7 @@ AbTopicManagerRipple >> topicAsJson: aTopic [
 ]
 
 { #category : 'json' }
-AbTopicManagerRipple >> messageAsJson: aMessage [
+AbTopicManagerRipple >> messageJson: aMessage [
 
 	| type |
 	type := aMessage isThink
@@ -254,7 +254,7 @@ AbTopicManagerRipple >> handleListAgents: aMessage [
 AbTopicManagerRipple >> handleListTopics: aMessage [
 
 	| topicsJson |
-	topicsJson := self topicManager topics collect: [ :t | self topicAsJson: t ].
+	topicsJson := self topicManager topics collect: [ :t | self topicJson: t ].
 	self webSocket
 		sendReply: (Dictionary new at: 'topics' put: topicsJson asArray; yourself)
 		for: aMessage
@@ -286,7 +286,8 @@ AbTopicManagerRipple >> handleRenameTopic: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic title: (body at: 'title').
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self publishTopicsUpdated
 ]
 
 { #category : 'request handling' }
@@ -298,7 +299,8 @@ AbTopicManagerRipple >> handleDeleteTopic: aMessage [
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic isWorking ifTrue: [ self topicBusyError: topicId ].
 	self topicManager removeTopic: topic.
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self publishTopicsUpdated
 ]
 
 { #category : 'request handling' }
@@ -311,7 +313,8 @@ AbTopicManagerRipple >> handleSetAgent: aMessage [
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic isWorking ifTrue: [ self topicBusyError: topicId ].
 	topic agentArguments: (body at: 'agentArguments') asArray.
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self publishTopicsUpdated
 ]
 
 { #category : 'request handling' }
@@ -323,7 +326,8 @@ AbTopicManagerRipple >> handleSetGoal: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic goalDescription: (body at: 'goal').
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self publishTopicsUpdated
 ]
 
 { #category : 'request handling' }
@@ -392,7 +396,7 @@ AbTopicManagerRipple >> handleGetAllMessages: aMessage [
 		done := (start + chunkSize - 1) >= messages size.
 		self pushToClient: (Dictionary new
 			 at: 'event' put: 'messages';
-			 at: 'messages' put: (chunk collect: [ :m | self messageAsJson: m ]);
+			 at: 'messages' put: (chunk collect: [ :m | self messageJson: m ]);
 			 at: 'done' put: done;
 			 yourself) ] ]
 ]
@@ -451,13 +455,22 @@ AbTopicManagerRipple >> pushToClient: aBody [
 			self unregistered ]
 ]
 
+{ #category : 'private' }
+AbTopicManagerRipple >> publishTopicsUpdated [
+
+	self publish: (Dictionary new
+		 at: 'event' put: 'topicsUpdated';
+		 at: 'requesterId' put: self webSocket token;
+		 yourself) to: #topicsUpdated
+]
+
 { #category : 'topic events' }
 AbTopicManagerRipple >> onTopicAdded: aTopic [
 
 	self subscribeToTopic: aTopic.
 	self pushToClient: (Dictionary new
 		 at: 'event' put: 'topicAdded';
-		 at: 'topic' put: (self topicAsJson: aTopic);
+		 at: 'topic' put: (self topicJson: aTopic);
 		 yourself)
 ]
 
@@ -467,7 +480,7 @@ AbTopicManagerRipple >> onMessageAdded: ann [
 	self pushToClient: (Dictionary new
 		 at: 'event' put: 'messageAdded';
 		 at: 'topicId' put: ann topic topicId;
-		 at: 'message' put: (self messageAsJson: ann message);
+		 at: 'message' put: (self messageJson: ann message);
 		 yourself)
 ]
 

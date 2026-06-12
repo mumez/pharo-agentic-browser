@@ -48,6 +48,16 @@ AbMockWebSocket >> sendReply: body for: msg [
 ]
 
 { #category : 'sending' }
+AbMockWebSocket >> publish: body to: address [
+
+	sentMessages add: (Dictionary new
+		 at: 'type' put: 'publish';
+		 at: 'address' put: address;
+		 at: 'body' put: body;
+		 yourself)
+]
+
+{ #category : 'sending' }
 AbMockWebSocket >> send: body to: address [
 
 	sentMessages add: (Dictionary new
