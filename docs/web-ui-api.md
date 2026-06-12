@@ -211,6 +211,26 @@ Sets the goal description for a topic.
 
 ---
 
+### `POST /topics/copy`
+
+Creates a copy of an existing topic for a new session. The copy gets `"(Copy) "` prepended to the title and inherits the agent arguments, working directory, package prefixes, and settings of the source topic, but starts with an empty message history.
+
+**Request body:**
+```json
+{ "topicId": "abc123" }
+```
+
+**Reply body:**
+```json
+{ "topicId": "<new-topic-id>" }
+```
+
+A `topicAdded` push event is broadcast to all connected clients automatically (same as `create`). No `topicsUpdated` publish is sent.
+
+**Errors:** `10001` if the source `topicId` does not exist.
+
+---
+
 ### `POST /topics/select`
 
 Signals the client's intent to view a topic. The server replies `{ ok: true }` and immediately pushes the topic's current `commandsChanged`, `modelChanged`, and `modeChanged` state as server-send events.
@@ -228,6 +248,18 @@ Note: all push events are already broadcast to every connected client. `select` 
 - `commandsChanged` — current available commands
 - `modelChanged` — current model options
 - `modeChanged` — current mode options
+
+---
+
+### `POST /app/save`
+
+Saves all topics to disk (`AbTopicManager save`). This is an application-level operation with no topic parameter.
+
+**Request body:** _(empty)_
+
+**Reply body:** `{ "ok": true }`
+
+Returns an error response if the save operation fails.
 
 ---
 
@@ -367,7 +399,7 @@ Ripple supports a pub/sub subscription model in addition to the direct-push mode
 
 ### `"topicsUpdated"` — topic list has changed
 
-Sent by the server after any operation that modifies the topic list: `setTitle`, `delete`, `setAgent`, `setGoal`. (`create` is covered by `topicAdded` which carries the full topic data.)
+Sent by the server after any operation that modifies the topic list: `setTitle`, `delete`, `setAgent`, `setGoal`. (`create` and `copy` are covered by `topicAdded` which carries the full topic data.)
 
 **Subscribe (send immediately after connect):**
 ```json

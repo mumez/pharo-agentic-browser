@@ -486,3 +486,65 @@ AbTopicManagerRippleTest >> testRoomName [
 
 	self assert: AbTopicManagerRipple roomName equals: 'agentic-browser'
 ]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCopyTopicRepliesWithNewTopicId [
+
+	| topic msg reply newTopicId |
+	topic := self newTopic: 'Original'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topics/copy'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	reply := mockSocket lastReply.
+	newTopicId := (reply at: 'body') at: 'topicId'.
+	self assert: newTopicId isString.
+	self assert: newTopicId isNotEmpty.
+	self deny: newTopicId = topic topicId
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCopyTopicCreatesNewTopicInManager [
+
+	| topic msg newTopicId |
+	topic := self newTopic: 'Original'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topics/copy'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	newTopicId := ((mockSocket lastReply) at: 'body') at: 'topicId'.
+	self assert: (AbTopicManager forTest at: newTopicId) isNotNil.
+	self assert: (AbTopicManager forTest at: newTopicId) title equals: '(Copy) ab-test-Original'
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCopyTopicSignalsErrorForUnknownTopicId [
+
+	| msg |
+	msg := self requestMessage: '/topics/copy'
+		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
+	self should: [ ripple handleRequest: msg ] raise: RpError
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSaveAppRepliesOk [
+
+	| mockManager msg reply |
+	mockManager := AbMockTopicManager new.
+	ripple topicManager: mockManager.
+	msg := self requestMessage: '/app/save' body: Dictionary new.
+	ripple handleRequest: msg.
+	reply := mockSocket lastReply.
+	self assert: ((reply at: 'body') at: 'ok')
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSaveAppCallsSaveOnTopicManager [
+
+	| mockManager msg |
+	mockManager := AbMockTopicManager new.
+	ripple topicManager: mockManager.
+	msg := self requestMessage: '/app/save' body: Dictionary new.
+	ripple handleRequest: msg.
+	self assert: mockManager wasSaved
+]

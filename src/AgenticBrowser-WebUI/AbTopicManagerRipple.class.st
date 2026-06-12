@@ -238,7 +238,9 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/topics/delete' ifTrue: [ ^ self handleDeleteTopic: aMessage ].
 	aMessage address = '/topics/setAgent' ifTrue: [ ^ self handleSetAgent: aMessage ].
 	aMessage address = '/topics/setGoal' ifTrue: [ ^ self handleSetGoal: aMessage ].
+	aMessage address = '/topics/copy' ifTrue: [ ^ self handleCopyTopic: aMessage ].
 	aMessage address = '/topics/select' ifTrue: [ ^ self handleSelectTopic: aMessage ].
+	aMessage address = '/app/save' ifTrue: [ ^ self handleSaveApp: aMessage ].
 	(RpError code: 0 type: 'general' message: 'Unknown address: ' , aMessage address) signal
 ]
 
@@ -328,6 +330,29 @@ AbTopicManagerRipple >> handleSetGoal: aMessage [
 	topic goalDescription: (body at: 'goal').
 	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
 	self publishTopicsUpdated
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleCopyTopic: aMessage [
+
+	| topicId topic newTopic |
+	topicId := aMessage body at: 'topicId'.
+	topic := self topicManager at: topicId.
+	topic ifNil: [ self topicNotFoundError: topicId ].
+	newTopic := topic copyForNewSession.
+	self topicManager addTopic: newTopic.
+	self webSocket
+		sendReply: (Dictionary new at: 'topicId' put: newTopic topicId; yourself)
+		for: aMessage
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleSaveApp: aMessage [
+
+	[ self topicManager save ]
+		on: Error
+		do: [ :e | (RpError code: 0 type: 'general' message: 'Failed to save: ' , e messageText) signal ].
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
 ]
 
 { #category : 'request handling' }
