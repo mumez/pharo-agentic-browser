@@ -33,7 +33,7 @@ Class {
 { #category : 'actions' }
 AbTopicManagerRipple class >> startWebUIServer [
 	<script>
-	RpServer createStarted.
+	RpServer default start.
 	self putRouteToDefaultServer
 ]
 

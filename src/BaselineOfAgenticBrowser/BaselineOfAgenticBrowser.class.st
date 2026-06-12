@@ -36,7 +36,7 @@ BaselineOfAgenticBrowser >> baseline: spec [
 			with: [ spec requires: #( 'AgenticBrowser-Handler' ) ].
 		spec
 			package: 'AgenticBrowser-Tests'
-			with: [ spec requires: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' ) ].
+			with: [ spec requires: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ) ].
 		spec
 			package: 'AgenticBrowser-WebUI'
 			with: [ spec requires: #( 'AgenticBrowser-Core' 'Ripple' ) ].
