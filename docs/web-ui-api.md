@@ -259,7 +259,7 @@ Saves all topics to disk (`AbTopicManager save`). This is an application-level o
 
 **Reply body:** `{ "ok": true }`
 
-Returns an error response if the save operation fails.
+Returns error `10006` if the save operation fails.
 
 ---
 
@@ -518,6 +518,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10003` | `No pending approval for topic: <topicId>` | `/approval/resolve` called with nothing pending |
 | `10004` | `Invalid optionId: <optionId>` | `optionId` not in the pending approval's option list |
 | `10005` | `Failed to create topic: <reason>` | Topic creation failed |
+| `10006` | `Failed to save: <reason>` | `/app/save` encountered an error |
 
 ---
 

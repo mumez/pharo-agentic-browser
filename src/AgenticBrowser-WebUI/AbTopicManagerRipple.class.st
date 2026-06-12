@@ -136,6 +136,12 @@ AbTopicManagerRipple >> createTopicFailedError: aReason [
 	^ (RpError code: 10005 type: 'application' message: 'Failed to create topic: ' , aReason) signal
 ]
 
+{ #category : 'private' }
+AbTopicManagerRipple >> saveFailedError: aReason [
+
+	^ (RpError code: 10006 type: 'application' message: 'Failed to save: ' , aReason) signal
+]
+
 { #category : 'json' }
 AbTopicManagerRipple >> topicJson: aTopic [
 
@@ -351,7 +357,7 @@ AbTopicManagerRipple >> handleSaveApp: aMessage [
 
 	[ self topicManager save ]
 		on: Error
-		do: [ :e | (RpError code: 0 type: 'general' message: 'Failed to save: ' , e messageText) signal ].
+		do: [ :e | self saveFailedError: e messageText ].
 	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
 ]
 
