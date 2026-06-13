@@ -101,7 +101,7 @@ Delivered to all clients that have registered for the address.
 
 ## Request Endpoints (expect reply)
 
-### `GET /agents/list`
+### `request /agents/list`
 
 Returns the list of available coding agent presets from `AbSettings`.
 
@@ -124,7 +124,7 @@ Returns the list of available coding agent presets from `AbSettings`.
 
 ---
 
-### `GET /topics/list`
+### `request /topics/list`
 
 Returns all topics.
 
@@ -139,7 +139,7 @@ Returns all topics.
 
 ---
 
-### `POST /topics/create`
+### `request /topics/create`
 
 Creates a new topic.
 
@@ -161,7 +161,7 @@ Creates a new topic.
 
 ---
 
-### `POST /topics/setTitle`
+### `request /topic/setTitle`
 
 Sets the display title of a topic.
 
@@ -174,7 +174,7 @@ Sets the display title of a topic.
 
 ---
 
-### `POST /topics/delete`
+### `request /topic/delete`
 
 Deletes a topic. Fails if the topic is currently working.
 
@@ -187,7 +187,7 @@ Deletes a topic. Fails if the topic is currently working.
 
 ---
 
-### `POST /topics/setAgent`
+### `request /topic/setAgent`
 
 Updates the agent arguments for a topic. Fails if the topic is currently working.
 
@@ -200,7 +200,7 @@ Updates the agent arguments for a topic. Fails if the topic is currently working
 
 ---
 
-### `POST /topics/setGoal`
+### `request /topic/setGoal`
 
 Sets the goal description for a topic.
 
@@ -213,7 +213,37 @@ Sets the goal description for a topic.
 
 ---
 
-### `POST /topics/copy`
+### `request /topic/setModel`
+
+Selects the active model for a topic. Use `optionId` values from the `modelChanged` push event options.
+
+**Request body:**
+```json
+{ "topicId": "abc123", "optionId": "claude-sonnet-4-6" }
+```
+
+**Reply body:** `{ "ok": true }`
+
+**Errors:** `10001` if `topicId` not found; `10007` if no model config is available (agent not yet connected).
+
+---
+
+### `request /topic/setMode`
+
+Selects the active mode for a topic. Use `optionId` values from the `modeChanged` push event options.
+
+**Request body:**
+```json
+{ "topicId": "abc123", "optionId": "auto" }
+```
+
+**Reply body:** `{ "ok": true }`
+
+**Errors:** `10001` if `topicId` not found; `10008` if no mode config is available (agent not yet connected).
+
+---
+
+### `request /topic/copy`
 
 Creates a copy of an existing topic for a new session. The copy gets `"(Copy) "` prepended to the title and inherits the agent arguments, working directory, package prefixes, and settings of the source topic, but starts with an empty message history.
 
@@ -233,7 +263,7 @@ A `topicAdded` push event is broadcast to all connected clients automatically (s
 
 ---
 
-### `POST /topics/select`
+### `request /topic/select`
 
 Signals the client's intent to view a topic. The server replies `{ ok: true }` and immediately pushes the topic's current `commandsChanged`, `modelChanged`, and `modeChanged` state as server-send events.
 
@@ -253,7 +283,7 @@ Note: all push events are already broadcast to every connected client. `select` 
 
 ---
 
-### `POST /app/save`
+### `request /app/save`
 
 Saves all topics to disk (`AbTopicManager save`). This is an application-level operation with no topic parameter.
 
@@ -525,6 +555,8 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10004` | `Invalid optionId: <optionId>` | `optionId` not in the pending approval's option list |
 | `10005` | `Failed to create topic: <reason>` | Topic creation failed |
 | `10006` | `Failed to save: <reason>` | `/app/save` encountered an error |
+| `10007` | `No model config available for: <topicId>` | `/topic/setModel` called before agent connected and sent model options |
+| `10008` | `No mode config available for: <topicId>` | `/topic/setMode` called before agent connected and sent mode options |
 
 ---
 
@@ -542,7 +574,7 @@ Errors on `request` messages include a `correlationId` matching the original req
    ← reply    { topics: [...] }
 
 4. Select a topic to view:
-   → request  /topics/select  { topicId }
+   → request  /topic/select  { topicId }
    ← reply    { ok }
    ← send     { event: "commandsChanged", ... }
    ← send     { event: "modelChanged", ... }

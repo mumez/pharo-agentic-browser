@@ -162,7 +162,7 @@ AbTopicManagerRippleTest >> testSelectTopicRepliesOk [
 	| topic msg body |
 	topic := self newTopic: 'Beta'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/select'
+	msg := self requestMessage: '/topic/select'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
 	body := (mockSocket lastReply) at: 'body'.
@@ -176,7 +176,7 @@ AbTopicManagerRippleTest >> testSelectTopicPushesCurrentViewState [
 	topic := self newTopic: 'Beta'.
 	AbTopicManager forTest addTopic: topic.
 	mockSocket reset.
-	msg := self requestMessage: '/topics/select'
+	msg := self requestMessage: '/topic/select'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
 	sends := mockSocket sentMessages select: [ :m | (m at: 'type') = 'send' ].
@@ -190,7 +190,7 @@ AbTopicManagerRippleTest >> testSelectTopicPushesCurrentViewState [
 AbTopicManagerRippleTest >> testSelectTopicSignalsErrorForUnknownTopicId [
 
 	| msg |
-	msg := self requestMessage: '/topics/select'
+	msg := self requestMessage: '/topic/select'
 		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
 	self
 		should: [ ripple handleRequest: msg ]
@@ -220,7 +220,7 @@ AbTopicManagerRippleTest >> testRenameTopicUpdatesTitle [
 	| topic msg reply |
 	topic := self newTopic: 'Old Title'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/setTitle'
+	msg := self requestMessage: '/topic/setTitle'
 		       body: (Dictionary new
 			        at: 'topicId' put: topic topicId;
 			        at: 'title' put: 'New Title';
@@ -237,7 +237,7 @@ AbTopicManagerRippleTest >> testDeleteTopicRemovesFromManager [
 	| topic msg reply |
 	topic := self newTopic: 'To Delete'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/delete'
+	msg := self requestMessage: '/topic/delete'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
 	reply := mockSocket lastReply.
@@ -251,7 +251,7 @@ AbTopicManagerRippleTest >> testSetAgentUpdatesAgentArguments [
 	| topic msg |
 	topic := self newTopic: 'Agent Test'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/setAgent'
+	msg := self requestMessage: '/topic/setAgent'
 		       body: (Dictionary new
 			        at: 'topicId' put: topic topicId;
 			        at: 'agentArguments' put: #( 'claude-code' );
@@ -266,7 +266,7 @@ AbTopicManagerRippleTest >> testSetGoalSetsGoalOnTopic [
 	| topic msg |
 	topic := self newMockTopic: 'Goal Test'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/setGoal'
+	msg := self requestMessage: '/topic/setGoal'
 		       body: (Dictionary new
 			        at: 'topicId' put: topic topicId;
 			        at: 'goal' put: 'Implement feature X';
@@ -395,7 +395,7 @@ AbTopicManagerRippleTest >> testStatusChangedPushesEventAfterSelectTopic [
 	| topic selectMsg pushes |
 	topic := self newTopic: 'Status Push'.
 	AbTopicManager forTest addTopic: topic.
-	selectMsg := self requestMessage: '/topics/select'
+	selectMsg := self requestMessage: '/topic/select'
 		             body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: selectMsg.
 	mockSocket reset.
@@ -493,7 +493,7 @@ AbTopicManagerRippleTest >> testCopyTopicRepliesWithNewTopicId [
 	| topic msg reply newTopicId |
 	topic := self newTopic: 'Original'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/copy'
+	msg := self requestMessage: '/topic/copy'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
 	reply := mockSocket lastReply.
@@ -509,7 +509,7 @@ AbTopicManagerRippleTest >> testCopyTopicCreatesNewTopicInManager [
 	| topic msg newTopicId |
 	topic := self newTopic: 'Original'.
 	AbTopicManager forTest addTopic: topic.
-	msg := self requestMessage: '/topics/copy'
+	msg := self requestMessage: '/topic/copy'
 		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
 	ripple handleRequest: msg.
 	newTopicId := ((mockSocket lastReply) at: 'body') at: 'topicId'.
@@ -521,9 +521,97 @@ AbTopicManagerRippleTest >> testCopyTopicCreatesNewTopicInManager [
 AbTopicManagerRippleTest >> testCopyTopicSignalsErrorForUnknownTopicId [
 
 	| msg |
-	msg := self requestMessage: '/topics/copy'
+	msg := self requestMessage: '/topic/copy'
 		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
 	self should: [ ripple handleRequest: msg ] raise: RpError
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetModelSignalsErrorWhenNoConfigAvailable [
+
+	| topic msg |
+	topic := self newTopic: 'Model Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/setModel'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'optionId' put: 'claude-sonnet-4-6';
+			        yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10007 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetModeSignalsErrorWhenNoConfigAvailable [
+
+	| topic msg |
+	topic := self newTopic: 'Mode Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/setMode'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'optionId' put: 'ask';
+			        yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10008 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetModelRepliesOkAndCallsSetConfigOptionId [
+
+	| topic session mockClient result msg |
+	topic := self newMockTopic: 'Model Test'.
+	AbTopicManager forTest addTopic: topic.
+	session := topic session.
+	session updateConfigOptions:
+		(OrderedCollection with: (self modelOptionWithCurrentValue: 'claude-sonnet-4-6')).
+	result := MockObject new.
+	result on: #configOptions verify: [ OrderedCollection new ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock | result ].
+	session client: mockClient.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/setModel'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'optionId' put: 'claude-opus-4-7';
+			        yourself).
+	ripple handleRequest: msg.
+	self assert: ((mockSocket lastReply at: 'body') at: 'ok').
+	self verify: mockClient
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetModeRepliesOkAndCallsSetConfigOptionId [
+
+	| topic session mockClient result msg |
+	topic := self newMockTopic: 'Mode Test'.
+	AbTopicManager forTest addTopic: topic.
+	session := topic session.
+	session updateConfigOptions:
+		(OrderedCollection with: (self modeOptionWithCurrentValue: 'ask')).
+	result := MockObject new.
+	result on: #configOptions verify: [ OrderedCollection new ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock | result ].
+	session client: mockClient.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/setMode'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'optionId' put: 'code';
+			        yourself).
+	ripple handleRequest: msg.
+	self assert: ((mockSocket lastReply at: 'body') at: 'ok').
+	self verify: mockClient
 ]
 
 { #category : 'tests' }

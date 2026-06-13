@@ -109,37 +109,37 @@ AbTopicManagerRipple >> unregistered [
 { #category : 'private' }
 AbTopicManagerRipple >> topicNotFoundError: aTopicId [
 
-	^ (RpError code: 10001 type: 'application' message: 'Topic not found: ' , aTopicId) signal
+	^ (RpError application: 'Topic not found: ' , aTopicId code: 10001) signal
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> topicBusyError: aTopicId [
 
-	^ (RpError code: 10002 type: 'application' message: 'Topic is busy: ' , aTopicId) signal
+	^ (RpError application: 'Topic is busy: ' , aTopicId code: 10002) signal
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> noPendingApprovalError: aTopicId [
 
-	^ (RpError code: 10003 type: 'application' message: 'No pending approval for topic: ' , aTopicId) signal
+	^ (RpError application: 'No pending approval for topic: ' , aTopicId code: 10003) signal
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> invalidOptionError: anOptionId [
 
-	^ (RpError code: 10004 type: 'application' message: 'Invalid optionId: ' , anOptionId printString) signal
+	^ (RpError application: 'Invalid optionId: ' , anOptionId printString code: 10004) signal
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> createTopicFailedError: aReason [
 
-	^ (RpError code: 10005 type: 'application' message: 'Failed to create topic: ' , aReason) signal
+	^ (RpError application: 'Failed to create topic: ' , aReason code: 10005) signal
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> saveFailedError: aReason [
 
-	^ (RpError code: 10006 type: 'application' message: 'Failed to save: ' , aReason) signal
+	^ (RpError application: 'Failed to save: ' , aReason code: 10006) signal
 ]
 
 { #category : 'json' }
@@ -242,14 +242,16 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/agents/list' ifTrue: [ ^ self handleListAgents: aMessage ].
 	aMessage address = '/topics/list' ifTrue: [ ^ self handleListTopics: aMessage ].
 	aMessage address = '/topics/create' ifTrue: [ ^ self handleCreateTopic: aMessage ].
-	aMessage address = '/topics/setTitle' ifTrue: [ ^ self handleRenameTopic: aMessage ].
-	aMessage address = '/topics/delete' ifTrue: [ ^ self handleDeleteTopic: aMessage ].
-	aMessage address = '/topics/setAgent' ifTrue: [ ^ self handleSetAgent: aMessage ].
-	aMessage address = '/topics/setGoal' ifTrue: [ ^ self handleSetGoal: aMessage ].
-	aMessage address = '/topics/copy' ifTrue: [ ^ self handleCopyTopic: aMessage ].
-	aMessage address = '/topics/select' ifTrue: [ ^ self handleSelectTopic: aMessage ].
+	aMessage address = '/topic/setTitle' ifTrue: [ ^ self handleRenameTopic: aMessage ].
+	aMessage address = '/topic/delete' ifTrue: [ ^ self handleDeleteTopic: aMessage ].
+	aMessage address = '/topic/setAgent' ifTrue: [ ^ self handleSetAgent: aMessage ].
+	aMessage address = '/topic/setGoal' ifTrue: [ ^ self handleSetGoal: aMessage ].
+	aMessage address = '/topic/setModel' ifTrue: [ ^ self handleSetModel: aMessage ].
+	aMessage address = '/topic/setMode' ifTrue: [ ^ self handleSetMode: aMessage ].
+	aMessage address = '/topic/copy' ifTrue: [ ^ self handleCopyTopic: aMessage ].
+	aMessage address = '/topic/select' ifTrue: [ ^ self handleSelectTopic: aMessage ].
 	aMessage address = '/app/save' ifTrue: [ ^ self handleSaveApp: aMessage ].
-	(RpError code: 0 type: 'general' message: 'Unknown address: ' , aMessage address) signal
+	(RpError general: 'Unknown address: ' , aMessage address) signal
 ]
 
 { #category : 'request handling' }
@@ -341,6 +343,41 @@ AbTopicManagerRipple >> handleSetGoal: aMessage [
 ]
 
 { #category : 'request handling' }
+AbTopicManagerRipple >> handleSetModel: aMessage [
+
+	self
+		applyConfigOption: [ :t | t modelConfigOption ]
+		from: aMessage
+		noConfigError: 10007
+		label: 'model'
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleSetMode: aMessage [
+
+	self
+		applyConfigOption: [ :t | t modeConfigOption ]
+		from: aMessage
+		noConfigError: 10008
+		label: 'mode'
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> applyConfigOption: aBlock from: aMessage noConfigError: anErrorCode label: aLabel [
+
+	| body topicId topic configOption |
+	body := aMessage body.
+	topicId := body at: 'topicId'.
+	topic := self topicManager at: topicId.
+	topic ifNil: [ self topicNotFoundError: topicId ].
+	configOption := aBlock value: topic.
+	configOption ifNil: [
+		^ (RpError application: 'No ' , aLabel , ' config available for: ' , topicId code: anErrorCode) signal ].
+	topic setConfigOptionId: configOption id value: (body at: 'optionId').
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+]
+
+{ #category : 'request handling' }
 AbTopicManagerRipple >> handleCopyTopic: aMessage [
 
 	| topicId topic newTopic |
@@ -403,7 +440,7 @@ AbTopicManagerRipple >> handleSend: aMessage [
 	aMessage address = '/prompt/send' ifTrue: [ ^ self handleSendPrompt: aMessage ].
 	aMessage address = '/prompt/cancel' ifTrue: [ ^ self handleCancelPrompt: aMessage ].
 	aMessage address = '/approval/resolve' ifTrue: [ ^ self handleResolveApproval: aMessage ].
-	(RpError code: 0 type: 'general' message: 'Unknown address: ' , aMessage address) signal
+	(RpError general: 'Unknown address: ' , aMessage address) signal
 ]
 
 { #category : 'send handling' }
