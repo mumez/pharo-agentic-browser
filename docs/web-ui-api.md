@@ -442,6 +442,7 @@ Sent by the server after any operation that modifies the topic list: `setTitle`,
   "name": "my-topic",
   "status": "initial",
   "agentArguments": ["claude-code"],
+  "goal": "Implement the login feature",
   "currentModel": "claude-sonnet-4-6",
   "currentMode": "auto",
   "lastUpdated": "2026-06-11T10:00:00+09:00"
@@ -455,6 +456,7 @@ Sent by the server after any operation that modifies the topic list: `setTitle`,
 | `name` | string | Short name (empty string if not set) |
 | `status` | string | See topic statuses below |
 | `agentArguments` | array | CLI arguments for the agent |
+| `goal` | string | Goal description set via `/topics/setGoal` (empty string if not set) |
 | `currentModel` | string | Active model identifier (empty string if not set) |
 | `currentMode` | string | Active mode identifier (empty string if not set) |
 | `lastUpdated` | string | Timestamp string (offset-based ISO 8601) |

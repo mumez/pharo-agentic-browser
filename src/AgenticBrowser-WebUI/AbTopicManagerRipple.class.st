@@ -151,6 +151,7 @@ AbTopicManagerRipple >> topicJson: aTopic [
 		  at: 'name' put: (aTopic name ifNil: [ '' ]);
 		  at: 'status' put: aTopic status asString;
 		  at: 'agentArguments' put: aTopic agentArguments;
+		  at: 'goal' put: (aTopic topicGoal description ifNil: [ '' ]);
 		  at: 'currentModel' put: (aTopic currentModel ifNil: [ '' ]);
 		  at: 'currentMode' put: (aTopic currentMode ifNil: [ '' ]);
 		  at: 'lastUpdated' put: (aTopic lastUpdated ifNil: [ '' ] ifNotNil: [ :d | d printString ]);
