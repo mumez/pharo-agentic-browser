@@ -467,6 +467,7 @@ Sent by the server after any operation that modifies the topic list: `setTitle`,
 
 ```json
 {
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "sender": "ai",
   "text": "I have added the unit tests.",
   "type": "normal",
@@ -478,6 +479,7 @@ Sent by the server after any operation that modifies the topic list: `setTitle`,
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `id` | string | UUID uniquely identifying this message. Stable across pushes — use to deduplicate `messageAdded` events. |
 | `sender` | string | `human` \| `ai` \| `system` |
 | `text` | string | Message content |
 | `type` | string | See message types below |
