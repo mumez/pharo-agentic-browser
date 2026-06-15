@@ -46,6 +46,7 @@ The core workflow:
 - **Working directory management** — per-topic working directory for better context; custom paths for existing projects
 - **Multiple package prefixes** — track multiple package families (e.g. `#('ACP-*' 'BaselineOfACP')`) per topic
 - **Image change watching** — `AbTopicRelatedPackagesWatcher` monitors image changes, inserts system messages into chat, and asks for confirmation before synching packages
+- **Web UI** — browser-based interface via WebSocket ([docs/web-ui.md](docs/web-ui.md))
 
 ## Requirements
 
@@ -74,6 +75,19 @@ Metacello new
     repository: 'github://mumez/pharo-agentic-browser:main/src';
     load: 'Tests'.
 ```
+
+### Web UI (optional)
+
+Load the server-side package:
+
+```smalltalk
+Metacello new
+    baseline: 'AgenticBrowser';
+    repository: 'github://mumez/pharo-agentic-browser:main/src';
+    load: 'WebUI'.
+```
+
+For client setup and full usage, see [docs/web-ui.md](docs/web-ui.md).
 
 ## Usage
 
@@ -213,6 +227,8 @@ AbSettings save.
 | `AgenticBrowser-Handler` | ACP callback bridge: `AbTopicHandler` |
 | `AgenticBrowser-UI` | Spec2 presenters: browser, topic list, chat, new-topic dialog, settings dialog, and other dialogs |
 | `AgenticBrowser-Tests` | SUnit tests for Core |
+| `AgenticBrowser-WebUI` | Ripple WebSocket server: `AbTopicManagerRipple` |
+| `AgenticBrowser-WebUI-Tests` | SUnit tests for WebUI |
 | `BaselineOfAgenticBrowser` | Metacello baseline |
 
 ## Architecture
