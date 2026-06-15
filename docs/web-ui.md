@@ -37,11 +37,11 @@ npm run build
 
 `RpServer` serves static files from `<imageDir>/assets/` by default (overridable with the `PHARO_RIPPLE_ASSETS_DIR` environment variable).
 
-The build outputs to `test-assets/agentic-browser/`. Symlink `test-assets` as the `assets` directory (recommended during development), or copy it:
+The build outputs to `assets/agentic-browser/`. Symlink `assets` directory (recommended during development), or copy it:
 
 ```sh
 # symlink
-ln -s /path/to/pharo-agentic-browser-web-ui/test-assets /path/to/pharo/image/assets
+ln -s /path/to/pharo-agentic-browser-web-ui/assets /path/to/pharo/image/assets
 
 # or copy
 cp -r test-assets /path/to/pharo/image/assets
@@ -53,7 +53,7 @@ cp -r test-assets /path/to/pharo/image/assets
 AbTopicManagerRipple startWebUIServer.
 ```
 
-Open `http://localhost:8080/assets/agentic-browser/` in a browser.
+Open `http://yourhost:8080/assets/agentic-browser/` in a browser.
 
 To change the port or bind address, configure `RpServerSettings` before starting:
 
@@ -83,19 +83,19 @@ Click **+ New Topic**, enter a title, and optionally select an agent from the dr
 
 ### Chat
 
-Select a topic to open the chat pane. Messages are loaded in chunks of 20. Type a prompt and press **Send**.
+Select a topic to open the chat pane. Messages are loaded in chunks. Type a prompt and press **Send**.
 
 When the agent requests approval, the pending message shows action buttons (e.g. **Allow once** / **Deny**). Click a button to resolve the approval.
 
 ### Model and mode selection
 
-Once an agent connects, dropdowns for model and mode appear in the toolbar. Selections are sent back to the agent via `setConfigOption`.
+Once an agent connects, dropdowns for model and mode appear in the toolbar. Selections are sent back to the agent.
 
 ### Multi-tab behavior
 
 All tabs receive push events for all topics. If one tab creates, renames, or deletes a topic, other tabs receive a `topicsUpdated` publish and re-fetch the topic list. Tabs that were inactive (backgrounded) can call `/messages/getAll` after `statusChanged: endTurn` to catch up.
 
-There is no exclusive locking — two tabs can send prompts to the same topic. This is intentional for the LAN single-user scenario.
+There is no exclusive locking — two tabs can send prompts to the same topic. This is intentional for the single-user scenario.
 
 ## WebSocket API
 
