@@ -5,15 +5,23 @@ Class {
 	#name : 'AbMockTopicManager',
 	#superclass : 'AbTopicManager',
 	#instVars : [
-		'saved'
+		'saved',
+		'shouldFail'
 	],
 	#category : 'AgenticBrowser-WebUI-Tests',
 	#package : 'AgenticBrowser-WebUI-Tests'
 }
 
 { #category : 'accessing' }
+AbMockTopicManager >> makeSaveFail [
+
+	shouldFail := true
+]
+
+{ #category : 'accessing' }
 AbMockTopicManager >> save [
 
+	shouldFail = true ifTrue: [ Error signal: 'Save failed for test' ].
 	saved := true
 ]
 

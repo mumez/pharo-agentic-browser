@@ -636,3 +636,227 @@ AbTopicManagerRippleTest >> testSaveAppCallsSaveOnTopicManager [
 	ripple handleRequest: msg.
 	self assert: mockManager wasSaved
 ]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testTopicAsJsonContainsNameAndGoal [
+
+	| topic json |
+	topic := self newTopic: 'Name Goal Test'.
+	json := ripple topicJson: topic.
+	self assert: (json includesKey: 'name').
+	self assert: (json includesKey: 'goal')
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testMessageAsJsonContainsId [
+
+	| msg json |
+	msg := AbMessage sender: #human text: 'Hello'.
+	json := ripple messageJson: msg.
+	self assert: (json includesKey: 'id').
+	self assert: (json at: 'id') isString.
+	self assert: (json at: 'id') isNotEmpty
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCreateTopicDefaultsTitleToUntitled [
+
+	| msg reply topicId topic |
+	msg := self requestMessage: '/topics/create' body: Dictionary new.
+	ripple handleRequest: msg.
+	reply := mockSocket lastReply.
+	topicId := (reply at: 'body') at: 'topicId'.
+	topic := AbTopicManager forTest at: topicId.
+	self assert: topic title equals: 'Untitled'
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCreateTopicPushesTopicAddedEvent [
+
+	| msg pushes |
+	mockSocket reset.
+	msg := self requestMessage: '/topics/create'
+		       body: (Dictionary new
+			        at: 'title' put: 'New Topic';
+			        at: 'agentArguments' put: #( 'claude-agent-acp' );
+			        yourself).
+	ripple handleRequest: msg.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'topicAdded' ] ].
+	self assert: pushes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCopyTopicPushesTopicAddedEvent [
+
+	| topic msg pushes |
+	topic := self newTopic: 'Original'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/copy'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'topicAdded' ] ].
+	self assert: pushes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetTitlePublishesTopicsUpdated [
+
+	| topic msg publishes |
+	topic := self newTopic: 'Old Title'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/setTitle'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'title' put: 'New Title';
+			        yourself).
+	ripple handleRequest: msg.
+	publishes := mockSocket sentMessages select: [ :m |
+		             (m at: 'type') = 'publish'
+		             and: [ (m at: 'address') = #topicsUpdated ] ].
+	self assert: publishes size equals: 1.
+	self assert: ((publishes first at: 'body') at: 'event') equals: 'topicsUpdated'.
+	self
+		assert: ((publishes first at: 'body') at: 'requesterId')
+		equals: mockSocket token
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testDeleteTopicPublishesTopicsUpdated [
+
+	| topic msg publishes |
+	topic := self newTopic: 'To Delete'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/delete'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	publishes := mockSocket sentMessages select: [ :m |
+		             (m at: 'type') = 'publish'
+		             and: [ (m at: 'address') = #topicsUpdated ] ].
+	self assert: publishes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetAgentPublishesTopicsUpdated [
+
+	| topic msg publishes |
+	topic := self newTopic: 'Agent Topic'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/setAgent'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'agentArguments' put: #( 'claude-code' );
+			        yourself).
+	ripple handleRequest: msg.
+	publishes := mockSocket sentMessages select: [ :m |
+		             (m at: 'type') = 'publish'
+		             and: [ (m at: 'address') = #topicsUpdated ] ].
+	self assert: publishes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetGoalPublishesTopicsUpdated [
+
+	| topic msg publishes |
+	topic := self newMockTopic: 'Goal Topic'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/setGoal'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'goal' put: 'Implement feature X';
+			        yourself).
+	ripple handleRequest: msg.
+	publishes := mockSocket sentMessages select: [ :m |
+		             (m at: 'type') = 'publish'
+		             and: [ (m at: 'address') = #topicsUpdated ] ].
+	self assert: publishes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testDeleteTopicSignalsErrorWhenBusy [
+
+	| topic msg |
+	topic := self newTopic: 'Busy Topic'.
+	AbTopicManager forTest addTopic: topic.
+	topic stateMachine handleEvent: #promptSent.
+	msg := self requestMessage: '/topic/delete'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10002 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetAgentSignalsErrorWhenBusy [
+
+	| topic msg |
+	topic := self newTopic: 'Busy Topic'.
+	AbTopicManager forTest addTopic: topic.
+	topic stateMachine handleEvent: #promptSent.
+	msg := self requestMessage: '/topic/setAgent'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'agentArguments' put: #( 'claude-code' );
+			        yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10002 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStatusChangedIncludesTopicIdAndStatus [
+
+	| topic statusPush |
+	topic := self newTopic: 'Status Body Test'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	topic stateMachine handleEvent: #promptSent.
+	statusPush := (mockSocket sentMessages select: [ :m |
+		               (m at: 'type') = 'send'
+		               and: [ ((m at: 'body') at: 'event') = 'statusChanged' ] ]) first.
+	self assert: ((statusPush at: 'body') at: 'topicId') equals: topic topicId.
+	self assert: ((statusPush at: 'body') at: 'status') equals: 'working'
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testGetAllMessagesSignalsErrorWhenTopicNotFound [
+
+	| msg |
+	msg := self sendMessage: '/messages/getAll'
+		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
+	self dispatch: msg.
+	self assert: mockSocket lastError notNil.
+	self assert: (mockSocket lastError at: 'error') code equals: 10001
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCancelPromptSignalsErrorWhenTopicNotFound [
+
+	| msg |
+	msg := self sendMessage: '/prompt/cancel'
+		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
+	self dispatch: msg.
+	self assert: mockSocket lastError notNil.
+	self assert: (mockSocket lastError at: 'error') code equals: 10001
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSaveAppSignalsErrorOnSaveFailure [
+
+	| mockManager msg |
+	mockManager := AbMockTopicManager new.
+	mockManager makeSaveFail.
+	ripple topicManager: mockManager.
+	msg := self requestMessage: '/app/save' body: Dictionary new.
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10006 ]
+]
