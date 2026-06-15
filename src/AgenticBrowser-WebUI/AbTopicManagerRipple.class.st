@@ -194,46 +194,22 @@ AbTopicManagerRipple >> approvalOptionsJson: aCollectionOrNil [
 ]
 
 { #category : 'json' }
-AbTopicManagerRipple >> optionsJsonFrom: aConfigOption [
-
-	| raw options currentValue |
-	raw := aConfigOption rawValues.
-	currentValue := raw at: 'currentValue' ifAbsent: [ '' ].
-	options := raw at: 'options' ifAbsent: [ #() ].
-	^ options collect: [ :opt |
-		  Dictionary new
-			  at: 'label' put: (opt at: 'name' ifAbsent: [ '' ]);
-			  at: 'optionId' put: (opt at: 'value' ifAbsent: [ '' ]);
-			  at: 'selected' put: ((opt at: 'value' ifAbsent: [ '' ]) = currentValue);
-			  yourself ]
-]
-
-{ #category : 'json' }
 AbTopicManagerRipple >> modelOptionsJson: aTopic [
 
-	^ aTopic modelConfigOption
-		ifNil: [ #() ]
-		ifNotNil: [ :opt | self optionsJsonFrom: opt ]
+	^ aTopic modelConfigOption ifNotNil: [ :opt | opt asDictionary ]
 ]
 
 { #category : 'json' }
 AbTopicManagerRipple >> modeOptionsJson: aTopic [
 
-	^ aTopic modeConfigOption
-		ifNil: [ #() ]
-		ifNotNil: [ :opt | self optionsJsonFrom: opt ]
+	^ aTopic modeConfigOption ifNotNil: [ :opt | opt asDictionary ]
 ]
 
 { #category : 'json' }
 AbTopicManagerRipple >> commandsJson: aTopic [
 
 	^ aTopic availableCommands ifNil: [ #() ] ifNotNil: [ :cmds |
-		  cmds collect: [ :cmd |
-			  Dictionary new
-				  at: 'label' put: cmd name;
-				  at: 'optionId' put: cmd name;
-				  at: 'selected' put: false;
-				  yourself ] ]
+		  cmds collect: [ :cmd | cmd asDictionary ] ]
 ]
 
 { #category : 'request handling' }
@@ -593,12 +569,6 @@ AbTopicManagerRipple >> onCommandsChanged: ann [
 		 at: 'commands'
 		 put: (ann commands
 			  ifNil: [ #() ]
-			  ifNotNil: [ :cmds |
-				  cmds collect: [ :cmd |
-					  Dictionary new
-						  at: 'label' put: cmd name;
-						  at: 'optionId' put: cmd name;
-						  at: 'selected' put: false;
-						  yourself ] ]);
+			  ifNotNil: [ :cmds | cmds collect: [ :cmd | cmd asDictionary ] ]);
 		 yourself)
 ]

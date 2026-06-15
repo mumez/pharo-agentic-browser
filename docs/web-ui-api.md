@@ -390,9 +390,11 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
 {
   "event": "modelChanged",
   "topicId": "abc123",
-  "options": [OptionData, ...]
+  "options": ConfigOptionData
 }
 ```
+
+`options` is `null` when no model config is available (agent not yet connected).
 
 ### `modeChanged` — mode options updated for a topic
 
@@ -400,9 +402,11 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
 {
   "event": "modeChanged",
   "topicId": "abc123",
-  "options": [OptionData, ...]
+  "options": ConfigOptionData
 }
 ```
+
+`options` is `null` when no mode config is available (agent not yet connected).
 
 ### `commandsChanged` — available commands updated for a topic
 
@@ -410,7 +414,7 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
 {
   "event": "commandsChanged",
   "topicId": "abc123",
-  "commands": [OptionData, ...]
+  "commands": [CommandData, ...]
 }
 ```
 
@@ -527,19 +531,61 @@ Sent by the server after any operation that modifies the topic list: `setTitle`,
 
 ---
 
-### OptionData
+### ConfigOptionData
 
-Used in `availableCommands`, `modelOptions`, `modeOptions`, and `commandsChanged`.
+Used in `options` (from `modelChanged` / `modeChanged` events and `/topic/select` pushes). This is the raw `ACPConfigOption` structure from the agent. `null` when the agent has not yet sent options.
 
 ```json
-{ "label": "Claude Sonnet 4.6", "optionId": "claude-sonnet-4-6", "selected": true }
+{
+  "id": "model",
+  "currentValue": "claude-sonnet-4-6",
+  "type": "select",
+  "category": "model",
+  "options": [
+    { "name": "Claude Sonnet 4.6", "value": "claude-sonnet-4-6" },
+    { "name": "Claude Opus 4.7",   "value": "claude-opus-4-7" }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Config key to pass to `/topic/setModel` or `/topic/setMode` as `optionId` |
+| `currentValue` | string | Currently active value |
+| `type` | string | `"select"` for dropdown options |
+| `category` | string | `"model"` or `"mode"` |
+| `options` | array | Available choices; each has `name` (display) and `value` (send back as `optionId`) |
+
+---
+
+### OptionData
+
+Used in approval options (`approvalOptions` in `MessageData`).
+
+```json
+{ "label": "Allow once", "optionId": "allowOnce" }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `label` | string | Human-readable display name |
-| `optionId` | string | Value to send back (e.g. in `/approval/resolve`) |
-| `selected` | boolean | Whether this is the currently active option |
+| `optionId` | string | Value to send to `/approval/resolve` |
+
+---
+
+### CommandData
+
+Used in `commands` (from `commandsChanged` events and `/topic/select` pushes). This is the raw `ACPAvailableCommand` structure from the agent.
+
+```json
+{ "name": "/compact", "description": "Compact the conversation history", "input": { "hint": "optional instructions" } }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Slash command name (e.g. `"/compact"`) |
+| `description` | string | Human-readable description (may be absent) |
+| `input` | object | Input schema; contains `hint` string if the command accepts arguments (may be absent) |
 
 ---
 
