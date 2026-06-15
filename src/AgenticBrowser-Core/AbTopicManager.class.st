@@ -113,13 +113,19 @@ AbTopicManager class >> loadFrom: aFileReference [
 { #category : 'persistence' }
 AbTopicManager class >> save [
 
-	self saveTo: self defaultFileReference
+	self default save
 ]
 
 { #category : 'persistence' }
 AbTopicManager class >> saveTo: aFileReference [
 
 	self default saveTo: aFileReference
+]
+
+{ #category : 'persistence' }
+AbTopicManager >> save [
+
+	self saveTo: self class defaultFileReference
 ]
 
 { #category : 'persistence' }
