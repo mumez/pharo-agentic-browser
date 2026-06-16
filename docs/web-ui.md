@@ -60,6 +60,7 @@ To change the port or bind address, configure `RpServerSettings` before starting
 ```smalltalk
 RpServer default settings port: 9090.
 RpServer default settings bindAddress: #[0 0 0 0].  "listen on all interfaces"
+RpServer default reset. "clear old server"
 AgenticBrowser startWebUI.
 ```
 
