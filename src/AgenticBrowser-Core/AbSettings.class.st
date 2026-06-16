@@ -90,7 +90,10 @@ AbSettings class >> loadFrom: aFileReference [
 	| dict settings |
 	dict := STONJSON fromString: aFileReference contents.
 	settings := self new.
-	dict keysAndValuesDo: [ :k :v | settings perform: k asSymbol asMutator with: v ].
+	dict keysAndValuesDo: [ :k :v |
+		[ settings perform: k asSymbol asMutator with: v ]
+			on: MessageNotUnderstood
+			do: [ :e | Transcript crShow: 'AbSettings: skipping unknown key ''' , k , ''' - ' , e messageText ] ].
 	^ settings
 ]
 
