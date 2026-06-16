@@ -31,8 +31,8 @@ Class {
 		'aiTimeoutOptionDropList',
 		'exportTimeoutOptionDropList',
 		'useDefaultMcpServersCheckbox',
-		'useCommandOnGoalSettingsCheckbox',
-		'goalSettingsCommandField',
+		'useCommandOnGoalSetCheckbox',
+		'goalSetCommandField',
 		'saveButton',
 		'cancelButton'
 	],
@@ -115,13 +115,13 @@ AbSettingsPresenter >> useDefaultMcpServersCheckbox [
 ]
 
 { #category : 'accessing' }
-AbSettingsPresenter >> useCommandOnGoalSettingsCheckbox [
-	^ useCommandOnGoalSettingsCheckbox
+AbSettingsPresenter >> useCommandOnGoalSetCheckbox [
+	^ useCommandOnGoalSetCheckbox
 ]
 
 { #category : 'accessing' }
-AbSettingsPresenter >> goalSettingsCommandField [
-	^ goalSettingsCommandField
+AbSettingsPresenter >> goalSetCommandField [
+	^ goalSetCommandField
 ]
 
 { #category : 'accessing' }
@@ -142,8 +142,8 @@ AbSettingsPresenter >> saveSettings [
 	self settings aiPermissionTimeoutOption: (self optionIdForLabel: aiTimeoutOptionDropList selectedItem).
 	self settings exportApprovalTimeoutOption: (self optionIdForLabel: exportTimeoutOptionDropList selectedItem).
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
-	self settings useCommandOnGoalSettings: useCommandOnGoalSettingsCheckbox state.
-	self settings goalSettingsCommand: goalSettingsCommandField text.
+	self settings useCommandOnGoalSet: useCommandOnGoalSetCheckbox state.
+	self settings goalSetCommand: goalSetCommandField text.
 	self saveAction cull: self settings
 ]
 
@@ -196,12 +196,12 @@ AbSettingsPresenter >> initializePresenters [
 	useDefaultMcpServersCheckbox label: 'Use default MCP servers'.
 	useDefaultMcpServersCheckbox state: self settings useDefaultMcpServers.
 
-	useCommandOnGoalSettingsCheckbox := self newCheckBox.
-	useCommandOnGoalSettingsCheckbox label: 'Use command on goal settings'.
-	useCommandOnGoalSettingsCheckbox state: self settings useCommandOnGoalSettings.
+	useCommandOnGoalSetCheckbox := self newCheckBox.
+	useCommandOnGoalSetCheckbox label: 'Use command on goal settings'.
+	useCommandOnGoalSetCheckbox state: self settings useCommandOnGoalSet.
 
-	goalSettingsCommandField := self newTextInput.
-	goalSettingsCommandField text: self settings goalSettingsCommand.
+	goalSetCommandField := self newTextInput.
+	goalSetCommandField text: self settings goalSetCommand.
 
 	saveButton := self newButton.
 	saveButton label: 'Save'.
@@ -223,8 +223,8 @@ AbSettingsPresenter >> defaultLayout [
 		add: (self labeledRow: 'Export timeout (seconds):' field: exportTimeoutField);
 		add: (self labeledRow: 'Export timeout option:' field: exportTimeoutOptionDropList);
 		add: useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
-		add: useCommandOnGoalSettingsCheckbox withConstraints: [ :c | c height: 28 ];
-		add: (self labeledRow: 'Goal settings command:' field: goalSettingsCommandField);
+		add: useCommandOnGoalSetCheckbox withConstraints: [ :c | c height: 28 ];
+		add: (self labeledRow: 'Goal settings command:' field: goalSetCommandField);
 		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
 		yourself
 ]

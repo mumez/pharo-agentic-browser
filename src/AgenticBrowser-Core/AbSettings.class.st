@@ -12,7 +12,7 @@ Collaborators:
 - AbTopic: It holds a per-topic copy created via AbSettings class>>defaultCopied.
 - AbMcpServersLoader: It reads #useDefaultMcpServers to decide whether to merge built-in servers.
 - AbTopicRelatedPackagesWatcher: It reads #watcherMessageThrottleDuration for throttle control.
-- AbTopicGoal: It reads #useCommandOnGoalSettings and #goalSettingsCommand.
+- AbTopicGoal: It reads #useCommandOnGoalSet and #goalSetCommand.
 
 Public API and Key Messages:
 - AbSettings class>>default - Global singleton; created lazily.
@@ -190,14 +190,14 @@ AbSettings >> defaultAiPermissionWaitTimeoutSeconds [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultGoalSettingsCommand [
-	self isDefault ifFalse: [ ^ self class default defaultGoalSettingsCommand ].
+AbSettings >> defaultGoalSetCommand [
+	self isDefault ifFalse: [ ^ self class default defaultGoalSetCommand ].
 	^ '/goal'
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultUseCommandOnGoalSettings [
-	self isDefault ifFalse: [ ^ self class default defaultUseCommandOnGoalSettings ].
+AbSettings >> defaultUseCommandOnGoalSet [
+	self isDefault ifFalse: [ ^ self class default defaultUseCommandOnGoalSet ].
 	^ false
 ]
 
@@ -254,27 +254,27 @@ AbSettings >> defaultWatcherMessageThrottleSeconds [
 ]
 
 { #category : 'accessing' }
-AbSettings >> goalSettingsCommand [
+AbSettings >> goalSetCommand [
 
-	^ self at: #goalSettingsCommand ifAbsent: [ self defaultGoalSettingsCommand ]
+	^ self at: #goalSetCommand ifAbsent: [ self defaultGoalSetCommand ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> goalSettingsCommand: aString [
+AbSettings >> goalSetCommand: aString [
 
-	self at: #goalSettingsCommand put: aString
+	self at: #goalSetCommand put: aString
 ]
 
 { #category : 'accessing' }
-AbSettings >> useCommandOnGoalSettings [
+AbSettings >> useCommandOnGoalSet [
 
-	^ self at: #useCommandOnGoalSettings ifAbsent: [ self defaultUseCommandOnGoalSettings ]
+	^ self at: #useCommandOnGoalSet ifAbsent: [ self defaultUseCommandOnGoalSet ]
 ]
 
 { #category : 'accessing' }
-AbSettings >> useCommandOnGoalSettings: aBoolean [
+AbSettings >> useCommandOnGoalSet: aBoolean [
 
-	self at: #useCommandOnGoalSettings put: aBoolean
+	self at: #useCommandOnGoalSet put: aBoolean
 ]
 
 { #category : 'accessing' }

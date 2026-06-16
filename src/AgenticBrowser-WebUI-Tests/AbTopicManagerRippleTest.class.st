@@ -860,3 +860,62 @@ AbTopicManagerRippleTest >> testSaveAppSignalsErrorOnSaveFailure [
 		on: RpError
 		do: [ :e | self assert: e code equals: 10006 ]
 ]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testGetSettingsRepliesWithDefaultValues [
+
+	| topic msg reply settings |
+	topic := self newTopic: 'Settings Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/getSettings'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	reply := mockSocket lastReply.
+	settings := (reply at: 'body') at: 'settings'.
+	self assert: (settings includesKey: 'useCommandOnGoalSet').
+	self assert: (settings includesKey: 'goalSetCommand').
+	self assert: (settings at: 'useCommandOnGoalSet') equals: false.
+	self assert: (settings at: 'goalSetCommand') equals: '/goal'
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetSettingsUpdatesTopicSettings [
+
+	| topic msg reply |
+	topic := self newTopic: 'Settings Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/setSettings'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'settings' put: (Dictionary new
+				         at: 'useCommandOnGoalSet' put: true;
+				         at: 'goalSetCommand' put: '/mygoal';
+				         yourself);
+			        yourself).
+	ripple handleRequest: msg.
+	reply := mockSocket lastReply.
+	self assert: ((reply at: 'body') at: 'ok').
+	self assert: topic settings useCommandOnGoalSet equals: true.
+	self assert: topic settings goalSetCommand equals: '/mygoal'
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testGetSettingsSignalsErrorForUnknownTopicId [
+
+	| msg |
+	msg := self requestMessage: '/topic/getSettings'
+		       body: (Dictionary new at: 'topicId' put: 'no-such-id'; yourself).
+	self should: [ ripple handleRequest: msg ] raise: RpError
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetSettingsSignalsErrorForUnknownTopicId [
+
+	| msg |
+	msg := self requestMessage: '/topic/setSettings'
+		       body: (Dictionary new
+			        at: 'topicId' put: 'no-such-id';
+			        at: 'settings' put: Dictionary new;
+			        yourself).
+	self should: [ ripple handleRequest: msg ] raise: RpError
+]

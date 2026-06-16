@@ -26,7 +26,7 @@ Internal Representation:
 Implementation Points:
 - The result file is result-<topicId>.md in the topic's working directory root (not the src subdirectory).
 - The file is deleted immediately after reading, so #checkAchievement is safe to call repeatedly.
-- When useCommandOnGoalSettings is true in the topic's settings, the notification prompt is prefixed with goalSettingsCommand (default: '/goal').
+- When useCommandOnGoalSet is true in the topic's settings, the notification prompt is prefixed with goalSetCommand (default: '/goal').
 "
 Class {
 	#name : 'AbTopicGoal',
@@ -89,8 +89,8 @@ AbTopicGoal >> notificationPrompt [
 	| basePrompt |
 	basePrompt := ('Goal has been set: {1}. When the goal is achieved, summarize and report in result-{2}. Keep retrying until the goal is achieved.'
 		format: { description. self resultFileBasename }).
-	self topic settings useCommandOnGoalSettings ifFalse: [ ^ basePrompt ].
-	^ ('{1} {2}' format: { self topic settings goalSettingsCommand. basePrompt })
+	self topic settings useCommandOnGoalSet ifFalse: [ ^ basePrompt ].
+	^ ('{1} {2}' format: { self topic settings goalSetCommand. basePrompt })
 ]
 
 { #category : 'accessing' }
