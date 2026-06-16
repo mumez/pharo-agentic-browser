@@ -10,21 +10,13 @@ BaselineOfAgenticBrowser >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
-		spec
-			baseline: 'ACP'
-			with: [ spec repository: 'github://mumez/pharo-acp:main/src' ].
-		spec
-			baseline: 'SState'
-			with: [ spec repository: 'github://mumez/SState/src' ].
-		spec
-			baseline: 'PharoSmalltalkInteropServer'
-			with: [ spec repository: 'github://mumez/PharoSmalltalkInteropServer:main/src' ].
-		spec
-			baseline: 'Ripple'
-			with: [
-				spec
-					repository: 'github://mumez/Ripple:main/src';
-					loads: #( 'Core' ) ].
+		"External Dependencies"
+		self acp: spec.
+		self sState: spec.
+		self pharoSmalltalkInteropServer: spec.
+		self ripple: spec.
+
+		"Packages"
 		spec
 			package: 'AgenticBrowser-Core'
 			with: [ spec requires: #( 'ACP' 'SState' 'PharoSmalltalkInteropServer' ) ].
@@ -43,6 +35,8 @@ BaselineOfAgenticBrowser >> baseline: spec [
 		spec
 			package: 'AgenticBrowser-WebUI-Tests'
 			with: [ spec requires: #( 'AgenticBrowser-WebUI' 'AgenticBrowser-Tests' ) ].
+
+		"Groups"
 		spec
 			group: 'default'
 			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ).
@@ -51,8 +45,36 @@ BaselineOfAgenticBrowser >> baseline: spec [
 			with: #( 'default' 'AgenticBrowser-Tests' ).
 		spec
 			group: 'WebUI'
-			with: #( 'AgenticBrowser-WebUI' ).
+			with: #( 'default' 'AgenticBrowser-WebUI' ).
 		spec
 			group: 'WebUI-Tests'
-			with: #( 'AgenticBrowser-WebUI' 'AgenticBrowser-WebUI-Tests' ) ]
+			with: #( 'WebUI' 'AgenticBrowser-WebUI-Tests' ) ]
+]
+
+{ #category : 'external projects' }
+BaselineOfAgenticBrowser >> acp: spec [
+	spec
+		baseline: 'ACP'
+		with: [ spec repository: 'github://mumez/pharo-acp:main/src' ]
+]
+
+{ #category : 'external projects' }
+BaselineOfAgenticBrowser >> pharoSmalltalkInteropServer: spec [
+	spec
+		baseline: 'PharoSmalltalkInteropServer'
+		with: [ spec repository: 'github://mumez/PharoSmalltalkInteropServer:main/src' ]
+]
+
+{ #category : 'external projects' }
+BaselineOfAgenticBrowser >> ripple: spec [
+	spec
+		baseline: 'Ripple'
+		with: [ spec repository: 'github://mumez/Ripple:main/src' ]
+]
+
+{ #category : 'external projects' }
+BaselineOfAgenticBrowser >> sState: spec [
+	spec
+		baseline: 'SState'
+		with: [ spec repository: 'github://mumez/SState/src' ]
 ]
