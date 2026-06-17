@@ -301,6 +301,196 @@ AbTopicOrchestrationTest >> testTopicBuilderUsesCustomPrompt [
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testScriptingExampleSmoke [
+	| orchestration completedTitles prompts planModeApplied planTopic implementTopic reviewTopic |
+	completedTitles := OrderedCollection new.
+	prompts := Dictionary new.
+	planModeApplied := Array with: false.
+	planTopic := nil.
+	implementTopic := nil.
+	reviewTopic := nil.
+
+	orchestration := self scriptingExampleOrchestration.
+
+	AbTopicManager activeManager announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			self registerSmokeHandlersFor: ann topic
+				prompts: prompts
+				completedTitles: completedTitles
+				planModeApplied: planModeApplied.
+			ann topic title = self smokePlanTitle ifTrue: [ planTopic := ann topic ].
+			ann topic title = self smokeImplementTitle ifTrue: [ implementTopic := ann topic ].
+			ann topic title = self smokeReviewTitle ifTrue: [ reviewTopic := ann topic ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: completedTitles size equals: 6.
+		self assert: (completedTitles includes: self smokePlanTitle).
+		self assert: (completedTitles includes: self smokeSpecTitle).
+		self assert: (completedTitles includes: self smokeImplementTitle).
+		self assert: (completedTitles includes: self smokeTestsTitle).
+		self assert: (completedTitles includes: self smokeReviewTitle).
+		self assert: (completedTitles includes: self smokePrTitle).
+		self assert: planModeApplied first.
+		self assert: planTopic notNil.
+		self assert: implementTopic notNil.
+		self assert: reviewTopic notNil.
+		self assert: planTopic agentArguments equals: #( 'claude-agent-acp' ).
+		self assert: implementTopic agentArguments equals: #( 'codex-acp' ).
+		self assert: reviewTopic agentArguments equals: orchestration defaultAgentConfig arguments.
+		self assert: ((prompts at: #spec) includesSubstring: 'Plan: feature XXX').
+		self assert: ((prompts at: #implement) includesSubstring: 'Spec: feature XXX').
+		self assert: ((prompts at: #tests) includesSubstring: 'Spec: feature XXX').
+		self assert: ((prompts at: #review) includesSubstring: 'Implementation done').
+		self assert: ((prompts at: #review) includesSubstring: 'Tests green').
+		self assert: ((prompts at: #pr) includesSubstring: 'Review OK')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> capturePromptOnWorkingFor: aTopic into: aDictionary at: aKey [
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :statusAnn |
+			statusAnn status = #working ifTrue: [
+				aDictionary at: aKey put: aTopic messages first text ] ]
+		for: self
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> mockPlanModeOn: aTopic recordingInto: planModeApplied [
+	| mockClient result |
+	aTopic session sessionId: 'session-smoke'.
+	result := MockObject new.
+	result on: #configOptions verify: [
+		OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
+	mockClient := MockObject new.
+	mockClient
+		on: #setSessionConfigOptionBy:
+		with: MockObject any
+		verify: [ :aBlock |
+			| params |
+			params := ACPSetSessionConfigOptionParams buildBy: aBlock.
+			self assert: params value equals: 'plan'.
+			planModeApplied at: 1 put: true.
+			result ].
+	aTopic session client: mockClient
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> registerSmokeCompletionHandlerFor: aTopic into: completedTitles [
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :statusAnn |
+			(statusAnn status = #endTurn or: [ statusAnn status = #goalAchieved ]) ifTrue: [
+				completedTitles add: aTopic title ] ]
+		for: self
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> registerSmokeHandlersFor: aTopic
+	prompts: prompts
+	completedTitles: completedTitles
+	planModeApplied: planModeApplied [
+
+	(self smokePlanningStepTitles includes: aTopic title) ifTrue: [
+		self mockPlanModeOn: aTopic recordingInto: planModeApplied ].
+	aTopic title = self smokePlanTitle ifTrue: [
+		self simulateAiResultWhenWorkingFor: aTopic resultText: 'Plan: feature XXX' ].
+	aTopic title = self smokeSpecTitle ifTrue: [
+		self capturePromptOnWorkingFor: aTopic into: prompts at: #spec.
+		self simulateAiResultWhenWorkingFor: aTopic resultText: 'Spec: feature XXX' ].
+	aTopic title = self smokeImplementTitle ifTrue: [
+		self capturePromptOnWorkingFor: aTopic into: prompts at: #implement.
+		self simulateAiResultWhenWorkingFor: aTopic resultText: 'Implementation done' ].
+	aTopic title = self smokeTestsTitle ifTrue: [
+		self capturePromptOnWorkingFor: aTopic into: prompts at: #tests.
+		self simulateGoalAchievementWhenWorkingFor: aTopic resultText: 'Tests green' ].
+	aTopic title = self smokeReviewTitle ifTrue: [
+		self capturePromptOnWorkingFor: aTopic into: prompts at: #review.
+		self simulateAiResultWhenWorkingFor: aTopic resultText: 'Review OK' ].
+	aTopic title = self smokePrTitle ifTrue: [
+		self capturePromptOnWorkingFor: aTopic into: prompts at: #pr.
+		self simulateEndTurnWhenWorkingFor: aTopic ].
+	self registerSmokeCompletionHandlerFor: aTopic into: completedTitles
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> scriptingExampleOrchestration [
+	| planTitle specTitle implementTitle testsTitle reviewTitle prTitle |
+	planTitle := self smokePlanTitle.
+	specTitle := self smokeSpecTitle.
+	implementTitle := self smokeImplementTitle.
+	testsTitle := self smokeTestsTitle.
+	reviewTitle := self smokeReviewTitle.
+	prTitle := self smokePrTitle.
+	^ AbTopicOrchestration build: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: planTitle ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: specTitle ]
+		} with: (builder agentBy: [ :a | a claude; planMode ]).
+		builder para: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: implementTitle ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: testsTitle.
+				t goal: 'pass all tests' ]
+		} with: builder agent codex.
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: reviewTitle ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: prTitle ] } ]
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokePlanningStepTitles [
+	^ Array
+		with: self smokePlanTitle
+		with: self smokeSpecTitle
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokeImplementTitle [
+	^ 'ab-test-Implement feature XXX'
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokePlanTitle [
+	^ 'ab-test-Create plan of feature XXX'
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokePrTitle [
+	^ 'ab-test-create PR of XXX'
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokeReviewTitle [
+	^ 'ab-test-Review implementation of XXX'
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokeSpecTitle [
+	^ 'ab-test-Create spec of feature XXX'
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationTest >> smokeTestsTitle [
+	^ 'ab-test-Write tests feature XXX'
+]
+
 { #category : 'private' }
 AbTopicOrchestrationTest >> simulateAiResultWhenWorkingFor: aTopic resultText: aString [
 	aTopic announcer
