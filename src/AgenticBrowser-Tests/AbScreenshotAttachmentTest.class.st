@@ -5,6 +5,15 @@ Class {
 	#package : 'AgenticBrowser-Tests'
 }
 
+{ #category : 'running' }
+AbScreenshotAttachmentTest >> setUp [
+
+	super setUp.
+	AbScreenshotAttachment screenshotDirectory ensureCreateDirectory.
+	AbScreenshotAttachment screenshotDirectory children do: [ :each |
+		(each basename beginsWith: 'sc-20260527-') ifTrue: [ each delete ] ]
+]
+
 { #category : 'tests' }
 AbScreenshotAttachmentTest >> testNameFormat [
 

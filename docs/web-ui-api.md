@@ -283,6 +283,60 @@ Note: all push events are already broadcast to every connected client. `select` 
 
 ---
 
+### `request /topic/getSettings`
+
+Returns the topic's current settings. Only the fields meaningful in the WebUI context are returned.
+
+**Request body:**
+```json
+{ "topicId": "abc123" }
+```
+
+**Reply body:**
+```json
+{
+  "settings": {
+    "useCommandOnGoalSet": false,
+    "goalSetCommand": "/goal"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `useCommandOnGoalSet` | boolean | When `true`, the goal notification prompt is prefixed with `goalSetCommand` |
+| `goalSetCommand` | string | The command prefix prepended to the goal notification prompt (default: `"/goal"`) |
+
+**Errors:** `10001` if the `topicId` does not exist.
+
+---
+
+### `request /topic/setSettings`
+
+Updates per-topic settings. Only the fields present in the `settings` body are applied; omitted fields are left unchanged.
+
+**Request body:**
+```json
+{
+  "topicId": "abc123",
+  "settings": {
+    "useCommandOnGoalSet": true,
+    "goalSetCommand": "/mygoal"
+  }
+}
+```
+
+**Reply body:** `{ "ok": true }`
+
+| Field | Type | Description |
+|---|---|---|
+| `useCommandOnGoalSet` | boolean | Enable/disable command prefix on goal notification |
+| `goalSetCommand` | string | Command prefix to prepend (e.g. `"/goal"`, `"/mygoal"`) |
+
+**Errors:** `10001` if the `topicId` does not exist.
+
+---
+
 ### `request /app/save`
 
 Saves all topics to disk (`AbTopicManager save`). This is an application-level operation with no topic parameter.

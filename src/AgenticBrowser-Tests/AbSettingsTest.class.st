@@ -152,8 +152,8 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'useDefaultMcpServers').
 	self assert: (dict includesKey: 'watcherMessageThrottleSeconds').
 	self assert: (dict includesKey: 'codingAgents').
-	self assert: (dict includesKey: 'goalSettingsCommand').
-	self assert: (dict includesKey: 'useCommandOnGoalSettings').
+	self assert: (dict includesKey: 'goalSetCommand').
+	self assert: (dict includesKey: 'useCommandOnGoalSet').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
 ]
 
@@ -190,31 +190,31 @@ AbSettingsTest >> testCodingAgentsSettable [
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testGoalSettingsCommandDefaultIsGoal [
+AbSettingsTest >> testGoalSetCommandDefaultIsGoal [
 
-	self assert: AbSettings default goalSettingsCommand equals: '/goal'
+	self assert: AbSettings default goalSetCommand equals: '/goal'
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testGoalSettingsCommandSettable [
+AbSettingsTest >> testGoalSetCommandSettable [
 
 	| settings |
 	settings := AbSettings defaultCopied.
-	settings goalSettingsCommand: '/mygoal'.
-	self assert: settings goalSettingsCommand equals: '/mygoal'
+	settings goalSetCommand: '/mygoal'.
+	self assert: settings goalSetCommand equals: '/mygoal'
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testUseCommandOnGoalSettingsDefaultIsFalse [
+AbSettingsTest >> testUseCommandOnGoalSetDefaultIsFalse [
 
-	self assert: AbSettings default useCommandOnGoalSettings equals: false
+	self assert: AbSettings default useCommandOnGoalSet equals: false
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testUseCommandOnGoalSettingsSettable [
+AbSettingsTest >> testUseCommandOnGoalSetSettable [
 
 	| settings |
 	settings := AbSettings defaultCopied.
-	settings useCommandOnGoalSettings: true.
-	self assert: settings useCommandOnGoalSettings equals: true
+	settings useCommandOnGoalSet: true.
+	self assert: settings useCommandOnGoalSet equals: true
 ]

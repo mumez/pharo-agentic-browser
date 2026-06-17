@@ -65,11 +65,11 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 ]
 
 { #category : 'tests' }
-AbTopicGoalTest >> testNotificationPromptPrependsGoalSettingsCommandWhenEnabled [
+AbTopicGoalTest >> testNotificationPromptPrependsGoalSetCommandWhenEnabled [
 
 	| goal topic |
 	topic := self newTopic.
-	topic settings useCommandOnGoalSettings: true.
+	topic settings useCommandOnGoalSet: true.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt beginsWith: '/goal ')
@@ -90,7 +90,7 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileNameWithComma
 
 	| goal topic |
 	topic := self newTopic.
-	topic settings useCommandOnGoalSettings: true.
+	topic settings useCommandOnGoalSet: true.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
@@ -102,8 +102,8 @@ AbTopicGoalTest >> testNotificationPromptUsesConfiguredCommandWhenEnabled [
 
 	| goal topic |
 	topic := self newTopic.
-	topic settings useCommandOnGoalSettings: true.
-	topic settings goalSettingsCommand: '/mygoal'.
+	topic settings useCommandOnGoalSet: true.
+	topic settings goalSetCommand: '/mygoal'.
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt beginsWith: '/mygoal ')

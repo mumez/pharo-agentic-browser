@@ -50,7 +50,7 @@ cp -r test-assets /path/to/pharo/image/assets
 ### 4. Start the server
 
 ```smalltalk
-AbTopicManagerRipple startWebUIServer.
+AgenticBrowser startWebUI
 ```
 
 Open `http://yourhost:8080/assets/agentic-browser/` in a browser.
@@ -60,7 +60,8 @@ To change the port or bind address, configure `RpServerSettings` before starting
 ```smalltalk
 RpServer default settings port: 9090.
 RpServer default settings bindAddress: #[0 0 0 0].  "listen on all interfaces"
-AbTopicManagerRipple startWebUIServer.
+RpServer default reset. "clear old server"
+AgenticBrowser startWebUI.
 ```
 
 ## Usage
@@ -114,7 +115,7 @@ ws://localhost:8080/ws/agentic-browser?token=<client-generated-uuid>
 { "type": "register", "address": "topicsUpdated" }
 ```
 
-## Configuration
+## Server Configuration
 
 | Setting | Default | Override |
 |---------|---------|---------|

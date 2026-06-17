@@ -226,6 +226,8 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/topic/setMode' ifTrue: [ ^ self handleSetMode: aMessage ].
 	aMessage address = '/topic/copy' ifTrue: [ ^ self handleCopyTopic: aMessage ].
 	aMessage address = '/topic/select' ifTrue: [ ^ self handleSelectTopic: aMessage ].
+	aMessage address = '/topic/getSettings' ifTrue: [ ^ self handleGetSettings: aMessage ].
+	aMessage address = '/topic/setSettings' ifTrue: [ ^ self handleSetSettings: aMessage ].
 	aMessage address = '/app/save' ifTrue: [ ^ self handleSaveApp: aMessage ].
 	(RpError general: 'Unknown address: ' , aMessage address) signal
 ]
@@ -289,6 +291,40 @@ AbTopicManagerRipple >> handleDeleteTopic: aMessage [
 	self topicManager removeTopic: topic.
 	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
 	self publishTopicsUpdated
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleGetSettings: aMessage [
+
+	| topicId topic settings |
+	topicId := aMessage body at: 'topicId'.
+	topic := self topicManager at: topicId.
+	topic ifNil: [ self topicNotFoundError: topicId ].
+	settings := topic settings.
+	self webSocket
+		sendReply: (Dictionary new
+			at: 'settings' put: (Dictionary new
+				at: 'useCommandOnGoalSet' put: settings useCommandOnGoalSet;
+				at: 'goalSetCommand' put: settings goalSetCommand;
+				yourself);
+			yourself)
+		for: aMessage
+]
+
+{ #category : 'request handling' }
+AbTopicManagerRipple >> handleSetSettings: aMessage [
+
+	| body topicId topic settings |
+	body := aMessage body.
+	topicId := body at: 'topicId'.
+	topic := self topicManager at: topicId.
+	topic ifNil: [ self topicNotFoundError: topicId ].
+	settings := body at: 'settings'.
+	(settings includesKey: 'useCommandOnGoalSet') ifTrue: [
+		topic settings useCommandOnGoalSet: (settings at: 'useCommandOnGoalSet') ].
+	(settings includesKey: 'goalSetCommand') ifTrue: [
+		topic settings goalSetCommand: (settings at: 'goalSetCommand') ].
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
 ]
 
 { #category : 'request handling' }
