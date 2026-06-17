@@ -2,7 +2,6 @@ Class {
 	#name : 'AbTopicBuilder',
 	#superclass : 'Object',
 	#instVars : [
-		'configBlock',
 		'title',
 		'goal',
 		'prompt',
@@ -54,12 +53,11 @@ AbTopicBuilder >> topicClass: aClass [
 
 { #category : 'defaults' }
 AbTopicBuilder >> defaultTopicClass [
-	^ Smalltalk globals at: #AbTopic ifAbsent: [ nil ]
+	^ AbTopic
 ]
 
 { #category : 'configuring' }
 AbTopicBuilder >> configure: aBlock [
-	configBlock := aBlock.
 	aBlock value: self.
 	^ self
 ]

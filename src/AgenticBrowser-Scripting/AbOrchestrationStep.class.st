@@ -73,12 +73,41 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
+AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anAgentConfig [
+	| topic |
+	topic := aBuilder instantiateWith: anAgentConfig.
+	topic workingDirectoryPath: self sharedDirectoryPath.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	topic settings aiPermissionTimeoutOption: #allow_once.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	topic settings exportApprovalTimeoutOption: #allow_once.
+	AbTopicManager activeManager addTopic: topic.
+	^ topic
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
+	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
+		ifTrue: [ aStatus = #endTurn ]
+		ifFalse: [ aStatus = #goalAchieved ]
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic [
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann |
+			(self isCompletionFor: aTopic status: ann status)
+				ifTrue: [ aSemaphore signal ] ]
+		for: self
+]
+
+{ #category : 'private' }
 AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
 	| results |
 	results := aCollectionOfTopics collect: [ :topic | self resultFromTopic: topic ].
 	results := results reject: #isNil.
-	results isEmpty ifTrue: [ ^ nil ].
-	^ results joinUsing: String crlf , String crlf
+	^ results ifEmpty: [ nil ] ifNotEmpty: [ results joinUsing: String crlf , String crlf ]
 ]
 
 { #category : 'private' }
