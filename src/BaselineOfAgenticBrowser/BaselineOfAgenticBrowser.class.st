@@ -30,6 +30,12 @@ BaselineOfAgenticBrowser >> baseline: spec [
 			package: 'AgenticBrowser-Tests'
 			with: [ spec requires: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ) ].
 		spec
+			package: 'AgenticBrowser-Scripting'
+			with: [ spec requires: #( 'AgenticBrowser-Core' ) ].
+		spec
+			package: 'AgenticBrowser-Scripting-Tests'
+			with: [ spec requires: #( 'AgenticBrowser-Scripting' 'AgenticBrowser-Tests' ) ].
+		spec
 			package: 'AgenticBrowser-WebUI'
 			with: [ spec requires: #( 'AgenticBrowser-Core' 'Ripple' ) ].
 		spec
@@ -39,10 +45,10 @@ BaselineOfAgenticBrowser >> baseline: spec [
 		"Groups"
 		spec
 			group: 'default'
-			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ).
+			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' 'AgenticBrowser-Scripting' ).
 		spec
 			group: 'Tests'
-			with: #( 'default' 'AgenticBrowser-Tests' ).
+			with: #( 'default' 'AgenticBrowser-Tests' 'AgenticBrowser-Scripting-Tests' ).
 		spec
 			group: 'WebUI'
 			with: #( 'default' 'AgenticBrowser-WebUI' ).
