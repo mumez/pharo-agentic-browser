@@ -302,6 +302,17 @@ AbTopicOrchestrationTest >> testTopicBuilderUsesCustomPrompt [
 ]
 
 { #category : 'private' }
+AbTopicOrchestrationTest >> simulateAiResultWhenWorkingFor: aTopic resultText: aString [
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :statusAnn |
+			statusAnn status = #working ifTrue: [
+				aTopic addAiTextChunk: aString.
+				aTopic stateMachine handleEvent: #turnEnded ] ]
+		for: self
+]
+
+{ #category : 'private' }
 AbTopicOrchestrationTest >> simulateEndTurnWhenWorkingFor: aTopic [
 	aTopic announcer
 		when: AbTopicStatusChanged
@@ -328,6 +339,211 @@ AbTopicOrchestrationTest >> simulateGoalAchievementWhenWorkingFor: aTopic result
 AbTopicOrchestrationTest >> unsubscribeTopicHandlers [
 	AbTopicManager activeManager announcer unsubscribe: self.
 	AbTopicManager forTest topicsDo: [ :t | t announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testMultiStepOrchestrationInjectsResultAcrossSeqParaSeq [
+	| orchestration promptT2 promptT3 promptT4 |
+	promptT2 := nil.
+	promptT3 := nil.
+	promptT4 := nil.
+
+	orchestration := AbTopicOrchestration build: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T1' ] }.
+		builder para: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T2' ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T3' ] }.
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T4' ] }
+	].
+
+	AbTopicManager activeManager announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-T1' ifTrue: [
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Plan output' ].
+			topic title = 'ab-test-T2' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT2 := topic messages first text.
+							topic addAiTextChunk: 'Implement output'.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ].
+			topic title = 'ab-test-T3' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT3 := topic messages first text.
+							topic addAiTextChunk: 'Tests output'.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ].
+			topic title = 'ab-test-T4' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT4 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: (promptT2 includesSubstring: 'Plan output').
+		self assert: (promptT3 includesSubstring: 'Plan output').
+		self assert: (promptT4 includesSubstring: 'Implement output').
+		self assert: (promptT4 includesSubstring: 'Tests output')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testParallelStepCombinesResultsForNextStep [
+	| orchestration promptT3 |
+	promptT3 := nil.
+
+	orchestration := AbTopicOrchestration build: [ :builder |
+		builder para: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T1' ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T2' ] }.
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T3' ] }
+	].
+
+	AbTopicManager activeManager announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-T1' ifTrue: [
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Para result A' ].
+			topic title = 'ab-test-T2' ifTrue: [
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Para result B' ].
+			topic title = 'ab-test-T3' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT3 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: (promptT3 includesSubstring: 'Para result A').
+		self assert: (promptT3 includesSubstring: 'Para result B')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testParallelStepInjectsResultFromPriorStep [
+	| orchestration promptT2 promptT3 |
+	promptT2 := nil.
+	promptT3 := nil.
+
+	orchestration := AbTopicOrchestration build: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T1' ] }.
+		builder para: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T2' ].
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T3' ] }
+	].
+
+	AbTopicManager activeManager announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-T1' ifTrue: [
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Plan result' ].
+			topic title = 'ab-test-T2' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT2 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ].
+			topic title = 'ab-test-T3' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT3 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: (promptT2 includesSubstring: 'Plan result').
+		self assert: (promptT3 includesSubstring: 'Plan result')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepInjectsResultFromPriorStep [
+	| orchestration promptT2 |
+	promptT2 := nil.
+
+	orchestration := AbTopicOrchestration build: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T1' ] }.
+		builder seq: {
+			builder topicBy: [ :t |
+				t topicClass: AbMockTopicNoPromptSend.
+				t title: 'ab-test-T2' ] }
+	].
+
+	AbTopicManager activeManager announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-T1' ifTrue: [
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Step one result' ].
+			topic title = 'ab-test-T2' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT2 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: (promptT2 includesSubstring: 'Step one result')
+	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 
 { #category : 'tests' }

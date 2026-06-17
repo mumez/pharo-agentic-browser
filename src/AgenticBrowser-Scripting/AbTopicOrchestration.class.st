@@ -62,9 +62,12 @@ AbTopicOrchestration >> defaultAgentConfig: anAgentConfig [
 
 { #category : 'running' }
 AbTopicOrchestration >> run [
-	steps do: [ :step | 
+	| stepResult |
+	stepResult := nil.
+	steps do: [ :step |
 		step sharedDirectoryPath: self sharedDirectoryPath.
-		step run ]
+		step previousResult: stepResult.
+		stepResult := step run ]
 ]
 
 { #category : 'private' }
