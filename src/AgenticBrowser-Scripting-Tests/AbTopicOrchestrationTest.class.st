@@ -19,14 +19,14 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 	].
 
 	self assert: orchestration steps size equals: 2.
-	
+
 	step1 := orchestration steps first.
 	self assert: (step1 isKindOf: AbSequentialStep).
 	self assert: step1 topicBuilders size equals: 2.
 	self assert: step1 topicBuilders first title equals: 'T1'.
 	self assert: step1 topicBuilders second title equals: 'T2'.
 	self assert: step1 agentConfig arguments equals: #( 'claude-agent-acp' ).
-	
+
 	step2 := orchestration steps second.
 	self assert: (step2 isKindOf: AbParallelStep).
 	self assert: step2 topicBuilders size equals: 1.
@@ -55,13 +55,13 @@ AbTopicOrchestrationTest >> testSequentialStepExecutionAndResultInjection [
 	ranT1 := false.
 	ranT2 := false.
 	promptT2 := nil.
-	
+
 	orchestration := AbTopicOrchestration build: [ :builder |
 		builder seq: {
-			builder topicBy: [ :t | 
+			builder topicBy: [ :t |
 				t topicClass: AbMockTopicNoPromptSend.
 				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t | 
+			builder topicBy: [ :t |
 				t topicClass: AbMockTopicNoPromptSend.
 				t title: 'ab-test-T2' ]
 		}
@@ -141,7 +141,7 @@ AbTopicOrchestrationTest >> testOrchestrationDefaultAgentConfigOverride [
 				t title: 'ab-test-T1' ]
 		}
 	].
-	orchestration defaultAgentConfig: (AbAgentBuilder new codex; yourself).
+	orchestration defaultAgentConfig: (AbCodingAgentBuilder new codex; yourself).
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -844,13 +844,13 @@ AbTopicOrchestrationTest >> testParallelStepExecution [
 	| orchestration ranT1 ranT2 |
 	ranT1 := false.
 	ranT2 := false.
-	
+
 	orchestration := AbTopicOrchestration build: [ :builder |
 		builder para: {
-			builder topicBy: [ :t | 
+			builder topicBy: [ :t |
 				t topicClass: AbMockTopicNoPromptSend.
 				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t | 
+			builder topicBy: [ :t |
 				t topicClass: AbMockTopicNoPromptSend.
 				t title: 'ab-test-T2' ]
 		}

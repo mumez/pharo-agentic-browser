@@ -79,7 +79,7 @@ AbTopicOrchestration >> resolveSystemDefaultAgentConfig [
 	] on: Error do: [ :ex |
 		cmdArgs := #( 'claude-agent-acp' )
 	].
-	^ AbAgentBuilder new
+	^ AbCodingAgentBuilder new
 		arguments: cmdArgs;
 		yourself
 ]

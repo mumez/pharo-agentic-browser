@@ -1,5 +1,5 @@
 Class {
-	#name : 'AbAgentBuilder',
+	#name : 'AbCodingAgentBuilder',
 	#superclass : 'Object',
 	#instVars : [
 		'arguments',
@@ -10,59 +10,59 @@ Class {
 }
 
 { #category : 'initialization' }
-AbAgentBuilder >> initialize [
+AbCodingAgentBuilder >> initialize [
 	super initialize.
 	arguments := #( 'claude-agent-acp' ).
 	postConnectActions := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
-AbAgentBuilder >> arguments [
+AbCodingAgentBuilder >> arguments [
 	^ arguments
 ]
 
 { #category : 'accessing' }
-AbAgentBuilder >> arguments: anArray [
+AbCodingAgentBuilder >> arguments: anArray [
 	arguments := anArray
 ]
 
 { #category : 'accessing' }
-AbAgentBuilder >> postConnectActions [
+AbCodingAgentBuilder >> postConnectActions [
 	^ postConnectActions
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> claude [
+AbCodingAgentBuilder >> claude [
 	arguments := #( 'claude-agent-acp' )
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> codex [
+AbCodingAgentBuilder >> codex [
 	arguments := #( 'codex-acp' )
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> gemini [
+AbCodingAgentBuilder >> gemini [
 	arguments := #( 'gemini' '--acp' )
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> opencode [
+AbCodingAgentBuilder >> opencode [
 	arguments := #( 'opencode' 'acp' )
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> planMode [
+AbCodingAgentBuilder >> planMode [
 	postConnectActions add: [ :topic |
 		| modeOption |
 		modeOption := topic session modeConfigOption.
-		modeOption 
+		modeOption
 			ifNotNil: [ topic setConfigOptionId: modeOption id value: 'plan' ]
 			ifNil: [ topic setConfigOptionId: 'mode' value: 'plan' ] ]
 ]
 
 { #category : 'configuring' }
-AbAgentBuilder >> configure: aBlock [
+AbCodingAgentBuilder >> configure: aBlock [
 	aBlock value: self.
 	^ self
 ]

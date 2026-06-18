@@ -8,7 +8,7 @@ Class {
 { #category : 'private' }
 AbTopicBuilderTest >> codexAgentConfig [
 
-	^ AbAgentBuilder new codex; yourself
+	^ AbCodingAgentBuilder new codex; yourself
 ]
 
 { #category : 'tests' }

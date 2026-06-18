@@ -47,12 +47,12 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> agentBy: aBlock [
-	^ AbAgentBuilder new configure: aBlock
+	^ AbCodingAgentBuilder new configure: aBlock
 ]
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> agent [
-	^ AbAgentBuilder new
+	^ AbCodingAgentBuilder new
 ]
 
 { #category : 'building' }

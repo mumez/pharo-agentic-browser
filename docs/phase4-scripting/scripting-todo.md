@@ -18,7 +18,7 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 - [x] Auto-approval settings on orchestrated topics
 - [x] Shared working directory per orchestration
 - [x] `planMode` post-connect action on agent builder
-- [x] Unit tests: `AbAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
+- [x] Unit tests: `AbCodingAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
 - [x] Mock DSL smoke test: `testScriptingExampleSmoke` (mirrors `docs/ab-scripting.txt` example)
 
 ---
@@ -31,7 +31,7 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 - [ ] Add CRC-style class comments for Scripting classes (none yet):
   - `AbTopicOrchestration`, `AbTopicOrchestrationBuilder`
   - `AbOrchestrationStep`, `AbSequentialStep`, `AbParallelStep`
-  - `AbTopicBuilder`, `AbAgentBuilder`
+  - `AbTopicBuilder`, `AbCodingAgentBuilder`
 
 ### Refactoring
 
@@ -47,7 +47,7 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 
 ## Test gaps (Mock-level)
 
-- [ ] `AbAgentBuilder` — `gemini`, `opencode` selectors (only claude/codex/planMode covered)
+- [ ] `AbCodingAgentBuilder` — `gemini`, `opencode` selectors (only claude/codex/planMode covered)
 - [ ] `AbTopicOrchestrationBuilder` — no dedicated test class (only indirect coverage)
 - [ ] Parallel step — explicit test that topics **within** the same para step do **not** inject each other’s results (only prior step result)
 - [ ] Error path — topic never reaches `#endTurn` / `#goalAchieved` (orchestration hang; no timeout today)

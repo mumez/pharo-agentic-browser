@@ -1,42 +1,42 @@
 Class {
-	#name : 'AbAgentBuilderTest',
+	#name : 'AbCodingAgentBuilderTest',
 	#superclass : 'AbTestCase',
 	#category : 'AgenticBrowser-Scripting-Tests',
 	#package : 'AgenticBrowser-Scripting-Tests'
 }
 
 { #category : 'tests' }
-AbAgentBuilderTest >> testClaudeSetsArguments [
+AbCodingAgentBuilderTest >> testClaudeSetsArguments [
 
 	| builder |
-	builder := AbAgentBuilder new claude.
+	builder := AbCodingAgentBuilder new claude.
 	self assert: builder arguments equals: #( 'claude-agent-acp' )
 ]
 
 { #category : 'tests' }
-AbAgentBuilderTest >> testCodexSetsArguments [
+AbCodingAgentBuilderTest >> testCodexSetsArguments [
 
 	| builder |
-	builder := AbAgentBuilder new codex.
+	builder := AbCodingAgentBuilder new codex.
 	self assert: builder arguments equals: #( 'codex-acp' )
 ]
 
 { #category : 'tests' }
-AbAgentBuilderTest >> testConfigureBlock [
+AbCodingAgentBuilderTest >> testConfigureBlock [
 
 	| builder |
-	builder := AbAgentBuilder new configure: [ :a | a gemini ].
+	builder := AbCodingAgentBuilder new configure: [ :a | a gemini ].
 	self assert: builder arguments equals: #( 'gemini' '--acp' )
 ]
 
 { #category : 'tests' }
-AbAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
+AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 
 	| builder topic modeOption called configId configValue |
 	called := false.
 	configId := nil.
 	configValue := nil.
-	builder := AbAgentBuilder new planMode.
+	builder := AbCodingAgentBuilder new planMode.
 	modeOption := ACPConfigOption new beModeCategory.
 	modeOption rawValues at: 'id' put: 'agent-mode'.
 	topic := MockObject new.
@@ -58,13 +58,13 @@ AbAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 ]
 
 { #category : 'tests' }
-AbAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
+AbCodingAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
 
 	| builder topic called configId configValue |
 	called := false.
 	configId := nil.
 	configValue := nil.
-	builder := AbAgentBuilder new planMode.
+	builder := AbCodingAgentBuilder new planMode.
 	topic := MockObject new.
 	topic on: #session verify: [
 		| session |
