@@ -31,24 +31,49 @@ AbCodingAgentBuilder >> postConnectActions [
 	^ postConnectActions
 ]
 
-{ #category : 'configuring' }
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
+	self arguments: (AbSettings default agentArgumentsPresets at: agentName)
+]
+
+{ #category : 'shortcuts' }
 AbCodingAgentBuilder >> claude [
-	arguments := #( 'claude-agent-acp' )
+	self useAgentArgumentsAt: 'claude-agent-acp'
 ]
 
-{ #category : 'configuring' }
+{ #category : 'shortcuts' }
 AbCodingAgentBuilder >> codex [
-	arguments := #( 'codex-acp' )
+	self useAgentArgumentsAt: 'codex-acp'
 ]
 
-{ #category : 'configuring' }
+{ #category : 'shortcuts' }
 AbCodingAgentBuilder >> gemini [
-	arguments := #( 'gemini' '--acp' )
+	self useAgentArgumentsAt: 'Gemini CLI'
 ]
 
-{ #category : 'configuring' }
+{ #category : 'shortcuts' }
 AbCodingAgentBuilder >> opencode [
-	arguments := #( 'opencode' 'acp' )
+	self useAgentArgumentsAt: 'OpenCode'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> copilot [
+	self useAgentArgumentsAt: 'Copilot CLI'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> cursorAgent [
+	self useAgentArgumentsAt: 'Cursor CLI'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> kilo [
+	self useAgentArgumentsAt: 'Kilo Code'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> kiro [
+	self useAgentArgumentsAt: 'Kiro CLI'
 ]
 
 { #category : 'configuring' }
