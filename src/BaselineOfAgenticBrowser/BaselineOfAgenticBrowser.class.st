@@ -45,16 +45,22 @@ BaselineOfAgenticBrowser >> baseline: spec [
 		"Groups"
 		spec
 			group: 'default'
-			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' 'AgenticBrowser-Scripting' ).
+			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ).
 		spec
 			group: 'Tests'
-			with: #( 'default' 'AgenticBrowser-Tests' 'AgenticBrowser-Scripting-Tests' ).
+			with: #( 'default' 'AgenticBrowser-Tests' ).
 		spec
 			group: 'WebUI'
 			with: #( 'default' 'AgenticBrowser-WebUI' ).
 		spec
 			group: 'WebUI-Tests'
-			with: #( 'WebUI' 'AgenticBrowser-WebUI-Tests' ) ]
+			with: #( 'WebUI' 'AgenticBrowser-WebUI-Tests' ).
+		spec
+			group: 'Scripting'
+			with: #( 'default' 'AgenticBrowser-Scripting' ).
+		spec
+			group: 'Scripting-Tests'
+			with: #( 'Scripting' 'AgenticBrowser-Scripting-Tests' ) ]
 ]
 
 { #category : 'external projects' }
