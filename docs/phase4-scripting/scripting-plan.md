@@ -7,19 +7,19 @@ Enable AI agents to programmatically create and coordinate multiple topics witho
 ### Example Usage (executed via `st-eval`)
 
 ```smalltalk
-orchestration := AbTopicOrchestration build: [:builder |
+orchestration := AbTopicOrchestration buildBy: [:builder |
 	builder seq: {
 		builder topicBy: [:t | t title: 'Create plan of feature XXX'].
 		builder topicBy: [:t | t title: 'Create spec of feature XXX']
-	} with: builder agentBy: [:a | a claude; planMode ];
+	} agentBy: [:a | a claude; planMode ];
 	para: {
 		builder topicBy: [:t | t title: 'Implement feature XXX'].
 		builder topicBy: [:t | t title: 'Write tests feature XXX'; goal: 'pass all tests']
-	} with: builder agent codex;
+	} agentBy: [:a | a claude; planMode ];
 	seq: {
 		builder topicBy: [:t | t title: 'Review implementation of XXX']
 		builder topicBy: [:t | t title: 'create PR of XXX']
-	}
+	} agentBy: [:a | a opencode ]
 ].
 orchestration run.
 ```
