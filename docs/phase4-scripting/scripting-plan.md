@@ -15,7 +15,7 @@ orchestration := AbTopicOrchestration buildBy: [:builder |
 	para: {
 		builder topicBy: [:t | t title: 'Implement feature XXX'].
 		builder topicBy: [:t | t title: 'Write tests feature XXX'; goal: 'pass all tests']
-	} agentBy: [:a | a claude; planMode ];
+	} agentBy: [:a | a codex ];
 	seq: {
 		builder topicBy: [:t | t title: 'Review implementation of XXX']
 		builder topicBy: [:t | t title: 'create PR of XXX']
