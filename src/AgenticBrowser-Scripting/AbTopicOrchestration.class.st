@@ -24,9 +24,8 @@ AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
 	builder := self class orchestrationBuilderClass new.
 	aBlock value: builder.
-	steps := builder steps.
-	steps do: [ :step | step orchestration: self ].
-	^ self
+	self steps: builder steps.
+	self steps do: [ :step | step orchestration: self ]
 ]
 
 { #category : 'initialization' }
@@ -36,14 +35,15 @@ AbTopicOrchestration >> initialize [
 	sharedDirectoryPath := (Smalltalk imageDirectory / 'agentic-browser' / ('orchestration-' , UUID new asString36)) fullName.
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestration >> steps [
-	^ steps
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> steps: aCollection [
-	steps := aCollection
+{ #category : 'running' }
+AbTopicOrchestration >> run [
+	| stepResult |
+	stepResult := nil.
+	self steps do: [ :step |
+		step sharedDirectoryPath: self sharedDirectoryPath.
+		step previousResult: stepResult.
+		stepResult := step run ].
+	^ stepResult
 ]
 
 { #category : 'accessing' }
@@ -56,13 +56,12 @@ AbTopicOrchestration >> sharedDirectoryPath: aString [
 	sharedDirectoryPath := aString
 ]
 
-{ #category : 'running' }
-AbTopicOrchestration >> run [
-	| stepResult |
-	self steps do: [ :step |
-		step sharedDirectoryPath: self sharedDirectoryPath.
-		step previousResult: stepResult.
-		stepResult := step run ].
-	^ stepResult
+{ #category : 'accessing' }
+AbTopicOrchestration >> steps [
+	^ steps
 ]
 
+{ #category : 'accessing' }
+AbTopicOrchestration >> steps: aCollection [
+	steps := aCollection
+]
