@@ -12,8 +12,13 @@ Class {
 
 { #category : 'building' }
 AbTopicOrchestration class >> build: aBlock [
+	^ self build: aBlock using: AbTopicOrchestrationBuilder
+]
+
+{ #category : 'building' }
+AbTopicOrchestration class >> build: aBlock using: aBuilderClass [
 	| builder orchestration |
-	builder := AbTopicOrchestrationBuilder new.
+	builder := aBuilderClass new.
 	aBlock value: builder.
 	orchestration := self new
 		steps: builder steps;

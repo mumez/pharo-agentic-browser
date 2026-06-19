@@ -2,33 +2,37 @@ Class {
 	#name : 'AbTopicBuilder',
 	#superclass : 'AbElementBuilder',
 	#instVars : [
-		'title',
-		'goal',
-		'prompt',
-		'topicClass'
+		'topic',
+		'prompt'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
 
 { #category : 'accessing' }
-AbTopicBuilder >> title [
-	^ title
-]
-
-{ #category : 'accessing' }
-AbTopicBuilder >> title: aString [
-	title := aString
-]
-
-{ #category : 'accessing' }
 AbTopicBuilder >> goal [
-	^ goal
+	^ self topic topicGoal description
 ]
 
 { #category : 'accessing' }
 AbTopicBuilder >> goal: aString [
-	goal := aString
+	self topic topicGoal description: aString
+]
+
+{ #category : 'factory' }
+AbTopicBuilder >> instantiateWith: anAgentConfig [
+	| newTopic |
+	newTopic := self topicClass new.
+	newTopic agentArguments: anAgentConfig agentArguments.
+	newTopic title: self topic title.
+	self topic topicGoal description ifNotNil: [ :g |
+		newTopic topicGoal description: g ].
+	^ newTopic
+]
+
+{ #category : 'accessing' }
+AbTopicBuilder >> topic [
+	^ topic ifNil: [topic := self createTopic]
 ]
 
 { #category : 'accessing' }
@@ -42,27 +46,16 @@ AbTopicBuilder >> prompt: aString [
 ]
 
 { #category : 'accessing' }
-AbTopicBuilder >> topicClass [
-	^ topicClass ifNil: [ topicClass := self defaultTopicClass ]
+AbTopicBuilder >> title [
+	^ self topic title
 ]
 
 { #category : 'accessing' }
-AbTopicBuilder >> topicClass: aClass [
-	topicClass := aClass
+AbTopicBuilder >> title: aString [
+	self topic title: aString
 ]
-
-{ #category : 'defaults' }
-AbTopicBuilder >> defaultTopicClass [
-	^ AbTopic
-]
-
 
 { #category : 'factory' }
-AbTopicBuilder >> instantiateWith: anAgentConfig [
-	| topic |
-	topic := self topicClass new.
-	topic agentArguments: anAgentConfig agentArguments.
-	self title ifNotNil: [ topic title: self title ].
-	self goal ifNotNil: [ topic topicGoal description: self goal ].
-	^ topic
+AbTopicBuilder >> createTopic [
+	^ AbTopic new
 ]

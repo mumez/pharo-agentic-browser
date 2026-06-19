@@ -5,12 +5,6 @@ Class {
 	#package : 'AgenticBrowser-Scripting-Tests'
 }
 
-{ #category : 'private' }
-AbTopicBuilderTest >> codexAgentConfig [
-
-	^ AbCodingAgentBuilder new codex; yourself
-]
-
 { #category : 'tests' }
 AbTopicBuilderTest >> testBuildByBlockSetsAttributes [
 
@@ -18,77 +12,50 @@ AbTopicBuilderTest >> testBuildByBlockSetsAttributes [
 	builder := AbTopicBuilder new buildBy: [ :t |
 		t title: 'Configured title'.
 		t goal: 'pass all tests'.
-		t prompt: 'Start here'.
-		t topicClass: AbMockTopicNoPromptSend ].
+		t prompt: 'Start here' ].
 	self assert: builder title equals: 'Configured title'.
 	self assert: builder goal equals: 'pass all tests'.
-	self assert: builder prompt equals: 'Start here'.
-	self assert: builder topicClass equals: AbMockTopicNoPromptSend
+	self assert: builder prompt equals: 'Start here'
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithDoesNotCreateTopicGoalWhenGoalNotSet [
+AbTopicBuilderTest >> testTopicGoalNotCreatedWhenGoalNotSet [
 
-	| builder topic |
+	| builder |
 	builder := AbTopicBuilder new title: 'ab-test-no-goal'.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: (topic instVarNamed: #topicGoal) isNil
+	self assert: (builder topic instVarNamed: #topicGoal) isNil
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithLeavesDefaultTitleWhenTitleNotSet [
+AbTopicBuilderTest >> testTopicHasDefaultTitleWhenNotSet [
 
-	| builder topic |
+	| builder |
 	builder := AbTopicBuilder new.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: topic title equals: 'Untitled'
+	self assert: builder topic title equals: 'Untitled'
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithSetsAgentArguments [
+AbTopicBuilderTest >> testTopicTitleSetViaBuilder [
 
-	| builder topic |
-	builder := AbTopicBuilder new title: 'ab-test-agent'.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: topic agentArguments equals: #( 'codex-acp' )
+	| builder |
+	builder := AbTopicBuilder new title: 'ab-test-title'.
+	self assert: builder topic title equals: 'ab-test-title'
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithSetsGoalDescription [
+AbTopicBuilderTest >> testTopicGoalSetViaBuilder [
 
-	| builder topic |
+	| builder |
 	builder := AbTopicBuilder new.
 	builder title: 'ab-test-goal'.
 	builder goal: 'pass all tests'.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: topic topicGoal description equals: 'pass all tests'
+	self assert: builder topic topicGoal description equals: 'pass all tests'
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithSetsTitle [
+AbTopicBuilderTest >> testMockTopicBuilderCreatesMockTopic [
 
-	| builder topic |
-	builder := AbTopicBuilder new title: 'ab-test-title'.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: topic title equals: 'ab-test-title'
-]
-
-{ #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithUsesCustomTopicClass [
-
-	| builder topic |
-	builder := AbTopicBuilder new.
-	builder title: 'ab-test-custom-class'.
-	builder topicClass: AbMockTopicNoPromptSend.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: (topic isKindOf: AbMockTopicNoPromptSend)
-]
-
-{ #category : 'tests' }
-AbTopicBuilderTest >> testInstantiateWithUsesDefaultTopicClass [
-
-	| builder topic |
-	builder := AbTopicBuilder new title: 'ab-test-default-class'.
-	topic := builder instantiateWith: self codexAgentConfig.
-	self assert: (topic isKindOf: AbTopic)
+	| builder |
+	builder := AbMockTopicBuilder new.
+	self assert: (builder topic isKindOf: AbMockTopicNoPromptSend)
 ]

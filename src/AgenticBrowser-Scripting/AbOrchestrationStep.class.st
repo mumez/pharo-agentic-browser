@@ -75,7 +75,8 @@ AbOrchestrationStep >> run [
 { #category : 'private' }
 AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anAgentConfig [
 	| topic |
-	topic := aBuilder instantiateWith: anAgentConfig.
+	topic := aBuilder topic.
+	topic agentArguments: anAgentConfig agentArguments.
 	topic workingDirectoryPath: self sharedDirectoryPath.
 	topic settings aiPermissionWaitTimeoutSeconds: 0.
 	topic settings aiPermissionTimeoutOption: #allow_once.

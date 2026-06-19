@@ -56,16 +56,14 @@ AbTopicOrchestrationTest >> testSequentialStepExecutionAndResultInjection [
 	ranT2 := false.
 	promptT2 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -107,13 +105,13 @@ AbTopicOrchestrationTest >> testSequentialStepExecutionAndResultInjection [
 { #category : 'tests' }
 AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 	| orchestration topic |
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -134,13 +132,13 @@ AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 { #category : 'tests' }
 AbTopicOrchestrationTest >> testOrchestrationDefaultAgentConfigOverride [
 	| orchestration topic |
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 	orchestration defaultAgentConfig: (AbCodingAgentBuilder new codex; yourself).
 
 	AbTopicManager activeManager announcer
@@ -161,17 +159,16 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsGoalResult [
 	| orchestration promptT2 |
 	promptT2 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1'.
-				t goal: 'pass all tests' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t goal: 'pass all tests' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -203,14 +200,15 @@ AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 	| orchestration achievedStatuses |
 	achievedStatuses := OrderedCollection new.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1'.
-				t goal: 'pass all tests' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t goal: 'pass all tests' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -238,16 +236,14 @@ AbTopicOrchestrationTest >> testSharedDirectoryPathAppliedToTopics [
 	sharedPath := (AbSettings defaultAgenticBrowserRootDirectory / 'ab-test-orchestration-shared') fullName.
 	capturedPaths := OrderedCollection new.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 	orchestration sharedDirectoryPath: sharedPath.
 
 	AbTopicManager activeManager announcer
@@ -272,14 +268,15 @@ AbTopicOrchestrationTest >> testTopicBuilderUsesCustomPrompt [
 	| orchestration prompt |
 	prompt := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1'.
-				t prompt: 'Do the custom thing' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t prompt: 'Do the custom thing' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -427,31 +424,22 @@ AbTopicOrchestrationTest >> scriptingExampleOrchestration [
 	testsTitle := self smokeTestsTitle.
 	reviewTitle := self smokeReviewTitle.
 	prTitle := self smokePrTitle.
-	^ AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: planTitle ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: specTitle ]
-		} with: (builder agentBy: [ :a | a claude; planMode ]).
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: implementTitle ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: testsTitle.
-				t goal: 'pass all tests' ]
-		} with: builder agent codex.
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: reviewTitle ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: prTitle ] } ]
+	^ AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: planTitle ].
+				builder topicBy: [ :t | t title: specTitle ]
+			} with: (builder agentBy: [ :a | a claude; planMode ]).
+			builder para: {
+				builder topicBy: [ :t | t title: implementTitle ].
+				builder topicBy: [ :t |
+					t title: testsTitle.
+					t goal: 'pass all tests' ]
+			} with: builder agent codex.
+			builder seq: {
+				builder topicBy: [ :t | t title: reviewTitle ].
+				builder topicBy: [ :t | t title: prTitle ] } ]
+		using: AbMockTopicOrchestrationBuilder
 ]
 
 { #category : 'private' }
@@ -538,23 +526,17 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationInjectsResultAcrossSeqPara
 	promptT3 := nil.
 	promptT4 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ] }.
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T3' ] }.
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T4' ] }
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T2' ].
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] }.
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T4' ] }
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -605,19 +587,15 @@ AbTopicOrchestrationTest >> testParallelStepCombinesResultsForNextStep [
 	| orchestration promptT3 |
 	promptT3 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ] }.
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T3' ] }
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ] }.
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] }
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -651,19 +629,15 @@ AbTopicOrchestrationTest >> testParallelStepInjectsResultFromPriorStep [
 	promptT2 := nil.
 	promptT3 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ] }.
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T3' ] }
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T2' ].
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] }
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -702,16 +676,14 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsResultFromPriorStep [
 	| orchestration promptT2 |
 	promptT2 := nil.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ] }.
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ] }
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T2' ] }
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -743,23 +715,17 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationRunsStepsInOrder [
 	t4AddedEarly := false.
 	addedTitles := OrderedCollection new.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ] }.
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T3' ] }.
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T4' ] }
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T2' ].
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] }.
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T4' ] }
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -802,12 +768,12 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 	| orchestration topic modeSet |
 	modeSet := false.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ]
-		} with: (builder agentBy: [ :a | a claude; planMode ]) ].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ]
+			} with: (builder agentBy: [ :a | a claude; planMode ]) ]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -845,16 +811,14 @@ AbTopicOrchestrationTest >> testParallelStepExecution [
 	ranT1 := false.
 	ranT2 := false.
 
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder para: {
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T1' ].
-			builder topicBy: [ :t |
-				t topicClass: AbMockTopicNoPromptSend.
-				t title: 'ab-test-T2' ]
-		}
-	].
+	orchestration := AbTopicOrchestration
+		build: [ :builder |
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			}
+		]
+		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
