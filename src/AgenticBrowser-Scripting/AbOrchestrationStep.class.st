@@ -73,6 +73,13 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
+AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
+	aTopic session ensureConnected.
+	anAgentBuilder onConnected: aTopic.
+	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
+]
+
+{ #category : 'private' }
 AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
 	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
 		ifTrue: [ aStatus = #endTurn ]

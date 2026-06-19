@@ -16,9 +16,7 @@ AbSequentialStep >> run [
 		topic registerTo: self orchestration topicManager.
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
-		topic session ensureConnected.
-		activeCodingAgentBuilder onConnected: topic.
-		topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: currentResult).
+		self runTopic: topic topicBuilder: builder agentBuilder: activeCodingAgentBuilder resultInjecting: currentResult.
 		semaphore wait.
 		currentResult := self resultFromTopic: topic ].
 	^ currentResult
