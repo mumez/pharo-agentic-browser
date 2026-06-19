@@ -44,6 +44,19 @@ AbTopicBuilder >> title: aString [
 	self topic title: aString
 ]
 
+{ #category : 'actions' }
+AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
+	| topic |
+	topic := self topic.
+	topic agentArguments: aCodingAgentBuilder agentArguments.
+	topic workingDirectoryPath: anOrchestrationStep sharedDirectoryPath.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	topic settings aiPermissionTimeoutOption: #allow_once.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	topic settings exportApprovalTimeoutOption: #allow_once.
+	^ topic
+]
+
 { #category : 'factory' }
 AbTopicBuilder >> createTopic [
 	^ AbTopic new

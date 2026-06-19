@@ -26,7 +26,7 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
-	steps add: (AbSequentialStep new
+	self steps add: (AbSequentialStep new
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)
@@ -34,13 +34,13 @@ AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: aBlock [
-	steps add: (AbParallelStep new
+	self steps add: (AbParallelStep new
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)
 ]
 
-{ #category : 'building' }
+{ #category : 'accessing' }
 AbTopicOrchestrationBuilder >> steps [
 	^ steps
 ]

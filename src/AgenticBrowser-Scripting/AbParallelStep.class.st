@@ -7,21 +7,15 @@ Class {
 
 { #category : 'running' }
 AbParallelStep >> run [
-	| semaphores topics incomingResult |
+	| topics semaphores incomingResult agentBuilder |
 	incomingResult := self previousResult.
-	topics := OrderedCollection new.
-	semaphores := self topicBuilders collect: [ :builder |
-		| topic semaphore activeCodingAgentBuilder |
-		activeCodingAgentBuilder := self activeCodingAgentBuilder.
-		topic := self prepareTopicFrom: builder using: activeCodingAgentBuilder.
-		topics add: topic.
+	agentBuilder := self activeCodingAgentBuilder.
+	topics := self prepareTopicsForRun.
+	semaphores := self topicBuilders with: topics collect: [ :builder :topic |
+		| semaphore |
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
-		[
-			topic session ensureConnected.
-			activeCodingAgentBuilder onConnected: topic.
-			topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: incomingResult)
-		] fork.
+		[ self runTopic: topic topicBuilder: builder agentBuilder: agentBuilder resultInjecting: incomingResult ] fork.
 		semaphore ].
 	semaphores do: [ :sem | sem wait ].
 	^ self combinedResultsFrom: topics

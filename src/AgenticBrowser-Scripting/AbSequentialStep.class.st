@@ -5,19 +5,17 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
+
 { #category : 'running' }
 AbSequentialStep >> run [
-	| currentResult |
+	| currentResult topics |
 	currentResult := self previousResult.
-	self topicBuilders do: [ :builder |
-		| topic semaphore activeCodingAgentBuilder |
-		activeCodingAgentBuilder := self activeCodingAgentBuilder.
-		topic := self prepareTopicFrom: builder using: activeCodingAgentBuilder.
+	topics := self prepareTopicsForRun.
+	self topicBuilders with: topics do: [ :builder :topic |
+		| semaphore |
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
-		topic session ensureConnected.
-		activeCodingAgentBuilder onConnected: topic.
-		topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: currentResult).
+		self runTopic: topic topicBuilder: builder agentBuilder: self activeCodingAgentBuilder resultInjecting: currentResult.
 		semaphore wait.
 		currentResult := self resultFromTopic: topic ].
 	^ currentResult

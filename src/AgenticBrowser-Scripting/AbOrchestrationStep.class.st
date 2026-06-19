@@ -68,22 +68,26 @@ AbOrchestrationStep >> previousResult: aString [
 ]
 
 { #category : 'running' }
+AbOrchestrationStep >> prepareTopicsForRun [
+	| agentBuilder |
+	agentBuilder := self activeCodingAgentBuilder.
+	^ self topicBuilders collect: [ :builder |
+		| topic |
+		topic := builder prepareWith: agentBuilder for: self.
+		topic registerTo: self orchestration topicManager.
+		topic ]
+]
+
+{ #category : 'running' }
 AbOrchestrationStep >> run [
 	self subclassResponsibility
 ]
 
 { #category : 'private' }
-AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anCodingAgentBuilder [
-	| topic |
-	topic := aBuilder topic.
-	topic agentArguments: anCodingAgentBuilder agentArguments.
-	topic workingDirectoryPath: self sharedDirectoryPath.
-	topic settings aiPermissionWaitTimeoutSeconds: 0.
-	topic settings aiPermissionTimeoutOption: #allow_once.
-	topic settings exportApprovalWaitTimeoutSeconds: 0.
-	topic settings exportApprovalTimeoutOption: #allow_once.
-	self orchestration topicManager addTopic: topic.
-	^ topic
+AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
+	aTopic session ensureConnected.
+	anAgentBuilder onConnected: aTopic.
+	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
 ]
 
 { #category : 'private' }
