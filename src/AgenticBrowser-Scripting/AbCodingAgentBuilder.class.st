@@ -3,7 +3,7 @@ Class {
 	#superclass : 'AbElementBuilder',
 	#instVars : [
 		'agentArguments',
-		'postConnectActions'
+		'mode'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -13,7 +13,6 @@ Class {
 AbCodingAgentBuilder >> initialize [
 	super initialize.
 	agentArguments := #().
-	postConnectActions := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
@@ -24,11 +23,6 @@ AbCodingAgentBuilder >> agentArguments [
 { #category : 'accessing' }
 AbCodingAgentBuilder >> agentArguments: anArray [
 	agentArguments := anArray
-]
-
-{ #category : 'accessing' }
-AbCodingAgentBuilder >> postConnectActions [
-	^ postConnectActions
 ]
 
 { #category : 'actions' }
@@ -76,17 +70,34 @@ AbCodingAgentBuilder >> kiro [
 	self useAgentArgumentsAt: 'Kiro CLI'
 ]
 
-{ #category : 'configuring' }
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> mode [
+	^ mode
+]
+
+{ #category : 'accessing' }
 AbCodingAgentBuilder >> mode: aModeName [
+	mode := aModeName
+]
+
+{ #category : 'actions' }
+AbCodingAgentBuilder >> planMode [
+	self mode: #plan
+]
+
+{ #category : 'privates' }
+AbCodingAgentBuilder >> processMode [
+	self mode ifNil: [ ^ self ].
 	self postConnectActions add: [ :topic |
 		| modeOption |
 		modeOption := topic session modeConfigOption.
 		modeOption
-			ifNotNil: [ topic setConfigOptionId: modeOption id value: aModeName ]
-			ifNil: [ topic setConfigOptionId: 'mode' value: aModeName ] ]
+			ifNotNil: [ topic setConfigOptionId: modeOption id value: self mode ]
+			ifNil: [ topic setConfigOptionId: 'mode' value: self mode ] ]
 ]
 
-{ #category : 'configuring' }
-AbCodingAgentBuilder >> planMode [
-	self mode: #plan
+{ #category : 'callbacks' }
+AbCodingAgentBuilder >> onConnected: aTopic [
+	self processMode.
+	super onConnected: aTopic
 ]

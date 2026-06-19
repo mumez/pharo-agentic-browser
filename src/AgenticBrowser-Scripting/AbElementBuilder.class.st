@@ -2,7 +2,8 @@ Class {
 	#name : 'AbElementBuilder',
 	#superclass : 'Object',
 	#instVars : [
-		'parentBuilder'
+		'parentBuilder',
+		'postConnectActions'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -25,7 +26,7 @@ AbElementBuilder >> parentBuilder: aBuilder [
 	parentBuilder := aBuilder
 ]
 
-{ #category : 'actions' }
+{ #category : 'building' }
 AbElementBuilder >> buildBy: aBlock [
 	aBlock value: self.
 	^ self
@@ -33,10 +34,10 @@ AbElementBuilder >> buildBy: aBlock [
 
 { #category : 'accessing' }
 AbElementBuilder >> postConnectActions [
-	^ #()
+	^ postConnectActions ifNil: [ postConnectActions := OrderedCollection new ]
 ]
 
-{ #category : 'actions' }
+{ #category : 'event handling' }
 AbElementBuilder >> onConnected: aTopic [
 	self postConnectActions do: [ :action | action value: aTopic ]
 ]
