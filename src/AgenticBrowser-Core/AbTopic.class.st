@@ -588,6 +588,11 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 ]
 
 { #category : 'operations' }
+AbTopic >> registerTo: aTopicManager [
+	aTopicManager addTopic: self
+]
+
+{ #category : 'operations' }
 AbTopic >> sendPrompt: aString [
 
 	self sendPrompt: aString withResources: #()

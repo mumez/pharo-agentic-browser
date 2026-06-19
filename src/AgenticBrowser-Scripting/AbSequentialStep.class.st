@@ -12,7 +12,8 @@ AbSequentialStep >> run [
 	self topicBuilders do: [ :builder |
 		| topic semaphore activeCodingAgentBuilder |
 		activeCodingAgentBuilder := self activeCodingAgentBuilder.
-		topic := self prepareTopicFrom: builder using: activeCodingAgentBuilder.
+		topic := builder prepareWith: activeCodingAgentBuilder for: self.
+		topic registerTo: self orchestration topicManager.
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		topic session ensureConnected.

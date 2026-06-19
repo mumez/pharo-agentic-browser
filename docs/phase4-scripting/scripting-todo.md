@@ -18,7 +18,7 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 - [x] Auto-approval settings on orchestrated topics
 - [x] Shared working directory per orchestration
 - [x] `planMode` post-connect action on agent builder
-- [x] Unit tests: `AbCodingAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
+- [x] Unit tests: `AbAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
 - [x] Mock DSL smoke test: `testScriptingExampleSmoke` (mirrors `docs/ab-scripting.txt` example)
 
 ---
@@ -35,21 +35,21 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 
 ### Refactoring
 
-- [ ] Extract duplicated auto-approval + topic setup from `AbSequentialStep` / `AbParallelStep` into `AbOrchestrationStep`
+- [x] Extract duplicated auto-approval + topic setup into `AbTopicBuilder >> prepareWith:for:` and `AbTopic >> registerTo:`; removed `AbOrchestrationStep >> prepareTopicFrom:using:`
 - [ ] Consider shortening long test methods flagged by tonel lint (>15 lines)
 
 ### Design clarifications to document
 
 - [ ] **Parallel step combined result format** — currently non-nil results joined with double CRLF; document in spec if this is the contract
-- [ ] **`defaultAgentConfig` caching** — first access mutates `defaultAgentConfig` ivar via `resolveSystemDefaultAgentConfig`; confirm intentional
 
 ---
 
 ## Test gaps (Mock-level)
 
-- [ ] `AbCodingAgentBuilder` — `gemini`, `opencode` selectors (only claude/codex/planMode covered)
+- [ ] `AbCodingAgentBuilder` — `opencode`, `copilot`, `cursorAgent`, `kilo`, `kiro` shortcuts untested (`claude`, `codex`, `gemini`, `planMode` covered)
+- [x] `AbCodingAgentBuilder` — `model:` setter and `processModel` covered (`testModelSetsModelName`, `testModelUsesModelConfigOptionIdWhenPresent`, `testModelUsesDefaultModelIdWhenOptionMissing`)
 - [ ] `AbTopicOrchestrationBuilder` — no dedicated test class (only indirect coverage)
-- [ ] Parallel step — explicit test that topics **within** the same para step do **not** inject each other’s results (only prior step result)
+- [x] Parallel step — topics within the same para step do not inject each other’s results (`testParallelStepTopicsDoNotInjectEachOthersResults`)
 - [ ] Error path — topic never reaches `#endTurn` / `#goalAchieved` (orchestration hang; no timeout today)
 
 ---

@@ -73,20 +73,6 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
-AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anCodingAgentBuilder [
-	| topic |
-	topic := aBuilder topic.
-	topic agentArguments: anCodingAgentBuilder agentArguments.
-	topic workingDirectoryPath: self sharedDirectoryPath.
-	topic settings aiPermissionWaitTimeoutSeconds: 0.
-	topic settings aiPermissionTimeoutOption: #allow_once.
-	topic settings exportApprovalWaitTimeoutSeconds: 0.
-	topic settings exportApprovalTimeoutOption: #allow_once.
-	self orchestration topicManager addTopic: topic.
-	^ topic
-]
-
-{ #category : 'private' }
 AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
 	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
 		ifTrue: [ aStatus = #endTurn ]

@@ -742,6 +742,39 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testParallelStepTopicsDoNotInjectEachOthersResults [
+	"Topics within the same parallel step must NOT see each other's results in their prompts."
+	| orchestration prompts |
+	prompts := Dictionary new.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-T1' ifTrue: [
+				self capturePromptOnWorkingFor: topic into: prompts at: #t1.
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Result from T1' ].
+			topic title = 'ab-test-T2' ifTrue: [
+				self capturePromptOnWorkingFor: topic into: prompts at: #t2.
+				self simulateAiResultWhenWorkingFor: topic resultText: 'Result from T2' ] ]
+		for: self.
+
+	[
+		orchestration run.
+		self deny: ((prompts at: #t1) includesSubstring: 'Result from T2').
+		self deny: ((prompts at: #t2) includesSubstring: 'Result from T1')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testParallelStepExecution [
 	| orchestration ranT1 ranT2 |
 	ranT1 := false.
