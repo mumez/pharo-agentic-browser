@@ -15,16 +15,6 @@ AbTopicOrchestrationBuilder >> initialize [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> agent [
-	^ self agentBy: [ :builder | ]
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> agentBy: aBlock [
-	^ self agentBuilder buildBy: aBlock
-]
-
-{ #category : 'building' }
 AbTopicOrchestrationBuilder >> topic [
 	^ self topicBy: [ :builder | ]
 ]
@@ -35,31 +25,19 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
-	anCodingAgentBuilder ifNil: [ self error: 'codingAgentBuilder must be specified' ].
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
 	steps add: (AbSequentialStep new
 		topicBuilders: aCollectionOfTopicBuilders;
-		codingAgentBuilder: anCodingAgentBuilder;
+		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders [
-	self seq: aCollectionOfTopicBuilders with: nil
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
-	anCodingAgentBuilder ifNil: [ self error: 'codingAgentBuilder must be specified' ].
+AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: aBlock [
 	steps add: (AbParallelStep new
 		topicBuilders: aCollectionOfTopicBuilders;
-		codingAgentBuilder: anCodingAgentBuilder;
+		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders [
-	self para: aCollectionOfTopicBuilders with: nil
 ]
 
 { #category : 'building' }
@@ -75,6 +53,11 @@ AbTopicOrchestrationBuilder >> agentBuilderClass [
 { #category : 'factory' }
 AbTopicOrchestrationBuilder >> topicBuilderClass [
 	^ AbTopicBuilder
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> agentBy: aBlock [
+	^ self agentBuilder buildBy: aBlock
 ]
 
 { #category : 'private' }

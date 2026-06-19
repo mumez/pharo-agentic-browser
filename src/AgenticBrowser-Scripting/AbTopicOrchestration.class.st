@@ -10,20 +10,23 @@ Class {
 }
 
 { #category : 'building' }
-AbTopicOrchestration class >> build: aBlock [
-	^ self build: aBlock using: AbTopicOrchestrationBuilder
+AbTopicOrchestration class >> buildBy: aBlock [
+	^ self new buildBy: aBlock
 ]
 
 { #category : 'building' }
-AbTopicOrchestration class >> build: aBlock using: aBuilderClass [
-	| builder orchestration |
-	builder := aBuilderClass new.
+AbTopicOrchestration class >> orchestrationBuilderClass [
+	^ AbTopicOrchestrationBuilder
+]
+
+{ #category : 'building' }
+AbTopicOrchestration >> buildBy: aBlock [
+	| builder |
+	builder := self class orchestrationBuilderClass new.
 	aBlock value: builder.
-	orchestration := self new
-		steps: builder steps;
-		yourself.
-	orchestration steps do: [ :step | step orchestration: orchestration ].
-	^ orchestration
+	steps := builder steps.
+	steps do: [ :step | step orchestration: self ].
+	^ self
 ]
 
 { #category : 'initialization' }
