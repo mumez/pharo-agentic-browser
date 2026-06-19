@@ -57,6 +57,11 @@ AbOrchestrationStep >> activeCodingAgentBuilder [
 	^ codingAgentBuilder ifNil: [ self error: 'codingAgentBuilder is not set' ]
 ]
 
+{ #category : 'factory' }
+AbOrchestrationStep >> copiedCodingAgentBuilder [
+	^ self activeCodingAgentBuilder copyForRun
+]
+
 { #category : 'accessing' }
 AbOrchestrationStep >> previousResult [
 	^ previousResult

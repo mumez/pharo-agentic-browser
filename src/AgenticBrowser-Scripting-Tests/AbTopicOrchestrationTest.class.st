@@ -701,6 +701,61 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationRunsStepsInOrder [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testParallelStepAppliesPlanModeOnConnect [
+	| orchestration modeSetCount |
+	modeSetCount := 0.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ].
+				builder topicBy: [ :t | t title: 'ab-test-T2' ]
+			} agentBy: [ :a | a claude; planMode ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic mockClient result |
+			topic := ann topic.
+			topic session sessionId: 'session-parallel-plan'.
+			result := MockObject new.
+			result on: #configOptions verify: [
+				OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
+			mockClient := MockObject new.
+			mockClient
+				on: #setSessionConfigOptionBy:
+				with: MockObject any
+				verify: [ :aBlock |
+					| params |
+					params := ACPSetSessionConfigOptionParams buildBy: aBlock.
+					self assert: params value equals: 'plan'.
+					modeSetCount := modeSetCount + 1.
+					result ].
+			topic session client: mockClient.
+			self simulateEndTurnWhenWorkingFor: topic ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: modeSetCount equals: 2
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
+	| template copy |
+	template := AbCodingAgentBuilder new.
+	template codex; planMode.
+	copy := template copyForRun.
+	self assert: copy ~~ template.
+	self assert: copy agentArguments equals: template agentArguments.
+	self assert: copy mode equals: template mode.
+	self assert: template postConnectActions isEmpty.
+	copy postConnectActions add: [ :t | t class name ].
+	self assert: template postConnectActions isEmpty
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 	| orchestration topic modeSet |
 	modeSet := false.

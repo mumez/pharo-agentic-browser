@@ -96,31 +96,38 @@ AbCodingAgentBuilder >> planMode [
 	self mode: #plan
 ]
 
-{ #category : 'privates' }
-AbCodingAgentBuilder >> processMode [
-	self mode ifNil: [ ^ self ].
-	self postConnectActions add: [ :topic |
-		| modeOption |
-		modeOption := topic session modeConfigOption.
-		modeOption
-			ifNotNil: [ topic setConfigOptionId: modeOption id value: self mode ]
-			ifNil: [ topic setConfigOptionId: 'mode' value: self mode ] ]
+{ #category : 'copying' }
+AbCodingAgentBuilder >> copyForRun [
+	^ (self class new)
+		agentArguments: self agentArguments;
+		mode: self mode;
+		model: self model;
+		yourself
 ]
 
 { #category : 'privates' }
-AbCodingAgentBuilder >> processModel [
+AbCodingAgentBuilder >> applyModeTo: aTopic [
+	| modeOption |
+	self mode ifNil: [ ^ self ].
+	modeOption := aTopic session modeConfigOption.
+	modeOption
+		ifNotNil: [ aTopic setConfigOptionId: modeOption id value: self mode ]
+		ifNil: [ aTopic setConfigOptionId: 'mode' value: self mode ]
+]
+
+{ #category : 'privates' }
+AbCodingAgentBuilder >> applyModelTo: aTopic [
+	| modelOption |
 	self model ifNil: [ ^ self ].
-	self postConnectActions add: [ :topic |
-		| modelOption |
-		modelOption := topic session modelConfigOption.
-		modelOption
-			ifNotNil: [ topic setConfigOptionId: modelOption id value: self model ]
-			ifNil: [ topic setConfigOptionId: 'model' value: self model ] ]
+	modelOption := aTopic session modelConfigOption.
+	modelOption
+		ifNotNil: [ aTopic setConfigOptionId: modelOption id value: self model ]
+		ifNil: [ aTopic setConfigOptionId: 'model' value: self model ]
 ]
 
 { #category : 'callbacks' }
 AbCodingAgentBuilder >> onConnected: aTopic [
-	self processMode.
-	self processModel.
+	self applyModeTo: aTopic.
+	self applyModelTo: aTopic.
 	super onConnected: aTopic
 ]
