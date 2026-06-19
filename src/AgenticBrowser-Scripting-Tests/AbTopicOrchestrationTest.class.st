@@ -48,7 +48,7 @@ AbTopicOrchestrationTest >> testSequentialStepExecutionAndResultInjection [
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -94,7 +94,7 @@ AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 				builder topicBy: [ :t | t title: 'ab-test-T1' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			topic := ann topic.
@@ -125,7 +125,7 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsGoalResult [
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -163,7 +163,7 @@ AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 					t goal: 'pass all tests' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -197,7 +197,7 @@ AbTopicOrchestrationTest >> testSharedDirectoryPathAppliedToTopics [
 			} agentBy: [ :a | a codex ] ].
 	orchestration sharedDirectoryPath: sharedPath.
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			capturedPaths add: ann topic workingDirectoryPath.
@@ -227,7 +227,7 @@ AbTopicOrchestrationTest >> testTopicBuilderUsesCustomPrompt [
 					t prompt: 'Do the custom thing' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -259,7 +259,7 @@ AbTopicOrchestrationTest >> testScriptingExampleSmoke [
 
 	orchestration := self scriptingExampleOrchestration.
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			self registerSmokeHandlersFor: ann topic
@@ -462,7 +462,7 @@ AbTopicOrchestrationTest >> simulateGoalAchievementWhenWorkingFor: aTopic result
 
 { #category : 'private' }
 AbTopicOrchestrationTest >> unsubscribeTopicHandlers [
-	AbTopicManager activeManager announcer unsubscribe: self.
+	AbTopicManager forTest announcer unsubscribe: self.
 	AbTopicManager forTest topicsDo: [ :t | t announcer unsubscribe: self ]
 ]
 
@@ -483,7 +483,7 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationInjectsResultAcrossSeqPara
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T4' ] } agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -540,7 +540,7 @@ AbTopicOrchestrationTest >> testParallelStepCombinesResultsForNextStep [
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T3' ] } agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -580,7 +580,7 @@ AbTopicOrchestrationTest >> testParallelStepInjectsResultFromPriorStep [
 				builder topicBy: [ :t | t title: 'ab-test-T2' ].
 				builder topicBy: [ :t | t title: 'ab-test-T3' ] } agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -624,7 +624,7 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsResultFromPriorStep [
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T2' ] } agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |
@@ -664,7 +664,7 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationRunsStepsInOrder [
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T4' ] } agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic parallelTopicsStarted |
@@ -711,7 +711,7 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 				builder topicBy: [ :t | t title: 'ab-test-T1' ]
 			} agentBy: [ :a | a claude; planMode ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| mockClient result |
@@ -754,7 +754,7 @@ AbTopicOrchestrationTest >> testParallelStepExecution [
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
 			} agentBy: [ :a | a codex ] ].
 
-	AbTopicManager activeManager announcer
+	AbTopicManager forTest announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			| topic |

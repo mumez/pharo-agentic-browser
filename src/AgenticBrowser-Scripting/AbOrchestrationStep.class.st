@@ -82,7 +82,7 @@ AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anCodingAgentBuilder [
 	topic settings aiPermissionTimeoutOption: #allow_once.
 	topic settings exportApprovalWaitTimeoutSeconds: 0.
 	topic settings exportApprovalTimeoutOption: #allow_once.
-	AbTopicManager activeManager addTopic: topic.
+	self orchestration topicManager addTopic: topic.
 	^ topic
 ]
 

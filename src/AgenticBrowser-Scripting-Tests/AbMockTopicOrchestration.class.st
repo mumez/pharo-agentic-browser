@@ -6,6 +6,11 @@ Class {
 }
 
 { #category : 'building' }
-AbMockTopicOrchestration class >> orchestrationBuilderClass [
+AbMockTopicOrchestration >> orchestrationBuilderClass [
 	^ AbMockTopicOrchestrationBuilder
+]
+
+{ #category : 'accessing' }
+AbMockTopicOrchestration >> topicManager [
+	^ AbTopicManager forTest
 ]

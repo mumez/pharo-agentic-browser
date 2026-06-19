@@ -15,24 +15,23 @@ AbTopicOrchestration class >> buildBy: aBlock [
 ]
 
 { #category : 'building' }
-AbTopicOrchestration class >> orchestrationBuilderClass [
-	^ AbTopicOrchestrationBuilder
-]
-
-{ #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
-	builder := self class orchestrationBuilderClass new.
+	builder := self orchestrationBuilderClass new.
 	aBlock value: builder.
 	self steps: builder steps.
 	self steps do: [ :step | step orchestration: self ]
+]
+
+{ #category : 'building' }
+AbTopicOrchestration >> orchestrationBuilderClass [
+	^ AbTopicOrchestrationBuilder
 ]
 
 { #category : 'initialization' }
 AbTopicOrchestration >> initialize [
 	super initialize.
 	steps := OrderedCollection new.
-	sharedDirectoryPath := (Smalltalk imageDirectory / 'agentic-browser' / ('orchestration-' , UUID new asString36)) fullName.
 ]
 
 { #category : 'running' }
@@ -47,8 +46,14 @@ AbTopicOrchestration >> run [
 ]
 
 { #category : 'accessing' }
+AbTopicOrchestration >> topicManager [
+	^ AbTopicManager default
+]
+
+{ #category : 'accessing' }
 AbTopicOrchestration >> sharedDirectoryPath [
-	^ sharedDirectoryPath
+	^ sharedDirectoryPath ifNil: [
+		sharedDirectoryPath := (AbSettings defaultAgenticBrowserRootDirectory / ('orchestration-' , UUID new asString36)) fullName ]
 ]
 
 { #category : 'accessing' }
