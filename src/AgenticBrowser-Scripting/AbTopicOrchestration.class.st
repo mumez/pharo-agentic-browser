@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'steps',
 		'sharedDirectoryPath',
-		'defaultAgentConfig'
+		'defaultCodingAgentBuilder'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -32,7 +32,7 @@ AbTopicOrchestration >> initialize [
 	super initialize.
 	steps := OrderedCollection new.
 	sharedDirectoryPath := (Smalltalk imageDirectory / 'agentic-browser' / ('orchestration-' , UUID new asString36)) fullName.
-	defaultAgentConfig := nil.
+	defaultCodingAgentBuilder := nil.
 ]
 
 { #category : 'accessing' }
@@ -56,13 +56,13 @@ AbTopicOrchestration >> sharedDirectoryPath: aString [
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestration >> defaultAgentConfig [
-	^ defaultAgentConfig ifNil: [ defaultAgentConfig := self resolveSystemDefaultAgentConfig ]
+AbTopicOrchestration >> defaultCodingAgentBuilder [
+	^ defaultCodingAgentBuilder ifNil: [ defaultCodingAgentBuilder := self resolveSystemDefaultCodingAgentBuilder ]
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestration >> defaultAgentConfig: anAgentConfig [
-	defaultAgentConfig := anAgentConfig
+AbTopicOrchestration >> defaultCodingAgentBuilder: anCodingAgentBuilder [
+	defaultCodingAgentBuilder := anCodingAgentBuilder
 ]
 
 { #category : 'running' }
@@ -76,7 +76,7 @@ AbTopicOrchestration >> run [
 ]
 
 { #category : 'private' }
-AbTopicOrchestration >> resolveSystemDefaultAgentConfig [
+AbTopicOrchestration >> resolveSystemDefaultCodingAgentBuilder [
 	| defaultAgentInfo cmdArgs |
 	[
 		defaultAgentInfo := AbSettings default codingAgents first.

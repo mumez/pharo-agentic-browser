@@ -25,17 +25,17 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 	self assert: step1 topicBuilders size equals: 2.
 	self assert: step1 topicBuilders first title equals: 'T1'.
 	self assert: step1 topicBuilders second title equals: 'T2'.
-	self assert: step1 agentConfig agentArguments equals: #( 'claude-agent-acp' ).
+	self assert: step1 codingAgentBuilder agentArguments equals: #( 'claude-agent-acp' ).
 
 	step2 := orchestration steps second.
 	self assert: (step2 isKindOf: AbParallelStep).
 	self assert: step2 topicBuilders size equals: 1.
 	self assert: step2 topicBuilders first title equals: 'T3'.
-	self assert: step2 agentConfig agentArguments equals: #( 'codex-acp' )
+	self assert: step2 codingAgentBuilder agentArguments equals: #( 'codex-acp' )
 ]
 
 { #category : 'tests' }
-AbTopicOrchestrationTest >> testDefaultAgentConfigFallback [
+AbTopicOrchestrationTest >> testDefaultCodingAgentBuilderFallback [
 	| orchestration step |
 	orchestration := AbTopicOrchestration build: [ :builder |
 		builder seq: {
@@ -44,9 +44,9 @@ AbTopicOrchestrationTest >> testDefaultAgentConfigFallback [
 	].
 
 	step := orchestration steps first.
-	self assert: step agentConfig isNil.
-	self assert: step activeAgentConfig notNil.
-	self assert: step activeAgentConfig agentArguments equals: orchestration defaultAgentConfig agentArguments
+	self assert: step codingAgentBuilder isNil.
+	self assert: step activeCodingAgentBuilder notNil.
+	self assert: step activeCodingAgentBuilder agentArguments equals: orchestration defaultCodingAgentBuilder agentArguments
 ]
 
 { #category : 'tests' }
@@ -130,7 +130,7 @@ AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 ]
 
 { #category : 'tests' }
-AbTopicOrchestrationTest >> testOrchestrationDefaultAgentConfigOverride [
+AbTopicOrchestrationTest >> testOrchestrationDefaultCodingAgentBuilderOverride [
 	| orchestration topic |
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
@@ -139,7 +139,7 @@ AbTopicOrchestrationTest >> testOrchestrationDefaultAgentConfigOverride [
 			}
 		]
 		using: AbMockTopicOrchestrationBuilder.
-	orchestration defaultAgentConfig: (AbCodingAgentBuilder new codex; yourself).
+	orchestration defaultCodingAgentBuilder: (AbCodingAgentBuilder new codex; yourself).
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -337,7 +337,7 @@ AbTopicOrchestrationTest >> testScriptingExampleSmoke [
 		self assert: reviewTopic notNil.
 		self assert: planTopic agentArguments equals: #( 'claude-agent-acp' ).
 		self assert: implementTopic agentArguments equals: #( 'codex-acp' ).
-		self assert: reviewTopic agentArguments equals: orchestration defaultAgentConfig agentArguments.
+		self assert: reviewTopic agentArguments equals: orchestration defaultCodingAgentBuilder agentArguments.
 		self assert: ((prompts at: #spec) includesSubstring: 'Plan: feature XXX').
 		self assert: ((prompts at: #implement) includesSubstring: 'Spec: feature XXX').
 		self assert: ((prompts at: #tests) includesSubstring: 'Spec: feature XXX').

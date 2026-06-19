@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'orchestration',
 		'topicBuilders',
-		'agentConfig',
+		'codingAgentBuilder',
 		'sharedDirectoryPath',
 		'previousResult'
 	],
@@ -33,13 +33,13 @@ AbOrchestrationStep >> topicBuilders: aCollection [
 ]
 
 { #category : 'accessing' }
-AbOrchestrationStep >> agentConfig [
-	^ agentConfig
+AbOrchestrationStep >> codingAgentBuilder [
+	^ codingAgentBuilder
 ]
 
 { #category : 'accessing' }
-AbOrchestrationStep >> agentConfig: anAgentConfig [
-	agentConfig := anAgentConfig
+AbOrchestrationStep >> codingAgentBuilder: anCodingAgentBuilder [
+	codingAgentBuilder := anCodingAgentBuilder
 ]
 
 { #category : 'accessing' }
@@ -53,8 +53,8 @@ AbOrchestrationStep >> sharedDirectoryPath: aString [
 ]
 
 { #category : 'accessing' }
-AbOrchestrationStep >> activeAgentConfig [
-	^ agentConfig ifNil: [ orchestration defaultAgentConfig ]
+AbOrchestrationStep >> activeCodingAgentBuilder [
+	^ codingAgentBuilder ifNil: [ orchestration defaultCodingAgentBuilder ]
 ]
 
 { #category : 'accessing' }
@@ -73,10 +73,10 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
-AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anAgentConfig [
+AbOrchestrationStep >> prepareTopicFrom: aBuilder using: anCodingAgentBuilder [
 	| topic |
 	topic := aBuilder topic.
-	topic agentArguments: anAgentConfig agentArguments.
+	topic agentArguments: anCodingAgentBuilder agentArguments.
 	topic workingDirectoryPath: self sharedDirectoryPath.
 	topic settings aiPermissionWaitTimeoutSeconds: 0.
 	topic settings aiPermissionTimeoutOption: #allow_once.

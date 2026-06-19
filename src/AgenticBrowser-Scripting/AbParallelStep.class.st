@@ -11,15 +11,15 @@ AbParallelStep >> run [
 	incomingResult := self previousResult.
 	topics := OrderedCollection new.
 	semaphores := self topicBuilders collect: [ :builder |
-		| topic semaphore activeConfig |
-		activeConfig := self activeAgentConfig.
-		topic := self prepareTopicFrom: builder using: activeConfig.
+		| topic semaphore activeCodingAgentBuilder |
+		activeCodingAgentBuilder := self activeCodingAgentBuilder.
+		topic := self prepareTopicFrom: builder using: activeCodingAgentBuilder.
 		topics add: topic.
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		[
 			topic session ensureConnected.
-			activeConfig onConnected: topic.
+			activeCodingAgentBuilder onConnected: topic.
 			topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: incomingResult)
 		] fork.
 		semaphore ].

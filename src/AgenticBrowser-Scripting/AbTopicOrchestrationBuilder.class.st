@@ -35,10 +35,10 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders with: anAgentConfig [
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
 	steps add: (AbSequentialStep new
 		topicBuilders: aCollectionOfTopicBuilders;
-		agentConfig: anAgentConfig;
+		codingAgentBuilder: anCodingAgentBuilder;
 		yourself)
 ]
 
@@ -48,10 +48,10 @@ AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders with: anAgentConfig [
+AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
 	steps add: (AbParallelStep new
 		topicBuilders: aCollectionOfTopicBuilders;
-		agentConfig: anAgentConfig;
+		codingAgentBuilder: anCodingAgentBuilder;
 		yourself)
 ]
 

@@ -19,17 +19,6 @@ AbTopicBuilder >> goal: aString [
 	self topic topicGoal description: aString
 ]
 
-{ #category : 'factory' }
-AbTopicBuilder >> instantiateWith: anAgentConfig [
-	| newTopic |
-	newTopic := self topicClass new.
-	newTopic agentArguments: anAgentConfig agentArguments.
-	newTopic title: self topic title.
-	self topic topicGoal description ifNotNil: [ :g |
-		newTopic topicGoal description: g ].
-	^ newTopic
-]
-
 { #category : 'accessing' }
 AbTopicBuilder >> topic [
 	^ topic ifNil: [topic := self createTopic]

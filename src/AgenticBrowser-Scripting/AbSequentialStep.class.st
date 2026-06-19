@@ -10,13 +10,13 @@ AbSequentialStep >> run [
 	| currentResult |
 	currentResult := self previousResult.
 	self topicBuilders do: [ :builder |
-		| topic semaphore activeConfig |
-		activeConfig := self activeAgentConfig.
-		topic := self prepareTopicFrom: builder using: activeConfig.
+		| topic semaphore activeCodingAgentBuilder |
+		activeCodingAgentBuilder := self activeCodingAgentBuilder.
+		topic := self prepareTopicFrom: builder using: activeCodingAgentBuilder.
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		topic session ensureConnected.
-		activeConfig onConnected: topic.
+		activeCodingAgentBuilder onConnected: topic.
 		topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: currentResult).
 		semaphore wait.
 		currentResult := self resultFromTopic: topic ].
