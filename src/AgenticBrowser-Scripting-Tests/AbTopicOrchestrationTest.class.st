@@ -25,13 +25,13 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 	self assert: step1 topicBuilders size equals: 2.
 	self assert: step1 topicBuilders first title equals: 'T1'.
 	self assert: step1 topicBuilders second title equals: 'T2'.
-	self assert: step1 agentConfig arguments equals: #( 'claude-agent-acp' ).
+	self assert: step1 agentConfig agentArguments equals: #( 'claude-agent-acp' ).
 
 	step2 := orchestration steps second.
 	self assert: (step2 isKindOf: AbParallelStep).
 	self assert: step2 topicBuilders size equals: 1.
 	self assert: step2 topicBuilders first title equals: 'T3'.
-	self assert: step2 agentConfig arguments equals: #( 'codex-acp' )
+	self assert: step2 agentConfig agentArguments equals: #( 'codex-acp' )
 ]
 
 { #category : 'tests' }
@@ -46,7 +46,7 @@ AbTopicOrchestrationTest >> testDefaultAgentConfigFallback [
 	step := orchestration steps first.
 	self assert: step agentConfig isNil.
 	self assert: step activeAgentConfig notNil.
-	self assert: step activeAgentConfig arguments equals: orchestration defaultAgentConfig arguments
+	self assert: step activeAgentConfig agentArguments equals: orchestration defaultAgentConfig agentArguments
 ]
 
 { #category : 'tests' }
@@ -340,7 +340,7 @@ AbTopicOrchestrationTest >> testScriptingExampleSmoke [
 		self assert: reviewTopic notNil.
 		self assert: planTopic agentArguments equals: #( 'claude-agent-acp' ).
 		self assert: implementTopic agentArguments equals: #( 'codex-acp' ).
-		self assert: reviewTopic agentArguments equals: orchestration defaultAgentConfig arguments.
+		self assert: reviewTopic agentArguments equals: orchestration defaultAgentConfig agentArguments.
 		self assert: ((prompts at: #spec) includesSubstring: 'Plan: feature XXX').
 		self assert: ((prompts at: #implement) includesSubstring: 'Spec: feature XXX').
 		self assert: ((prompts at: #tests) includesSubstring: 'Spec: feature XXX').

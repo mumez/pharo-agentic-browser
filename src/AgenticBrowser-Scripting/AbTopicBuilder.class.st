@@ -1,6 +1,6 @@
 Class {
 	#name : 'AbTopicBuilder',
-	#superclass : 'Object',
+	#superclass : 'AbElementBuilder',
 	#instVars : [
 		'title',
 		'goal',
@@ -56,17 +56,12 @@ AbTopicBuilder >> defaultTopicClass [
 	^ AbTopic
 ]
 
-{ #category : 'configuring' }
-AbTopicBuilder >> configure: aBlock [
-	aBlock value: self.
-	^ self
-]
 
-{ #category : 'instantiating' }
+{ #category : 'factory' }
 AbTopicBuilder >> instantiateWith: anAgentConfig [
 	| topic |
 	topic := self topicClass new.
-	topic agentArguments: anAgentConfig arguments.
+	topic agentArguments: anAgentConfig agentArguments.
 	self title ifNotNil: [ topic title: self title ].
 	self goal ifNotNil: [ topic topicGoal description: self goal ].
 	^ topic

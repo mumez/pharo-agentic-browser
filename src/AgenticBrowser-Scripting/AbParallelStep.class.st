@@ -19,7 +19,7 @@ AbParallelStep >> run [
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		[
 			topic session ensureConnected.
-			activeConfig postConnectActions do: [ :action | action value: topic ].
+			activeConfig onConnected: topic.
 			topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: incomingResult)
 		] fork.
 		semaphore ].

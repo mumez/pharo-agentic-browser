@@ -80,6 +80,6 @@ AbTopicOrchestration >> resolveSystemDefaultAgentConfig [
 		cmdArgs := #( 'claude-agent-acp' )
 	].
 	^ AbCodingAgentBuilder new
-		arguments: cmdArgs;
+		agentArguments: cmdArgs;
 		yourself
 ]

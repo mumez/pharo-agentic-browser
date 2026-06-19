@@ -15,6 +15,26 @@ AbTopicOrchestrationBuilder >> initialize [
 ]
 
 { #category : 'building' }
+AbTopicOrchestrationBuilder >> agent [
+	^ self agentBy: [ :builder | ]
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> agentBy: aBlock [
+	^ self agentBuilder buildBy: aBlock
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> topic [
+	^ self topicBy: [ :builder | ]
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> topicBy: aBlock [
+	^ self topicBuilder buildBy: aBlock
+]
+
+{ #category : 'building' }
 AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders with: anAgentConfig [
 	steps add: (AbSequentialStep new
 		topicBuilders: aCollectionOfTopicBuilders;
@@ -41,21 +61,26 @@ AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> topicBy: aBlock [
-	^ AbTopicBuilder new configure: aBlock
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> agentBy: aBlock [
-	^ AbCodingAgentBuilder new configure: aBlock
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> agent [
-	^ AbCodingAgentBuilder new
-]
-
-{ #category : 'building' }
 AbTopicOrchestrationBuilder >> steps [
 	^ steps
+]
+
+{ #category : 'factory' }
+AbTopicOrchestrationBuilder >> agentBuilderClass [
+	^ AbCodingAgentBuilder
+]
+
+{ #category : 'factory' }
+AbTopicOrchestrationBuilder >> topicBuilderClass [
+	^ AbTopicBuilder
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> agentBuilder [
+	^ self agentBuilderClass on: self
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> topicBuilder [
+	^ self topicBuilderClass on: self
 ]

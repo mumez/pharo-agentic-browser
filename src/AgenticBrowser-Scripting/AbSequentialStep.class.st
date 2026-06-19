@@ -16,7 +16,7 @@ AbSequentialStep >> run [
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		topic session ensureConnected.
-		activeConfig postConnectActions do: [ :action | action value: topic ].
+		activeConfig onConnected: topic.
 		topic sendPrompt: (self promptForBuilder: builder topic: topic injecting: currentResult).
 		semaphore wait.
 		currentResult := self resultFromTopic: topic ].

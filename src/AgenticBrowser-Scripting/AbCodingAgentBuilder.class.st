@@ -1,8 +1,8 @@
 Class {
 	#name : 'AbCodingAgentBuilder',
-	#superclass : 'Object',
+	#superclass : 'AbElementBuilder',
 	#instVars : [
-		'arguments',
+		'agentArguments',
 		'postConnectActions'
 	],
 	#category : 'AgenticBrowser-Scripting',
@@ -12,18 +12,18 @@ Class {
 { #category : 'initialization' }
 AbCodingAgentBuilder >> initialize [
 	super initialize.
-	arguments := #( 'claude-agent-acp' ).
+	agentArguments := #().
 	postConnectActions := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
-AbCodingAgentBuilder >> arguments [
-	^ arguments
+AbCodingAgentBuilder >> agentArguments [
+	^ agentArguments
 ]
 
 { #category : 'accessing' }
-AbCodingAgentBuilder >> arguments: anArray [
-	arguments := anArray
+AbCodingAgentBuilder >> agentArguments: anArray [
+	agentArguments := anArray
 ]
 
 { #category : 'accessing' }
@@ -31,9 +31,9 @@ AbCodingAgentBuilder >> postConnectActions [
 	^ postConnectActions
 ]
 
-{ #category : 'accessing' }
+{ #category : 'actions' }
 AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
-	self arguments: (AbSettings default agentArgumentsPresets at: agentName)
+	self agentArguments: (AbSettings default agentArgumentsPresets at: agentName)
 ]
 
 { #category : 'shortcuts' }
@@ -77,17 +77,16 @@ AbCodingAgentBuilder >> kiro [
 ]
 
 { #category : 'configuring' }
-AbCodingAgentBuilder >> planMode [
-	postConnectActions add: [ :topic |
+AbCodingAgentBuilder >> mode: aModeName [
+	self postConnectActions add: [ :topic |
 		| modeOption |
 		modeOption := topic session modeConfigOption.
 		modeOption
-			ifNotNil: [ topic setConfigOptionId: modeOption id value: 'plan' ]
-			ifNil: [ topic setConfigOptionId: 'mode' value: 'plan' ] ]
+			ifNotNil: [ topic setConfigOptionId: modeOption id value: aModeName ]
+			ifNil: [ topic setConfigOptionId: 'mode' value: aModeName ] ]
 ]
 
 { #category : 'configuring' }
-AbCodingAgentBuilder >> configure: aBlock [
-	aBlock value: self.
-	^ self
+AbCodingAgentBuilder >> planMode [
+	self mode: #plan
 ]

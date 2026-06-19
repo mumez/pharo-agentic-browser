@@ -10,7 +10,7 @@ AbCodingAgentBuilderTest >> testClaudeSetsArguments [
 
 	| builder |
 	builder := AbCodingAgentBuilder new claude.
-	self assert: builder arguments equals: #( 'claude-agent-acp' )
+	self assert: builder agentArguments equals: #( 'claude-agent-acp' )
 ]
 
 { #category : 'tests' }
@@ -18,15 +18,15 @@ AbCodingAgentBuilderTest >> testCodexSetsArguments [
 
 	| builder |
 	builder := AbCodingAgentBuilder new codex.
-	self assert: builder arguments equals: #( 'codex-acp' )
+	self assert: builder agentArguments equals: #( 'codex-acp' )
 ]
 
 { #category : 'tests' }
-AbCodingAgentBuilderTest >> testConfigureBlock [
+AbCodingAgentBuilderTest >> testBuildByBlock [
 
 	| builder |
-	builder := AbCodingAgentBuilder new configure: [ :a | a gemini ].
-	self assert: builder arguments equals: #( 'gemini' '--acp' )
+	builder := AbCodingAgentBuilder new buildBy: [ :a | a gemini ].
+	self assert: builder agentArguments equals: #( 'gemini' '--acp' )
 ]
 
 { #category : 'tests' }
@@ -51,7 +51,7 @@ AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder postConnectActions do: [ :action | action value: topic ].
+	builder onConnected: topic.
 	self assert: called.
 	self assert: configId equals: 'agent-mode'.
 	self assert: configValue equals: 'plan'
@@ -77,7 +77,7 @@ AbCodingAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder postConnectActions do: [ :action | action value: topic ].
+	builder onConnected: topic.
 	self assert: called.
 	self assert: configId equals: 'mode'.
 	self assert: configValue equals: 'plan'

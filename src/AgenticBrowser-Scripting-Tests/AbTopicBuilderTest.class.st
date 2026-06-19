@@ -12,10 +12,10 @@ AbTopicBuilderTest >> codexAgentConfig [
 ]
 
 { #category : 'tests' }
-AbTopicBuilderTest >> testConfigureBlockSetsAttributes [
+AbTopicBuilderTest >> testBuildByBlockSetsAttributes [
 
 	| builder |
-	builder := AbTopicBuilder new configure: [ :t |
+	builder := AbTopicBuilder new buildBy: [ :t |
 		t title: 'Configured title'.
 		t goal: 'pass all tests'.
 		t prompt: 'Start here'.
