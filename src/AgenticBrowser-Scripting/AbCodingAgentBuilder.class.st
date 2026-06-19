@@ -3,7 +3,8 @@ Class {
 	#superclass : 'AbElementBuilder',
 	#instVars : [
 		'agentArguments',
-		'mode'
+		'mode',
+		'model'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -80,6 +81,16 @@ AbCodingAgentBuilder >> mode: aModeName [
 	mode := aModeName
 ]
 
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> model [
+	^ model
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> model: aModelName [
+	model := aModelName
+]
+
 { #category : 'actions' }
 AbCodingAgentBuilder >> planMode [
 	self mode: #plan
@@ -96,8 +107,20 @@ AbCodingAgentBuilder >> processMode [
 			ifNil: [ topic setConfigOptionId: 'mode' value: self mode ] ]
 ]
 
+{ #category : 'privates' }
+AbCodingAgentBuilder >> processModel [
+	self model ifNil: [ ^ self ].
+	self postConnectActions add: [ :topic |
+		| modelOption |
+		modelOption := topic session modelConfigOption.
+		modelOption
+			ifNotNil: [ topic setConfigOptionId: modelOption id value: self model ]
+			ifNil: [ topic setConfigOptionId: 'model' value: self model ] ]
+]
+
 { #category : 'callbacks' }
 AbCodingAgentBuilder >> onConnected: aTopic [
 	self processMode.
+	self processModel.
 	super onConnected: aTopic
 ]
