@@ -3,8 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'steps',
-		'sharedDirectoryPath',
-		'defaultCodingAgentBuilder'
+		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -32,7 +31,6 @@ AbTopicOrchestration >> initialize [
 	super initialize.
 	steps := OrderedCollection new.
 	sharedDirectoryPath := (Smalltalk imageDirectory / 'agentic-browser' / ('orchestration-' , UUID new asString36)) fullName.
-	defaultCodingAgentBuilder := nil.
 ]
 
 { #category : 'accessing' }
@@ -55,16 +53,6 @@ AbTopicOrchestration >> sharedDirectoryPath: aString [
 	sharedDirectoryPath := aString
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestration >> defaultCodingAgentBuilder [
-	^ defaultCodingAgentBuilder ifNil: [ defaultCodingAgentBuilder := self resolveSystemDefaultCodingAgentBuilder ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> defaultCodingAgentBuilder: anCodingAgentBuilder [
-	defaultCodingAgentBuilder := anCodingAgentBuilder
-]
-
 { #category : 'running' }
 AbTopicOrchestration >> run [
 	| stepResult |
@@ -75,16 +63,3 @@ AbTopicOrchestration >> run [
 	^ stepResult
 ]
 
-{ #category : 'private' }
-AbTopicOrchestration >> resolveSystemDefaultCodingAgentBuilder [
-	| defaultAgentInfo cmdArgs |
-	[
-		defaultAgentInfo := AbSettings default codingAgents first.
-		cmdArgs := defaultAgentInfo at: 'command' ifAbsent: [ #( 'claude-agent-acp' ) ]
-	] on: Error do: [ :ex |
-		cmdArgs := #( 'claude-agent-acp' )
-	].
-	^ AbCodingAgentBuilder new
-		agentArguments: cmdArgs;
-		yourself
-]

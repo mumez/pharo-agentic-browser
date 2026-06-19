@@ -36,6 +36,7 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
+	anCodingAgentBuilder ifNil: [ self error: 'codingAgentBuilder must be specified' ].
 	steps add: (AbSequentialStep new
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: anCodingAgentBuilder;
@@ -49,6 +50,7 @@ AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders with: anCodingAgentBuilder [
+	anCodingAgentBuilder ifNil: [ self error: 'codingAgentBuilder must be specified' ].
 	steps add: (AbParallelStep new
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: anCodingAgentBuilder;

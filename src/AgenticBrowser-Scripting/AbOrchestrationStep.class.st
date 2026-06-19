@@ -54,7 +54,7 @@ AbOrchestrationStep >> sharedDirectoryPath: aString [
 
 { #category : 'accessing' }
 AbOrchestrationStep >> activeCodingAgentBuilder [
-	^ codingAgentBuilder ifNil: [ orchestration defaultCodingAgentBuilder ]
+	^ codingAgentBuilder ifNil: [ self error: 'codingAgentBuilder is not set' ]
 ]
 
 { #category : 'accessing' }

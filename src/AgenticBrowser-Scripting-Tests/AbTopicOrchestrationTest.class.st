@@ -35,18 +35,12 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 ]
 
 { #category : 'tests' }
-AbTopicOrchestrationTest >> testDefaultCodingAgentBuilderFallback [
-	| orchestration step |
-	orchestration := AbTopicOrchestration build: [ :builder |
-		builder seq: {
-			builder topicBy: [ :t | t title: 'T1' ]
-		}
-	].
-
-	step := orchestration steps first.
-	self assert: step codingAgentBuilder isNil.
-	self assert: step activeCodingAgentBuilder notNil.
-	self assert: step activeCodingAgentBuilder agentArguments equals: orchestration defaultCodingAgentBuilder agentArguments
+AbTopicOrchestrationTest >> testStepRequiresCodingAgentBuilder [
+	self should: [
+		AbTopicOrchestration build: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'T1' ]
+			} ] ] raise: Error
 ]
 
 { #category : 'tests' }
@@ -61,8 +55,7 @@ AbTopicOrchestrationTest >> testSequentialStepExecutionAndResultInjection [
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ].
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -109,8 +102,7 @@ AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 		build: [ :builder |
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -130,16 +122,14 @@ AbTopicOrchestrationTest >> testAutoApprovalSettingsAppliedToTopics [
 ]
 
 { #category : 'tests' }
-AbTopicOrchestrationTest >> testOrchestrationDefaultCodingAgentBuilderOverride [
+AbTopicOrchestrationTest >> testOrchestrationStepUsesExplicitCodingAgentBuilder [
 	| orchestration topic |
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ]
-			}
-		]
+			} with: (AbCodingAgentBuilder new codex; yourself) ]
 		using: AbMockTopicOrchestrationBuilder.
-	orchestration defaultCodingAgentBuilder: (AbCodingAgentBuilder new codex; yourself).
 
 	AbTopicManager activeManager announcer
 		when: AbTopicAdded
@@ -166,8 +156,7 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsGoalResult [
 					t title: 'ab-test-T1'.
 					t goal: 'pass all tests' ].
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -206,8 +195,7 @@ AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 				builder topicBy: [ :t |
 					t title: 'ab-test-T1'.
 					t goal: 'pass all tests' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -241,8 +229,7 @@ AbTopicOrchestrationTest >> testSharedDirectoryPathAppliedToTopics [
 			builder seq: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ].
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 	orchestration sharedDirectoryPath: sharedPath.
 
@@ -274,8 +261,7 @@ AbTopicOrchestrationTest >> testTopicBuilderUsesCustomPrompt [
 				builder topicBy: [ :t |
 					t title: 'ab-test-T1'.
 					t prompt: 'Do the custom thing' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -337,7 +323,7 @@ AbTopicOrchestrationTest >> testScriptingExampleSmoke [
 		self assert: reviewTopic notNil.
 		self assert: planTopic agentArguments equals: #( 'claude-agent-acp' ).
 		self assert: implementTopic agentArguments equals: #( 'codex-acp' ).
-		self assert: reviewTopic agentArguments equals: orchestration defaultCodingAgentBuilder agentArguments.
+		self assert: reviewTopic agentArguments equals: #( 'claude-agent-acp' ).
 		self assert: ((prompts at: #spec) includesSubstring: 'Plan: feature XXX').
 		self assert: ((prompts at: #implement) includesSubstring: 'Spec: feature XXX').
 		self assert: ((prompts at: #tests) includesSubstring: 'Spec: feature XXX').
@@ -438,7 +424,7 @@ AbTopicOrchestrationTest >> scriptingExampleOrchestration [
 			} with: builder agent codex.
 			builder seq: {
 				builder topicBy: [ :t | t title: reviewTitle ].
-				builder topicBy: [ :t | t title: prTitle ] } ]
+				builder topicBy: [ :t | t title: prTitle ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder
 ]
 
@@ -529,13 +515,12 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationInjectsResultAcrossSeqPara
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] } with: builder agent codex.
 			builder para: {
 				builder topicBy: [ :t | t title: 'ab-test-T2' ].
-				builder topicBy: [ :t | t title: 'ab-test-T3' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] } with: builder agent codex.
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T4' ] }
-		]
+				builder topicBy: [ :t | t title: 'ab-test-T4' ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -591,10 +576,9 @@ AbTopicOrchestrationTest >> testParallelStepCombinesResultsForNextStep [
 		build: [ :builder |
 			builder para: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ].
-				builder topicBy: [ :t | t title: 'ab-test-T2' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T2' ] } with: builder agent codex.
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T3' ] }
-		]
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -632,11 +616,10 @@ AbTopicOrchestrationTest >> testParallelStepInjectsResultFromPriorStep [
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] } with: builder agent codex.
 			builder para: {
 				builder topicBy: [ :t | t title: 'ab-test-T2' ].
-				builder topicBy: [ :t | t title: 'ab-test-T3' ] }
-		]
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -679,10 +662,9 @@ AbTopicOrchestrationTest >> testSequentialStepInjectsResultFromPriorStep [
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] } with: builder agent codex.
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T2' ] }
-		]
+				builder topicBy: [ :t | t title: 'ab-test-T2' ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -718,13 +700,12 @@ AbTopicOrchestrationTest >> testMultiStepOrchestrationRunsStepsInOrder [
 	orchestration := AbTopicOrchestration
 		build: [ :builder |
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T1' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T1' ] } with: builder agent codex.
 			builder para: {
 				builder topicBy: [ :t | t title: 'ab-test-T2' ].
-				builder topicBy: [ :t | t title: 'ab-test-T3' ] }.
+				builder topicBy: [ :t | t title: 'ab-test-T3' ] } with: builder agent codex.
 			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T4' ] }
-		]
+				builder topicBy: [ :t | t title: 'ab-test-T4' ] } with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
@@ -816,8 +797,7 @@ AbTopicOrchestrationTest >> testParallelStepExecution [
 			builder para: {
 				builder topicBy: [ :t | t title: 'ab-test-T1' ].
 				builder topicBy: [ :t | t title: 'ab-test-T2' ]
-			}
-		]
+			} with: builder agent codex ]
 		using: AbMockTopicOrchestrationBuilder.
 
 	AbTopicManager activeManager announcer
