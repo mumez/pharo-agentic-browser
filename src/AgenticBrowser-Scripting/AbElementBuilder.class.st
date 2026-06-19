@@ -28,8 +28,7 @@ AbElementBuilder >> parentBuilder: aBuilder [
 
 { #category : 'building' }
 AbElementBuilder >> buildBy: aBlock [
-	aBlock value: self.
-	^ self
+	aBlock value: self
 ]
 
 { #category : 'accessing' }
