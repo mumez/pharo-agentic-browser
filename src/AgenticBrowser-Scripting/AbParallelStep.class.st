@@ -10,11 +10,7 @@ AbParallelStep >> run [
 	| topics semaphores incomingResult agentBuilder |
 	incomingResult := self previousResult.
 	agentBuilder := self activeCodingAgentBuilder.
-	topics := self topicBuilders collect: [ :builder |
-		| topic |
-		topic := builder prepareWith: agentBuilder for: self.
-		topic registerTo: self orchestration topicManager.
-		topic ].
+	topics := self prepareTopicsForRun.
 	semaphores := self topicBuilders with: topics collect: [ :builder :topic |
 		| semaphore |
 		semaphore := Semaphore new.

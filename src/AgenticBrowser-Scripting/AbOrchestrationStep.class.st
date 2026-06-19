@@ -68,6 +68,17 @@ AbOrchestrationStep >> previousResult: aString [
 ]
 
 { #category : 'running' }
+AbOrchestrationStep >> prepareTopicsForRun [
+	| agentBuilder |
+	agentBuilder := self activeCodingAgentBuilder.
+	^ self topicBuilders collect: [ :builder |
+		| topic |
+		topic := builder prepareWith: agentBuilder for: self.
+		topic registerTo: self orchestration topicManager.
+		topic ]
+]
+
+{ #category : 'running' }
 AbOrchestrationStep >> run [
 	self subclassResponsibility
 ]
