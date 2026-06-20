@@ -3,7 +3,8 @@ Class {
 	#superclass : 'AbElementBuilder',
 	#instVars : [
 		'topic',
-		'prompt'
+		'prompt',
+		'goalDescription'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -11,12 +12,12 @@ Class {
 
 { #category : 'accessing' }
 AbTopicBuilder >> goal [
-	^ self topic topicGoal description
+	^ goalDescription
 ]
 
 { #category : 'accessing' }
 AbTopicBuilder >> goal: aString [
-	self topic topicGoal description: aString
+	goalDescription := aString
 ]
 
 { #category : 'accessing' }
@@ -55,6 +56,12 @@ AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
 	topic settings exportApprovalWaitTimeoutSeconds: 0.
 	topic settings exportApprovalTimeoutOption: #allow_once.
 	^ topic
+]
+
+{ #category : 'callbacks' }
+AbTopicBuilder >> onConnected: aTopic [
+	self goal ifNotNil: [ :description | aTopic goalDescription: description ].
+	super onConnected: aTopic
 ]
 
 { #category : 'factory' }

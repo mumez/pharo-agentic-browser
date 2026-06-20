@@ -49,7 +49,27 @@ AbTopicBuilderTest >> testTopicGoalSetViaBuilder [
 	builder := AbTopicBuilder new.
 	builder title: 'ab-test-goal'.
 	builder goal: 'pass all tests'.
-	self assert: builder topic topicGoal description equals: 'pass all tests'
+	self assert: builder goal equals: 'pass all tests'.
+	self assert: (builder topic instVarNamed: #topicGoal) isNil
+]
+
+{ #category : 'tests' }
+AbTopicBuilderTest >> testOnConnectedAppliesGoalDescriptionToTopic [
+
+	| builder called value topic |
+	called := false.
+	value := nil.
+	builder := AbTopicBuilder new.
+	builder goal: 'pass all tests'.
+	topic := MockObject new.
+	topic
+		on: #goalDescription:
+		verify: [ :aString |
+			called := true.
+			value := aString ].
+	builder onConnected: topic.
+	self assert: called.
+	self assert: value equals: 'pass all tests'
 ]
 
 { #category : 'tests' }

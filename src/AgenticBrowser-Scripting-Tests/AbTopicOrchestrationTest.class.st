@@ -302,7 +302,12 @@ AbTopicOrchestrationTest >> capturePromptOnWorkingFor: aTopic into: aDictionary 
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			statusAnn status = #working ifTrue: [
-				aDictionary at: aKey put: aTopic messages first text ] ]
+				| latestHumanMessage |
+				latestHumanMessage := aTopic messages reversed
+					detect: [ :msg | msg sender = #human ]
+					ifNone: [ nil ].
+				latestHumanMessage ifNotNil: [
+					aDictionary at: aKey put: latestHumanMessage text ] ] ]
 		for: self
 ]
 
@@ -332,7 +337,8 @@ AbTopicOrchestrationTest >> registerSmokeCompletionHandlerFor: aTopic into: comp
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			(statusAnn status = #endTurn or: [ statusAnn status = #goalAchieved ]) ifTrue: [
-				completedTitles add: aTopic title ] ]
+				(completedTitles includes: aTopic title) ifFalse: [
+					completedTitles add: aTopic title ] ] ]
 		for: self
 ]
 
@@ -453,10 +459,11 @@ AbTopicOrchestrationTest >> simulateGoalAchievementWhenWorkingFor: aTopic result
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			statusAnn status = #working ifTrue: [
-				| resultFile |
-				resultFile := aTopic topicGoal resultFile.
-				resultFile parent ensureCreateDirectory.
-				resultFile writeStreamDo: [ :s | s nextPutAll: aString ] ] ]
+				(aTopic messages last text includesSubstring: 'Goal has been set:') ifFalse: [
+					| resultFile |
+					resultFile := aTopic topicGoal resultFile.
+					resultFile parent ensureCreateDirectory.
+					resultFile writeStreamDo: [ :s | s nextPutAll: aString ] ] ] ]
 		for: self
 ]
 
@@ -793,6 +800,30 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 		orchestration run.
 		self assert: modeSet.
 		self assert: topic currentMode equals: 'plan'
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepInvokesTopicBuilderOnConnected [
+	| orchestration onConnectedCalled |
+	onConnectedCalled := false.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t postConnectActions add: [ :topic | onConnectedCalled := true ] ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann | self simulateEndTurnWhenWorkingFor: ann topic ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: onConnectedCalled
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 

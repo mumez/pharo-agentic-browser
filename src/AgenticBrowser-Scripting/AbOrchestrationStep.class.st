@@ -92,7 +92,30 @@ AbOrchestrationStep >> run [
 AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
 	aTopic session ensureConnected.
 	anAgentBuilder onConnected: aTopic.
+	aBuilder onConnected: aTopic.
+	self waitForPostConnectPromptIfNeededFor: aTopic.
+	aTopic isGoalAchieved ifTrue: [ ^ self ].
 	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> waitForPostConnectPromptIfNeededFor: aTopic [
+	| completionSignal subscriptionOwner |
+	(aTopic isWorking or: [ aTopic isWaitingForHuman ]) ifFalse: [ ^ self ].
+	completionSignal := Semaphore new.
+	subscriptionOwner := Object new.
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann |
+			(ann status = #endTurn or: [ ann status = #goalAchieved ]) ifTrue: [
+				completionSignal signal ] ]
+		for: subscriptionOwner.
+	(aTopic isWorking or: [ aTopic isWaitingForHuman ]) ifFalse: [
+		aTopic announcer unsubscribe: subscriptionOwner.
+		^ self ].
+	[
+		completionSignal wait
+	] ensure: [ aTopic announcer unsubscribe: subscriptionOwner ]
 ]
 
 { #category : 'private' }
