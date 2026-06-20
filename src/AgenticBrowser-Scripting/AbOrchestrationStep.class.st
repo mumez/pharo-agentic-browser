@@ -89,11 +89,11 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
-AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
+AbOrchestrationStep >> runTopic: aTopic topicBuilder: aTopicBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
 	aTopic session ensureConnected.
-	anAgentBuilder onConnected: aTopic.
-	aBuilder onConnected: aTopic.
-	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
+	anAgentBuilder finalizeOnSessionEstablished: aTopic.
+	aTopicBuilder finalizeOnSessionEstablished: aTopic.
+	aTopic sendPrompt: (self promptForBuilder: aTopicBuilder topic: aTopic injecting: aResult)
 ]
 
 { #category : 'private' }

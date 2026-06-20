@@ -795,9 +795,9 @@ AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
 	self assert: copy ~~ template.
 	self assert: copy agentArguments equals: template agentArguments.
 	self assert: copy mode equals: template mode.
-	self assert: template postConnectActions isEmpty.
-	copy postConnectActions add: [ :t | t class name ].
-	self assert: template postConnectActions isEmpty
+	self assert: template sessionEstablishedActions isEmpty.
+	copy sessionEstablishedActions add: [ :t | t class name ].
+	self assert: template sessionEstablishedActions isEmpty
 ]
 
 { #category : 'tests' }
@@ -842,16 +842,16 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 ]
 
 { #category : 'tests' }
-AbTopicOrchestrationTest >> testSequentialStepInvokesTopicBuilderOnConnected [
-	| orchestration onConnectedCalled |
-	onConnectedCalled := false.
+AbTopicOrchestrationTest >> testSequentialStepInvokesTopicBuilderFinalizeOnSessionEstablished [
+	| orchestration sessionEstablishedActionCalled |
+	sessionEstablishedActionCalled := false.
 
 	orchestration := AbMockTopicOrchestration new
 		buildBy: [ :builder |
 			builder seq: {
 				builder topicBy: [ :t |
 					t title: 'ab-test-T1'.
-					t postConnectActions add: [ :topic | onConnectedCalled := true ] ]
+					t sessionEstablishedActions add: [ :topic | sessionEstablishedActionCalled := true ] ]
 			} agentBy: [ :a | a codex ] ].
 
 	AbTopicManager forTest announcer
@@ -861,7 +861,7 @@ AbTopicOrchestrationTest >> testSequentialStepInvokesTopicBuilderOnConnected [
 
 	[
 		orchestration run.
-		self assert: onConnectedCalled
+		self assert: sessionEstablishedActionCalled
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 

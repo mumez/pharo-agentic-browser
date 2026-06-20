@@ -126,8 +126,8 @@ AbCodingAgentBuilder >> applyModelTo: aTopic [
 ]
 
 { #category : 'callbacks' }
-AbCodingAgentBuilder >> onConnected: aTopic [
+AbCodingAgentBuilder >> finalizeOnSessionEstablished: aTopic [
 	self applyModeTo: aTopic.
 	self applyModelTo: aTopic.
-	super onConnected: aTopic
+	super finalizeOnSessionEstablished: aTopic
 ]

@@ -60,7 +60,7 @@ AbTopicBuilderTest >> testOnConnectedAppliesGoalDescriptionToTopic [
 	builder := AbTopicBuilder new.
 	builder goal: 'pass all tests'.
 	topic := AbMockTopicNoPromptSend new.
-	builder onConnected: topic.
+	builder finalizeOnSessionEstablished: topic.
 	self assert: topic messages isEmpty.
 	self assert: (topic instVarNamed: #topicGoal) isNil
 ]

@@ -58,11 +58,6 @@ AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
 	^ topic
 ]
 
-{ #category : 'callbacks' }
-AbTopicBuilder >> onConnected: aTopic [
-	super onConnected: aTopic
-]
-
 { #category : 'factory' }
 AbTopicBuilder >> createTopic [
 	^ AbTopic new
