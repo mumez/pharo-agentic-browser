@@ -89,10 +89,11 @@ AbOrchestrationStep >> run [
 ]
 
 { #category : 'private' }
-AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
+AbOrchestrationStep >> runTopic: aTopic topicBuilder: aTopicBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
 	aTopic session ensureConnected.
-	anAgentBuilder onConnected: aTopic.
-	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
+	anAgentBuilder finalizeOnSessionEstablished: aTopic.
+	aTopicBuilder finalizeOnSessionEstablished: aTopic.
+	aTopic sendPrompt: (self promptForBuilder: aTopicBuilder topic: aTopic injecting: aResult)
 ]
 
 { #category : 'private' }
@@ -124,12 +125,19 @@ AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
 AbOrchestrationStep >> promptForBuilder: aBuilder topic: aTopic injecting: aPreviousResult [
 	| prompt |
 	prompt := aBuilder prompt ifNil: [ aTopic title ].
-	aPreviousResult ifNil: [ ^ prompt ].
-	^ String streamContents: [ :strm |
-		strm << prompt.
-		strm crlf; crlf.
-		strm << '=== Previous Topic Result ==='; crlf.
-		strm << aPreviousResult ]
+	aPreviousResult ifNotNil: [
+		prompt := String streamContents: [ :strm |
+			strm << prompt.
+			strm crlf; crlf.
+			strm << '=== Previous Topic Result ==='; crlf.
+			strm << aPreviousResult ] ].
+	aBuilder goal ifNotNil: [ :goal |
+		aTopic topicGoal description: goal.
+		prompt := String streamContents: [ :strm |
+			strm << prompt.
+			strm crlf; crlf.
+			strm << aTopic topicGoal notificationPrompt ] ].
+	^ prompt
 ]
 
 { #category : 'private' }

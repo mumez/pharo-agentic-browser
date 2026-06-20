@@ -3,7 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'parentBuilder',
-		'postConnectActions'
+		'sessionEstablishedActions'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -32,11 +32,11 @@ AbElementBuilder >> buildBy: aBlock [
 ]
 
 { #category : 'accessing' }
-AbElementBuilder >> postConnectActions [
-	^ postConnectActions ifNil: [ postConnectActions := OrderedCollection new ]
+AbElementBuilder >> sessionEstablishedActions [
+	^ sessionEstablishedActions ifNil: [ sessionEstablishedActions := OrderedCollection new ]
 ]
 
 { #category : 'event handling' }
-AbElementBuilder >> onConnected: aTopic [
-	self postConnectActions do: [ :action | action value: aTopic ]
+AbElementBuilder >> finalizeOnSessionEstablished: aTopic [
+	self sessionEstablishedActions do: [ :action | action value: aTopic ]
 ]

@@ -184,6 +184,45 @@ AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testTopicWithGoalUsesSinglePromptContainingGoalInstruction [
+	| orchestration sentPrompt |
+	sentPrompt := nil.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t prompt: 'Do the custom thing'.
+					t goal: 'pass all tests' ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic announcer
+				when: AbTopicStatusChanged
+				do: [ :statusAnn |
+					statusAnn status = #working ifTrue: [
+						| resultFile |
+						sentPrompt := topic messages first text.
+						resultFile := topic topicGoal resultFile.
+						resultFile parent ensureCreateDirectory.
+						resultFile writeStreamDo: [ :s | s nextPutAll: 'Done.' ] ] ]
+				for: self ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: sentPrompt notNil.
+		self assert: (sentPrompt includesSubstring: 'Do the custom thing').
+		self assert: (sentPrompt includesSubstring: 'Goal has been set: pass all tests')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSharedDirectoryPathAppliedToTopics [
 	| orchestration sharedPath capturedPaths |
 	sharedPath := (AbSettings defaultAgenticBrowserRootDirectory / 'ab-test-orchestration-shared') fullName.
@@ -302,7 +341,12 @@ AbTopicOrchestrationTest >> capturePromptOnWorkingFor: aTopic into: aDictionary 
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			statusAnn status = #working ifTrue: [
-				aDictionary at: aKey put: aTopic messages first text ] ]
+				| latestHumanMessage |
+				latestHumanMessage := aTopic messages reversed
+					detect: [ :msg | msg sender = #human ]
+					ifNone: [ nil ].
+				latestHumanMessage ifNotNil: [
+					aDictionary at: aKey put: latestHumanMessage text ] ] ]
 		for: self
 ]
 
@@ -332,7 +376,8 @@ AbTopicOrchestrationTest >> registerSmokeCompletionHandlerFor: aTopic into: comp
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			(statusAnn status = #endTurn or: [ statusAnn status = #goalAchieved ]) ifTrue: [
-				completedTitles add: aTopic title ] ]
+				(completedTitles includes: aTopic title) ifFalse: [
+					completedTitles add: aTopic title ] ] ]
 		for: self
 ]
 
@@ -750,9 +795,9 @@ AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
 	self assert: copy ~~ template.
 	self assert: copy agentArguments equals: template agentArguments.
 	self assert: copy mode equals: template mode.
-	self assert: template postConnectActions isEmpty.
-	copy postConnectActions add: [ :t | t class name ].
-	self assert: template postConnectActions isEmpty
+	self assert: template sessionEstablishedActions isEmpty.
+	copy sessionEstablishedActions add: [ :t | t class name ].
+	self assert: template sessionEstablishedActions isEmpty
 ]
 
 { #category : 'tests' }
@@ -793,6 +838,30 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 		orchestration run.
 		self assert: modeSet.
 		self assert: topic currentMode equals: 'plan'
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepInvokesTopicBuilderFinalizeOnSessionEstablished [
+	| orchestration sessionEstablishedActionCalled |
+	sessionEstablishedActionCalled := false.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t sessionEstablishedActions add: [ :topic | sessionEstablishedActionCalled := true ] ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann | self simulateEndTurnWhenWorkingFor: ann topic ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: sessionEstablishedActionCalled
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 

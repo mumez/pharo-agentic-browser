@@ -51,7 +51,7 @@ AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder onConnected: topic.
+	builder finalizeOnSessionEstablished: topic.
 	self assert: called.
 	self assert: configId equals: 'agent-mode'.
 	self assert: configValue equals: 'plan'
@@ -77,7 +77,7 @@ AbCodingAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder onConnected: topic.
+	builder finalizeOnSessionEstablished: topic.
 	self assert: called.
 	self assert: configId equals: 'mode'.
 	self assert: configValue equals: 'plan'
@@ -113,7 +113,7 @@ AbCodingAgentBuilderTest >> testModelUsesModelConfigOptionIdWhenPresent [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder onConnected: topic.
+	builder finalizeOnSessionEstablished: topic.
 	self assert: called.
 	self assert: configId equals: 'agent-model'.
 	self assert: configValue equals: 'claude-opus-4-5'
@@ -139,7 +139,7 @@ AbCodingAgentBuilderTest >> testModelUsesDefaultModelIdWhenOptionMissing [
 			called := true.
 			configId := anId.
 			configValue := aValue ].
-	builder onConnected: topic.
+	builder finalizeOnSessionEstablished: topic.
 	self assert: called.
 	self assert: configId equals: 'model'.
 	self assert: configValue equals: 'claude-opus-4-5'

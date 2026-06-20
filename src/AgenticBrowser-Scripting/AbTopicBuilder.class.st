@@ -3,7 +3,8 @@ Class {
 	#superclass : 'AbElementBuilder',
 	#instVars : [
 		'topic',
-		'prompt'
+		'prompt',
+		'goalDescription'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -11,12 +12,12 @@ Class {
 
 { #category : 'accessing' }
 AbTopicBuilder >> goal [
-	^ self topic topicGoal description
+	^ goalDescription
 ]
 
 { #category : 'accessing' }
 AbTopicBuilder >> goal: aString [
-	self topic topicGoal description: aString
+	goalDescription := aString
 ]
 
 { #category : 'accessing' }
