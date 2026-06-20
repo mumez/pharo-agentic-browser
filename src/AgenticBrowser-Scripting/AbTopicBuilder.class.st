@@ -60,7 +60,6 @@ AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
 
 { #category : 'callbacks' }
 AbTopicBuilder >> onConnected: aTopic [
-	self goal ifNotNil: [ :description | aTopic goalDescription: description ].
 	super onConnected: aTopic
 ]
 

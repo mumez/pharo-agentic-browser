@@ -93,29 +93,7 @@ AbOrchestrationStep >> runTopic: aTopic topicBuilder: aBuilder agentBuilder: anA
 	aTopic session ensureConnected.
 	anAgentBuilder onConnected: aTopic.
 	aBuilder onConnected: aTopic.
-	self waitForPostConnectPromptIfNeededFor: aTopic.
-	aTopic isGoalAchieved ifTrue: [ ^ self ].
 	aTopic sendPrompt: (self promptForBuilder: aBuilder topic: aTopic injecting: aResult)
-]
-
-{ #category : 'private' }
-AbOrchestrationStep >> waitForPostConnectPromptIfNeededFor: aTopic [
-	| completionSignal subscriptionOwner |
-	(aTopic isWorking or: [ aTopic isWaitingForHuman ]) ifFalse: [ ^ self ].
-	completionSignal := Semaphore new.
-	subscriptionOwner := Object new.
-	aTopic announcer
-		when: AbTopicStatusChanged
-		do: [ :ann |
-			(ann status = #endTurn or: [ ann status = #goalAchieved ]) ifTrue: [
-				completionSignal signal ] ]
-		for: subscriptionOwner.
-	(aTopic isWorking or: [ aTopic isWaitingForHuman ]) ifFalse: [
-		aTopic announcer unsubscribe: subscriptionOwner.
-		^ self ].
-	[
-		completionSignal wait
-	] ensure: [ aTopic announcer unsubscribe: subscriptionOwner ]
 ]
 
 { #category : 'private' }
@@ -147,12 +125,19 @@ AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
 AbOrchestrationStep >> promptForBuilder: aBuilder topic: aTopic injecting: aPreviousResult [
 	| prompt |
 	prompt := aBuilder prompt ifNil: [ aTopic title ].
-	aPreviousResult ifNil: [ ^ prompt ].
-	^ String streamContents: [ :strm |
-		strm << prompt.
-		strm crlf; crlf.
-		strm << '=== Previous Topic Result ==='; crlf.
-		strm << aPreviousResult ]
+	aPreviousResult ifNotNil: [
+		prompt := String streamContents: [ :strm |
+			strm << prompt.
+			strm crlf; crlf.
+			strm << '=== Previous Topic Result ==='; crlf.
+			strm << aPreviousResult ] ].
+	aBuilder goal ifNotNil: [ :goal |
+		aTopic topicGoal description: goal.
+		prompt := String streamContents: [ :strm |
+			strm << prompt.
+			strm crlf; crlf.
+			strm << aTopic topicGoal notificationPrompt ] ].
+	^ prompt
 ]
 
 { #category : 'private' }

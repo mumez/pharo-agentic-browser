@@ -184,6 +184,45 @@ AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testTopicWithGoalUsesSinglePromptContainingGoalInstruction [
+	| orchestration sentPrompt |
+	sentPrompt := nil.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t |
+					t title: 'ab-test-T1'.
+					t prompt: 'Do the custom thing'.
+					t goal: 'pass all tests' ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic announcer
+				when: AbTopicStatusChanged
+				do: [ :statusAnn |
+					statusAnn status = #working ifTrue: [
+						| resultFile |
+						sentPrompt := topic messages first text.
+						resultFile := topic topicGoal resultFile.
+						resultFile parent ensureCreateDirectory.
+						resultFile writeStreamDo: [ :s | s nextPutAll: 'Done.' ] ] ]
+				for: self ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: sentPrompt notNil.
+		self assert: (sentPrompt includesSubstring: 'Do the custom thing').
+		self assert: (sentPrompt includesSubstring: 'Goal has been set: pass all tests')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSharedDirectoryPathAppliedToTopics [
 	| orchestration sharedPath capturedPaths |
 	sharedPath := (AbSettings defaultAgenticBrowserRootDirectory / 'ab-test-orchestration-shared') fullName.
@@ -459,11 +498,10 @@ AbTopicOrchestrationTest >> simulateGoalAchievementWhenWorkingFor: aTopic result
 		when: AbTopicStatusChanged
 		do: [ :statusAnn |
 			statusAnn status = #working ifTrue: [
-				(aTopic messages last text includesSubstring: 'Goal has been set:') ifFalse: [
-					| resultFile |
-					resultFile := aTopic topicGoal resultFile.
-					resultFile parent ensureCreateDirectory.
-					resultFile writeStreamDo: [ :s | s nextPutAll: aString ] ] ] ]
+				| resultFile |
+				resultFile := aTopic topicGoal resultFile.
+				resultFile parent ensureCreateDirectory.
+				resultFile writeStreamDo: [ :s | s nextPutAll: aString ] ] ]
 		for: self
 ]
 
