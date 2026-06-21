@@ -1,16 +1,16 @@
 Extension { #name : 'AgenticBrowser' }
 
-{ #category : 'scripting' }
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> scriptBy: aBlock [
 	^ AbTopicOrchestration buildBy: aBlock
 ]
 
-{ #category : 'scripting' }
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> runBy: aBlock [
 	^ (self scriptBy: aBlock) run
 ]
 
-{ #category : 'examples-scripting' }
+{ #category : '*AgenticBrowser-Scripting-examples-scripting' }
 AgenticBrowser class >> exampleSingleTopicFileCreation [
 	<script>
 	| result |
