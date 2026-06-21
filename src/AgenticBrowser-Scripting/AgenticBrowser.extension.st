@@ -20,7 +20,8 @@ AgenticBrowser class >> exampleSingleTopic [
 				t title: 'List Pharo features'.
 				t prompt: 'List 3 Pharo Smalltalk features in one sentence each. Reply with only the list.' ]
 		} agentBy: [ :a | a claude ] ].
-	{orchestrationScript. orchestrationScript result} inspect.
+	[orchestrationScript run.
+	{orchestrationScript. orchestrationScript result} inspect] fork.
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -36,7 +37,8 @@ AgenticBrowser class >> exampleSequentialTopics [
 				t title: 'Summarize Pharo features'.
 				t prompt: 'Summarize the feature list from the previous step in one sentence. Reply with only the summary.' ]
 		} agentBy: [ :a | a claude ] ].
-	{orchestrationScript. orchestrationScript result} inspect.
+	[orchestrationScript run.
+	{orchestrationScript. orchestrationScript result} inspect] fork.
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -50,5 +52,6 @@ AgenticBrowser class >> exampleGoalDrivenTopic [
 				t prompt: 'Write a one-sentence summary of what Pharo Smalltalk is.'.
 				t goal: 'summary written to goal file' ]
 		} agentBy: [ :a | a claude ] ].
-	{orchestrationScript. orchestrationScript result} inspect.
+	[orchestrationScript run.
+	{orchestrationScript. orchestrationScript result} inspect] fork.
 ]
