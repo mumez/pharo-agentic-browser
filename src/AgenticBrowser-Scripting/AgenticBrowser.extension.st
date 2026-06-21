@@ -11,14 +11,14 @@ AgenticBrowser class >> runBy: aBlock [
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
-AgenticBrowser class >> exampleSingleTopicFileCreation [
+AgenticBrowser class >> exampleSingleTopic [
 	<script>
-	| result |
-	result := self runBy: [ :builder |
+	| orchestrationScript |
+	orchestrationScript :=  self scriptBy: [ :builder |
 		builder seq: {
 			builder topicBy: [ :t |
-				t title: 'Create greeting file'.
-				t prompt: 'Create a file named hello.txt with the text "Hello, Agentic Browser!" in the current directory. Nothing else.' ]
+				t title: 'List Pharo features'.
+				t prompt: 'List 3 Pharo Smalltalk features in one sentence each. Reply with only the list.' ]
 		} agentBy: [ :a | a claude ] ].
-	Transcript crShow: 'Result: ' , result printString
+	{orchestrationScript. orchestrationScript result} inspect.
 ]
