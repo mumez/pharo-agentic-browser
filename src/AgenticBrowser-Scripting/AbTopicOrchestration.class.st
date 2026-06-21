@@ -63,10 +63,20 @@ AbTopicOrchestration >> topicManager [
 	^ AbTopicManager default
 ]
 
+{ #category : 'defaults' }
+AbTopicOrchestration >> defaultDirectoryNamePrefix [
+	^ 'orchestration-'
+]
+
+{ #category : 'defaults' }
+AbTopicOrchestration >> defaultSharedDirectoryPath [
+	^ (AbSettings defaultAgenticBrowserRootDirectory / (self defaultDirectoryNamePrefix , UUID new asString36)) fullName
+]
+
 { #category : 'accessing' }
 AbTopicOrchestration >> sharedDirectoryPath [
 	^ sharedDirectoryPath ifNil: [
-		sharedDirectoryPath := (AbSettings defaultAgenticBrowserRootDirectory / ('orchestration-' , UUID new asString36)) fullName ]
+		sharedDirectoryPath := self defaultSharedDirectoryPath ]
 ]
 
 { #category : 'accessing' }
