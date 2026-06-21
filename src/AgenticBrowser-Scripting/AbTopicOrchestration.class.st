@@ -14,6 +14,7 @@ AbTopicOrchestration class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
 ]
 
+
 { #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
