@@ -8,7 +8,7 @@ Class {
 { #category : 'running' }
 AbParallelStep >> run [
 	| topics semaphores incomingResult |
-	incomingResult := self previousResult.
+	incomingResult := self previousStepResult.
 	topics := self prepareTopicsForRun.
 	semaphores := self topicBuilders with: topics collect: [ :builder :topic |
 		| semaphore |

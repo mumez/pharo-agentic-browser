@@ -6,7 +6,8 @@ Class {
 		'topicBuilders',
 		'codingAgentBuilder',
 		'sharedDirectoryPath',
-		'previousResult'
+		'previousStepResult',
+		'stepResult'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -63,13 +64,23 @@ AbOrchestrationStep >> copiedCodingAgentBuilder [
 ]
 
 { #category : 'accessing' }
-AbOrchestrationStep >> previousResult [
-	^ previousResult
+AbOrchestrationStep >> previousStepResult [
+	^ previousStepResult
 ]
 
 { #category : 'accessing' }
-AbOrchestrationStep >> previousResult: aString [
-	previousResult := aString
+AbOrchestrationStep >> previousStepResult: aString [
+	previousStepResult := aString
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> stepResult [
+	^ stepResult
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> stepResult: aString [
+	stepResult := aString
 ]
 
 { #category : 'running' }
@@ -115,10 +126,10 @@ AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic
 
 { #category : 'private' }
 AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
-	| results |
-	results := aCollectionOfTopics collect: [ :topic | self resultFromTopic: topic ].
-	results := results reject: #isNil.
-	^ results ifEmpty: [ nil ] ifNotEmpty: [ results joinUsing: String crlf , String crlf ]
+	| topicResults |
+	topicResults := aCollectionOfTopics collect: [ :topic | self resultFromTopic: topic ].
+	topicResults := topicResults reject: #isNil.
+	^ topicResults ifEmpty: [ nil ] ifNotEmpty: [ topicResults joinUsing: String crlf , String crlf ]
 ]
 
 { #category : 'private' }

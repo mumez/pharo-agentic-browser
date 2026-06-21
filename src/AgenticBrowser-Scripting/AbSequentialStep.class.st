@@ -9,7 +9,7 @@ Class {
 { #category : 'running' }
 AbSequentialStep >> run [
 	| currentResult topics |
-	currentResult := self previousResult.
+	currentResult := self previousStepResult.
 	topics := self prepareTopicsForRun.
 	self topicBuilders with: topics do: [ :builder :topic |
 		| semaphore |

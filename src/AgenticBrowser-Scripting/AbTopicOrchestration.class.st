@@ -3,8 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'steps',
-		'sharedDirectoryPath',
-		'result'
+		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -42,20 +41,16 @@ AbTopicOrchestration >> run [
 	stepResult := nil.
 	self steps do: [ :step |
 		step sharedDirectoryPath: self sharedDirectoryPath.
-		step previousResult: stepResult.
-		stepResult := step run ].
-	self result: stepResult.
+		step previousStepResult: stepResult.
+		stepResult := step run.
+		step stepResult: stepResult ].
 	^ stepResult
 ]
 
 { #category : 'accessing' }
 AbTopicOrchestration >> result [
-	^ result
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> result: aString [
-	result := aString
+	^ (steps select: [ :each | each stepResult notNil ])
+		ifNotEmpty: [ :completed | completed last stepResult ]
 ]
 
 { #category : 'accessing' }
