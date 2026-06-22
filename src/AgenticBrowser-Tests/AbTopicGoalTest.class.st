@@ -61,7 +61,8 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileName [
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
-	self assert: (goal notificationPrompt includesSubstring: 'result-' , topic topicId , '.md')
+	self assert: (goal notificationPrompt includesSubstring: goal resultFileBasename).
+	self deny: (goal notificationPrompt includesSubstring: 'result-' , goal resultFileBasename)
 ]
 
 { #category : 'tests' }
@@ -94,7 +95,8 @@ AbTopicGoalTest >> testNotificationPromptContainsDescriptionAndFileNameWithComma
 	goal := AbTopicGoal on: topic.
 	goal description: 'all tests pass'.
 	self assert: (goal notificationPrompt includesSubstring: 'all tests pass').
-	self assert: (goal notificationPrompt includesSubstring: 'result-' , topic topicId , '.md')
+	self assert: (goal notificationPrompt includesSubstring: goal resultFileBasename).
+	self deny: (goal notificationPrompt includesSubstring: 'result-' , goal resultFileBasename)
 ]
 
 { #category : 'tests' }
