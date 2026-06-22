@@ -19,6 +19,11 @@ AbOrchestrationStep >> orchestration [
 ]
 
 { #category : 'accessing' }
+AbOrchestrationStep >> settings [
+	^ self orchestration settings
+]
+
+{ #category : 'accessing' }
 AbOrchestrationStep >> orchestration: anOrchestration [
 	orchestration := anOrchestration
 ]
@@ -97,6 +102,12 @@ AbOrchestrationStep >> prepareTopicsForRun [
 { #category : 'running' }
 AbOrchestrationStep >> run [
 	self subclassResponsibility
+]
+
+{ #category : 'error handling' }
+AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
+	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)
+		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
 ]
 
 { #category : 'private' }

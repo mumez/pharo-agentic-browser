@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'steps',
-		'sharedDirectoryPath'
+		'sharedDirectoryPath',
+		'settings'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -77,6 +78,16 @@ AbTopicOrchestration >> sharedDirectoryPath [
 { #category : 'accessing' }
 AbTopicOrchestration >> sharedDirectoryPath: aString [
 	sharedDirectoryPath := aString
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> settings [
+	^ settings ifNil: [ settings := AbSettings defaultCopied ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> settings: anAbSettings [
+	settings := anAbSettings
 ]
 
 { #category : 'accessing' }
