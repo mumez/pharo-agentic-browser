@@ -493,6 +493,8 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 	aStatus = #working
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
+	(self pendingApprovalMessage notNil and: [ aStatus ~= #waitingForHuman ])
+		ifTrue: [ self exitApprovalMode ].
 	self messagesPresenter refreshMessages
 ]
 
