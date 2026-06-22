@@ -42,12 +42,16 @@ AbTopicHandler >> logger [
 
 { #category : 'private' }
 AbTopicHandler >> permissionOptionAssociationFor: anACPPermissionOption [
+	"Build a label -> kind association for internal approval matching.
+	 Using 'kind' (not 'optionId') ensures internal symbols like #allow_once
+	 from aiPermissionTimeoutOption always match, even when the ACP optionId
+	 differs (e.g. Claude Code sends kind='allow_once', optionId='allow')."
 
-	| label optionId |
+	| label kind |
 	label := anACPPermissionOption name.
-	optionId := anACPPermissionOption optionId.
-	(label isNil or: [ optionId isNil ]) ifTrue: [ ^ nil ].
-	^ label asString -> optionId asSymbol
+	kind := anACPPermissionOption kind.
+	(label isNil or: [ kind isNil ]) ifTrue: [ ^ nil ].
+	^ label asString -> kind asSymbol
 ]
 
 { #category : 'private' }
@@ -102,8 +106,23 @@ AbTopicHandler >> requestPermission: anACPRequestPermission [
 	self logger debug: 'requestPermission: got approvalOption='
 		, approvalOptionId printString.
 	response := anACPRequestPermission makeResponse.
-	self applyApprovalOptionId: approvalOptionId toResponse: response.
+	self applyApprovalOptionId:
+		(self resolveAcpOptionId: approvalOptionId forRequest: anACPRequestPermission)
+		toResponse: response.
 	^ response
+]
+
+{ #category : 'private' }
+AbTopicHandler >> resolveAcpOptionId: aKindSymbol forRequest: anACPRequestPermission [
+	"Translate an ACP 'kind' symbol to the actual ACP optionId to send in the response.
+	 ACP kind (e.g. #allow_once) is the semantic identifier; optionId is just a unique
+	 string chosen by the server (e.g. 'allow'). We match by kind, then return optionId."
+
+	| rawOptions |
+	rawOptions := anACPRequestPermission options ifNil: [ ^ aKindSymbol asString ].
+	rawOptions do: [ :opt |
+		opt kind = aKindSymbol asString ifTrue: [ ^ opt optionId ] ].
+	^ aKindSymbol asString
 ]
 
 { #category : 'agent-callbacks' }

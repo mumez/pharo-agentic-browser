@@ -6,32 +6,29 @@ Class {
 }
 
 { #category : 'private' }
+AbTopicHandlerTest >> permissionOption: kind name: aName optionId: anOptionId [
+
+	^ Dictionary new
+		  at: 'kind' put: kind;
+		  at: 'name' put: aName;
+		  at: 'optionId' put: anOptionId;
+		  yourself
+]
+
+{ #category : 'private' }
 AbTopicHandlerTest >> samplePermissionRequest [
+	"Real Claude Code sends kind != optionId for allow_once: kind='allow_once', optionId='allow'."
 
 	| rawValues toolCall |
 	toolCall := Dictionary new
 		            at: 'title' put: 'run_package_test';
-		            at: 'rawInput' put: (Dictionary new
-				             at: 'package_name' put: 'MoneyCalc';
-				             yourself);
+		            at: 'rawInput' put: (Dictionary new at: 'package_name' put: 'MoneyCalc'; yourself);
 		            yourself.
 	rawValues := Dictionary new
 		             at: 'options' put: {
-				             (Dictionary new
-					              at: 'kind' put: 'allow_once';
-					              at: 'name' put: 'Allow once';
-					              at: 'optionId' put: 'allow_once';
-					              yourself).
-				             (Dictionary new
-					              at: 'kind' put: 'allow_always';
-					              at: 'name' put: 'Always allow';
-					              at: 'optionId' put: 'allow_always';
-					              yourself).
-				             (Dictionary new
-					              at: 'kind' put: 'reject_once';
-					              at: 'name' put: 'Deny';
-					              at: 'optionId' put: 'reject_once';
-					              yourself) };
+				             (self permissionOption: 'allow_once' name: 'Allow once' optionId: 'allow').
+				             (self permissionOption: 'allow_always' name: 'Always allow' optionId: 'allow_always').
+				             (self permissionOption: 'reject_once' name: 'Deny' optionId: 'reject_once') };
 		             at: 'sessionId' put: 'session-1';
 		             at: 'toolCall' put: toolCall;
 		             yourself.
@@ -75,7 +72,9 @@ AbTopicHandlerTest >> testApplyApprovalOptionIdRejectAlways [
 ]
 
 { #category : 'tests' }
-AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
+AbTopicHandlerTest >> testPermissionOptionsForUsesKindAsValue [
+	"Options use 'kind' as value so internal symbols (#allow_once etc.)
+	 match regardless of what ACP sends as optionId."
 
 	| options request |
 	request := self samplePermissionRequest.
@@ -87,6 +86,42 @@ AbTopicHandlerTest >> testPermissionOptionsForUsesOptionNameAndId [
 	self assert: options second value equals: AbConstants allowAlways.
 	self assert: options third key equals: 'Deny'.
 	self assert: options third value equals: AbConstants rejectOnce
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testResolveAcpOptionIdMapsAllowOnceToActualOptionId [
+	"#allow_once (kind) must resolve to 'allow' (the real ACP optionId).
+	 This is the core of the auto-approval bug: sending 'allow_once' instead
+	 of 'allow' caused Claude Code to reject the permission response."
+
+	| request result |
+	request := self samplePermissionRequest.
+	result := AbTopicHandler new
+		          resolveAcpOptionId: AbConstants allowOnce
+		          forRequest: request.
+	self assert: result equals: 'allow'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testResolveAcpOptionIdAllowAlways [
+
+	| request result |
+	request := self samplePermissionRequest.
+	result := AbTopicHandler new
+		          resolveAcpOptionId: AbConstants allowAlways
+		          forRequest: request.
+	self assert: result equals: 'allow_always'
+]
+
+{ #category : 'tests' }
+AbTopicHandlerTest >> testResolveAcpOptionIdFallsBackForUnknownSymbol [
+
+	| request result |
+	request := self samplePermissionRequest.
+	result := AbTopicHandler new
+		          resolveAcpOptionId: #disconnected
+		          forRequest: request.
+	self assert: result equals: 'disconnected'
 ]
 
 { #category : 'tests' }
