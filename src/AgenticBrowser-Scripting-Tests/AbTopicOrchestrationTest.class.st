@@ -787,6 +787,44 @@ AbTopicOrchestrationTest >> testParallelStepAppliesPlanModeOnConnect [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepRunRaisesTimeoutWhenTopicNeverCompletes [
+	| orchestration raisedException |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-never-seq' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	raisedException := nil.
+	[
+		[ orchestration run ]
+			on: AbOrchestrationStepTimeout
+			do: [ :e | raisedException := e ]
+	] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: raisedException notNil.
+	self assert: (raisedException step isKindOf: AbSequentialStep)
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testParallelStepRunRaisesTimeoutWhenTopicNeverCompletes [
+	| orchestration raisedException |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder para: {
+				builder topicBy: [ :t | t title: 'ab-test-never-para' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	raisedException := nil.
+	[
+		[ orchestration run ]
+			on: AbOrchestrationStepTimeout
+			do: [ :e | raisedException := e ]
+	] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: raisedException notNil.
+	self assert: (raisedException step isKindOf: AbParallelStep)
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
 	| template copy |
 	template := AbCodingAgentBuilder new.

@@ -16,7 +16,7 @@ AbSequentialStep >> run [
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		self runTopic: topic topicBuilder: builder agentBuilder: self activeCodingAgentBuilder resultInjecting: currentResult.
-		semaphore wait.
+		self waitWithTimeoutOn: semaphore.
 		currentResult := self resultFromTopic: topic ].
 	^ currentResult
 ]

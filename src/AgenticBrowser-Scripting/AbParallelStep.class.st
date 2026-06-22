@@ -16,6 +16,6 @@ AbParallelStep >> run [
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		[ self runTopic: topic topicBuilder: builder agentBuilder: self copiedCodingAgentBuilder resultInjecting: incomingResult ] fork.
 		semaphore ].
-	semaphores do: [ :sem | sem wait ].
+	semaphores do: [ :sem | self waitWithTimeoutOn: sem ].
 	^ self combinedResultsFrom: topics
 ]
