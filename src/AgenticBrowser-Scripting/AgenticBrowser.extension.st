@@ -42,6 +42,23 @@ AgenticBrowser class >> exampleSequentialTopics [
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
+AgenticBrowser class >> exampleParallelTopics [
+	<script>
+	| orchestrationScript |
+	orchestrationScript := self scriptBy: [ :builder |
+		builder para: {
+			builder topicBy: [ :t |
+				t title: 'List Pharo features'.
+				t prompt: 'List 3 Pharo Smalltalk language features in one sentence each. Reply with only the list.' ].
+			builder topicBy: [ :t |
+				t title: 'List Pharo tools'.
+				t prompt: 'List 3 Pharo Smalltalk development tools in one sentence each. Reply with only the list.' ]
+		} agentBy: [ :a | a claude ] ].
+	[orchestrationScript run.
+	{orchestrationScript. orchestrationScript result} inspect] fork.
+]
+
+{ #category : '*AgenticBrowser-Scripting-examples-scripting' }
 AgenticBrowser class >> exampleGoalDrivenTopic [
 	<script>
 	| orchestrationScript |

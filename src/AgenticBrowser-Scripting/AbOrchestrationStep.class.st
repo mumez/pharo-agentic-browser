@@ -137,10 +137,13 @@ AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic
 
 { #category : 'private' }
 AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
-	| topicResults |
-	topicResults := aCollectionOfTopics collect: [ :topic | self resultFromTopic: topic ].
-	topicResults := topicResults reject: #isNil.
-	^ topicResults ifEmpty: [ nil ] ifNotEmpty: [ topicResults joinUsing: String crlf , String crlf ]
+	| sections |
+	sections := (aCollectionOfTopics collect: [ :topic |
+		(self resultFromTopic: topic) ifNotNil: [ :result |
+			String streamContents: [ :strm |
+				strm << '=== ' << topic title << ' ==='; crlf.
+				strm << result ] ] ]) reject: #isNil.
+	^ sections ifNotEmpty: [ sections joinUsing: String crlf , String crlf ]
 ]
 
 { #category : 'private' }
