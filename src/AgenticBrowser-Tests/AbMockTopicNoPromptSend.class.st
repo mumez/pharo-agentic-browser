@@ -14,7 +14,8 @@ AbMockTopicNoPromptSend >> initialize [
 	super initialize.
 	self session client
 		on: #promptBy:
-		respond: (ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary)
+		verify: [ :paramsBlock |
+			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ]
 ]
 
 { #category : 'accessing' }
@@ -28,4 +29,10 @@ AbMockTopicNoPromptSend >> sendPrompt: aString withResources: aCollection [
 
 	sendBlock ifNotNil: [ sendBlock value: aString value: aCollection ].
 	super sendPrompt: aString withResources: aCollection
+]
+
+{ #category : 'private' }
+AbMockTopicNoPromptSend >> trySendPrompt: aString withResources: aCollection [
+	self checkGoalAchievement ifFalse: [
+		self stateMachine handleEvent: #turnEnded ]
 ]

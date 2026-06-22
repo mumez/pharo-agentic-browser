@@ -376,3 +376,12 @@ AbSettings >> watcherMessageThrottleDuration [
 
 	^ self watcherMessageThrottleSeconds seconds
 ]
+
+{ #category : 'accessing-convenient' }
+AbSettings >> agentArgumentsPresets [
+	| dict |
+	dict := Dictionary new.
+	self codingAgents do: [ :each |
+		dict at: (each at: 'name') put: (each at: 'command') asArray ].
+	^ dict
+]

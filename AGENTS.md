@@ -36,6 +36,33 @@ A Pharo-native UI for managing multiple AI coding agent sessions (Claude Code, G
 
 This is a **pure Pharo Smalltalk** project (no npm/pip/Makefile/Docker). The entire lifecycle — dependency loading, compilation, testing, and running — happens inside a **Pharo VM/image** managed by [smalltalkCI](https://github.com/hpi-swa/smalltalkCI).
 
+## General Rules
+
+- Act based on facts. If you're unsure, verify the information.
+state your assumptions. ask when unsure. never guess.
+
+- Simplicity first
+write the minimum code that solves the problem.
+no abstractions nobody asked for.
+
+- Surgical changes
+don't touch code unrelated to the request.
+every changed line must trace back to what was asked.
+
+- Goal-driven execution
+turn vague instructions into verifiable success criteria
+before writing a single line.
+
+## Implementation Rules
+
+- When editing `.st` files, actively consult the `smalltalk-developer` skill.
+  - In particular, the style guide section is important.
+- When debugging Smalltalk code, consult the `smalltalk-debugger` skill.
+  - In particular, focus on the troubleshooting and UI debugging sections.
+- Always write documentation in English.
+- Follow TDD.
+- Do not make grand, too-deep plans. Just proceed step by step with user feedback.
+
 ### Running tests
 
 ```bash
