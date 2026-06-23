@@ -169,3 +169,9 @@ AbTopicOrchestration >> steps: aCollection [
 AbTopicOrchestration >> logger [
 	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
+
+{ #category : 'inspecting' }
+AbTopicOrchestration >> explore [
+	{ #orchestration -> self. #steps -> self steps. #result -> self result }
+		asDictionary inspect
+]
