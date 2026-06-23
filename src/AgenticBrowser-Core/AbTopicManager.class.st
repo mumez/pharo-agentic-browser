@@ -141,7 +141,7 @@ AbTopicManager >> saveTo: aFileReference [
 AbTopicManager >> addTopic: anAbTopic [
 
 	topics at: anAbTopic topicId put: anAbTopic.
-	self announcer announce: (AbTopicAdded new topic: anAbTopic; yourself)
+	self announcer announce: (AbTopicAdded topic: anAbTopic)
 ]
 
 { #category : 'accessing' }
@@ -174,7 +174,7 @@ AbTopicManager >> removeTopic: anAbTopic [
 	| removedTopic |
 	self teardownTopic: anAbTopic.
 	removedTopic := topics removeKey: anAbTopic topicId ifAbsent: [ ^ self ].
-	self announcer announce: (AbTopicRemoved new topic: removedTopic; yourself)
+	self announcer announce: (AbTopicRemoved topic: removedTopic)
 ]
 
 { #category : 'operations' }

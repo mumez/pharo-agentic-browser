@@ -8,6 +8,14 @@ Class {
 	#package : 'AgenticBrowser-Core'
 }
 
+{ #category : 'instance creation' }
+AbTopicRemoved class >> topic: anAbTopic [
+
+	^ self new
+		  topic: anAbTopic;
+		  yourself
+]
+
 { #category : 'accessing' }
 AbTopicRemoved >> topic [
 	^ topic

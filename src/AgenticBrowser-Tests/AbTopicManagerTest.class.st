@@ -32,6 +32,26 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testAbTopicAddedClassTopicConstructor [
+
+	| topic announcement |
+	topic := self newTopic: 'Test topic'.
+	announcement := AbTopicAdded topic: topic.
+	self assert: announcement class equals: AbTopicAdded.
+	self assert: announcement topic == topic
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testAbTopicRemovedClassTopicConstructor [
+
+	| topic announcement |
+	topic := self newTopic: 'Test topic'.
+	announcement := AbTopicRemoved topic: topic.
+	self assert: announcement class equals: AbTopicRemoved.
+	self assert: announcement topic == topic
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 
 	| manager topic |
