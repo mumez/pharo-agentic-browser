@@ -23,6 +23,7 @@ Internal Representation:
 - topicList - The SpListPresenter showing topics with icons.
 - sortMode - Symbol (#title or #lastUpdated) controlling current sort order.
 - onTopicSelectedBlock - Optional callback block; receives the selected AbTopic.
+- topicManager - The AbTopicManager to use; defaults lazily to AbTopicManager default.
 "
 Class {
 	#name : 'AbTopicListPresenter',
@@ -32,7 +33,8 @@ Class {
 		'sortDropList',
 		'newTopicButton',
 		'onTopicSelectedBlock',
-		'sortMode'
+		'sortMode',
+		'topicManager'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -189,7 +191,7 @@ AbTopicListPresenter >> onCopyTopicRequest [
 	selectedTopic := self topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	newTopic := selectedTopic copyForNewSession.
-	AbTopicManager default addTopic: newTopic.
+	self topicManager addTopic: newTopic.
 	self defer: [ self refresh. self topicList selectItem: newTopic ]
 ]
 
@@ -203,7 +205,7 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		 confirm: 'Delete topic "' , selectedTopic title , '"?'
 		 label: 'Confirm Delete')
 		ifTrue: [
-			AbTopicManager default removeTopic: selectedTopic.
+			self topicManager removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
 ]
 
@@ -223,7 +225,7 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog := AbNewTopicDialog new.
 	dialog openModal.
 	dialog topic ifNotNil: [ :topic |
-		AbTopicManager default addTopic: topic.
+		self topicManager addTopic: topic.
 		self defer: [ self refresh. self topicList selectItem: topic ] ]
 ]
 
@@ -331,7 +333,7 @@ AbTopicListPresenter >> onTopicSelected: aBlock [
 AbTopicListPresenter >> refresh [
 
 	| items |
-	items := AbTopicManager default topics asArray.
+	items := self topicManager topics asArray.
 	self topicList items: (self sortedTopics: items)
 ]
 
@@ -351,6 +353,18 @@ AbTopicListPresenter >> sortMode [
 AbTopicListPresenter >> sortMode: aSymbol [
 
 	sortMode := aSymbol
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicManager [
+
+	^ topicManager ifNil: [ topicManager := self topicManager ]
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicManager: anAbTopicManager [
+
+	topicManager := anAbTopicManager
 ]
 
 { #category : 'private' }
@@ -383,12 +397,12 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
-	AbTopicManager default topicsDo: [ :t |
+	self topicManager topicsDo: [ :t |
 		t announcer
 			when: AbTopicStatusChanged
 			do: [ self defer: [ self refresh ] ]
 			for: self ].
-	AbTopicManager default announcer
+	self topicManager announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			ann topic announcer
@@ -425,7 +439,7 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> unsubscribeFromTopicManager [
 
-	AbTopicManager default topicsDo: [ :t |
+	self topicManager topicsDo: [ :t |
 		t announcer unsubscribe: self ].
-	AbTopicManager default announcer unsubscribe: self
+	self topicManager announcer unsubscribe: self
 ]
