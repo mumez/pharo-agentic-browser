@@ -19,6 +19,11 @@ AbOrchestrationStep >> orchestration [
 ]
 
 { #category : 'accessing' }
+AbOrchestrationStep >> logger [
+	^ self orchestration logger
+]
+
+{ #category : 'accessing' }
 AbOrchestrationStep >> settings [
 	^ self orchestration settings
 ]

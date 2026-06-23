@@ -6,7 +6,8 @@ Class {
 		'name',
 		'steps',
 		'sharedDirectoryPath',
-		'settings'
+		'settings',
+		'logger'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -15,6 +16,11 @@ Class {
 { #category : 'building' }
 AbTopicOrchestration class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
+]
+
+{ #category : 'fuel' }
+AbTopicOrchestration class >> fuelIgnoredInstanceVariableNames [
+	^ #( 'logger' )
 ]
 
 { #category : 'persistence' }
@@ -46,6 +52,7 @@ AbTopicOrchestration >> initialize [
 { #category : 'running' }
 AbTopicOrchestration >> run [
 	| stepResult |
+	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
 	stepResult := nil.
 	self steps do: [ :step |
 		step sharedDirectoryPath: self sharedDirectoryPath.
@@ -53,6 +60,7 @@ AbTopicOrchestration >> run [
 		stepResult := step run.
 		step stepResult: stepResult ].
 	self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
+	self logger debug: 'Orchestration run: end name=' , self name.
 	^ stepResult
 ]
 
@@ -155,4 +163,9 @@ AbTopicOrchestration >> steps [
 { #category : 'accessing' }
 AbTopicOrchestration >> steps: aCollection [
 	steps := aCollection
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]

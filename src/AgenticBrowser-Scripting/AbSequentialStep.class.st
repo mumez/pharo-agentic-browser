@@ -9,14 +9,18 @@ Class {
 { #category : 'running' }
 AbSequentialStep >> run [
 	| currentResult topics |
+	self logger debug: 'SequentialStep run: start topics=' , self topicBuilders size printString.
 	currentResult := self previousStepResult.
 	topics := self prepareTopicsForRun.
 	self topicBuilders with: topics do: [ :builder :topic |
 		| semaphore |
+		self logger debug: 'SequentialStep run: topic start title=' , topic title.
 		semaphore := Semaphore new.
 		self subscribeCompletionSemaphore: semaphore forTopic: topic.
 		self runTopic: topic topicBuilder: builder agentBuilder: self activeCodingAgentBuilder resultInjecting: currentResult.
 		self waitWithTimeoutOn: semaphore.
-		currentResult := self resultFromTopic: topic ].
+		currentResult := self resultFromTopic: topic.
+		self logger debug: 'SequentialStep run: topic end title=' , topic title ].
+	self logger debug: 'SequentialStep run: end'.
 	^ currentResult
 ]
