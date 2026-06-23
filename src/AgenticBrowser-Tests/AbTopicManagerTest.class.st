@@ -32,6 +32,26 @@ AbTopicManagerTest >> testAddTopicAnnouncesAbTopicAdded [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testAbTopicAddedClassTopicConstructor [
+
+	| topic announcement |
+	topic := self newTopic: 'Test topic'.
+	announcement := AbTopicAdded topic: topic.
+	self assert: announcement class equals: AbTopicAdded.
+	self assert: announcement topic == topic
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testAbTopicRemovedClassTopicConstructor [
+
+	| topic announcement |
+	topic := self newTopic: 'Test topic'.
+	announcement := AbTopicRemoved topic: topic.
+	self assert: announcement class equals: AbTopicRemoved.
+	self assert: announcement topic == topic
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testAtReturnsTopicByTopicId [
 
 	| manager topic |
@@ -159,6 +179,26 @@ AbTopicManagerTest >> testRemoveTopic [
 	manager addTopic: topic.
 	manager removeTopic: topic.
 	self deny: (manager topics includes: topic)
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicAnnouncesAbTopicRemoved [
+
+	| manager topic removedAnnouncementClass received |
+	manager := AbTopicManager forTest.
+	topic := self newTopic: 'Test topic'.
+	manager addTopic: topic.
+	removedAnnouncementClass := Smalltalk at: #AbTopicRemoved ifAbsent: [ nil ].
+	self assert: removedAnnouncementClass notNil.
+	received := nil.
+	manager announcer
+		when: removedAnnouncementClass
+		do: [ :ann | received := ann topic ]
+		for: self.
+	[
+	manager removeTopic: topic.
+	self assert: received == topic ]
+		ensure: [ manager announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }

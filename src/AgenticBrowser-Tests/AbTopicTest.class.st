@@ -957,24 +957,6 @@ AbTopicTest >> testCopyForNewSessionCopiesSettings [
 		equals: topic settings aiPermissionWaitTimeoutSeconds
 ]
 
-{ #category : 'tests' }
-AbTopicTest >> testCopyForNewSessionCopiesNameWhenSet [
-
-	| topic copy |
-	topic := AbTopic new.
-	topic name: 'my-topic'.
-	copy := topic copyForNewSession.
-	self assert: copy name equals: 'my-topic-copy'
-]
-
-{ #category : 'tests' }
-AbTopicTest >> testCopyForNewSessionLeavesNameNilWhenNotSet [
-
-	| topic copy |
-	topic := AbTopic new.
-	copy := topic copyForNewSession.
-	self assert: copy name isNil
-]
 
 { #category : 'tests' }
 AbTopicTest >> testCopyForNewSessionClearsSessionState [

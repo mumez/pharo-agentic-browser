@@ -10,7 +10,7 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 - Default port: `8080`
 - No authentication required (LAN single-user).
 
-On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
+On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
 
 **Client registration requirements (send immediately after connect):**
 - `{ "type": "register", "address": "serverEventPushed" }` — required to receive all server-initiated push events (`messageAdded`, `statusChanged`, etc.)
@@ -184,6 +184,8 @@ Deletes a topic. Fails if the topic is currently working.
 ```
 
 **Reply body:** `{ "ok": true }`
+
+A `topicRemoved` push event is broadcast to all connected clients automatically. No `topicsUpdated` publish is sent.
 
 ---
 
@@ -409,7 +411,7 @@ Push events arrive in two ways depending on the event type:
 
 | Delivery | Message type | Events |
 |----------|-------------|--------|
-| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded` |
+| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`, `topicRemoved` |
 | `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
 
 For `send`-type events, the `body` always contains an `event` field. All `send`-type events are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them.
@@ -481,6 +483,15 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
 }
 ```
 
+### `topicRemoved` — a topic was deleted
+
+```json
+{
+  "event": "topicRemoved",
+  "topicId": "abc123"
+}
+```
+
 ---
 
 ## Pub/Sub: `register` / `unregister`
@@ -489,7 +500,7 @@ Ripple supports a pub/sub subscription model in addition to the direct-push mode
 
 ### `"topicsUpdated"` — topic list has changed
 
-Sent by the server after any operation that modifies the topic list: `setTitle`, `delete`, `setAgent`, `setGoal`. (`create` and `copy` are covered by `topicAdded` which carries the full topic data.)
+Sent by the server after any operation that modifies topic metadata without adding or removing a topic: `setTitle`, `setAgent`, `setGoal`. (`create` and `copy` are covered by `topicAdded`; `delete` is covered by `topicRemoved`.)
 
 **Subscribe (send immediately after connect):**
 ```json
@@ -709,6 +720,6 @@ Errors on `request` messages include a `correlationId` matching the original req
 
 Multiple browser tabs may connect simultaneously. Each gets its own `AbTopicManagerRipple` instance. All `send`-type events for all topics are broadcast to every connected tab that has registered for `"serverEventPushed"` — no `select` call is needed to receive live pushes. No exclusive locking is enforced.
 
-**Topic list synchronization across tabs:** Each tab should send `{ "type": "register", "address": "topicsUpdated" }` on connect. When any tab creates, renames, deletes, or reconfigures a topic, the server publishes `topicsUpdated` to all subscribed tabs. Tabs whose `requesterId` does not match their own token should re-fetch `/topics/list` to refresh their view.
+**Topic list synchronization across tabs:** Each tab should send `{ "type": "register", "address": "topicsUpdated" }` on connect. When any tab creates or copies a topic, all tabs receive a `topicAdded` push; when any tab deletes a topic, all tabs receive a `topicRemoved` push. When any tab renames or reconfigures a topic (`setTitle`, `setAgent`, `setGoal`), the server publishes `topicsUpdated` to all subscribed tabs. Tabs whose `requesterId` does not match their own token should re-fetch `/topics/list` to refresh their view.
 
 A tab that was inactive (e.g. backgrounded) may have missed pushes; after `statusChanged` with `status: "endTurn"` it can call `/messages/getAll` to reload the full conversation for any topic.

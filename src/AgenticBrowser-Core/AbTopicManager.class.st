@@ -5,19 +5,21 @@ Responsibility:
 - I maintain the collection of active topics keyed by their topicId.
 - I persist topics to and load them from a Fuel binary file (ab-topics.fuel).
 - I announce AbTopicAdded when a topic is registered.
+- I announce AbTopicRemoved when a topic is removed.
 - I clean up (stop watching, disconnect) topics on removal or image re-initialization.
 - I provide topic lookup by topicId, working directory path, and name.
 
 Collaborators:
 - AbTopic: I own and lifecycle-manage all topic instances.
 - AbTopicAdded: I announce it when a new topic is added.
+- AbTopicRemoved: I announce it when a topic is removed.
 - FLSerializer / FLMaterializer: I use the Fuel framework for binary serialization.
 
 Public API and Key Messages:
 - AbTopicManager class>>#default - Access the global singleton.
 - AbTopicManager class>>load / #save - Load from / save to ab-topics.fuel.
 - #addTopic: - Register a topic and announce AbTopicAdded.
-- #removeTopic: - Teardown and deregister a topic.
+- #removeTopic: - Teardown, deregister, and announce AbTopicRemoved.
 - #topics - All registered topics as an Array.
 - #topicNamed: - Look up the first topic by name (lexicographic topicId order).
 - #topicForWorkingDirectoryPath: - Look up a topic by its working directory path.
@@ -139,7 +141,7 @@ AbTopicManager >> saveTo: aFileReference [
 AbTopicManager >> addTopic: anAbTopic [
 
 	topics at: anAbTopic topicId put: anAbTopic.
-	self announcer announce: (AbTopicAdded new topic: anAbTopic; yourself)
+	self announcer announce: (AbTopicAdded topic: anAbTopic)
 ]
 
 { #category : 'accessing' }
@@ -169,8 +171,10 @@ AbTopicManager >> initialize [
 { #category : 'operations' }
 AbTopicManager >> removeTopic: anAbTopic [
 
+	| removedTopic |
 	self teardownTopic: anAbTopic.
-	topics removeKey: anAbTopic topicId ifAbsent: []
+	removedTopic := topics removeKey: anAbTopic topicId ifAbsent: [ ^ self ].
+	self announcer announce: (AbTopicRemoved topic: removedTopic)
 ]
 
 { #category : 'operations' }

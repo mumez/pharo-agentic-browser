@@ -1,5 +1,5 @@
 Class {
-	#name : 'AbTopicAdded',
+	#name : 'AbTopicRemoved',
 	#superclass : 'Announcement',
 	#instVars : [
 		'topic'
@@ -9,7 +9,7 @@ Class {
 }
 
 { #category : 'instance creation' }
-AbTopicAdded class >> topic: anAbTopic [
+AbTopicRemoved class >> topic: anAbTopic [
 
 	^ self new
 		  topic: anAbTopic;
@@ -17,11 +17,11 @@ AbTopicAdded class >> topic: anAbTopic [
 ]
 
 { #category : 'accessing' }
-AbTopicAdded >> topic [
+AbTopicRemoved >> topic [
 	^ topic
 ]
 
 { #category : 'accessing' }
-AbTopicAdded >> topic: anAbTopic [
+AbTopicRemoved >> topic: anAbTopic [
 	topic := anAbTopic
 ]

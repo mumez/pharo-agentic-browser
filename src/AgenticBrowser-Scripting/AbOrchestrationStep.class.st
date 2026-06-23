@@ -19,6 +19,11 @@ AbOrchestrationStep >> orchestration [
 ]
 
 { #category : 'accessing' }
+AbOrchestrationStep >> logger [
+	^ self orchestration logger
+]
+
+{ #category : 'accessing' }
 AbOrchestrationStep >> settings [
 	^ self orchestration settings
 ]
@@ -36,6 +41,11 @@ AbOrchestrationStep >> topicBuilders [
 { #category : 'accessing' }
 AbOrchestrationStep >> topicBuilders: aCollection [
 	topicBuilders := aCollection
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> topics [
+	^ self topicBuilders collect: [ :each | each topic ]
 ]
 
 { #category : 'accessing' }
@@ -137,10 +147,16 @@ AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic
 
 { #category : 'private' }
 AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
-	| topicResults |
-	topicResults := aCollectionOfTopics collect: [ :topic | self resultFromTopic: topic ].
-	topicResults := topicResults reject: #isNil.
-	^ topicResults ifEmpty: [ nil ] ifNotEmpty: [ topicResults joinUsing: String crlf , String crlf ]
+	| titleResultPairs |
+	titleResultPairs := (aCollectionOfTopics
+		collect: [ :topic | { topic title. self resultFromTopic: topic } ])
+		select: [ :pair | pair last notNil ].
+	^ String streamContents: [ :strm |
+		titleResultPairs
+			do: [ :pair |
+				strm << '=== ' << pair first << ' ==='; crlf.
+				strm << pair second ]
+			separatedBy: [ strm crlf; crlf ] ]
 ]
 
 { #category : 'private' }

@@ -34,7 +34,7 @@ Internal Representation:
 Implementation Points:
 - Approval waits are blocking (poll loop on agent thread); the UI thread is never blocked.
 - announcer, logger, workingDirectory, and relatedPackagesWatcher are excluded from Fuel serialization and recreated lazily after load.
-- topic name (short identifier) is separate from title (display label); name supports programmatic lookup via AbTopicManager>>topicsNamed:.
+- topic name is an alias for title; programmatic lookup via AbTopicManager>>topicsNamed: matches against the title.
 "
 Class {
 	#name : 'AbTopic',
@@ -54,8 +54,7 @@ Class {
 		'logger',
 		'topicGoal',
 		'session',
-		'settings',
-		'name'
+		'settings'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -236,7 +235,6 @@ AbTopic >> copyForNewSession [
 	| copy |
 	copy := self class new.
 	copy title: '(Copy) ' , self title.
-	self name ifNotNil: [ :n | copy name: n , '-copy' ].
 	copy agentArguments: self agentArguments copy.
 	copy workingDirectoryPath: self workingDirectoryPath.
 	copy packagePrefixes: self packagePrefixes copy.
@@ -452,12 +450,12 @@ AbTopic >> messages [
 
 { #category : 'accessing' }
 AbTopic >> name [
-	^ name
+	^ self title
 ]
 
 { #category : 'accessing' }
 AbTopic >> name: aString [
-	name := aString
+	self title: aString
 ]
 
 { #category : 'accessing' }

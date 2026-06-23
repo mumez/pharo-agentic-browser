@@ -5,11 +5,11 @@ Responsibility:
 - I display all registered AbTopics as a sorted list with status icons and agent-name labels.
 - I support two sort modes: alphabetical by title and descending by last-updated timestamp.
 - I provide a context menu with operations: Rename, Delete, Inspect, Change Agent, Set Goal, Set Working Directory, Clear Session ID, Set Target Packages, Apply Updated External Packages, and Edit Settings.
-- I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and new topic additions.
+- I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and topic add/remove events.
 - I fire a user-supplied block when a topic is selected, allowing AbBrowserPresenter to update AbChatPresenter.
 
 Collaborators:
-- AbTopicManager: I query it for the full topic list and subscribe to AbTopicAdded announcements.
+- AbTopicManager: I query it for the full topic list and subscribe to AbTopicAdded/AbTopicRemoved announcements.
 - AbTopic: I subscribe to AbTopicStatusChanged on each topic to trigger list refresh.
 - AbSettingsPresenter: I open it via #openOnTopic: for per-topic settings editing.
 - AbNewTopicDialog / AbSetAgentDialog / AbPackagePrefixesDialog: I open these dialogs for the relevant context-menu actions.
@@ -23,6 +23,7 @@ Internal Representation:
 - topicList - The SpListPresenter showing topics with icons.
 - sortMode - Symbol (#title or #lastUpdated) controlling current sort order.
 - onTopicSelectedBlock - Optional callback block; receives the selected AbTopic.
+- topicManager - The AbTopicManager to use; defaults lazily to AbTopicManager default.
 "
 Class {
 	#name : 'AbTopicListPresenter',
@@ -32,7 +33,8 @@ Class {
 		'sortDropList',
 		'newTopicButton',
 		'onTopicSelectedBlock',
-		'sortMode'
+		'sortMode',
+		'topicManager'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -189,7 +191,7 @@ AbTopicListPresenter >> onCopyTopicRequest [
 	selectedTopic := self topicList selectedItem.
 	selectedTopic ifNil: [ ^ self ].
 	newTopic := selectedTopic copyForNewSession.
-	AbTopicManager default addTopic: newTopic.
+	self topicManager addTopic: newTopic.
 	self defer: [ self refresh. self topicList selectItem: newTopic ]
 ]
 
@@ -203,7 +205,7 @@ AbTopicListPresenter >> onDeleteTopicRequest [
 		 confirm: 'Delete topic "' , selectedTopic title , '"?'
 		 label: 'Confirm Delete')
 		ifTrue: [
-			AbTopicManager default removeTopic: selectedTopic.
+			self topicManager removeTopic: selectedTopic.
 			self defer: [ self refresh ] ]
 ]
 
@@ -223,7 +225,7 @@ AbTopicListPresenter >> onNewTopicRequest [
 	dialog := AbNewTopicDialog new.
 	dialog openModal.
 	dialog topic ifNotNil: [ :topic |
-		AbTopicManager default addTopic: topic.
+		self topicManager addTopic: topic.
 		self defer: [ self refresh. self topicList selectItem: topic ] ]
 ]
 
@@ -331,7 +333,7 @@ AbTopicListPresenter >> onTopicSelected: aBlock [
 AbTopicListPresenter >> refresh [
 
 	| items |
-	items := AbTopicManager default topics asArray.
+	items := self topicManager topics asArray.
 	self topicList items: (self sortedTopics: items)
 ]
 
@@ -351,6 +353,18 @@ AbTopicListPresenter >> sortMode [
 AbTopicListPresenter >> sortMode: aSymbol [
 
 	sortMode := aSymbol
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicManager [
+
+	^ topicManager ifNil: [ topicManager := AbTopicManager default ]
+]
+
+{ #category : 'accessing' }
+AbTopicListPresenter >> topicManager: anAbTopicManager [
+
+	topicManager := anAbTopicManager
 ]
 
 { #category : 'private' }
@@ -383,18 +397,24 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
-	AbTopicManager default topicsDo: [ :t |
+	self topicManager topicsDo: [ :t |
 		t announcer
 			when: AbTopicStatusChanged
 			do: [ self defer: [ self refresh ] ]
 			for: self ].
-	AbTopicManager default announcer
+	self topicManager announcer
 		when: AbTopicAdded
 		do: [ :ann |
 			ann topic announcer
 				when: AbTopicStatusChanged
 				do: [ self defer: [ self refresh ] ]
 				for: self ]
+		for: self.
+	self topicManager announcer
+		when: AbTopicRemoved
+		do: [ :ann |
+			ann topic announcer unsubscribe: self.
+			self defer: [ self refresh ] ]
 		for: self
 ]
 
@@ -425,7 +445,7 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> unsubscribeFromTopicManager [
 
-	AbTopicManager default topicsDo: [ :t |
+	self topicManager topicsDo: [ :t |
 		t announcer unsubscribe: self ].
-	AbTopicManager default announcer unsubscribe: self
+	self topicManager announcer unsubscribe: self
 ]

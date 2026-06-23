@@ -2,9 +2,12 @@ Class {
 	#name : 'AbTopicOrchestration',
 	#superclass : 'Object',
 	#instVars : [
+		'id',
+		'name',
 		'steps',
 		'sharedDirectoryPath',
-		'settings'
+		'settings',
+		'logger'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -13,6 +16,21 @@ Class {
 { #category : 'building' }
 AbTopicOrchestration class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
+]
+
+{ #category : 'fuel' }
+AbTopicOrchestration class >> fuelIgnoredInstanceVariableNames [
+	^ #( 'logger' )
+]
+
+{ #category : 'persistence' }
+AbTopicOrchestration class >> loadFrom: aFileReference [
+
+	| loaded |
+	loaded := FLMaterializer materializeFromFileNamed: aFileReference fullName.
+	loaded class == self ifFalse: [
+		self error: 'Deserialized object is not a ' , self name ].
+	^ loaded
 ]
 
 
@@ -39,13 +57,33 @@ AbTopicOrchestration >> initialize [
 { #category : 'running' }
 AbTopicOrchestration >> run [
 	| stepResult |
+	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
 	stepResult := nil.
 	self steps do: [ :step |
 		step sharedDirectoryPath: self sharedDirectoryPath.
 		step previousStepResult: stepResult.
 		stepResult := step run.
 		step stepResult: stepResult ].
+	self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
+	self logger debug: 'Orchestration run: end name=' , self name.
 	^ stepResult
+]
+
+{ #category : 'persistence' }
+AbTopicOrchestration >> save [
+	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
+]
+
+{ #category : 'persistence' }
+AbTopicOrchestration >> saveTo: aFileReference [
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: aFileReference fullName
+]
+
+{ #category : 'running' }
+AbTopicOrchestration >> removeTopicsFromManager [
+	self steps do: [ :step |
+		step topics do: [ :topic | self topicManager removeTopic: topic ] ]
 ]
 
 { #category : 'accessing' }
@@ -59,14 +97,31 @@ AbTopicOrchestration >> topicManager [
 	^ AbTopicManager default
 ]
 
+{ #category : 'accessing' }
+AbTopicOrchestration >> safeName [
+
+	| safe |
+	safe := self name collect: [ :c |
+		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
+			    ifTrue: [ c ]
+			    ifFalse: [ $- ] ].
+	safe ifEmpty: [ safe := 'orchestration' ].
+	^ safe
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> shortReferenceName [
+	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
+]
+
 { #category : 'defaults' }
-AbTopicOrchestration >> defaultDirectoryNamePrefix [
-	^ 'orchestration-'
+AbTopicOrchestration >> directoryName [
+	^ self shortReferenceName
 ]
 
 { #category : 'defaults' }
 AbTopicOrchestration >> defaultSharedDirectoryPath [
-	^ (AbSettings defaultAgenticBrowserRootDirectory / (self defaultDirectoryNamePrefix , UUID new asString36)) fullName
+	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
 ]
 
 { #category : 'accessing' }
@@ -91,6 +146,21 @@ AbTopicOrchestration >> settings: anAbSettings [
 ]
 
 { #category : 'accessing' }
+AbTopicOrchestration >> id [
+	^ id ifNil: [ id := UUID new asString36 ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name [
+	^ name ifNil: [ name := 'orchestration' ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name: aString [
+	name := aString
+]
+
+{ #category : 'accessing' }
 AbTopicOrchestration >> steps [
 	^ steps
 ]
@@ -98,4 +168,15 @@ AbTopicOrchestration >> steps [
 { #category : 'accessing' }
 AbTopicOrchestration >> steps: aCollection [
 	steps := aCollection
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
+{ #category : 'inspecting' }
+AbTopicOrchestration >> explore [
+	{ #orchestration -> self. #steps -> self steps. #result -> self result }
+		asDictionary inspect
 ]
