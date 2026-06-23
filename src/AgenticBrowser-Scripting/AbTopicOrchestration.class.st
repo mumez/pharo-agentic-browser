@@ -25,7 +25,12 @@ AbTopicOrchestration class >> fuelIgnoredInstanceVariableNames [
 
 { #category : 'persistence' }
 AbTopicOrchestration class >> loadFrom: aFileReference [
-	^ FLMaterializer materializeFromFileNamed: aFileReference fullName
+
+	| loaded |
+	loaded := FLMaterializer materializeFromFileNamed: aFileReference fullName.
+	loaded class == self ifFalse: [
+		self error: 'Deserialized object is not a ' , self name ].
+	^ loaded
 ]
 
 
