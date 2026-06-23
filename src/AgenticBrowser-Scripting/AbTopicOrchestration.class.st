@@ -57,6 +57,11 @@ AbTopicOrchestration >> run [
 ]
 
 { #category : 'persistence' }
+AbTopicOrchestration >> save [
+	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
+]
+
+{ #category : 'persistence' }
 AbTopicOrchestration >> saveTo: aFileReference [
 	aFileReference parent ensureCreateDirectory.
 	FLSerializer serialize: self toFileNamed: aFileReference fullName
@@ -91,9 +96,14 @@ AbTopicOrchestration >> safeName [
 	^ safe
 ]
 
+{ #category : 'accessing' }
+AbTopicOrchestration >> shortReferenceName [
+	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
+]
+
 { #category : 'defaults' }
 AbTopicOrchestration >> directoryName [
-	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
+	^ self shortReferenceName
 ]
 
 { #category : 'defaults' }
