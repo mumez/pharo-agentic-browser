@@ -39,6 +39,11 @@ AbOrchestrationStep >> topicBuilders: aCollection [
 ]
 
 { #category : 'accessing' }
+AbOrchestrationStep >> topics [
+	^ self topicBuilders collect: [ :each | each topic ]
+]
+
+{ #category : 'accessing' }
 AbOrchestrationStep >> codingAgentBuilder [
 	^ codingAgentBuilder
 ]

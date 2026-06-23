@@ -17,6 +17,11 @@ AbTopicOrchestration class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
 ]
 
+{ #category : 'persistence' }
+AbTopicOrchestration class >> loadFrom: aFileReference [
+	^ FLMaterializer materializeFromFileNamed: aFileReference fullName
+]
+
 
 { #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
@@ -47,7 +52,20 @@ AbTopicOrchestration >> run [
 		step previousStepResult: stepResult.
 		stepResult := step run.
 		step stepResult: stepResult ].
+	self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
 	^ stepResult
+]
+
+{ #category : 'persistence' }
+AbTopicOrchestration >> saveTo: aFileReference [
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: aFileReference fullName
+]
+
+{ #category : 'running' }
+AbTopicOrchestration >> removeTopicsFromManager [
+	self steps do: [ :step |
+		step topics do: [ :topic | self topicManager removeTopic: topic ] ]
 ]
 
 { #category : 'accessing' }

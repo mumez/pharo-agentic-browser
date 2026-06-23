@@ -843,11 +843,12 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 	| orchestration topic modeSet |
 	modeSet := false.
 
-	orchestration := AbMockTopicOrchestration new
-		buildBy: [ :builder |
-			builder seq: {
-				builder topicBy: [ :t | t title: 'ab-test-T1' ]
-			} agentBy: [ :a | a claude; planMode ] ].
+	orchestration := AbMockTopicOrchestration new.
+	orchestration settings lingerOrchestrationTopicsAfterRun: true.
+	orchestration buildBy: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t | t title: 'ab-test-T1' ]
+		} agentBy: [ :a | a claude; planMode ] ].
 
 	AbTopicManager forTest announcer
 		when: AbTopicAdded

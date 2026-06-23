@@ -17,3 +17,21 @@ AbSettings >> defaultOrchestrationStepWaitTimeoutSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultOrchestrationStepWaitTimeoutSeconds ].
 	^ 900
 ]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AbSettings >> lingerOrchestrationTopicsAfterRun [
+	^ self
+		at: #lingerOrchestrationTopicsAfterRun
+		ifAbsent: [ self defaultLingerOrchestrationTopicsAfterRun ]
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AbSettings >> lingerOrchestrationTopicsAfterRun: aBoolean [
+	self at: #lingerOrchestrationTopicsAfterRun put: aBoolean
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AbSettings >> defaultLingerOrchestrationTopicsAfterRun [
+	self isDefault ifFalse: [ ^ self class default defaultLingerOrchestrationTopicsAfterRun ].
+	^ false
+]
