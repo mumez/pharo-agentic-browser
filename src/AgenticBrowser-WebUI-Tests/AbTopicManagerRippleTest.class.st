@@ -482,6 +482,23 @@ AbTopicManagerRippleTest >> testTopicAddedIsPushedToClient [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testTopicRemovedIsPushedWhenTopicRemovedFromManager [
+
+	| topic pushes |
+	topic := self newTopic: 'Removed externally'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	AbTopicManager forTest removeTopic: topic.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'topicRemoved' ] ].
+	self assert: pushes size equals: 1.
+	self
+		assert: ((pushes first at: 'body') at: 'topicId')
+		equals: topic topicId
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testRoomName [
 
 	self assert: AbTopicManagerRipple roomName equals: 'agentic-browser'
@@ -740,6 +757,25 @@ AbTopicManagerRippleTest >> testDeleteTopicPublishesTopicsUpdated [
 		             (m at: 'type') = 'publish'
 		             and: [ (m at: 'address') = #topicsUpdated ] ].
 	self assert: publishes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testDeleteTopicPushesTopicRemovedEvent [
+
+	| topic msg pushes |
+	topic := self newTopic: 'To Delete'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	msg := self requestMessage: '/topic/delete'
+		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
+	ripple handleRequest: msg.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'topicRemoved' ] ].
+	self assert: pushes size equals: 1.
+	self
+		assert: ((pushes first at: 'body') at: 'topicId')
+		equals: topic topicId
 ]
 
 { #category : 'tests' }

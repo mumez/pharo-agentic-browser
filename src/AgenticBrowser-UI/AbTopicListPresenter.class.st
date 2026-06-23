@@ -5,11 +5,11 @@ Responsibility:
 - I display all registered AbTopics as a sorted list with status icons and agent-name labels.
 - I support two sort modes: alphabetical by title and descending by last-updated timestamp.
 - I provide a context menu with operations: Rename, Delete, Inspect, Change Agent, Set Goal, Set Working Directory, Clear Session ID, Set Target Packages, Apply Updated External Packages, and Edit Settings.
-- I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and new topic additions.
+- I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and topic add/remove events.
 - I fire a user-supplied block when a topic is selected, allowing AbBrowserPresenter to update AbChatPresenter.
 
 Collaborators:
-- AbTopicManager: I query it for the full topic list and subscribe to AbTopicAdded announcements.
+- AbTopicManager: I query it for the full topic list and subscribe to AbTopicAdded/AbTopicRemoved announcements.
 - AbTopic: I subscribe to AbTopicStatusChanged on each topic to trigger list refresh.
 - AbSettingsPresenter: I open it via #openOnTopic: for per-topic settings editing.
 - AbNewTopicDialog / AbSetAgentDialog / AbPackagePrefixesDialog: I open these dialogs for the relevant context-menu actions.
@@ -409,6 +409,12 @@ AbTopicListPresenter >> subscribeToTopicManager [
 				when: AbTopicStatusChanged
 				do: [ self defer: [ self refresh ] ]
 				for: self ]
+		for: self.
+	self topicManager announcer
+		when: AbTopicRemoved
+		do: [ :ann |
+			ann topic announcer unsubscribe: self.
+			self defer: [ self refresh ] ]
 		for: self
 ]
 

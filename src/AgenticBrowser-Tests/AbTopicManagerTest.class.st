@@ -162,6 +162,26 @@ AbTopicManagerTest >> testRemoveTopic [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testRemoveTopicAnnouncesAbTopicRemoved [
+
+	| manager topic removedAnnouncementClass received |
+	manager := AbTopicManager forTest.
+	topic := self newTopic: 'Test topic'.
+	manager addTopic: topic.
+	removedAnnouncementClass := Smalltalk at: #AbTopicRemoved ifAbsent: [ nil ].
+	self assert: removedAnnouncementClass notNil.
+	received := nil.
+	manager announcer
+		when: removedAnnouncementClass
+		do: [ :ann | received := ann topic ]
+		for: self.
+	[
+	manager removeTopic: topic.
+	self assert: received == topic ]
+		ensure: [ manager announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testRemoveTopicStopsrelatedPackagesWatcher [
 
 	| manager topic |

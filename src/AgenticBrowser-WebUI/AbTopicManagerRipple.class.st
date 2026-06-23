@@ -8,7 +8,7 @@ Responsibility:
 - I push real-time topic events (messageAdded, statusChanged, etc.) to the client via server-send.
 - I subscribe to ALL events for ALL topics at connect time and when new topics are added.
   All connected clients receive messageAdded, statusChanged, modelChanged, modeChanged,
-  commandsChanged, and topicAdded for every topic (broadcast model).
+  commandsChanged, topicAdded, and topicRemoved for every topic (broadcast model).
 
 Public API and Key Messages:
 - AbTopicManagerRipple class>>roomName - 'agentic-browser' room identifier
@@ -69,6 +69,10 @@ AbTopicManagerRipple >> subscribeToTopicManager [
 	self topicManager announcer
 		when: AbTopicAdded
 		do: [ :ann | self onTopicAdded: ann topic ]
+		for: self.
+	self topicManager announcer
+		when: AbTopicRemoved
+		do: [ :ann | self onTopicRemoved: ann topic ]
 		for: self.
 	self topicManager topics do: [ :each | self subscribeToTopic: each ]
 ]
@@ -553,6 +557,16 @@ AbTopicManagerRipple >> onTopicAdded: aTopic [
 	self pushToClient: (Dictionary new
 		 at: 'event' put: 'topicAdded';
 		 at: 'topic' put: (self topicJson: aTopic);
+		 yourself)
+]
+
+{ #category : 'topic events' }
+AbTopicManagerRipple >> onTopicRemoved: aTopic [
+
+	aTopic announcer unsubscribe: self.
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'topicRemoved';
+		 at: 'topicId' put: aTopic topicId;
 		 yourself)
 ]
 
