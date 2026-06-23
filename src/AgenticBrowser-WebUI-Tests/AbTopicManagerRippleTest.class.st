@@ -744,22 +744,6 @@ AbTopicManagerRippleTest >> testSetTitlePublishesTopicsUpdated [
 ]
 
 { #category : 'tests' }
-AbTopicManagerRippleTest >> testDeleteTopicPublishesTopicsUpdated [
-
-	| topic msg publishes |
-	topic := self newTopic: 'To Delete'.
-	AbTopicManager forTest addTopic: topic.
-	mockSocket reset.
-	msg := self requestMessage: '/topic/delete'
-		       body: (Dictionary new at: 'topicId' put: topic topicId; yourself).
-	ripple handleRequest: msg.
-	publishes := mockSocket sentMessages select: [ :m |
-		             (m at: 'type') = 'publish'
-		             and: [ (m at: 'address') = #topicsUpdated ] ].
-	self assert: publishes size equals: 1
-]
-
-{ #category : 'tests' }
 AbTopicManagerRippleTest >> testDeleteTopicPushesTopicRemovedEvent [
 
 	| topic msg pushes |

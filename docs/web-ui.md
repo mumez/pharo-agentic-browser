@@ -94,7 +94,7 @@ Once an agent connects, dropdowns for model and mode appear in the toolbar. Sele
 
 ### Multi-tab behavior
 
-All tabs receive push events for all topics. If one tab creates, renames, or deletes a topic, other tabs receive a `topicsUpdated` publish and re-fetch the topic list. Tabs that were inactive (backgrounded) can call `/messages/getAll` after `statusChanged: endTurn` to catch up.
+All tabs receive push events for all topics. If one tab creates or copies a topic, other tabs receive a `topicAdded` push; if one tab deletes a topic, other tabs receive a `topicRemoved` push. If one tab renames or reconfigures a topic, other tabs receive a `topicsUpdated` publish and re-fetch the topic list. Tabs that were inactive (backgrounded) can call `/messages/getAll` after `statusChanged: endTurn` to catch up.
 
 There is no exclusive locking — two tabs can send prompts to the same topic. This is intentional for the single-user scenario.
 

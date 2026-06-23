@@ -293,8 +293,7 @@ AbTopicManagerRipple >> handleDeleteTopic: aMessage [
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic isWorking ifTrue: [ self topicBusyError: topicId ].
 	self topicManager removeTopic: topic.
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
-	self publishTopicsUpdated
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
 ]
 
 { #category : 'request handling' }
