@@ -358,7 +358,7 @@ AbTopicListPresenter >> sortMode: aSymbol [
 { #category : 'accessing' }
 AbTopicListPresenter >> topicManager [
 
-	^ topicManager ifNil: [ topicManager := self topicManager ]
+	^ topicManager ifNil: [ topicManager := AbTopicManager default ]
 ]
 
 { #category : 'accessing' }
