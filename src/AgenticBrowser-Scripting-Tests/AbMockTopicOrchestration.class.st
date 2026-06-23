@@ -10,9 +10,9 @@ AbMockTopicOrchestration >> orchestrationBuilderClass [
 	^ AbMockTopicOrchestrationBuilder
 ]
 
-{ #category : 'defaults' }
-AbMockTopicOrchestration >> defaultDirectoryNamePrefix [
-	^ 'ab-test-orchestration-'
+{ #category : 'accessing' }
+AbMockTopicOrchestration >> name [
+	^ 'ab-test-orchestration'
 ]
 
 { #category : 'accessing' }

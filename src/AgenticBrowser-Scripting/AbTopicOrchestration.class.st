@@ -2,6 +2,8 @@ Class {
 	#name : 'AbTopicOrchestration',
 	#superclass : 'Object',
 	#instVars : [
+		'id',
+		'name',
 		'steps',
 		'sharedDirectoryPath',
 		'settings'
@@ -59,14 +61,26 @@ AbTopicOrchestration >> topicManager [
 	^ AbTopicManager default
 ]
 
+{ #category : 'accessing' }
+AbTopicOrchestration >> safeName [
+
+	| safe |
+	safe := self name collect: [ :c |
+		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
+			    ifTrue: [ c ]
+			    ifFalse: [ $- ] ].
+	safe ifEmpty: [ safe := 'orchestration' ].
+	^ safe
+]
+
 { #category : 'defaults' }
-AbTopicOrchestration >> defaultDirectoryNamePrefix [
-	^ 'orchestration-'
+AbTopicOrchestration >> directoryName [
+	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
 ]
 
 { #category : 'defaults' }
 AbTopicOrchestration >> defaultSharedDirectoryPath [
-	^ (AbSettings defaultAgenticBrowserRootDirectory / (self defaultDirectoryNamePrefix , UUID new asString36)) fullName
+	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
 ]
 
 { #category : 'accessing' }
@@ -88,6 +102,21 @@ AbTopicOrchestration >> settings [
 { #category : 'accessing' }
 AbTopicOrchestration >> settings: anAbSettings [
 	settings := anAbSettings
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> id [
+	^ id ifNil: [ id := UUID new asString36 ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name [
+	^ name ifNil: [ name := 'orchestration' ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name: aString [
+	name := aString
 ]
 
 { #category : 'accessing' }
