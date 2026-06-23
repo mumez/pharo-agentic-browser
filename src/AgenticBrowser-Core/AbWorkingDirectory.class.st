@@ -93,7 +93,9 @@ AbWorkingDirectory >> endImportFromSource [
 { #category : 'operations' }
 AbWorkingDirectory >> ensureExists [
 
-	self path ensureCreateDirectory
+	[ self path ensureCreateDirectory ]
+		on: DirectoryExists
+		do: [ :e | "another thread already created it — this is fine" ]
 ]
 
 { #category : 'exporting' }
