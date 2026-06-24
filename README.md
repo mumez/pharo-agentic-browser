@@ -47,6 +47,7 @@ The core workflow:
 - **Multiple package prefixes** — track multiple package families (e.g. `#('ACP-*' 'BaselineOfACP')`) per topic
 - **Image change watching** — `AbTopicRelatedPackagesWatcher` monitors image changes, inserts system messages into chat, and asks for confirmation before synching packages
 - **Web UI** — browser-based interface via WebSocket ([docs/web-ui.md](docs/web-ui.md))
+- **Scripting API** — headless DSL for coordinating multiple topics from code; supports sequential and parallel steps with automatic result injection ([docs/scripting.md](docs/scripting.md))
 
 ## Requirements
 
@@ -88,6 +89,19 @@ Metacello new
 ```
 
 For client setup and full usage, see [docs/web-ui.md](docs/web-ui.md).
+
+### Scripting (optional)
+
+Load the Scripting package to create and coordinate multiple topics from code, with no UI:
+
+```smalltalk
+Metacello new
+    baseline: 'AgenticBrowser';
+    repository: 'github://mumez/pharo-agentic-browser:main/src';
+    load: 'Scripting'.
+```
+
+For the full DSL reference and examples, see [docs/scripting.md](docs/scripting.md).
 
 ## Usage
 
@@ -230,6 +244,8 @@ AbSettings save.
 | `AgenticBrowser-Tests` | SUnit tests for Core |
 | `AgenticBrowser-WebUI` | Ripple WebSocket server: `AbTopicManagerRipple` |
 | `AgenticBrowser-WebUI-Tests` | SUnit tests for WebUI |
+| `AgenticBrowser-Scripting` | Scripting DSL: `AbTopicOrchestration`, `AbTopicOrchestrationBuilder`, `AbTopicBuilder`, `AbCodingAgentBuilder`, `AbSequentialStep`, `AbParallelStep` |
+| `AgenticBrowser-Scripting-Tests` | SUnit tests for Scripting |
 | `BaselineOfAgenticBrowser` | Metacello baseline |
 
 ## Architecture

@@ -1,3 +1,9 @@
+"
+I am the abstract base for DSL element builders (AbTopicBuilder, AbCodingAgentBuilder).
+
+I hold a reference to the parent builder and a collection of deferred actions that are executed
+once the ACP session for a topic is established via #finalizeOnSessionEstablished:.
+"
 Class {
 	#name : 'AbElementBuilder',
 	#superclass : 'Object',

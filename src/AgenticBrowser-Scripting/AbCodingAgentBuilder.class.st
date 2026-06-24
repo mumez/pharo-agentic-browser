@@ -1,3 +1,26 @@
+"
+I configure which AI coding agent and mode to use for an orchestration step.
+
+I am built via an #agentBy: block in the DSL. Shortcut messages (#claude, #codex, #gemini, etc.)
+set the agent command arguments from AbSettings presets. Optional messages (#planMode, #model:)
+add further configuration that is applied once the ACP session is established.
+
+Responsibility:
+- Hold the agent command arguments (looked up from AbSettings presets by name)
+- Optionally hold a mode (e.g. #plan) and a model name override
+- Apply mode and model to a topic once its ACP session is established
+
+Collaborators:
+- AbTopicOrchestrationBuilder: creates me via #agentBy:
+- AbOrchestrationStep: calls #copyForRun (for parallel steps) and #finalizeOnSessionEstablished:
+- AbSettings: provides agent argument presets by agent name
+- AbTopic: receives agent arguments, mode config, and model config
+
+Public API and Key Messages:
+- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro - select a preset agent
+- #planMode - start the agent in plan mode (where supported)
+- #model: aString - override the model name passed to the agent
+"
 Class {
 	#name : 'AbCodingAgentBuilder',
 	#superclass : 'AbElementBuilder',
