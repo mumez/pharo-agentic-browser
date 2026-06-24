@@ -73,9 +73,8 @@ AbTopicOrchestration class >> loadFrom: aFileReference [
 { #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
-	builder := self orchestrationBuilderClass new.
+	builder := self orchestrationBuilderClass on: self.
 	aBlock value: builder.
-	self steps: builder steps.
 	self steps do: [ :step | step orchestration: self ]
 ]
 

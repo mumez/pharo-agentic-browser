@@ -1,22 +1,29 @@
 "
 I am the DSL builder used inside an AbTopicOrchestration #buildBy: block.
 
-I accumulate AbSequentialStep and AbParallelStep instances as the user calls #seq:agentBy: and
+I hold a reference to the AbTopicOrchestration being configured, so DSL calls for name,
+sharedDirectoryPath, and settings delegate directly to that instance. I also accumulate
+AbSequentialStep and AbParallelStep instances as the user calls #seq:agentBy: and
 #para:agentBy:. When the block completes, AbTopicOrchestration reads my #steps collection.
 
 Responsibility:
+- Hold a reference to the AbTopicOrchestration under construction
+- Provide the #name:, #sharedDirectoryPath:, #settings: DSL entry points
 - Provide the #seq:agentBy: and #para:agentBy: DSL entry points
 - Create AbTopicBuilder instances via #topicBy:
 - Create AbCodingAgentBuilder instances via #agentBy:
 - Collect steps in order for the orchestration
 
 Collaborators:
-- AbTopicOrchestration: reads my #steps after the build block completes
+- AbTopicOrchestration: holds me and reads my #steps after the build block completes
 - AbSequentialStep / AbParallelStep: instantiated and added to steps
 - AbTopicBuilder: created per #topicBy: call
 - AbCodingAgentBuilder: created per #agentBy: call
 
 Public API and Key Messages:
+- #name: aString - set the orchestration name
+- #sharedDirectoryPath: aString - set the shared working directory
+- #settings: anAbSettings - set the orchestration settings
 - #seq: topics agentBy: agentBlock - add a sequential step
 - #para: topics agentBy: agentBlock - add a parallel step
 - #topicBy: aBlock - create a topic builder for use inside step arrays
@@ -25,16 +32,42 @@ Class {
 	#name : 'AbTopicOrchestrationBuilder',
 	#superclass : 'Object',
 	#instVars : [
-		'steps'
+		'orchestration'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
 
-{ #category : 'initialization' }
-AbTopicOrchestrationBuilder >> initialize [
-	super initialize.
-	steps := OrderedCollection new.
+{ #category : 'instance creation' }
+AbTopicOrchestrationBuilder class >> on: anOrchestration [
+	^ self new
+		orchestration: anOrchestration;
+		yourself
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> orchestration [
+	^ orchestration
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> orchestration: anOrchestration [
+	orchestration := anOrchestration
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> name: aString [
+	orchestration name: aString
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> sharedDirectoryPath: aString [
+	orchestration sharedDirectoryPath: aString
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> settings: anAbSettings [
+	orchestration settings: anAbSettings
 ]
 
 { #category : 'building' }
@@ -65,7 +98,7 @@ AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: aBlock 
 
 { #category : 'accessing' }
 AbTopicOrchestrationBuilder >> steps [
-	^ steps
+	^ orchestration steps
 ]
 
 { #category : 'factory' }

@@ -6,6 +6,32 @@ Class {
 }
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testOrchestrationBuilderSetsNameViaDSL [
+	| orchestration |
+	orchestration := AbTopicOrchestration buildBy: [ :builder |
+		builder name: 'my-orchestration' ].
+	self assert: orchestration name equals: 'my-orchestration'
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testOrchestrationBuilderSetsSharedDirectoryPathViaDSL [
+	| orchestration |
+	orchestration := AbTopicOrchestration buildBy: [ :builder |
+		builder sharedDirectoryPath: '/tmp/test-orchestration' ].
+	self assert: orchestration sharedDirectoryPath equals: '/tmp/test-orchestration'
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testOrchestrationBuilderSetsSettingsViaDSL [
+	| orchestration settings |
+	settings := AbSettings defaultCopied.
+	settings lingerOrchestrationTopicsAfterRun: true.
+	orchestration := AbTopicOrchestration buildBy: [ :builder |
+		builder settings: settings ].
+	self assert: orchestration settings lingerOrchestrationTopicsAfterRun
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 	| orchestration steps step1 step2 |
 	orchestration := AbTopicOrchestration buildBy: [ :builder |
