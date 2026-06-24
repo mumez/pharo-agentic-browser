@@ -199,11 +199,6 @@ AbTopicOrchestration >> steps [
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestration >> steps: aCollection [
-	steps := aCollection
-]
-
-{ #category : 'accessing' }
 AbTopicOrchestration >> logger [
 	^ logger ifNil: [ logger := AbLocalLogger new ]
 ]
