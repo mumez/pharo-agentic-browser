@@ -1,5 +1,32 @@
 # AGENTS.md
 
+## General Rules
+
+- Act based on facts. If you're unsure, verify the information.
+state your assumptions. ask when unsure. never guess.
+
+- Simplicity first
+write the minimum code that solves the problem.
+no abstractions nobody asked for.
+
+- Surgical changes
+don't touch code unrelated to the request.
+every changed line must trace back to what was asked.
+
+- Goal-driven execution
+turn vague instructions into verifiable success criteria
+before writing a single line.
+
+## Implementation Rules
+
+- When editing `.st` files, actively consult the `smalltalk-developer` skill.
+  - In particular, the style guide section is important.
+- When debugging Smalltalk code, consult the `smalltalk-debugger` skill.
+  - In particular, focus on the troubleshooting and UI debugging sections.
+- Always write documentation in English.
+- Follow TDD.
+- Do not make grand, too-deep plans. Just proceed step by step with user feedback.
+
 ## Project Overview
 
 A Pharo-native UI for managing multiple AI coding agent sessions (Claude Code, Gemini CLI, OpenCode, etc.) in parallel. Each session is a **topic** with its own chat, working directory, and state machine.
@@ -36,39 +63,14 @@ A Pharo-native UI for managing multiple AI coding agent sessions (Claude Code, G
 
 This is a **pure Pharo Smalltalk** project (no npm/pip/Makefile/Docker). The entire lifecycle — dependency loading, compilation, testing, and running — happens inside a **Pharo VM/image** managed by [smalltalkCI](https://github.com/hpi-swa/smalltalkCI).
 
-## General Rules
-
-- Act based on facts. If you're unsure, verify the information.
-state your assumptions. ask when unsure. never guess.
-
-- Simplicity first
-write the minimum code that solves the problem.
-no abstractions nobody asked for.
-
-- Surgical changes
-don't touch code unrelated to the request.
-every changed line must trace back to what was asked.
-
-- Goal-driven execution
-turn vague instructions into verifiable success criteria
-before writing a single line.
-
-## Implementation Rules
-
-- When editing `.st` files, actively consult the `smalltalk-developer` skill.
-  - In particular, the style guide section is important.
-- When debugging Smalltalk code, consult the `smalltalk-debugger` skill.
-  - In particular, focus on the troubleshooting and UI debugging sections.
-- Always write documentation in English.
-- Follow TDD.
-- Do not make grand, too-deep plans. Just proceed step by step with user feedback.
-
 ### Running tests
 
 ```bash
 export PATH="/opt/smalltalkCI/bin:$PATH"
 cd /workspace && smalltalkci -s Pharo64-13 .smalltalk.ston
 ```
+
+NOTE: For local development, `st-import` and `st-test` skills are preferable. Testing by smalltalkCI is an option for Cursor Cloud environment.
 
 This downloads/caches a Pharo 13 image + VM, loads the project and all Metacello dependencies from GitHub, and runs the full SUnit test suite (137 tests). The first run takes ~20s; subsequent cached runs are faster.
 
