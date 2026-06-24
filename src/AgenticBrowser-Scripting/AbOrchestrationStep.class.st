@@ -1,3 +1,36 @@
+"
+I am the abstract base class for a single step in an AbTopicOrchestration.
+
+A step owns a collection of AbTopicBuilder instances and one AbCodingAgentBuilder. Concrete subclasses
+(AbSequentialStep, AbParallelStep) implement #run and decide whether topics execute one at a time or
+concurrently.
+
+I handle the common concerns: preparing topics, subscribing to completion events, waiting with timeout,
+extracting results, and injecting the previous step's result into each topic's initial prompt.
+
+Responsibility:
+- Prepare and register topics with AbTopicManager
+- Subscribe to AbTopicStatusChanged to detect completion (#endTurn or #goalAchieved)
+- Wait for each topic to complete; raise AbOrchestrationStepTimeout on timeout
+- Extract results from completed topics (goal result file or last AI message)
+- Inject the previous step's result into topic prompts under a delimiter header
+- Combine parallel results into a single string for the next step
+
+Collaborators:
+- AbTopicOrchestration: provides logger, settings, topicManager, and sharedDirectoryPath
+- AbTopicBuilder: builds and configures each topic
+- AbCodingAgentBuilder: configures agent arguments and mode on each topic
+- AbOrchestrationStepTimeout: raised when a topic exceeds the step wait timeout
+- AbTopic: the domain object being run and observed
+
+Internal Representation:
+- orchestration - parent AbTopicOrchestration
+- topicBuilders - collection of AbTopicBuilder
+- codingAgentBuilder - AbCodingAgentBuilder for this step
+- sharedDirectoryPath - working directory (set by orchestration before run)
+- previousStepResult - result string injected from the prior step
+- stepResult - result string produced by this step
+"
 Class {
 	#name : 'AbOrchestrationStep',
 	#superclass : 'Object',

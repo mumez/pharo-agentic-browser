@@ -1,3 +1,10 @@
+"
+I execute my topics one after another, passing each topic's result to the next.
+
+I am a concrete AbOrchestrationStep. For each topic I wait until it completes (#endTurn or
+#goalAchieved), extract the result, and inject it into the following topic's prompt via the
+'=== Previous Topic Result ===' header.
+"
 Class {
 	#name : 'AbSequentialStep',
 	#superclass : 'AbOrchestrationStep',

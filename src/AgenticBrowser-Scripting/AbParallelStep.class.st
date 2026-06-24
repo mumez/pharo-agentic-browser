@@ -1,3 +1,9 @@
+"
+I execute all my topics concurrently, then wait for all to finish before returning.
+
+I am a concrete AbOrchestrationStep. I fork each topic run, wait on individual semaphores, then
+combine all results into a single string that is injected into the first topic of the next step.
+"
 Class {
 	#name : 'AbParallelStep',
 	#superclass : 'AbOrchestrationStep',

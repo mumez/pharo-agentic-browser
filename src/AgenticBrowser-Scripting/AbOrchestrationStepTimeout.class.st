@@ -1,3 +1,8 @@
+"
+I signal that a topic in an orchestration step did not complete within the allowed timeout.
+
+I carry the offending AbOrchestrationStep so callers can identify which step timed out.
+"
 Class {
 	#name : 'AbOrchestrationStepTimeout',
 	#superclass : 'Error',

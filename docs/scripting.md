@@ -181,16 +181,16 @@ When a goal is set, the topic runs until the agent writes a `result-<topicId>.md
 ```smalltalk
 AgenticBrowser runBy: [ :builder |
     builder seq: {
-        builder topicBy: [ :t | t title: 'Create plan for feature XXX' ].
-        builder topicBy: [ :t | t title: 'Create spec for feature XXX' ]
+        builder topicBy: [ :t | t prompt: 'Create a detailed plan for feature XXX.' ].
+        builder topicBy: [ :t | t prompt: 'Create a specification for feature XXX based on the plan above.' ]
     } agentBy: [ :a | a claude; planMode ].
     builder para: {
-        builder topicBy: [ :t | t title: 'Implement feature XXX' ].
-        builder topicBy: [ :t | t title: 'Write tests for feature XXX'. t goal: 'all tests pass' ]
+        builder topicBy: [ :t | t prompt: 'Implement feature XXX according to the spec above.' ].
+        builder topicBy: [ :t | t prompt: 'Write tests for feature XXX.'; goal: 'all tests pass' ]
     } agentBy: [ :a | a codex ].
     builder seq: {
-        builder topicBy: [ :t | t title: 'Review implementation of XXX' ].
-        builder topicBy: [ :t | t title: 'Create PR for XXX' ]
+        builder topicBy: [ :t | t prompt: 'Review the implementation of feature XXX.' ].
+        builder topicBy: [ :t | t prompt: 'Create a pull request for feature XXX.' ]
     } agentBy: [ :a | a opencode ] ].
 ```
 
