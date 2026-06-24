@@ -100,7 +100,7 @@ AbOrchestrationStep >> codingAgentBuilder: anCodingAgentBuilder [
 
 { #category : 'accessing' }
 AbOrchestrationStep >> sharedDirectoryPath [
-	^ sharedDirectoryPath
+	^ sharedDirectoryPath ifNil: [ sharedDirectoryPath := self orchestration sharedDirectoryPath ]
 ]
 
 { #category : 'accessing' }

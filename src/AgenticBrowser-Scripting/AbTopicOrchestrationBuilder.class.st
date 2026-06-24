@@ -81,19 +81,35 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
-	self steps add: ((AbSequentialStep on: self orchestration)
-		topicBuilders: aCollectionOfTopicBuilders;
-		codingAgentBuilder: (self agentBy: aBlock);
-		yourself)
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock [
+	self seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: [ :step | ]
 ]
 
 { #category : 'building' }
-AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: aBlock [
-	self steps add: ((AbParallelStep on: self orchestration)
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
+	| step |
+	step := (AbSequentialStep on: self orchestration)
 		topicBuilders: aCollectionOfTopicBuilders;
-		codingAgentBuilder: (self agentBy: aBlock);
-		yourself)
+		codingAgentBuilder: (self agentBy: agentBuilderBlock);
+		yourself.
+	stepBuilderBlock value: step.
+	self steps add: step
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: agentBuilderBlock [
+	self para: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: [ :step | ]
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
+	| step |
+	step := (AbParallelStep on: self orchestration)
+		topicBuilders: aCollectionOfTopicBuilders;
+		codingAgentBuilder: (self agentBy: agentBuilderBlock);
+		yourself.
+	stepBuilderBlock value: step.
+	self steps add: step
 ]
 
 { #category : 'accessing' }

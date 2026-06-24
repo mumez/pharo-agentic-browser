@@ -32,6 +32,24 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderSetsSettingsViaDSL [
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testStepBySharedDirectoryPathOverridesOrchestrationPath [
+	| orchestration seqStep paraStep defaultStep |
+	orchestration := AbTopicOrchestration buildBy: [ :builder |
+		builder sharedDirectoryPath: '/tmp/orchestration-path'.
+		builder seq: { builder topic } agentBy: [ :a | a codex ] stepBy: [ :s |
+			s sharedDirectoryPath: '/tmp/custom-seq' ].
+		builder para: { builder topic } agentBy: [ :a | a codex ] stepBy: [ :s |
+			s sharedDirectoryPath: '/tmp/custom-para' ].
+		builder seq: { builder topic } agentBy: [ :a | a codex ] ].
+	seqStep := orchestration steps first.
+	paraStep := orchestration steps second.
+	defaultStep := orchestration steps third.
+	self assert: seqStep sharedDirectoryPath equals: '/tmp/custom-seq'.
+	self assert: paraStep sharedDirectoryPath equals: '/tmp/custom-para'.
+	self assert: defaultStep sharedDirectoryPath equals: '/tmp/orchestration-path'
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testOrchestrationBuilderCreatesSteps [
 	| orchestration steps step1 step2 |
 	orchestration := AbTopicOrchestration buildBy: [ :builder |
