@@ -24,10 +24,10 @@ Collaborators:
 - AbTopic: the domain object being run and observed
 
 Internal Representation:
-- orchestration - parent AbTopicOrchestration
+- orchestration - parent AbTopicOrchestration (set at construction via #on:)
 - topicBuilders - collection of AbTopicBuilder
 - codingAgentBuilder - AbCodingAgentBuilder for this step
-- sharedDirectoryPath - working directory (set by orchestration before run)
+- sharedDirectoryPath - per-step working directory override; lazily falls back to orchestration sharedDirectoryPath when nil
 - previousStepResult - result string injected from the prior step
 - stepResult - result string produced by this step
 "
@@ -45,6 +45,13 @@ Class {
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
+
+{ #category : 'instance creation' }
+AbOrchestrationStep class >> on: anOrchestration [
+	^ self new
+		orchestration: anOrchestration;
+		yourself
+]
 
 { #category : 'accessing' }
 AbOrchestrationStep >> orchestration [
@@ -93,7 +100,7 @@ AbOrchestrationStep >> codingAgentBuilder: anCodingAgentBuilder [
 
 { #category : 'accessing' }
 AbOrchestrationStep >> sharedDirectoryPath [
-	^ sharedDirectoryPath
+	^ sharedDirectoryPath ifNil: [ sharedDirectoryPath := self orchestration sharedDirectoryPath ]
 ]
 
 { #category : 'accessing' }

@@ -73,10 +73,8 @@ AbTopicOrchestration class >> loadFrom: aFileReference [
 { #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
-	builder := self orchestrationBuilderClass new.
+	builder := self orchestrationBuilderClass on: self.
 	aBlock value: builder.
-	self steps: builder steps.
-	self steps do: [ :step | step orchestration: self ]
 ]
 
 { #category : 'building' }
@@ -96,7 +94,6 @@ AbTopicOrchestration >> run [
 	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
 	stepResult := nil.
 	self steps do: [ :step |
-		step sharedDirectoryPath: self sharedDirectoryPath.
 		step previousStepResult: stepResult.
 		stepResult := step run.
 		step stepResult: stepResult ].
