@@ -25,7 +25,9 @@ Public API and Key Messages:
 - #sharedDirectoryPath: aString - set the shared working directory
 - #settings: anAbSettings - set the orchestration settings
 - #seq: topics agentBy: agentBlock - add a sequential step
+- #seq: topics agentBy: agentBlock stepBy: stepBlock - add a sequential step; stepBlock receives the step for per-step configuration (e.g. sharedDirectoryPath:)
 - #para: topics agentBy: agentBlock - add a parallel step
+- #para: topics agentBy: agentBlock stepBy: stepBlock - add a parallel step; stepBlock receives the step for per-step configuration
 - #topicBy: aBlock - create a topic builder for use inside step arrays
 "
 Class {
