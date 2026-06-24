@@ -46,6 +46,13 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
+{ #category : 'instance creation' }
+AbOrchestrationStep class >> on: anOrchestration [
+	^ self new
+		orchestration: anOrchestration;
+		yourself
+]
+
 { #category : 'accessing' }
 AbOrchestrationStep >> orchestration [
 	^ orchestration

@@ -82,7 +82,7 @@ AbTopicOrchestrationBuilder >> topicBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
-	self steps add: (AbSequentialStep new
+	self steps add: ((AbSequentialStep on: self orchestration)
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)
@@ -90,7 +90,7 @@ AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: aBlock [
 
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: aBlock [
-	self steps add: (AbParallelStep new
+	self steps add: ((AbParallelStep on: self orchestration)
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: aBlock);
 		yourself)

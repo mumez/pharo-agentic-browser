@@ -75,7 +75,6 @@ AbTopicOrchestration >> buildBy: aBlock [
 	| builder |
 	builder := self orchestrationBuilderClass on: self.
 	aBlock value: builder.
-	self steps do: [ :step | step orchestration: self ]
 ]
 
 { #category : 'building' }
