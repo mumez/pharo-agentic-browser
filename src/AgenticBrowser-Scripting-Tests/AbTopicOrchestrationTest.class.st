@@ -881,6 +881,36 @@ AbTopicOrchestrationTest >> testParallelStepRunRaisesTimeoutWhenTopicNeverComple
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testRunRemovesTopicsFromManagerEvenOnError [
+	| orchestration raisedException topicAdded |
+	topicAdded := false.
+
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-error-cleanup-topic' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	raisedException := nil.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			ann topic title = 'ab-test-error-cleanup-topic' ifTrue: [ topicAdded := true ] ]
+		for: self.
+
+	[
+		[ orchestration run ]
+			on: AbOrchestrationStepTimeout
+			do: [ :e | raisedException := e ]
+	] ensure: [ self unsubscribeTopicHandlers ].
+
+	self assert: raisedException notNil.
+	self assert: topicAdded.
+	self assert: (AbTopicManager forTest topics noneSatisfy: [ :t | t title = 'ab-test-error-cleanup-topic' ])
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
 	| template copy |
 	template := AbCodingAgentBuilder new.

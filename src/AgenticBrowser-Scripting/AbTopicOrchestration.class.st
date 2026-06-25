@@ -93,11 +93,13 @@ AbTopicOrchestration >> run [
 	| stepResult |
 	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
 	stepResult := nil.
-	self steps do: [ :step |
-		step previousStepResult: stepResult.
-		stepResult := step run.
-		step stepResult: stepResult ].
-	self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
+	[
+		self steps do: [ :step |
+			step previousStepResult: stepResult.
+			stepResult := step run.
+			step stepResult: stepResult ]
+	] ensure: [
+		self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ] ].
 	self logger debug: 'Orchestration run: end name=' , self name.
 	^ stepResult
 ]
