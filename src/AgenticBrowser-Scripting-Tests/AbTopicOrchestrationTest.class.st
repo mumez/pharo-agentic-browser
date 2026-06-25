@@ -395,9 +395,20 @@ AbTopicOrchestrationTest >> capturePromptOnWorkingFor: aTopic into: aDictionary 
 ]
 
 { #category : 'private' }
+AbTopicOrchestrationTest >> modeOptionWithCurrentValue: aValue [
+	| opt |
+	opt := ACPConfigOption new beModeCategory.
+	opt rawValues at: 'id' put: 'mode'.
+	opt rawValues at: 'currentValue' put: aValue.
+	opt rawValues at: 'options' put: { (Dictionary with: 'name' -> 'Plan' with: 'value' -> aValue) }.
+	^ opt
+]
+
+{ #category : 'private' }
 AbTopicOrchestrationTest >> mockPlanModeOn: aTopic recordingInto: planModeApplied [
 	| mockClient result |
 	aTopic session sessionId: 'session-smoke'.
+	aTopic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 	result := MockObject new.
 	result on: #configOptions verify: [
 		OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
@@ -807,6 +818,7 @@ AbTopicOrchestrationTest >> testParallelStepAppliesPlanModeOnConnect [
 			| topic mockClient result |
 			topic := ann topic.
 			topic session sessionId: 'session-parallel-plan'.
+			topic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 			result := MockObject new.
 			result on: #configOptions verify: [
 				OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
@@ -900,6 +912,7 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 			| mockClient result |
 			topic := ann topic.
 			topic session sessionId: 'session-1'.
+			topic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 			result := MockObject new.
 			result on: #configOptions verify: [
 				OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
