@@ -149,12 +149,21 @@ AbCodingAgentBuilder >> applyModeTo: aTopic [
 
 { #category : 'privates' }
 AbCodingAgentBuilder >> applyModelTo: aTopic [
-	| modelOption |
+	| modelOption modelNormalized options matchingOption |
 	self model ifNil: [ ^ self ].
 	modelOption := aTopic session modelConfigOption.
-	modelOption
-		ifNotNil: [ aTopic setConfigOptionId: modelOption id value: self model ]
-		ifNil: [ aTopic setConfigOptionId: 'model' value: self model ]
+	modelOption ifNil: [
+		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self agentArguments })) signal ].
+	modelNormalized := self model asLowercase.
+	options := modelOption options.
+	matchingOption := options
+		detect: [ :opt | opt value = modelNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingModel: ('No matching model option for {1}' format: { self model })
+				requestedModel: self model
+				availableOptions: options) signal ].
+	aTopic setConfigOptionId: modelOption id value: matchingOption value
 ]
 
 { #category : 'callbacks' }

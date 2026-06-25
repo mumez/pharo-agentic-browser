@@ -6,6 +6,8 @@ I carry a kind symbol identifying the error category and optional data for detai
 Kinds:
 - #modeNotSupported: the agent does not support mode configuration
 - #noMatchingMode: mode name did not match any option offered by the agent
+- #modelNotSupported: the agent does not support model configuration
+- #noMatchingModel: model value did not match any option offered by the agent
 "
 Class {
 	#name : 'AbScriptingError',
@@ -39,8 +41,32 @@ AbScriptingError class >> modeNotSupported: aMessage [
 ]
 
 { #category : 'instance creation' }
+AbScriptingError class >> modelNotSupported [
+	^ self kind: #modelNotSupported
+]
+
+{ #category : 'instance creation' }
+AbScriptingError class >> modelNotSupported: aMessage [
+	^ (self kind: #modelNotSupported) messageText: aMessage; yourself
+]
+
+{ #category : 'instance creation' }
 AbScriptingError class >> noMatchingMode [
 	^ self kind: #noMatchingMode
+]
+
+{ #category : 'instance creation' }
+AbScriptingError class >> noMatchingModel [
+	^ self kind: #noMatchingModel
+]
+
+{ #category : 'instance creation' }
+AbScriptingError class >> noMatchingModel: aMessage requestedModel: aModel availableOptions: optionObjects [
+	^ (self kind: #noMatchingModel)
+		messageText: aMessage;
+		dataAt: #requestedModel put: aModel;
+		dataAt: #availableOptions put: optionObjects;
+		yourself
 ]
 
 { #category : 'instance creation' }
