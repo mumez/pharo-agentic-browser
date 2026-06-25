@@ -395,9 +395,20 @@ AbTopicOrchestrationTest >> capturePromptOnWorkingFor: aTopic into: aDictionary 
 ]
 
 { #category : 'private' }
+AbTopicOrchestrationTest >> modeOptionWithCurrentValue: aValue [
+	| opt |
+	opt := ACPConfigOption new beModeCategory.
+	opt rawValues at: 'id' put: 'mode'.
+	opt rawValues at: 'currentValue' put: aValue.
+	opt rawValues at: 'options' put: { (Dictionary with: 'name' -> 'Plan' with: 'value' -> aValue) }.
+	^ opt
+]
+
+{ #category : 'private' }
 AbTopicOrchestrationTest >> mockPlanModeOn: aTopic recordingInto: planModeApplied [
 	| mockClient result |
 	aTopic session sessionId: 'session-smoke'.
+	aTopic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 	result := MockObject new.
 	result on: #configOptions verify: [
 		OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
@@ -807,6 +818,7 @@ AbTopicOrchestrationTest >> testParallelStepAppliesPlanModeOnConnect [
 			| topic mockClient result |
 			topic := ann topic.
 			topic session sessionId: 'session-parallel-plan'.
+			topic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 			result := MockObject new.
 			result on: #configOptions verify: [
 				OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
@@ -869,6 +881,36 @@ AbTopicOrchestrationTest >> testParallelStepRunRaisesTimeoutWhenTopicNeverComple
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testRunRemovesTopicsFromManagerEvenOnError [
+	| orchestration raisedException topicAdded |
+	topicAdded := false.
+
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-error-cleanup-topic' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	raisedException := nil.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			ann topic title = 'ab-test-error-cleanup-topic' ifTrue: [ topicAdded := true ] ]
+		for: self.
+
+	[
+		[ orchestration run ]
+			on: AbOrchestrationStepTimeout
+			do: [ :e | raisedException := e ]
+	] ensure: [ self unsubscribeTopicHandlers ].
+
+	self assert: raisedException notNil.
+	self assert: topicAdded.
+	self assert: (AbTopicManager forTest topics noneSatisfy: [ :t | t title = 'ab-test-error-cleanup-topic' ])
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testCodingAgentBuilderCopyForRunIsIndependent [
 	| template copy |
 	template := AbCodingAgentBuilder new.
@@ -900,6 +942,7 @@ AbTopicOrchestrationTest >> testSequentialStepAppliesPlanModeOnConnect [
 			| mockClient result |
 			topic := ann topic.
 			topic session sessionId: 'session-1'.
+			topic session configOptions: (OrderedCollection with: (self modeOptionWithCurrentValue: 'plan')).
 			result := MockObject new.
 			result on: #configOptions verify: [
 				OrderedCollection with: (self modeOptionWithCurrentValue: 'plan') ].
