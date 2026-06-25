@@ -31,33 +31,13 @@ AbScriptingError class >> kind: aKindSymbol data: aDictionary [
 ]
 
 { #category : 'instance creation' }
-AbScriptingError class >> modeNotSupported [
-	^ self kind: #modeNotSupported
-]
-
-{ #category : 'instance creation' }
 AbScriptingError class >> modeNotSupported: aMessage [
 	^ (self kind: #modeNotSupported) messageText: aMessage; yourself
 ]
 
 { #category : 'instance creation' }
-AbScriptingError class >> modelNotSupported [
-	^ self kind: #modelNotSupported
-]
-
-{ #category : 'instance creation' }
 AbScriptingError class >> modelNotSupported: aMessage [
 	^ (self kind: #modelNotSupported) messageText: aMessage; yourself
-]
-
-{ #category : 'instance creation' }
-AbScriptingError class >> noMatchingMode [
-	^ self kind: #noMatchingMode
-]
-
-{ #category : 'instance creation' }
-AbScriptingError class >> noMatchingModel [
-	^ self kind: #noMatchingModel
 ]
 
 { #category : 'instance creation' }
