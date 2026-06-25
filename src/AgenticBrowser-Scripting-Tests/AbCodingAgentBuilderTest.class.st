@@ -30,7 +30,7 @@ AbCodingAgentBuilderTest >> testBuildByBlock [
 ]
 
 { #category : 'tests' }
-AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
+AbCodingAgentBuilderTest >> testPlanModeResolvesOptionValueByName [
 
 	| builder topic modeOption called configId configValue |
 	called := false.
@@ -39,6 +39,7 @@ AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 	builder := AbCodingAgentBuilder new planMode.
 	modeOption := ACPConfigOption new beModeCategory.
 	modeOption rawValues at: 'id' put: 'agent-mode'.
+	modeOption rawValues at: 'options' put: { (Dictionary with: 'name' -> 'Plan' with: 'value' -> 'plan-value') }.
 	topic := MockObject new.
 	topic on: #session verify: [
 		| session |
@@ -54,16 +55,13 @@ AbCodingAgentBuilderTest >> testPlanModeUsesModeConfigOptionIdWhenPresent [
 	builder finalizeOnSessionEstablished: topic.
 	self assert: called.
 	self assert: configId equals: 'agent-mode'.
-	self assert: configValue equals: 'plan'
+	self assert: configValue equals: 'plan-value'
 ]
 
 { #category : 'tests' }
-AbCodingAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
+AbCodingAgentBuilderTest >> testPlanModeRaisesErrorWhenModeConfigOptionNil [
 
-	| builder topic called configId configValue |
-	called := false.
-	configId := nil.
-	configValue := nil.
+	| builder topic |
 	builder := AbCodingAgentBuilder new planMode.
 	topic := MockObject new.
 	topic on: #session verify: [
@@ -71,16 +69,34 @@ AbCodingAgentBuilderTest >> testPlanModeUsesDefaultModeIdWhenOptionMissing [
 		session := MockObject new.
 		session on: #modeConfigOption verify: [ nil ].
 		session ].
-	topic
-		on: #setConfigOptionId:value:
-		verify: [ :anId :aValue |
-			called := true.
-			configId := anId.
-			configValue := aValue ].
-	builder finalizeOnSessionEstablished: topic.
-	self assert: called.
-	self assert: configId equals: 'mode'.
-	self assert: configValue equals: 'plan'
+	self
+		should: [ builder finalizeOnSessionEstablished: topic ]
+		raise: AbScriptingError
+		withExceptionDo: [ :e | self assert: e kind equals: #modeNotSupported ]
+]
+
+{ #category : 'tests' }
+AbCodingAgentBuilderTest >> testPlanModeRaisesErrorWhenNoMatchingOptionFound [
+
+	| builder topic modeOption |
+	builder := AbCodingAgentBuilder new planMode.
+	modeOption := ACPConfigOption new beModeCategory.
+	modeOption rawValues at: 'id' put: 'agent-mode'.
+	modeOption rawValues at: 'options' put: { (Dictionary with: 'name' -> 'Normal' with: 'value' -> 'normal') }.
+	topic := MockObject new.
+	topic on: #session verify: [
+		| session |
+		session := MockObject new.
+		session on: #modeConfigOption verify: [ modeOption ].
+		session ].
+	self
+		should: [ builder finalizeOnSessionEstablished: topic ]
+		raise: AbScriptingError
+		withExceptionDo: [ :e |
+			self assert: e kind equals: #noMatchingMode.
+			self assert: (e dataAt: #requestedMode) equals: #plan.
+			self assert: (e dataAt: #availableOptions) size equals: 1.
+			self assert: (e dataAt: #availableOptions) first name equals: 'Normal' ]
 ]
 
 { #category : 'tests' }

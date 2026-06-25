@@ -130,12 +130,21 @@ AbCodingAgentBuilder >> copyForRun [
 
 { #category : 'privates' }
 AbCodingAgentBuilder >> applyModeTo: aTopic [
-	| modeOption |
+	| modeOption modeNormalized options matchingOption |
 	self mode ifNil: [ ^ self ].
 	modeOption := aTopic session modeConfigOption.
-	modeOption
-		ifNotNil: [ aTopic setConfigOptionId: modeOption id value: self mode ]
-		ifNil: [ aTopic setConfigOptionId: 'mode' value: self mode ]
+	modeOption ifNil: [
+		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self agentArguments })) signal ].
+	modeNormalized := self mode asLowercase.
+	options := modeOption options.
+	matchingOption := options
+		detect: [ :opt | ((opt name findTokens: String space) collect: #asLowercase) includes: modeNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingMode: ('No matching mode option for {1}. Available: {2}' format: { self mode. (options collect: #name) })
+				requestedMode: self mode
+				availableOptions: options) signal ].
+	aTopic setConfigOptionId: modeOption id value: matchingOption value
 ]
 
 { #category : 'privates' }
