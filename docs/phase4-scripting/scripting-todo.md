@@ -1,8 +1,8 @@
 # AbTopicOrchestration — Review TODO
 
-Status as of branch `feature/scripting-api` (latest commits include step result passing and smoke test).
+Status as of `develop` (2026-06-25). Latest work: plan mode validation, model validation, error cleanup on orchestration failure.
 
-**Test status:** `AgenticBrowser-Scripting-Tests` — 30 passed (Mock-based, no real agents).
+**Test status:** `AgenticBrowser-Scripting-Tests` — 44 passed (10 `AbCodingAgentBuilderTest` + 7 `AbTopicBuilderTest` + 27 `AbTopicOrchestrationTest`; mock-based, no real agents).
 
 ---
 
@@ -16,27 +16,26 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 - [x] Goal completion waits for `#goalAchieved`; non-goal waits for `#endTurn`
 - [x] Default agent fallback (`AbTopicOrchestration` override → `AbSettings default`)
 - [x] Auto-approval settings on orchestrated topics
-- [x] Shared working directory per orchestration
-- [x] `planMode` post-connect action on agent builder
-- [x] Unit tests: `AbAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
-- [x] Mock DSL smoke test: `testScriptingExampleSmoke` (mirrors `docs/ab-scripting.txt` example)
+- [x] Shared working directory per orchestration; steps can override directory path
+- [x] `planMode` — resolves option value dynamically by name match; raises `AbScriptingError noSuchMode` when no matching option found or `modeConfigOption` is nil
+- [x] `model:` — validates against available options; raises `AbScriptingError modelNotSupported` with available option list when no match found
+- [x] Unit tests: `AbCodingAgentBuilderTest`, `AbTopicBuilderTest`, `AbTopicOrchestrationTest`
+- [x] Mock DSL smoke test: `testScriptingExampleSmoke` (mirrors `docs/scripting.md` example)
+- [x] CRC-style class comments added to all Scripting classes
+- [x] Timeout support on orchestration steps (`testSequentialStepRunRaisesTimeoutWhenTopicNeverCompletes`, `testParallelStepRunRaisesTimeoutWhenTopicNeverCompletes`)
+- [x] Topics removed from manager even on orchestration error (`testRunRemovesTopicsFromManagerEvenOnError`)
+- [x] Configuration blocks on orchestration steps (`d8776f1`)
+- [x] Debug logging on orchestration steps (`832033c`)
+- [x] `save` / `explore` methods on `AbTopicOrchestration`
 
 ---
 
 
 ## Code quality (recommended, not blocking)
 
-### Class comments
-
-- [ ] Add CRC-style class comments for Scripting classes (none yet):
-  - `AbTopicOrchestration`, `AbTopicOrchestrationBuilder`
-  - `AbOrchestrationStep`, `AbSequentialStep`, `AbParallelStep`
-  - `AbTopicBuilder`, `AbCodingAgentBuilder`
-
 ### Refactoring
 
 - [x] Extract duplicated auto-approval + topic setup into `AbTopicBuilder >> prepareWith:for:` and `AbTopic >> registerTo:`; removed `AbOrchestrationStep >> prepareTopicFrom:using:`
-- [ ] Consider shortening long test methods flagged by tonel lint (>15 lines)
 
 ### Design clarifications to document
 
@@ -46,25 +45,19 @@ Status as of branch `feature/scripting-api` (latest commits include step result 
 
 ## Test gaps (Mock-level)
 
-- [ ] `AbCodingAgentBuilder` — `opencode`, `copilot`, `cursorAgent`, `kilo`, `kiro` shortcuts untested (`claude`, `codex`, `gemini`, `planMode` covered)
-- [x] `AbCodingAgentBuilder` — `model:` setter and `processModel` covered (`testModelSetsModelName`, `testModelUsesModelConfigOptionIdWhenPresent`, `testModelUsesDefaultModelIdWhenOptionMissing`)
-- [ ] `AbTopicOrchestrationBuilder` — no dedicated test class (only indirect coverage)
-- [x] Parallel step — topics within the same para step do not inject each other’s results (`testParallelStepTopicsDoNotInjectEachOthersResults`)
-- [ ] Error path — topic never reaches `#endTurn` / `#goalAchieved` (orchestration hang; no timeout today)
+- [ ] `AbCodingAgentBuilder` — `opencode`, `copilot`, `cursorAgent`, `kilo`, `kiro` shortcuts untested (`claude`, `codex`, `gemini`, `planMode`, `model:` covered)
+- [ ] `AbTopicOrchestrationBuilder` — no dedicated test class (only indirect coverage via mock helpers)
 
 ---
 
 ## Runtime / headless usage (manual, out of CI)
 
-- [ ] **Manual smoke via `st-eval`** — run `docs/ab-scripting.txt` example against real agents in a dev image
-- [ ] Verify `AbTopicManager>>activeManager` uses `default` outside tests (extension on `AbTopicManager`)
-- [ ] Confirm orchestration leaves topics in manager as expected; decide if cleanup/teardown API is needed
+- [ ] **Manual smoke via `st-eval`** — run `docs/scripting.md` example against real agents in a dev image
 
 ---
 
 ## Out of scope (future)
 
-- [ ] Orchestration run timeout / per-topic timeout
 - [ ] Failure propagation (abort remaining steps on error)
 - [ ] WebUI or REST entry point for orchestration
 - [ ] Optional integration test job with real ACP agents (separate pipeline)

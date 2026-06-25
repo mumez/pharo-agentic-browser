@@ -130,22 +130,48 @@ AbCodingAgentBuilder >> copyForRun [
 
 { #category : 'privates' }
 AbCodingAgentBuilder >> applyModeTo: aTopic [
-	| modeOption |
+	| modeOption modeNormalized flatOptions matchingOption |
 	self mode ifNil: [ ^ self ].
 	modeOption := aTopic session modeConfigOption.
-	modeOption
-		ifNotNil: [ aTopic setConfigOptionId: modeOption id value: self mode ]
-		ifNil: [ aTopic setConfigOptionId: 'mode' value: self mode ]
+	modeOption ifNil: [
+		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self agentArguments })) signal ].
+	modeNormalized := self mode asLowercase.
+	flatOptions := self flattenedOptions: modeOption options.
+	matchingOption := flatOptions
+		detect: [ :opt | ((opt name findTokens: String space) collect: #asLowercase) includes: modeNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingMode: ('No matching mode option for {1}. Available: {2}' format: { self mode. (flatOptions collect: #name) })
+				requestedMode: self mode
+				availableOptions: flatOptions) signal ].
+	aTopic setConfigOptionId: modeOption id value: matchingOption value
 ]
 
 { #category : 'privates' }
 AbCodingAgentBuilder >> applyModelTo: aTopic [
-	| modelOption |
+	| modelOption modelNormalized flatOptions matchingOption |
 	self model ifNil: [ ^ self ].
 	modelOption := aTopic session modelConfigOption.
-	modelOption
-		ifNotNil: [ aTopic setConfigOptionId: modelOption id value: self model ]
-		ifNil: [ aTopic setConfigOptionId: 'model' value: self model ]
+	modelOption ifNil: [
+		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self agentArguments })) signal ].
+	modelNormalized := self model asLowercase.
+	flatOptions := self flattenedOptions: modelOption options.
+	matchingOption := flatOptions
+		detect: [ :opt | opt value asLowercase = modelNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingModel: ('No matching model option for {1}' format: { self model })
+				requestedModel: self model
+				availableOptions: flatOptions) signal ].
+	aTopic setConfigOptionId: modelOption id value: matchingOption value
+]
+
+{ #category : 'privates' }
+AbCodingAgentBuilder >> flattenedOptions: aCollection [
+	^ aCollection flatCollect: [ :opt |
+		opt isGroup
+			ifTrue: [ opt options ]
+			ifFalse: [ { opt } ] ]
 ]
 
 { #category : 'callbacks' }
