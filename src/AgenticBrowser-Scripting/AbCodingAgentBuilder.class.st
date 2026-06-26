@@ -33,12 +33,6 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
-{ #category : 'initialization' }
-AbCodingAgentBuilder >> initialize [
-	super initialize.
-	agentArguments := #().
-]
-
 { #category : 'accessing' }
 AbCodingAgentBuilder >> agentArguments [
 	^ agentArguments
@@ -47,85 +41,6 @@ AbCodingAgentBuilder >> agentArguments [
 { #category : 'accessing' }
 AbCodingAgentBuilder >> agentArguments: anArray [
 	agentArguments := anArray
-]
-
-{ #category : 'actions' }
-AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
-	self agentArguments: (AbSettings default agentArgumentsPresets at: agentName)
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> claude [
-	self useAgentArgumentsAt: 'claude-agent-acp'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> codex [
-	self useAgentArgumentsAt: 'codex-acp'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> gemini [
-	self useAgentArgumentsAt: 'Gemini CLI'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> opencode [
-	self useAgentArgumentsAt: 'OpenCode'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> copilot [
-	self useAgentArgumentsAt: 'Copilot CLI'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> cursorAgent [
-	self useAgentArgumentsAt: 'Cursor CLI'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> kilo [
-	self useAgentArgumentsAt: 'Kilo Code'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> kiro [
-	self useAgentArgumentsAt: 'Kiro CLI'
-]
-
-{ #category : 'accessing' }
-AbCodingAgentBuilder >> mode [
-	^ mode
-]
-
-{ #category : 'accessing' }
-AbCodingAgentBuilder >> mode: aModeName [
-	mode := aModeName
-]
-
-{ #category : 'accessing' }
-AbCodingAgentBuilder >> model [
-	^ model
-]
-
-{ #category : 'accessing' }
-AbCodingAgentBuilder >> model: aModelName [
-	model := aModelName
-]
-
-{ #category : 'actions' }
-AbCodingAgentBuilder >> planMode [
-	self mode: #plan
-]
-
-{ #category : 'copying' }
-AbCodingAgentBuilder >> copyForRun [
-	^ (self class new)
-		agentArguments: self agentArguments;
-		mode: self mode;
-		model: self model;
-		yourself
 ]
 
 { #category : 'privates' }
@@ -166,6 +81,42 @@ AbCodingAgentBuilder >> applyModelTo: aTopic [
 	aTopic setConfigOptionId: modelOption id value: matchingOption value
 ]
 
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> claude [
+	self useAgentArgumentsAt: 'claude-agent-acp'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> codex [
+	self useAgentArgumentsAt: 'codex-acp'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> copilot [
+	self useAgentArgumentsAt: 'Copilot CLI'
+]
+
+{ #category : 'copying' }
+AbCodingAgentBuilder >> copyForRun [
+	^ (self class new)
+		agentArguments: self agentArguments;
+		mode: self mode;
+		model: self model;
+		yourself
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> cursorAgent [
+	self useAgentArgumentsAt: 'Cursor CLI'
+]
+
+{ #category : 'callbacks' }
+AbCodingAgentBuilder >> finalizeOnSessionEstablished: aTopic [
+	self applyModeTo: aTopic.
+	self applyModelTo: aTopic.
+	super finalizeOnSessionEstablished: aTopic
+]
+
 { #category : 'privates' }
 AbCodingAgentBuilder >> flattenedOptions: aCollection [
 	^ aCollection flatCollect: [ :opt |
@@ -174,9 +125,58 @@ AbCodingAgentBuilder >> flattenedOptions: aCollection [
 			ifFalse: [ { opt } ] ]
 ]
 
-{ #category : 'callbacks' }
-AbCodingAgentBuilder >> finalizeOnSessionEstablished: aTopic [
-	self applyModeTo: aTopic.
-	self applyModelTo: aTopic.
-	super finalizeOnSessionEstablished: aTopic
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> gemini [
+	self useAgentArgumentsAt: 'Gemini CLI'
+]
+
+{ #category : 'initialization' }
+AbCodingAgentBuilder >> initialize [
+	super initialize.
+	agentArguments := #().
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> kilo [
+	self useAgentArgumentsAt: 'Kilo Code'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> kiro [
+	self useAgentArgumentsAt: 'Kiro CLI'
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> mode [
+	^ mode
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> mode: aModeName [
+	mode := aModeName
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> model [
+	^ model
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilder >> model: aModelName [
+	model := aModelName
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> opencode [
+	self useAgentArgumentsAt: 'OpenCode'
+]
+
+{ #category : 'actions' }
+AbCodingAgentBuilder >> planMode [
+	self mode: #plan
+]
+
+{ #category : 'actions' }
+AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
+	self agentArguments: (AbSettings default agentArgumentsPresets at: agentName)
 ]

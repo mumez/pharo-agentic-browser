@@ -70,6 +70,10 @@ AbTopicOrchestration class >> loadFrom: aFileReference [
 	^ loaded
 ]
 
+{ #category : 'accessing' }
+AbTopicOrchestration >> announcer [
+	^ announcer ifNil: [ announcer := Announcer new ]
+]
 
 { #category : 'building' }
 AbTopicOrchestration >> buildBy: aBlock [
@@ -78,15 +82,63 @@ AbTopicOrchestration >> buildBy: aBlock [
 	aBlock value: builder.
 ]
 
-{ #category : 'building' }
-AbTopicOrchestration >> orchestrationBuilderClass [
-	^ AbTopicOrchestrationBuilder
+{ #category : 'defaults' }
+AbTopicOrchestration >> defaultSharedDirectoryPath [
+	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
+]
+
+{ #category : 'defaults' }
+AbTopicOrchestration >> directoryName [
+	^ self shortReferenceName
+]
+
+{ #category : 'inspecting' }
+AbTopicOrchestration >> explore [
+	{ #orchestration -> self. #steps -> self steps. #result -> self result }
+		asDictionary inspect
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> id [
+	^ id ifNil: [ id := UUID new asString36 ]
 ]
 
 { #category : 'initialization' }
 AbTopicOrchestration >> initialize [
 	super initialize.
 	steps := OrderedCollection new.
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> logger [
+	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name [
+	^ name ifNil: [ name := 'orchestration' ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> name: aString [
+	name := aString
+]
+
+{ #category : 'building' }
+AbTopicOrchestration >> orchestrationBuilderClass [
+	^ AbTopicOrchestrationBuilder
+]
+
+{ #category : 'running' }
+AbTopicOrchestration >> removeTopicsFromManager [
+	self steps do: [ :step |
+		step topics do: [ :topic | self topicManager removeTopic: topic ] ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> result [
+	^ (steps select: [ :each | each stepResult notNil ])
+		ifNotEmpty: [ :completed | completed last stepResult ]
 ]
 
 { #category : 'running' }
@@ -106,34 +158,6 @@ AbTopicOrchestration >> run [
 	^ stepResult
 ]
 
-{ #category : 'persistence' }
-AbTopicOrchestration >> save [
-	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
-]
-
-{ #category : 'persistence' }
-AbTopicOrchestration >> saveTo: aFileReference [
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: self toFileNamed: aFileReference fullName
-]
-
-{ #category : 'running' }
-AbTopicOrchestration >> removeTopicsFromManager [
-	self steps do: [ :step |
-		step topics do: [ :topic | self topicManager removeTopic: topic ] ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> result [
-	^ (steps select: [ :each | each stepResult notNil ])
-		ifNotEmpty: [ :completed | completed last stepResult ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> topicManager [
-	^ AbTopicManager default
-]
-
 { #category : 'accessing' }
 AbTopicOrchestration >> safeName [
 
@@ -146,19 +170,25 @@ AbTopicOrchestration >> safeName [
 	^ safe
 ]
 
+{ #category : 'persistence' }
+AbTopicOrchestration >> save [
+	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
+]
+
+{ #category : 'persistence' }
+AbTopicOrchestration >> saveTo: aFileReference [
+	aFileReference parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: aFileReference fullName
+]
+
 { #category : 'accessing' }
-AbTopicOrchestration >> shortReferenceName [
-	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
+AbTopicOrchestration >> settings [
+	^ settings ifNil: [ settings := AbSettings defaultCopied ]
 ]
 
-{ #category : 'defaults' }
-AbTopicOrchestration >> directoryName [
-	^ self shortReferenceName
-]
-
-{ #category : 'defaults' }
-AbTopicOrchestration >> defaultSharedDirectoryPath [
-	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
+{ #category : 'accessing' }
+AbTopicOrchestration >> settings: anAbSettings [
+	settings := anAbSettings
 ]
 
 { #category : 'accessing' }
@@ -173,28 +203,8 @@ AbTopicOrchestration >> sharedDirectoryPath: aString [
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestration >> settings [
-	^ settings ifNil: [ settings := AbSettings defaultCopied ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> settings: anAbSettings [
-	settings := anAbSettings
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> id [
-	^ id ifNil: [ id := UUID new asString36 ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> name [
-	^ name ifNil: [ name := 'orchestration' ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> name: aString [
-	name := aString
+AbTopicOrchestration >> shortReferenceName [
+	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
 ]
 
 { #category : 'accessing' }
@@ -208,17 +218,6 @@ AbTopicOrchestration >> steps: aCollection [
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestration >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> announcer [
-	^ announcer ifNil: [ announcer := Announcer new ]
-]
-
-{ #category : 'inspecting' }
-AbTopicOrchestration >> explore [
-	{ #orchestration -> self. #steps -> self steps. #result -> self result }
-		asDictionary inspect
+AbTopicOrchestration >> topicManager [
+	^ AbTopicManager default
 ]

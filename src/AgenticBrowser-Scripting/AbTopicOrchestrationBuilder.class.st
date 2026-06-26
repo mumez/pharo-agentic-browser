@@ -47,14 +47,19 @@ AbTopicOrchestrationBuilder class >> on: anOrchestration [
 		yourself
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestrationBuilder >> orchestration [
-	^ orchestration
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> agentBuilder [
+	^ self agentBuilderClass on: self
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestrationBuilder >> orchestration: anOrchestration [
-	orchestration := anOrchestration
+{ #category : 'factory' }
+AbTopicOrchestrationBuilder >> agentBuilderClass [
+	^ AbCodingAgentBuilder
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> agentBy: aBlock [
+	^ self agentBuilder buildBy: aBlock
 ]
 
 { #category : 'accessing' }
@@ -63,39 +68,13 @@ AbTopicOrchestrationBuilder >> name: aString [
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestrationBuilder >> sharedDirectoryPath: aString [
-	orchestration sharedDirectoryPath: aString
+AbTopicOrchestrationBuilder >> orchestration [
+	^ orchestration
 ]
 
 { #category : 'accessing' }
-AbTopicOrchestrationBuilder >> settings: anAbSettings [
-	orchestration settings: anAbSettings
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> topic [
-	^ self topicBy: [ :builder | ]
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> topicBy: aBlock [
-	^ self topicBuilder buildBy: aBlock
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock [
-	self seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: [ :step | ]
-]
-
-{ #category : 'building' }
-AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
-	| step |
-	step := (AbSequentialStep on: self orchestration)
-		topicBuilders: aCollectionOfTopicBuilders;
-		codingAgentBuilder: (self agentBy: agentBuilderBlock);
-		yourself.
-	stepBuilderBlock value: step.
-	self steps add: step
+AbTopicOrchestrationBuilder >> orchestration: anOrchestration [
+	orchestration := anOrchestration
 ]
 
 { #category : 'building' }
@@ -114,14 +93,45 @@ AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: agentBu
 	self steps add: step
 ]
 
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock [
+	self seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: [ :step | ]
+]
+
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
+	| step |
+	step := (AbSequentialStep on: self orchestration)
+		topicBuilders: aCollectionOfTopicBuilders;
+		codingAgentBuilder: (self agentBy: agentBuilderBlock);
+		yourself.
+	stepBuilderBlock value: step.
+	self steps add: step
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> settings: anAbSettings [
+	orchestration settings: anAbSettings
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestrationBuilder >> sharedDirectoryPath: aString [
+	orchestration sharedDirectoryPath: aString
+]
+
 { #category : 'accessing' }
 AbTopicOrchestrationBuilder >> steps [
 	^ orchestration steps
 ]
 
-{ #category : 'factory' }
-AbTopicOrchestrationBuilder >> agentBuilderClass [
-	^ AbCodingAgentBuilder
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> topic [
+	^ self topicBy: [ :builder | ]
+]
+
+{ #category : 'private' }
+AbTopicOrchestrationBuilder >> topicBuilder [
+	^ self topicBuilderClass on: self
 ]
 
 { #category : 'factory' }
@@ -129,17 +139,7 @@ AbTopicOrchestrationBuilder >> topicBuilderClass [
 	^ AbTopicBuilder
 ]
 
-{ #category : 'private' }
-AbTopicOrchestrationBuilder >> agentBy: aBlock [
-	^ self agentBuilder buildBy: aBlock
-]
-
-{ #category : 'private' }
-AbTopicOrchestrationBuilder >> agentBuilder [
-	^ self agentBuilderClass on: self
-]
-
-{ #category : 'private' }
-AbTopicOrchestrationBuilder >> topicBuilder [
-	^ self topicBuilderClass on: self
+{ #category : 'building' }
+AbTopicOrchestrationBuilder >> topicBy: aBlock [
+	^ self topicBuilder buildBy: aBlock
 ]

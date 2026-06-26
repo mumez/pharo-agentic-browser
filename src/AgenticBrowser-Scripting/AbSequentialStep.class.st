@@ -12,7 +12,6 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
-
 { #category : 'running' }
 AbSequentialStep >> run [
 	| currentResult topics |

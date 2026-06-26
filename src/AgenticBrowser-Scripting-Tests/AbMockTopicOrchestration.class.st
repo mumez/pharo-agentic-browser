@@ -5,14 +5,14 @@ Class {
 	#package : 'AgenticBrowser-Scripting-Tests'
 }
 
-{ #category : 'building' }
-AbMockTopicOrchestration >> orchestrationBuilderClass [
-	^ AbMockTopicOrchestrationBuilder
-]
-
 { #category : 'accessing' }
 AbMockTopicOrchestration >> name [
 	^ 'ab-test-orchestration'
+]
+
+{ #category : 'building' }
+AbMockTopicOrchestration >> orchestrationBuilderClass [
+	^ AbMockTopicOrchestrationBuilder
 ]
 
 { #category : 'accessing' }
