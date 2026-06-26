@@ -1069,3 +1069,31 @@ AbTopicOrchestrationTest >> testParallelStepExecution [
 		self assert: ranT2.
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testOrchestrationFiresEndedAnnouncementOnRunComplete [
+	| orchestration endedAnnouncement |
+	endedAnnouncement := nil.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-T1' ]
+			} agentBy: [ :a | a codex ] ].
+
+	orchestration announcer
+		when: AbOrchestrationEnded
+		do: [ :ann | endedAnnouncement := ann ]
+		for: self.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann | self simulateEndTurnWhenWorkingFor: ann topic ]
+		for: self.
+
+	[
+		orchestration run.
+		self assert: endedAnnouncement notNil.
+		self assert: endedAnnouncement orchestration == orchestration
+	] ensure: [ self unsubscribeTopicHandlers ]
+]

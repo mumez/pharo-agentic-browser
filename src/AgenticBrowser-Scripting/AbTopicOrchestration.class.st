@@ -43,7 +43,8 @@ Class {
 		'steps',
 		'sharedDirectoryPath',
 		'settings',
-		'logger'
+		'logger',
+		'announcer'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -56,7 +57,7 @@ AbTopicOrchestration class >> buildBy: aBlock [
 
 { #category : 'fuel' }
 AbTopicOrchestration class >> fuelIgnoredInstanceVariableNames [
-	^ #( 'logger' )
+	^ #( 'logger' 'announcer' )
 ]
 
 { #category : 'persistence' }
@@ -99,7 +100,8 @@ AbTopicOrchestration >> run [
 			stepResult := step run.
 			step stepResult: stepResult ]
 	] ensure: [
-		self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ] ].
+		self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
+		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
 	self logger debug: 'Orchestration run: end name=' , self name.
 	^ stepResult
 ]
@@ -208,6 +210,11 @@ AbTopicOrchestration >> steps: aCollection [
 { #category : 'accessing' }
 AbTopicOrchestration >> logger [
 	^ logger ifNil: [ logger := AbLocalLogger new ]
+]
+
+{ #category : 'accessing' }
+AbTopicOrchestration >> announcer [
+	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
 { #category : 'inspecting' }
