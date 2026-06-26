@@ -108,8 +108,7 @@ AbOrchestrationGroupTest >> testOrchestrationGroupByCreatesNestedGroup [
 
 { #category : 'tests' }
 AbOrchestrationGroupTest >> testParaNodeRunsItemsConcurrently [
-	| startTimes o1 o2 node |
-	startTimes := OrderedCollection new.
+	| o1 o2 node |
 	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
 	o1 runDelay: 50.
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
