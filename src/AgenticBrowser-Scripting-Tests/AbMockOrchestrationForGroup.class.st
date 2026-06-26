@@ -21,13 +21,16 @@ AbMockOrchestrationForGroup class >> withResult: aString [
 ]
 
 { #category : 'accessing' }
-AbMockOrchestrationForGroup >> runResult [
-	^ runResult
+AbMockOrchestrationForGroup >> announcer [
+	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
-{ #category : 'accessing' }
-AbMockOrchestrationForGroup >> runResult: aString [
-	runResult := aString
+{ #category : 'running' }
+AbMockOrchestrationForGroup >> run [
+	runCount := self runCount + 1.
+	runDelay ifNotNil: [ (Delay forMilliseconds: runDelay) wait ].
+	self announcer announce: (AbOrchestrationEnded orchestration: self).
+	^ runResult
 ]
 
 { #category : 'accessing' }
@@ -41,14 +44,11 @@ AbMockOrchestrationForGroup >> runDelay: aNumber [
 ]
 
 { #category : 'accessing' }
-AbMockOrchestrationForGroup >> announcer [
-	^ announcer ifNil: [ announcer := Announcer new ]
+AbMockOrchestrationForGroup >> runResult [
+	^ runResult
 ]
 
-{ #category : 'running' }
-AbMockOrchestrationForGroup >> run [
-	runCount := self runCount + 1.
-	runDelay ifNotNil: [ (Delay forMilliseconds: runDelay) wait ].
-	self announcer announce: (AbOrchestrationEnded orchestration: self).
-	^ runResult
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> runResult: aString [
+	runResult := aString
 ]
