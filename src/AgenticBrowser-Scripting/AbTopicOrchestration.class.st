@@ -36,15 +36,10 @@ Internal Representation:
 "
 Class {
 	#name : 'AbTopicOrchestration',
-	#superclass : 'Object',
+	#superclass : 'AbBaseOrchestration',
 	#instVars : [
-		'id',
-		'name',
 		'steps',
-		'sharedDirectoryPath',
-		'settings',
-		'logger',
-		'announcer'
+		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -55,11 +50,6 @@ AbTopicOrchestration class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
 ]
 
-{ #category : 'fuel' }
-AbTopicOrchestration class >> fuelIgnoredInstanceVariableNames [
-	^ #( 'logger' 'announcer' )
-]
-
 { #category : 'persistence' }
 AbTopicOrchestration class >> loadFrom: aFileReference [
 
@@ -68,11 +58,6 @@ AbTopicOrchestration class >> loadFrom: aFileReference [
 	loaded class == self ifFalse: [
 		self error: 'Deserialized object is not a ' , self name ].
 	^ loaded
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> announcer [
-	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
 { #category : 'building' }
@@ -98,30 +83,10 @@ AbTopicOrchestration >> explore [
 		asDictionary inspect
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestration >> id [
-	^ id ifNil: [ id := UUID new asString36 ]
-]
-
 { #category : 'initialization' }
 AbTopicOrchestration >> initialize [
 	super initialize.
 	steps := OrderedCollection new.
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> logger [
-	^ logger ifNil: [ logger := AbLocalLogger new ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> name [
-	^ name ifNil: [ name := 'orchestration' ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> name: aString [
-	name := aString
 ]
 
 { #category : 'building' }
@@ -179,16 +144,6 @@ AbTopicOrchestration >> save [
 AbTopicOrchestration >> saveTo: aFileReference [
 	aFileReference parent ensureCreateDirectory.
 	FLSerializer serialize: self toFileNamed: aFileReference fullName
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> settings [
-	^ settings ifNil: [ settings := AbSettings defaultCopied ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> settings: anAbSettings [
-	settings := anAbSettings
 ]
 
 { #category : 'accessing' }

@@ -28,11 +28,9 @@ Public API and Key Messages:
 "
 Class {
 	#name : 'AbOrchestrationGroup',
-	#superclass : 'Object',
+	#superclass : 'AbBaseOrchestration',
 	#instVars : [
-		'nodes',
-		'announcer',
-		'settings'
+		'nodes'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -43,26 +41,11 @@ AbOrchestrationGroup class >> buildBy: aBlock [
 	^ self new buildBy: aBlock
 ]
 
-{ #category : 'accessing' }
-AbOrchestrationGroup >> announcer [
-	^ announcer ifNil: [ announcer := Announcer new ]
-]
-
 { #category : 'building' }
 AbOrchestrationGroup >> buildBy: aBlock [
 	| builder |
 	builder := AbOrchestrationGroupBuilder on: self.
 	aBlock value: builder
-]
-
-{ #category : 'accessing' }
-AbOrchestrationGroup >> settings [
-	^ settings ifNil: [ settings := AbSettings defaultCopied ]
-]
-
-{ #category : 'accessing' }
-AbOrchestrationGroup >> settings: anAbSettings [
-	settings := anAbSettings
 ]
 
 { #category : 'accessing' }

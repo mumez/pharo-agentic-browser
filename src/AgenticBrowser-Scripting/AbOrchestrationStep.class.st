@@ -24,7 +24,7 @@ Collaborators:
 - AbTopic: the domain object being run and observed
 
 Internal Representation:
-- orchestration - parent AbTopicOrchestration (inherited from AbOrchestrationBaseStep)
+- orchestration - parent AbTopicOrchestration (inherited from AbBaseOrchestrationStep)
 - topicBuilders - collection of AbTopicBuilder
 - codingAgentBuilder - AbCodingAgentBuilder for this step
 - sharedDirectoryPath - per-step working directory override; lazily falls back to orchestration sharedDirectoryPath when nil
@@ -33,7 +33,7 @@ Internal Representation:
 "
 Class {
 	#name : 'AbOrchestrationStep',
-	#superclass : 'AbOrchestrationBaseStep',
+	#superclass : 'AbBaseOrchestrationStep',
 	#instVars : [
 		'topicBuilders',
 		'codingAgentBuilder',

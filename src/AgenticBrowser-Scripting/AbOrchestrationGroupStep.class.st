@@ -15,7 +15,7 @@ Collaborators:
 "
 Class {
 	#name : 'AbOrchestrationGroupStep',
-	#superclass : 'AbOrchestrationBaseStep',
+	#superclass : 'AbBaseOrchestrationStep',
 	#instVars : [
 		'items'
 	],
