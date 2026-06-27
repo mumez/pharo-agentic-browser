@@ -12,8 +12,8 @@ AbOrchestrationGroupTest >> testGroupBuildByCreatesParaNode [
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	group := AbOrchestrationGroup buildBy: [ :builder |
 		builder para: (OrderedCollection with: o1 with: o2) ].
-	self assert: group nodes size equals: 1.
-	self assert: (group nodes first isKindOf: AbOrchestrationGroupParallelStep)
+	self assert: group steps size equals: 1.
+	self assert: (group steps first isKindOf: AbOrchestrationGroupParallelStep)
 ]
 
 { #category : 'tests' }
@@ -23,8 +23,8 @@ AbOrchestrationGroupTest >> testGroupBuildByCreatesSeqNode [
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	group := AbOrchestrationGroup buildBy: [ :builder |
 		builder seq: (OrderedCollection with: o1 with: o2) ].
-	self assert: group nodes size equals: 1.
-	self assert: (group nodes first isKindOf: AbOrchestrationGroupSequentialStep)
+	self assert: group steps size equals: 1.
+	self assert: (group steps first isKindOf: AbOrchestrationGroupSequentialStep)
 ]
 
 { #category : 'tests' }
@@ -85,7 +85,7 @@ AbOrchestrationGroupTest >> testOrchestrationByCreatesOrchestration [
 		self assert: (o isKindOf: AbTopicOrchestration).
 		self assert: o name equals: 'test-orchestration'.
 		builder seq: (OrderedCollection with: o) ].
-	self assert: group nodes size equals: 1
+	self assert: group steps size equals: 1
 ]
 
 { #category : 'tests' }
@@ -103,7 +103,7 @@ AbOrchestrationGroupTest >> testOrchestrationGroupByCreatesNestedGroup [
 	self assert: (innerGroup isKindOf: AbOrchestrationGroup).
 	outerGroup run.
 	"inner group ran"
-	self assert: innerGroup nodes size equals: 1
+	self assert: innerGroup steps size equals: 1
 ]
 
 { #category : 'tests' }

@@ -24,33 +24,20 @@ Public API and Key Messages:
 - #buildBy: aBlock - configure steps via DSL builder block
 - #run - execute all steps in order; blocks until complete; returns last step result
 - #announcer - Announcer that fires AbOrchestrationEnded on run completion
-- #nodes - the ordered collection of AbOrchestrationGroupStep
+- #steps - the ordered collection of AbOrchestrationGroupStep
 "
 Class {
 	#name : 'AbOrchestrationGroup',
 	#superclass : 'AbBaseOrchestration',
 	#instVars : [
-		'nodes'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
 
 { #category : 'building' }
-AbOrchestrationGroup class >> buildBy: aBlock [
-	^ self new buildBy: aBlock
-]
-
-{ #category : 'building' }
-AbOrchestrationGroup >> buildBy: aBlock [
-	| builder |
-	builder := AbOrchestrationGroupBuilder on: self.
-	aBlock value: builder
-]
-
-{ #category : 'accessing' }
-AbOrchestrationGroup >> nodes [
-	^ nodes ifNil: [ nodes := OrderedCollection new ]
+AbOrchestrationGroup >> orchestrationBuilderClass [
+	^ AbOrchestrationGroupBuilder
 ]
 
 { #category : 'running' }
@@ -58,7 +45,7 @@ AbOrchestrationGroup >> run [
 	| result |
 	result := nil.
 	[
-		self nodes do: [ :node | result := node run ]
+		self steps do: [ :node | result := node run ]
 	] ensure: [
 		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
 	^ result

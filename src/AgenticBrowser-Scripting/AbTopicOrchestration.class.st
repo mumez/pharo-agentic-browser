@@ -38,17 +38,11 @@ Class {
 	#name : 'AbTopicOrchestration',
 	#superclass : 'AbBaseOrchestration',
 	#instVars : [
-		'steps',
 		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
-
-{ #category : 'building' }
-AbTopicOrchestration class >> buildBy: aBlock [
-	^ self new buildBy: aBlock
-]
 
 { #category : 'persistence' }
 AbTopicOrchestration class >> loadFrom: aFileReference [
@@ -58,13 +52,6 @@ AbTopicOrchestration class >> loadFrom: aFileReference [
 	loaded class == self ifFalse: [
 		self error: 'Deserialized object is not a ' , self name ].
 	^ loaded
-]
-
-{ #category : 'building' }
-AbTopicOrchestration >> buildBy: aBlock [
-	| builder |
-	builder := self orchestrationBuilderClass on: self.
-	aBlock value: builder.
 ]
 
 { #category : 'defaults' }
@@ -81,12 +68,6 @@ AbTopicOrchestration >> directoryName [
 AbTopicOrchestration >> explore [
 	{ #orchestration -> self. #steps -> self steps. #result -> self result }
 		asDictionary inspect
-]
-
-{ #category : 'initialization' }
-AbTopicOrchestration >> initialize [
-	super initialize.
-	steps := OrderedCollection new.
 ]
 
 { #category : 'building' }
@@ -160,16 +141,6 @@ AbTopicOrchestration >> sharedDirectoryPath: aString [
 { #category : 'accessing' }
 AbTopicOrchestration >> shortReferenceName [
 	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> steps [
-	^ steps
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> steps: aCollection [
-	steps := aCollection
 ]
 
 { #category : 'accessing' }

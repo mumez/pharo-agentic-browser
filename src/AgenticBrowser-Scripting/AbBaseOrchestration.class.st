@@ -22,6 +22,7 @@ Class {
 	#instVars : [
 		'id',
 		'name',
+		'steps',
 		'settings',
 		'logger',
 		'announcer'
@@ -29,6 +30,39 @@ Class {
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
+
+{ #category : 'building' }
+AbBaseOrchestration class >> buildBy: aBlock [
+	^ self new buildBy: aBlock
+]
+
+{ #category : 'building' }
+AbBaseOrchestration >> buildBy: aBlock [
+	| builder |
+	builder := self orchestrationBuilderClass on: self.
+	aBlock value: builder.
+]
+
+{ #category : 'building' }
+AbBaseOrchestration >> orchestrationBuilderClass [
+	^ self subclassResponsibility
+]
+
+{ #category : 'initialization' }
+AbBaseOrchestration >> initialize [
+	super initialize.
+	steps := OrderedCollection new.
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> steps [
+	^ steps
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> steps: aCollection [
+	steps := aCollection
+]
 
 { #category : 'fuel' }
 AbBaseOrchestration class >> fuelIgnoredInstanceVariableNames [

@@ -65,7 +65,7 @@ AbOrchestrationGroupBuilder >> para: aCollection [
 		orchestration: self group;
 		items: aCollection;
 		yourself.
-	self group nodes add: node
+	self group steps add: node
 ]
 
 { #category : 'building' }
@@ -75,5 +75,5 @@ AbOrchestrationGroupBuilder >> seq: aCollection [
 		orchestration: self group;
 		items: aCollection;
 		yourself.
-	self group nodes add: node
+	self group steps add: node
 ]
