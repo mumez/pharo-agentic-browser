@@ -7,6 +7,12 @@ AbSettings >> defaultLingerOrchestrationTopicsAfterRun [
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
+AbSettings >> defaultOrchestrationGroupItemWaitTimeoutSeconds [
+	self isDefault ifFalse: [ ^ self class default defaultOrchestrationGroupItemWaitTimeoutSeconds ].
+	^ 3600
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
 AbSettings >> defaultOrchestrationStepWaitTimeoutSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultOrchestrationStepWaitTimeoutSeconds ].
 	^ 900
@@ -34,4 +40,16 @@ AbSettings >> orchestrationStepWaitTimeoutSeconds [
 { #category : '*AgenticBrowser-Scripting' }
 AbSettings >> orchestrationStepWaitTimeoutSeconds: anInteger [
 	self at: #orchestrationStepWaitTimeoutSeconds put: anInteger
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AbSettings >> orchestrationGroupItemWaitTimeoutSeconds [
+	^ self
+		at: #orchestrationGroupItemWaitTimeoutSeconds
+		ifAbsent: [ self defaultOrchestrationGroupItemWaitTimeoutSeconds ]
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AbSettings >> orchestrationGroupItemWaitTimeoutSeconds: anInteger [
+	self at: #orchestrationGroupItemWaitTimeoutSeconds put: anInteger
 ]

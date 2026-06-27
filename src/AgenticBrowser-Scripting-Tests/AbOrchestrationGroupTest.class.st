@@ -13,7 +13,7 @@ AbOrchestrationGroupTest >> testGroupBuildByCreatesParaNode [
 	group := AbOrchestrationGroup buildBy: [ :builder |
 		builder para: (OrderedCollection with: o1 with: o2) ].
 	self assert: group nodes size equals: 1.
-	self assert: (group nodes first isKindOf: AbOrchestrationGroupParaNode)
+	self assert: (group nodes first isKindOf: AbOrchestrationGroupParallelStep)
 ]
 
 { #category : 'tests' }
@@ -24,7 +24,7 @@ AbOrchestrationGroupTest >> testGroupBuildByCreatesSeqNode [
 	group := AbOrchestrationGroup buildBy: [ :builder |
 		builder seq: (OrderedCollection with: o1 with: o2) ].
 	self assert: group nodes size equals: 1.
-	self assert: (group nodes first isKindOf: AbOrchestrationGroupSeqNode)
+	self assert: (group nodes first isKindOf: AbOrchestrationGroupSequentialStep)
 ]
 
 { #category : 'tests' }
@@ -107,13 +107,27 @@ AbOrchestrationGroupTest >> testOrchestrationGroupByCreatesNestedGroup [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testParaStepRaisesTimeoutWhenItemNeverCompletes [
+	| group node raised |
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: AbMockOrchestrationForGroupNeverCompletes new);
+		yourself.
+	raised := nil.
+	[ node run ] on: AbOrchestrationStepTimeout do: [ :e | raised := e ].
+	self assert: raised notNil
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testParaNodeRunsItemsConcurrently [
 	| o1 o2 node |
 	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
 	o1 runDelay: 50.
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	o2 runDelay: 50.
-	node := AbOrchestrationGroupParaNode new
+	node := AbOrchestrationGroupParallelStep new
 		items: (OrderedCollection with: o1 with: o2);
 		yourself.
 	node run.
@@ -128,7 +142,7 @@ AbOrchestrationGroupTest >> testParaNodeWaitsForAllItems [
 	o1 runDelay: 30.
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	o2 runDelay: 10.
-	node := AbOrchestrationGroupParaNode new
+	node := AbOrchestrationGroupParallelStep new
 		items: (OrderedCollection with: o1 with: o2);
 		yourself.
 	node run.
@@ -139,7 +153,7 @@ AbOrchestrationGroupTest >> testParaNodeWaitsForAllItems [
 { #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeReturnsLastItemResult [
 	| node result |
-	node := AbOrchestrationGroupSeqNode new
+	node := AbOrchestrationGroupSequentialStep new
 		items: (OrderedCollection
 			with: (AbMockOrchestrationForGroup withResult: 'first')
 			with: (AbMockOrchestrationForGroup withResult: 'last'));
@@ -159,7 +173,7 @@ AbOrchestrationGroupTest >> testSeqNodeRunsItemsInOrder [
 	o3 := AbMockOrchestrationForGroup withResult: 'r3'.
 	o3 announcer when: AbOrchestrationEnded do: [ runOrder add: 3 ] for: self.
 
-	node := AbOrchestrationGroupSeqNode new
+	node := AbOrchestrationGroupSequentialStep new
 		items: (OrderedCollection with: o1 with: o2 with: o3);
 		yourself.
 	node run.

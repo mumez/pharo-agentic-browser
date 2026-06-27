@@ -11,8 +11,8 @@ Responsibility:
 
 Collaborators:
 - AbOrchestrationGroup: the group under construction (holds my nodes via #group)
-- AbOrchestrationGroupParaNode: created by #para:
-- AbOrchestrationGroupSeqNode: created by #seq:
+- AbOrchestrationGroupParallelStep: created by #para:
+- AbOrchestrationGroupSequentialStep: created by #seq:
 - AbTopicOrchestration: created by #orchestrationBy:
 
 Public API and Key Messages:
@@ -61,7 +61,8 @@ AbOrchestrationGroupBuilder >> orchestrationGroupBy: aBlock [
 { #category : 'building' }
 AbOrchestrationGroupBuilder >> para: aCollection [
 	| node |
-	node := AbOrchestrationGroupParaNode new
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: self group;
 		items: aCollection;
 		yourself.
 	self group nodes add: node
@@ -70,7 +71,8 @@ AbOrchestrationGroupBuilder >> para: aCollection [
 { #category : 'building' }
 AbOrchestrationGroupBuilder >> seq: aCollection [
 	| node |
-	node := AbOrchestrationGroupSeqNode new
+	node := AbOrchestrationGroupSequentialStep new
+		orchestration: self group;
 		items: aCollection;
 		yourself.
 	self group nodes add: node

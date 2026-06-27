@@ -2,7 +2,7 @@
 I am the abstract base class for a single step in an AbTopicOrchestration.
 
 A step owns a collection of AbTopicBuilder instances and one AbCodingAgentBuilder. Concrete subclasses
-(AbSequentialStep, AbParallelStep) implement #run and decide whether topics execute one at a time or
+(AbOrchestrationSequentialStep, AbOrchestrationParallelStep) implement #run and decide whether topics execute one at a time or
 concurrently.
 
 I handle the common concerns: preparing topics, subscribing to completion events, waiting with timeout,
@@ -24,7 +24,7 @@ Collaborators:
 - AbTopic: the domain object being run and observed
 
 Internal Representation:
-- orchestration - parent AbTopicOrchestration (set at construction via #on:)
+- orchestration - parent AbTopicOrchestration (inherited from AbOrchestrationBaseStep)
 - topicBuilders - collection of AbTopicBuilder
 - codingAgentBuilder - AbCodingAgentBuilder for this step
 - sharedDirectoryPath - per-step working directory override; lazily falls back to orchestration sharedDirectoryPath when nil
@@ -33,9 +33,8 @@ Internal Representation:
 "
 Class {
 	#name : 'AbOrchestrationStep',
-	#superclass : 'Object',
+	#superclass : 'AbOrchestrationBaseStep',
 	#instVars : [
-		'orchestration',
 		'topicBuilders',
 		'codingAgentBuilder',
 		'sharedDirectoryPath',
@@ -45,13 +44,6 @@ Class {
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
-
-{ #category : 'instance creation' }
-AbOrchestrationStep class >> on: anOrchestration [
-	^ self new
-		orchestration: anOrchestration;
-		yourself
-]
 
 { #category : 'accessing' }
 AbOrchestrationStep >> activeCodingAgentBuilder [
@@ -92,21 +84,6 @@ AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
 	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
 		ifTrue: [ aStatus = #endTurn ]
 		ifFalse: [ aStatus = #goalAchieved ]
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> logger [
-	^ self orchestration logger
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> orchestration [
-	^ orchestration
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> orchestration: anOrchestration [
-	orchestration := anOrchestration
 ]
 
 { #category : 'running' }
@@ -159,22 +136,12 @@ AbOrchestrationStep >> resultFromTopic: aTopic [
 				ifFalse: [ nil ] ]
 ]
 
-{ #category : 'running' }
-AbOrchestrationStep >> run [
-	self subclassResponsibility
-]
-
 { #category : 'private' }
 AbOrchestrationStep >> runTopic: aTopic topicBuilder: aTopicBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
 	aTopic session ensureConnected.
 	anAgentBuilder finalizeOnSessionEstablished: aTopic.
 	aTopicBuilder finalizeOnSessionEstablished: aTopic.
 	aTopic sendPrompt: (self promptForBuilder: aTopicBuilder topic: aTopic injecting: aResult)
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> settings [
-	^ self orchestration settings
 ]
 
 { #category : 'accessing' }

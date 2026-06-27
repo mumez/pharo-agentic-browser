@@ -5,14 +5,14 @@ I am a concrete AbOrchestrationStep. I fork each topic run, wait on individual s
 combine all results into a single string that is injected into the first topic of the next step.
 "
 Class {
-	#name : 'AbParallelStep',
+	#name : 'AbOrchestrationParallelStep',
 	#superclass : 'AbOrchestrationStep',
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
 
 { #category : 'running' }
-AbParallelStep >> run [
+AbOrchestrationParallelStep >> run [
 	| topics semaphores incomingResult |
 	self logger debug: 'ParallelStep run: start topics=' , self topicBuilders size printString.
 	incomingResult := self previousStepResult.

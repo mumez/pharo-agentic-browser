@@ -3,7 +3,7 @@ I am the DSL builder used inside an AbTopicOrchestration #buildBy: block.
 
 I hold a reference to the AbTopicOrchestration being configured, so DSL calls for name,
 sharedDirectoryPath, and settings delegate directly to that instance. I also accumulate
-AbSequentialStep and AbParallelStep instances as the user calls #seq:agentBy: and
+AbOrchestrationSequentialStep and AbOrchestrationParallelStep instances as the user calls #seq:agentBy: and
 #para:agentBy:. When the block completes, AbTopicOrchestration reads my #steps collection.
 
 Responsibility:
@@ -16,7 +16,7 @@ Responsibility:
 
 Collaborators:
 - AbTopicOrchestration: holds me and reads my #steps after the build block completes
-- AbSequentialStep / AbParallelStep: instantiated and added to steps
+- AbOrchestrationSequentialStep / AbOrchestrationParallelStep: instantiated and added to steps
 - AbTopicBuilder: created per #topicBy: call
 - AbCodingAgentBuilder: created per #agentBy: call
 
@@ -85,7 +85,7 @@ AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: agentBu
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> para: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
 	| step |
-	step := (AbParallelStep on: self orchestration)
+	step := (AbOrchestrationParallelStep on: self orchestration)
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: agentBuilderBlock);
 		yourself.
@@ -101,7 +101,7 @@ AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBui
 { #category : 'building' }
 AbTopicOrchestrationBuilder >> seq: aCollectionOfTopicBuilders agentBy: agentBuilderBlock stepBy: stepBuilderBlock [
 	| step |
-	step := (AbSequentialStep on: self orchestration)
+	step := (AbOrchestrationSequentialStep on: self orchestration)
 		topicBuilders: aCollectionOfTopicBuilders;
 		codingAgentBuilder: (self agentBy: agentBuilderBlock);
 		yourself.

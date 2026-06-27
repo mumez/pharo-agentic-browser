@@ -1,9 +1,9 @@
 "
-I am the abstract base for a node in an AbOrchestrationGroup.
+I am the abstract base for a step in an AbOrchestrationGroup.
 
-Each node holds a collection of runnable items (AbTopicOrchestration or AbOrchestrationGroup)
-and executes them either sequentially (AbOrchestrationGroupSeqNode) or concurrently
-(AbOrchestrationGroupParaNode).
+Each step holds a collection of runnable items (AbTopicOrchestration or AbOrchestrationGroup)
+and executes them either sequentially (AbOrchestrationGroupSequentialStep) or concurrently
+(AbOrchestrationGroupParallelStep).
 
 Responsibility:
 - Hold the items to execute
@@ -14,8 +14,8 @@ Collaborators:
 - AbTopicOrchestration / AbOrchestrationGroup: my items (duck-typed: must respond to #run)
 "
 Class {
-	#name : 'AbOrchestrationGroupNode',
-	#superclass : 'Object',
+	#name : 'AbOrchestrationGroupStep',
+	#superclass : 'AbOrchestrationBaseStep',
 	#instVars : [
 		'items'
 	],
@@ -24,16 +24,12 @@ Class {
 }
 
 { #category : 'accessing' }
-AbOrchestrationGroupNode >> items [
+AbOrchestrationGroupStep >> items [
 	^ items ifNil: [ items := OrderedCollection new ]
 ]
 
 { #category : 'accessing' }
-AbOrchestrationGroupNode >> items: aCollection [
+AbOrchestrationGroupStep >> items: aCollection [
 	items := aCollection asOrderedCollection
 ]
 
-{ #category : 'running' }
-AbOrchestrationGroupNode >> run [
-	self subclassResponsibility
-]
