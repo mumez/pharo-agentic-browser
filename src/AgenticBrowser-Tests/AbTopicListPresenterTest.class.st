@@ -185,6 +185,34 @@ AbTopicListPresenterTest >> testTopicListLabelForReturnsIconAndTitle [
 	self assert: (presenter topicListLabelFor: topic) equals: 'ab-test-TestTopic'
 ]
 
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testRefreshAfterTopicAddedShowsNewTopic [
+
+	| manager newTopic |
+	manager := AbTopicManager forTest.
+	presenter topicManager: manager.
+	presenter subscribeToTopicManager.
+
+	newTopic := self newTopic: 'SyncedTopic'.
+	manager addTopic: newTopic.
+	presenter refresh.
+
+	self assert: (presenter topicList items includes: newTopic)
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testTopicAddedAnnouncerSubscriptionIsRegistered [
+	"Verify that AbTopicAdded subscription is wired on the manager announcer"
+
+	| manager |
+	manager := AbTopicManager forTest.
+	presenter topicManager: manager.
+	presenter subscribeToTopicManager.
+
+	self assert: (manager announcer subscriptions subscriptions
+		anySatisfy: [ :s | s announcementClass = AbTopicAdded ])
+]
+
 { #category : 'accessing' }
 AbTopicListPresenterTest >> topic: anAbTopic [
 
