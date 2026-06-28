@@ -1,5 +1,6 @@
 "
 I run my items concurrently by forking each one, waiting for all to complete via AbOrchestrationEnded.
+After all items finish, I combine each item's result into a single string (stepResult).
 "
 Class {
 	#name : 'AbOrchestrationGroupParallelStep',
@@ -8,9 +9,24 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
+{ #category : 'private' }
+AbOrchestrationGroupParallelStep >> combinedResultsFromItems [
+	| pairs |
+	pairs := (self items
+		collect: [ :item | { item name. item result } ])
+		select: [ :pair | pair last notNil ].
+	pairs ifEmpty: [ ^ nil ].
+	^ String streamContents: [ :strm |
+		pairs
+			do: [ :pair |
+				strm << '=== ' << pair first << ' ==='; crlf.
+				strm << pair second ]
+			separatedBy: [ strm crlf; crlf ] ]
+]
+
 { #category : 'running' }
 AbOrchestrationGroupParallelStep >> run [
-	| semaphore |
+	| semaphore result |
 	semaphore := Semaphore new.
 	self items do: [ :item |
 		item announcer
@@ -19,7 +35,10 @@ AbOrchestrationGroupParallelStep >> run [
 			for: self.
 		[ item run ] fork ].
 	self items size timesRepeat: [ self waitWithTimeoutOn: semaphore ].
-	self items do: [ :item | item announcer unsubscribe: self ]
+	self items do: [ :item | item announcer unsubscribe: self ].
+	result := self combinedResultsFromItems.
+	self stepResult: result.
+	^ result
 ]
 
 { #category : 'private' }

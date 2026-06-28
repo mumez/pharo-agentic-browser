@@ -45,12 +45,6 @@ AbTopicOrchestration >> removeTopicsFromManager [
 		step topics do: [ :topic | self topicManager removeTopic: topic ] ]
 ]
 
-{ #category : 'accessing' }
-AbTopicOrchestration >> result [
-	^ (steps select: [ :each | each stepResult notNil ])
-		ifNotEmpty: [ :completed | completed last stepResult ]
-]
-
 { #category : 'running' }
 AbTopicOrchestration >> run [
 	| stepResult |

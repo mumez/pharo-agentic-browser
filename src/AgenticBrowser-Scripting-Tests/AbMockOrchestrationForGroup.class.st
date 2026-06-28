@@ -44,6 +44,16 @@ AbMockOrchestrationForGroup >> runDelay: aNumber [
 ]
 
 { #category : 'accessing' }
+AbMockOrchestrationForGroup >> name [
+	^ 'mock'
+]
+
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> result [
+	^ runResult
+]
+
+{ #category : 'accessing' }
 AbMockOrchestrationForGroup >> runResult [
 	^ runResult
 ]

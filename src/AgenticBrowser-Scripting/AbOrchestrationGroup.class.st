@@ -42,11 +42,9 @@ AbOrchestrationGroup >> orchestrationBuilderClass [
 
 { #category : 'running' }
 AbOrchestrationGroup >> run [
-	| result |
-	result := nil.
 	[
-		self steps do: [ :node | result := node run ]
+		self steps do: [ :node | node run ]
 	] ensure: [
 		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
-	^ result
+	^ self result
 ]

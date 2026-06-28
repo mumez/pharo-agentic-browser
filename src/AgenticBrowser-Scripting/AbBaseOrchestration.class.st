@@ -108,6 +108,12 @@ AbBaseOrchestration >> safeName [
 	^ safe
 ]
 
+{ #category : 'accessing' }
+AbBaseOrchestration >> result [
+	^ (steps select: [ :each | each stepResult notNil ])
+		ifNotEmpty: [ :completed | completed last stepResult ]
+]
+
 { #category : 'persistence' }
 AbBaseOrchestration >> save [
 	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
