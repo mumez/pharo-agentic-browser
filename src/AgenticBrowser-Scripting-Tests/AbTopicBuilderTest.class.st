@@ -19,10 +19,41 @@ AbTopicBuilderTest >> testBuildByBlockSetsAttributes [
 ]
 
 { #category : 'tests' }
+AbTopicBuilderTest >> testMockTopicBuilderCreatesMockTopic [
+
+	| builder |
+	builder := AbMockTopicBuilder new.
+	self assert: (builder topic isKindOf: AbMockTopicNoPromptSend)
+]
+
+{ #category : 'tests' }
+AbTopicBuilderTest >> testOnConnectedAppliesGoalDescriptionToTopic [
+
+	| builder topic |
+	builder := AbTopicBuilder new.
+	builder goal: 'pass all tests'.
+	topic := AbMockTopicNoPromptSend new.
+	builder finalizeOnSessionEstablished: topic.
+	self assert: topic messages isEmpty.
+	self assert: (topic instVarNamed: #topicGoal) isNil
+]
+
+{ #category : 'tests' }
 AbTopicBuilderTest >> testTopicGoalNotCreatedWhenGoalNotSet [
 
 	| builder |
 	builder := AbTopicBuilder new title: 'ab-test-no-goal'.
+	self assert: (builder topic instVarNamed: #topicGoal) isNil
+]
+
+{ #category : 'tests' }
+AbTopicBuilderTest >> testTopicGoalSetViaBuilder [
+
+	| builder |
+	builder := AbTopicBuilder new.
+	builder title: 'ab-test-goal'.
+	builder goal: 'pass all tests'.
+	self assert: builder goal equals: 'pass all tests'.
 	self assert: (builder topic instVarNamed: #topicGoal) isNil
 ]
 
@@ -40,35 +71,4 @@ AbTopicBuilderTest >> testTopicTitleSetViaBuilder [
 	| builder |
 	builder := AbTopicBuilder new title: 'ab-test-title'.
 	self assert: builder topic title equals: 'ab-test-title'
-]
-
-{ #category : 'tests' }
-AbTopicBuilderTest >> testTopicGoalSetViaBuilder [
-
-	| builder |
-	builder := AbTopicBuilder new.
-	builder title: 'ab-test-goal'.
-	builder goal: 'pass all tests'.
-	self assert: builder goal equals: 'pass all tests'.
-	self assert: (builder topic instVarNamed: #topicGoal) isNil
-]
-
-{ #category : 'tests' }
-AbTopicBuilderTest >> testOnConnectedAppliesGoalDescriptionToTopic [
-
-	| builder topic |
-	builder := AbTopicBuilder new.
-	builder goal: 'pass all tests'.
-	topic := AbMockTopicNoPromptSend new.
-	builder finalizeOnSessionEstablished: topic.
-	self assert: topic messages isEmpty.
-	self assert: (topic instVarNamed: #topicGoal) isNil
-]
-
-{ #category : 'tests' }
-AbTopicBuilderTest >> testMockTopicBuilderCreatesMockTopic [
-
-	| builder |
-	builder := AbMockTopicBuilder new.
-	self assert: (builder topic isKindOf: AbMockTopicNoPromptSend)
 ]

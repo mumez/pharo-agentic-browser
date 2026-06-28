@@ -6,15 +6,14 @@ I am a concrete AbOrchestrationStep. For each topic I wait until it completes (#
 '=== Previous Topic Result ===' header.
 "
 Class {
-	#name : 'AbSequentialStep',
+	#name : 'AbOrchestrationSequentialStep',
 	#superclass : 'AbOrchestrationStep',
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
 
-
 { #category : 'running' }
-AbSequentialStep >> run [
+AbOrchestrationSequentialStep >> run [
 	| currentResult topics |
 	self logger debug: 'SequentialStep run: start topics=' , self topicBuilders size printString.
 	currentResult := self previousStepResult.

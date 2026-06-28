@@ -34,6 +34,11 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
+{ #category : 'factory' }
+AbTopicBuilder >> createTopic [
+	^ AbTopic new
+]
+
 { #category : 'accessing' }
 AbTopicBuilder >> goal [
 	^ goalDescription
@@ -44,9 +49,17 @@ AbTopicBuilder >> goal: aString [
 	goalDescription := aString
 ]
 
-{ #category : 'accessing' }
-AbTopicBuilder >> topic [
-	^ topic ifNil: [topic := self createTopic]
+{ #category : 'actions' }
+AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
+	| topic |
+	topic := self topic.
+	topic agentArguments: aCodingAgentBuilder agentArguments.
+	topic workingDirectoryPath: anOrchestrationStep sharedDirectoryPath.
+	topic settings aiPermissionWaitTimeoutSeconds: 0.
+	topic settings aiPermissionTimeoutOption: #allow_once.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	topic settings exportApprovalTimeoutOption: #allow_once.
+	^ topic
 ]
 
 { #category : 'accessing' }
@@ -69,20 +82,7 @@ AbTopicBuilder >> title: aString [
 	self topic title: aString
 ]
 
-{ #category : 'actions' }
-AbTopicBuilder >> prepareWith: aCodingAgentBuilder for: anOrchestrationStep [
-	| topic |
-	topic := self topic.
-	topic agentArguments: aCodingAgentBuilder agentArguments.
-	topic workingDirectoryPath: anOrchestrationStep sharedDirectoryPath.
-	topic settings aiPermissionWaitTimeoutSeconds: 0.
-	topic settings aiPermissionTimeoutOption: #allow_once.
-	topic settings exportApprovalWaitTimeoutSeconds: 0.
-	topic settings exportApprovalTimeoutOption: #allow_once.
-	^ topic
-]
-
-{ #category : 'factory' }
-AbTopicBuilder >> createTopic [
-	^ AbTopic new
+{ #category : 'accessing' }
+AbTopicBuilder >> topic [
+	^ topic ifNil: [topic := self createTopic]
 ]

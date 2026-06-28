@@ -2,7 +2,7 @@
 I am the abstract base class for a single step in an AbTopicOrchestration.
 
 A step owns a collection of AbTopicBuilder instances and one AbCodingAgentBuilder. Concrete subclasses
-(AbSequentialStep, AbParallelStep) implement #run and decide whether topics execute one at a time or
+(AbOrchestrationSequentialStep, AbOrchestrationParallelStep) implement #run and decide whether topics execute one at a time or
 concurrently.
 
 I handle the common concerns: preparing topics, subscribing to completion events, waiting with timeout,
@@ -24,7 +24,7 @@ Collaborators:
 - AbTopic: the domain object being run and observed
 
 Internal Representation:
-- orchestration - parent AbTopicOrchestration (set at construction via #on:)
+- orchestration - parent AbTopicOrchestration (inherited from AbBaseOrchestrationStep)
 - topicBuilders - collection of AbTopicBuilder
 - codingAgentBuilder - AbCodingAgentBuilder for this step
 - sharedDirectoryPath - per-step working directory override; lazily falls back to orchestration sharedDirectoryPath when nil
@@ -33,9 +33,8 @@ Internal Representation:
 "
 Class {
 	#name : 'AbOrchestrationStep',
-	#superclass : 'Object',
+	#superclass : 'AbBaseOrchestrationStep',
 	#instVars : [
-		'orchestration',
 		'topicBuilders',
 		'codingAgentBuilder',
 		'sharedDirectoryPath',
@@ -46,46 +45,9 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
-{ #category : 'instance creation' }
-AbOrchestrationStep class >> on: anOrchestration [
-	^ self new
-		orchestration: anOrchestration;
-		yourself
-]
-
 { #category : 'accessing' }
-AbOrchestrationStep >> orchestration [
-	^ orchestration
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> logger [
-	^ self orchestration logger
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> settings [
-	^ self orchestration settings
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> orchestration: anOrchestration [
-	orchestration := anOrchestration
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> topicBuilders [
-	^ topicBuilders
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> topicBuilders: aCollection [
-	topicBuilders := aCollection
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> topics [
-	^ self topicBuilders collect: [ :each | each topic ]
+AbOrchestrationStep >> activeCodingAgentBuilder [
+	^ codingAgentBuilder ifNil: [ self error: 'codingAgentBuilder is not set' ]
 ]
 
 { #category : 'accessing' }
@@ -96,93 +58,6 @@ AbOrchestrationStep >> codingAgentBuilder [
 { #category : 'accessing' }
 AbOrchestrationStep >> codingAgentBuilder: anCodingAgentBuilder [
 	codingAgentBuilder := anCodingAgentBuilder
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> sharedDirectoryPath [
-	^ sharedDirectoryPath ifNil: [ sharedDirectoryPath := self orchestration sharedDirectoryPath ]
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> sharedDirectoryPath: aString [
-	sharedDirectoryPath := aString
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> activeCodingAgentBuilder [
-	^ codingAgentBuilder ifNil: [ self error: 'codingAgentBuilder is not set' ]
-]
-
-{ #category : 'factory' }
-AbOrchestrationStep >> copiedCodingAgentBuilder [
-	^ self activeCodingAgentBuilder copyForRun
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> previousStepResult [
-	^ previousStepResult
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> previousStepResult: aString [
-	previousStepResult := aString
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> stepResult [
-	^ stepResult
-]
-
-{ #category : 'accessing' }
-AbOrchestrationStep >> stepResult: aString [
-	stepResult := aString
-]
-
-{ #category : 'running' }
-AbOrchestrationStep >> prepareTopicsForRun [
-	| agentBuilder |
-	agentBuilder := self activeCodingAgentBuilder.
-	^ self topicBuilders collect: [ :builder |
-		| topic |
-		topic := builder prepareWith: agentBuilder for: self.
-		topic registerTo: self orchestration topicManager.
-		topic ]
-]
-
-{ #category : 'running' }
-AbOrchestrationStep >> run [
-	self subclassResponsibility
-]
-
-{ #category : 'error handling' }
-AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
-	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)
-		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
-]
-
-{ #category : 'private' }
-AbOrchestrationStep >> runTopic: aTopic topicBuilder: aTopicBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
-	aTopic session ensureConnected.
-	anAgentBuilder finalizeOnSessionEstablished: aTopic.
-	aTopicBuilder finalizeOnSessionEstablished: aTopic.
-	aTopic sendPrompt: (self promptForBuilder: aTopicBuilder topic: aTopic injecting: aResult)
-]
-
-{ #category : 'private' }
-AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
-	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
-		ifTrue: [ aStatus = #endTurn ]
-		ifFalse: [ aStatus = #goalAchieved ]
-]
-
-{ #category : 'private' }
-AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic [
-	aTopic announcer
-		when: AbTopicStatusChanged
-		do: [ :ann |
-			(self isCompletionFor: aTopic status: ann status)
-				ifTrue: [ aSemaphore signal ] ]
-		for: self
 ]
 
 { #category : 'private' }
@@ -197,6 +72,39 @@ AbOrchestrationStep >> combinedResultsFrom: aCollectionOfTopics [
 				strm << '=== ' << pair first << ' ==='; crlf.
 				strm << pair second ]
 			separatedBy: [ strm crlf; crlf ] ]
+]
+
+{ #category : 'factory' }
+AbOrchestrationStep >> copiedCodingAgentBuilder [
+	^ self activeCodingAgentBuilder copyForRun
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> isCompletionFor: aTopic status: aStatus [
+	^ (aTopic topicGoal description isNil or: [ aTopic topicGoal description isEmpty ])
+		ifTrue: [ aStatus = #endTurn ]
+		ifFalse: [ aStatus = #goalAchieved ]
+]
+
+{ #category : 'running' }
+AbOrchestrationStep >> prepareTopicsForRun [
+	| agentBuilder |
+	agentBuilder := self activeCodingAgentBuilder.
+	^ self topicBuilders collect: [ :builder |
+		| topic |
+		topic := builder prepareWith: agentBuilder for: self.
+		topic registerTo: self orchestration topicManager.
+		topic ]
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> previousStepResult [
+	^ previousStepResult
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> previousStepResult: aString [
+	previousStepResult := aString
 ]
 
 { #category : 'private' }
@@ -226,4 +134,63 @@ AbOrchestrationStep >> resultFromTopic: aTopic [
 			(aTopic messages notEmpty and: [ aTopic messages last sender = #ai ])
 				ifTrue: [ aTopic messages last text ]
 				ifFalse: [ nil ] ]
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> runTopic: aTopic topicBuilder: aTopicBuilder agentBuilder: anAgentBuilder resultInjecting: aResult [
+	aTopic session ensureConnected.
+	anAgentBuilder finalizeOnSessionEstablished: aTopic.
+	aTopicBuilder finalizeOnSessionEstablished: aTopic.
+	aTopic sendPrompt: (self promptForBuilder: aTopicBuilder topic: aTopic injecting: aResult)
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> sharedDirectoryPath [
+	^ sharedDirectoryPath ifNil: [ sharedDirectoryPath := self orchestration sharedDirectoryPath ]
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> sharedDirectoryPath: aString [
+	sharedDirectoryPath := aString
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> stepResult [
+	^ stepResult
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> stepResult: aString [
+	stepResult := aString
+]
+
+{ #category : 'private' }
+AbOrchestrationStep >> subscribeCompletionSemaphore: aSemaphore forTopic: aTopic [
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ :ann |
+			(self isCompletionFor: aTopic status: ann status)
+				ifTrue: [ aSemaphore signal ] ]
+		for: self
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> topicBuilders [
+	^ topicBuilders
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> topicBuilders: aCollection [
+	topicBuilders := aCollection
+]
+
+{ #category : 'accessing' }
+AbOrchestrationStep >> topics [
+	^ self topicBuilders collect: [ :each | each topic ]
+]
+
+{ #category : 'error handling' }
+AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
+	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)
+		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
 ]

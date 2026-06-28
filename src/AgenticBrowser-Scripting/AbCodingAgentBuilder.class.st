@@ -33,12 +33,6 @@ Class {
 	#package : 'AgenticBrowser-Scripting'
 }
 
-{ #category : 'initialization' }
-AbCodingAgentBuilder >> initialize [
-	super initialize.
-	agentArguments := #().
-]
-
 { #category : 'accessing' }
 AbCodingAgentBuilder >> agentArguments [
 	^ agentArguments
@@ -49,9 +43,42 @@ AbCodingAgentBuilder >> agentArguments: anArray [
 	agentArguments := anArray
 ]
 
-{ #category : 'actions' }
-AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
-	self agentArguments: (AbSettings default agentArgumentsPresets at: agentName)
+{ #category : 'privates' }
+AbCodingAgentBuilder >> applyModeTo: aTopic [
+	| modeOption modeNormalized flatOptions matchingOption |
+	self mode ifNil: [ ^ self ].
+	modeOption := aTopic session modeConfigOption.
+	modeOption ifNil: [
+		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self mode })) signal ].
+	modeNormalized := self mode asLowercase.
+	flatOptions := self flattenedOptions: modeOption options.
+	matchingOption := flatOptions
+		detect: [ :opt | ((opt name findTokens: String space) collect: #asLowercase) includes: modeNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingMode: ('No matching mode option for {1}. Available: {2}' format: { self mode. (flatOptions collect: #name) })
+				requestedMode: self mode
+				availableOptions: flatOptions) signal ].
+	aTopic setConfigOptionId: modeOption id value: matchingOption value
+]
+
+{ #category : 'privates' }
+AbCodingAgentBuilder >> applyModelTo: aTopic [
+	| modelOption modelNormalized flatOptions matchingOption |
+	self model ifNil: [ ^ self ].
+	modelOption := aTopic session modelConfigOption.
+	modelOption ifNil: [
+		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self model })) signal ].
+	modelNormalized := self model asLowercase.
+	flatOptions := self flattenedOptions: modelOption options.
+	matchingOption := flatOptions
+		detect: [ :opt | opt value asLowercase = modelNormalized ]
+		ifNone: [
+			(AbScriptingError
+				noMatchingModel: ('No matching model option for {1}' format: { self model })
+				requestedModel: self model
+				availableOptions: flatOptions) signal ].
+	aTopic setConfigOptionId: modelOption id value: matchingOption value
 ]
 
 { #category : 'shortcuts' }
@@ -65,23 +92,48 @@ AbCodingAgentBuilder >> codex [
 ]
 
 { #category : 'shortcuts' }
-AbCodingAgentBuilder >> gemini [
-	self useAgentArgumentsAt: 'Gemini CLI'
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> opencode [
-	self useAgentArgumentsAt: 'OpenCode'
-]
-
-{ #category : 'shortcuts' }
 AbCodingAgentBuilder >> copilot [
 	self useAgentArgumentsAt: 'Copilot CLI'
+]
+
+{ #category : 'copying' }
+AbCodingAgentBuilder >> copyForRun [
+	^ (self class new)
+		agentArguments: self agentArguments;
+		mode: self mode;
+		model: self model;
+		yourself
 ]
 
 { #category : 'shortcuts' }
 AbCodingAgentBuilder >> cursorAgent [
 	self useAgentArgumentsAt: 'Cursor CLI'
+]
+
+{ #category : 'callbacks' }
+AbCodingAgentBuilder >> finalizeOnSessionEstablished: aTopic [
+	self applyModeTo: aTopic.
+	self applyModelTo: aTopic.
+	super finalizeOnSessionEstablished: aTopic
+]
+
+{ #category : 'privates' }
+AbCodingAgentBuilder >> flattenedOptions: aCollection [
+	^ aCollection flatCollect: [ :opt |
+		opt isGroup
+			ifTrue: [ opt options ]
+			ifFalse: [ { opt } ] ]
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> gemini [
+	self useAgentArgumentsAt: 'Gemini CLI'
+]
+
+{ #category : 'initialization' }
+AbCodingAgentBuilder >> initialize [
+	super initialize.
+	agentArguments := #().
 ]
 
 { #category : 'shortcuts' }
@@ -114,69 +166,17 @@ AbCodingAgentBuilder >> model: aModelName [
 	model := aModelName
 ]
 
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> opencode [
+	self useAgentArgumentsAt: 'OpenCode'
+]
+
 { #category : 'actions' }
 AbCodingAgentBuilder >> planMode [
 	self mode: #plan
 ]
 
-{ #category : 'copying' }
-AbCodingAgentBuilder >> copyForRun [
-	^ (self class new)
-		agentArguments: self agentArguments;
-		mode: self mode;
-		model: self model;
-		yourself
-]
-
-{ #category : 'privates' }
-AbCodingAgentBuilder >> applyModeTo: aTopic [
-	| modeOption modeNormalized flatOptions matchingOption |
-	self mode ifNil: [ ^ self ].
-	modeOption := aTopic session modeConfigOption.
-	modeOption ifNil: [
-		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self agentArguments })) signal ].
-	modeNormalized := self mode asLowercase.
-	flatOptions := self flattenedOptions: modeOption options.
-	matchingOption := flatOptions
-		detect: [ :opt | ((opt name findTokens: String space) collect: #asLowercase) includes: modeNormalized ]
-		ifNone: [
-			(AbScriptingError
-				noMatchingMode: ('No matching mode option for {1}. Available: {2}' format: { self mode. (flatOptions collect: #name) })
-				requestedMode: self mode
-				availableOptions: flatOptions) signal ].
-	aTopic setConfigOptionId: modeOption id value: matchingOption value
-]
-
-{ #category : 'privates' }
-AbCodingAgentBuilder >> applyModelTo: aTopic [
-	| modelOption modelNormalized flatOptions matchingOption |
-	self model ifNil: [ ^ self ].
-	modelOption := aTopic session modelConfigOption.
-	modelOption ifNil: [
-		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self agentArguments })) signal ].
-	modelNormalized := self model asLowercase.
-	flatOptions := self flattenedOptions: modelOption options.
-	matchingOption := flatOptions
-		detect: [ :opt | opt value asLowercase = modelNormalized ]
-		ifNone: [
-			(AbScriptingError
-				noMatchingModel: ('No matching model option for {1}' format: { self model })
-				requestedModel: self model
-				availableOptions: flatOptions) signal ].
-	aTopic setConfigOptionId: modelOption id value: matchingOption value
-]
-
-{ #category : 'privates' }
-AbCodingAgentBuilder >> flattenedOptions: aCollection [
-	^ aCollection flatCollect: [ :opt |
-		opt isGroup
-			ifTrue: [ opt options ]
-			ifFalse: [ { opt } ] ]
-]
-
-{ #category : 'callbacks' }
-AbCodingAgentBuilder >> finalizeOnSessionEstablished: aTopic [
-	self applyModeTo: aTopic.
-	self applyModelTo: aTopic.
-	super finalizeOnSessionEstablished: aTopic
+{ #category : 'actions' }
+AbCodingAgentBuilder >> useAgentArgumentsAt: agentName [
+	self agentArguments: (AbSettings default agentArgumentsPresets at: agentName)
 ]
