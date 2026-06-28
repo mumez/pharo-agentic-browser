@@ -408,7 +408,8 @@ AbTopicListPresenter >> subscribeToTopicManager [
 			ann topic announcer
 				when: AbTopicStatusChanged
 				do: [ self defer: [ self refresh ] ]
-				for: self ]
+				for: self.
+			self defer: [ self refresh ] ]
 		for: self.
 	self topicManager announcer
 		when: AbTopicRemoved

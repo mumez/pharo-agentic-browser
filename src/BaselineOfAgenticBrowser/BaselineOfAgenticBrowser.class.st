@@ -47,6 +47,9 @@ BaselineOfAgenticBrowser >> baseline: spec [
 			group: 'default'
 			with: #( 'AgenticBrowser-Core' 'AgenticBrowser-Handler' 'AgenticBrowser-UI' ).
 		spec
+			group: 'all'
+			with: #( 'Scripting-Tests' 'WebUI-Tests' ).
+		spec
 			group: 'Tests'
 			with: #( 'default' 'AgenticBrowser-Tests' ).
 		spec

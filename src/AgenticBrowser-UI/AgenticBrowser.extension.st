@@ -3,7 +3,9 @@ Extension { #name : 'AgenticBrowser' }
 { #category : '*AgenticBrowser-UI' }
 AgenticBrowser class >> open [
 	<script>
-	AbSettings load.
-	AbTopicManager load.
+	(AbBrowserPresenter allInstances anySatisfy: [ :e |
+		 e window notNil and: [ e window isOpen ] ]) ifFalse: [
+		AbSettings load.
+		AbTopicManager load ].
 	^ AbBrowserPresenter open
 ]
