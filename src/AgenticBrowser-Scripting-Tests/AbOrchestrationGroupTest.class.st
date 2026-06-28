@@ -163,6 +163,30 @@ AbOrchestrationGroupTest >> testSeqNodeReturnsLastItemResult [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testSharedDirectoryPathAppliedToItemsOnRun [
+	| group path o1 o2 |
+	path := '/tmp/ab-test-group-shared'.
+	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
+	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
+	group := AbOrchestrationGroup buildBy: [ :builder |
+		builder sharedDirectoryPath: path.
+		builder seq: (OrderedCollection with: o1 with: o2) ].
+	group run.
+	self assert: o1 sharedDirectoryPath equals: path.
+	self assert: o2 sharedDirectoryPath equals: path
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testSharedDirectoryPathNotAppliedWhenNotSet [
+	| group o1 |
+	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
+	group := AbOrchestrationGroup buildBy: [ :builder |
+		builder seq: (OrderedCollection with: o1) ].
+	group run.
+	self assert: o1 sharedDirectoryPath isNil
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeRunsItemsInOrder [
 	| runOrder o1 o2 o3 node |
 	runOrder := OrderedCollection new.

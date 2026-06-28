@@ -8,6 +8,7 @@ Responsibility:
 - Provide #para: and #seq: DSL entry points (each adds a node to the group)
 - Provide #orchestrationBy: to create an AbTopicOrchestration via its own builder
 - Provide #orchestrationGroupBy: to create a nested AbOrchestrationGroup
+- Provide #sharedDirectoryPath: to set a common working directory propagated to all items at run time
 
 Collaborators:
 - AbOrchestrationGroup: the group under construction (holds my nodes via #group)
@@ -20,6 +21,7 @@ Public API and Key Messages:
 - #seq: aCollection - add a sequential node containing the items in aCollection
 - #orchestrationBy: aBlock - create AbTopicOrchestration; block receives AbTopicOrchestrationBuilder
 - #orchestrationGroupBy: aBlock - create nested AbOrchestrationGroup; block receives AbOrchestrationGroupBuilder
+- #sharedDirectoryPath: aString - set the shared working directory for all items in the group
 "
 Class {
 	#name : 'AbOrchestrationGroupBuilder',
@@ -66,6 +68,11 @@ AbOrchestrationGroupBuilder >> para: aCollection [
 		items: aCollection;
 		yourself.
 	self group steps add: node
+]
+
+{ #category : 'accessing' }
+AbOrchestrationGroupBuilder >> sharedDirectoryPath: aString [
+	self group sharedDirectoryPath: aString
 ]
 
 { #category : 'building' }

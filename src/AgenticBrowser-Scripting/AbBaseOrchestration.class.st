@@ -83,6 +83,11 @@ AbBaseOrchestration class >> fuelIgnoredInstanceVariableNames [
 ]
 
 { #category : 'accessing' }
+AbBaseOrchestration >> basicSharedDirectoryPath [
+	^ sharedDirectoryPath
+]
+
+{ #category : 'accessing' }
 AbBaseOrchestration >> defaultSharedDirectoryPath [
 	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
 ]

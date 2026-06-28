@@ -9,7 +9,8 @@ Class {
 		'runResult',
 		'runCount',
 		'runDelay',
-		'announcer'
+		'announcer',
+		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting-Tests',
 	#package : 'AgenticBrowser-Scripting-Tests'
@@ -46,6 +47,16 @@ AbMockOrchestrationForGroup >> runDelay: aNumber [
 { #category : 'accessing' }
 AbMockOrchestrationForGroup >> name [
 	^ 'mock'
+]
+
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> sharedDirectoryPath [
+	^ sharedDirectoryPath
+]
+
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> sharedDirectoryPath: aString [
+	sharedDirectoryPath := aString
 ]
 
 { #category : 'accessing' }

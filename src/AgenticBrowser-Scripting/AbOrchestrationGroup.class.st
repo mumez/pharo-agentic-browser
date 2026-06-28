@@ -41,8 +41,18 @@ AbOrchestrationGroup >> orchestrationBuilderClass [
 ]
 
 { #category : 'running' }
+AbOrchestrationGroup >> prepareItems [
+	| path |
+	path := self basicSharedDirectoryPath.
+	path ifNil: [ ^ self ].
+	self steps do: [ :step |
+		step items do: [ :item | item sharedDirectoryPath: path ] ]
+]
+
+{ #category : 'running' }
 AbOrchestrationGroup >> run [
 	[
+		self prepareItems.
 		self steps do: [ :node | node run ]
 	] ensure: [
 		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
