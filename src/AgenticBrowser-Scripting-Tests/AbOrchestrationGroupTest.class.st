@@ -177,6 +177,23 @@ AbOrchestrationGroupTest >> testSharedDirectoryPathAppliedToItemsOnRun [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testSharedDirectoryPathPropagatesIntoNestedGroup [
+	| outerGroup path o1 o2 |
+	path := '/tmp/ab-test-nested-group-shared'.
+	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
+	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
+	outerGroup := AbOrchestrationGroup buildBy: [ :builder |
+		| innerGroup |
+		innerGroup := AbOrchestrationGroup buildBy: [ :b |
+			b seq: (OrderedCollection with: o1 with: o2) ].
+		builder sharedDirectoryPath: path.
+		builder seq: (OrderedCollection with: innerGroup) ].
+	outerGroup run.
+	self assert: o1 sharedDirectoryPath equals: path.
+	self assert: o2 sharedDirectoryPath equals: path
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSharedDirectoryPathNotAppliedWhenNotSet [
 	| group o1 |
 	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
