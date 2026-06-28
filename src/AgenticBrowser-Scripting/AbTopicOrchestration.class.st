@@ -2,15 +2,14 @@
 I represent a multi-topic orchestration that coordinates AI agent sessions in a structured workflow.
 
 I am the root object of the Scripting DSL. I hold an ordered collection of steps (sequential or
-parallel) and run them in order when #run is called. Steps share a common working directory under
-the AgenticBrowser root.
+parallel) and run them in order when #run is called.
 
 Responsibility:
 - Hold and execute an ordered list of AbOrchestrationStep instances
-- Provide a shared working directory for all steps
 - Propagate results between steps
-- Manage Fuel persistence (save/load)
 - Clean up topics from AbTopicManager after the run (unless lingerOrchestrationTopicsAfterRun is true)
+
+Persistence, shared directory, naming, and debugging are inherited from AbBaseOrchestration.
 
 Collaborators:
 - AbTopicOrchestrationBuilder: builds my steps from a DSL block
@@ -23,52 +22,17 @@ Public API and Key Messages:
 - #buildBy: aBlock - configure steps via DSL builder block
 - #run - execute all steps in order; blocks until complete; returns final result
 - #result - returns the result of the last completed step
-- #save / #saveTo: - persist to disk via Fuel serialization
-- #explore - open inspector on orchestration state
-
-Internal Representation:
-- id - stable UUID used as part of the shared directory name
-- name - human-readable name (defaults to 'orchestration')
-- steps - OrderedCollection of AbOrchestrationStep
-- sharedDirectoryPath - common working directory for all topics
-- settings - AbSettings copy (controls timeouts and linger behavior)
-- logger - for debug output
+- #save / #saveTo: - persist to disk via Fuel serialization (inherited)
+- #explore - open inspector on orchestration state (inherited)
 "
 Class {
 	#name : 'AbTopicOrchestration',
 	#superclass : 'AbBaseOrchestration',
 	#instVars : [
-		'sharedDirectoryPath'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
 }
-
-{ #category : 'persistence' }
-AbTopicOrchestration class >> loadFrom: aFileReference [
-
-	| loaded |
-	loaded := FLMaterializer materializeFromFileNamed: aFileReference fullName.
-	loaded class == self ifFalse: [
-		self error: 'Deserialized object is not a ' , self name ].
-	^ loaded
-]
-
-{ #category : 'defaults' }
-AbTopicOrchestration >> defaultSharedDirectoryPath [
-	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
-]
-
-{ #category : 'defaults' }
-AbTopicOrchestration >> directoryName [
-	^ self shortReferenceName
-]
-
-{ #category : 'inspecting' }
-AbTopicOrchestration >> explore [
-	{ #orchestration -> self. #steps -> self steps. #result -> self result }
-		asDictionary inspect
-]
 
 { #category : 'building' }
 AbTopicOrchestration >> orchestrationBuilderClass [
@@ -102,45 +66,6 @@ AbTopicOrchestration >> run [
 		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
 	self logger debug: 'Orchestration run: end name=' , self name.
 	^ stepResult
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> safeName [
-
-	| safe |
-	safe := self name collect: [ :c |
-		    (c isAlphaNumeric or: [ c = $- or: [ c = $_ ] ])
-			    ifTrue: [ c ]
-			    ifFalse: [ $- ] ].
-	safe ifEmpty: [ safe := 'orchestration' ].
-	^ safe
-]
-
-{ #category : 'persistence' }
-AbTopicOrchestration >> save [
-	self saveTo: self sharedDirectoryPath asFileReference / (self shortReferenceName , '.fuel')
-]
-
-{ #category : 'persistence' }
-AbTopicOrchestration >> saveTo: aFileReference [
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: self toFileNamed: aFileReference fullName
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> sharedDirectoryPath [
-	^ sharedDirectoryPath ifNil: [
-		sharedDirectoryPath := self defaultSharedDirectoryPath ]
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> sharedDirectoryPath: aString [
-	sharedDirectoryPath := aString
-]
-
-{ #category : 'accessing' }
-AbTopicOrchestration >> shortReferenceName [
-	^ self safeName , '-' , (self id copyFrom: 1 to: 8)
 ]
 
 { #category : 'accessing' }
