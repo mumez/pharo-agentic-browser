@@ -41,15 +41,6 @@ AbScriptingError class >> modelNotSupported: aMessage [
 ]
 
 { #category : 'instance creation' }
-AbScriptingError class >> noMatchingModel: aMessage requestedModel: aModel availableOptions: optionObjects [
-	^ (self kind: #noMatchingModel)
-		messageText: aMessage;
-		dataAt: #requestedModel put: aModel;
-		dataAt: #availableOptions put: optionObjects;
-		yourself
-]
-
-{ #category : 'instance creation' }
 AbScriptingError class >> noMatchingMode: aMessage requestedMode: aMode availableOptions: optionNames [
 	^ (self kind: #noMatchingMode)
 		messageText: aMessage;
@@ -58,14 +49,13 @@ AbScriptingError class >> noMatchingMode: aMessage requestedMode: aMode availabl
 		yourself
 ]
 
-{ #category : 'accessing' }
-AbScriptingError >> kind [
-	^ kind
-]
-
-{ #category : 'accessing' }
-AbScriptingError >> kind: aSymbol [
-	kind := aSymbol
+{ #category : 'instance creation' }
+AbScriptingError class >> noMatchingModel: aMessage requestedModel: aModel availableOptions: optionObjects [
+	^ (self kind: #noMatchingModel)
+		messageText: aMessage;
+		dataAt: #requestedModel put: aModel;
+		dataAt: #availableOptions put: optionObjects;
+		yourself
 ]
 
 { #category : 'accessing' }
@@ -87,4 +77,14 @@ AbScriptingError >> dataAt: key [
 { #category : 'accessing' }
 AbScriptingError >> dataAt: key put: value [
 	self data at: key put: value
+]
+
+{ #category : 'accessing' }
+AbScriptingError >> kind [
+	^ kind
+]
+
+{ #category : 'accessing' }
+AbScriptingError >> kind: aSymbol [
+	kind := aSymbol
 ]

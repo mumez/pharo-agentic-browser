@@ -22,6 +22,16 @@ AbElementBuilder class >> on: aParentBuilder [
 		yourself
 ]
 
+{ #category : 'building' }
+AbElementBuilder >> buildBy: aBlock [
+	aBlock value: self
+]
+
+{ #category : 'event handling' }
+AbElementBuilder >> finalizeOnSessionEstablished: aTopic [
+	self sessionEstablishedActions do: [ :action | action value: aTopic ]
+]
+
 { #category : 'accessing' }
 AbElementBuilder >> parentBuilder [
 	^ parentBuilder
@@ -32,17 +42,7 @@ AbElementBuilder >> parentBuilder: aBuilder [
 	parentBuilder := aBuilder
 ]
 
-{ #category : 'building' }
-AbElementBuilder >> buildBy: aBlock [
-	aBlock value: self
-]
-
 { #category : 'accessing' }
 AbElementBuilder >> sessionEstablishedActions [
 	^ sessionEstablishedActions ifNil: [ sessionEstablishedActions := OrderedCollection new ]
-]
-
-{ #category : 'event handling' }
-AbElementBuilder >> finalizeOnSessionEstablished: aTopic [
-	self sessionEstablishedActions do: [ :action | action value: aTopic ]
 ]
