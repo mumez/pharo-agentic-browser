@@ -49,7 +49,7 @@ AbCodingAgentBuilder >> applyModeTo: aTopic [
 	self mode ifNil: [ ^ self ].
 	modeOption := aTopic session modeConfigOption.
 	modeOption ifNil: [
-		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self agentArguments })) signal ].
+		(AbScriptingError modeNotSupported: ('Mode not supported: {1}' format: { self mode })) signal ].
 	modeNormalized := self mode asLowercase.
 	flatOptions := self flattenedOptions: modeOption options.
 	matchingOption := flatOptions
@@ -68,7 +68,7 @@ AbCodingAgentBuilder >> applyModelTo: aTopic [
 	self model ifNil: [ ^ self ].
 	modelOption := aTopic session modelConfigOption.
 	modelOption ifNil: [
-		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self agentArguments })) signal ].
+		(AbScriptingError modelNotSupported: ('Model not supported: {1}' format: { self model })) signal ].
 	modelNormalized := self model asLowercase.
 	flatOptions := self flattenedOptions: modelOption options.
 	matchingOption := flatOptions
