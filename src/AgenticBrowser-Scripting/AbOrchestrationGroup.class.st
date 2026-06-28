@@ -51,10 +51,12 @@ AbOrchestrationGroup >> prepareItems [
 
 { #category : 'running' }
 AbOrchestrationGroup >> run [
+	self logger debug: 'OrchestrationGroup run: start name=' , self name , ' steps=' , self steps size printString.
 	[
 		self prepareItems.
 		self steps do: [ :node | node run ]
 	] ensure: [
 		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
+	self logger debug: 'OrchestrationGroup run: end name=' , self name.
 	^ self result
 ]
