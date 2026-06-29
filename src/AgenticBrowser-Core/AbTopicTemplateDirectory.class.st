@@ -46,7 +46,7 @@ AbTopicTemplateDirectory class >> default [
 
 { #category : 'accessing' }
 AbTopicTemplateDirectory class >> reset [
-
+	<script>
 	default := nil
 ]
 
