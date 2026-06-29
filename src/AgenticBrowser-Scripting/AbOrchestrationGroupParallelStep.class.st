@@ -29,6 +29,7 @@ AbOrchestrationGroupParallelStep >> run [
 	| semaphore result |
 	semaphore := Semaphore new.
 	self items do: [ :item |
+		self previousStepResult ifNotNil: [ :prev | item previousResult: prev ].
 		item announcer
 			when: AbOrchestrationEnded
 			do: [ semaphore signal ]

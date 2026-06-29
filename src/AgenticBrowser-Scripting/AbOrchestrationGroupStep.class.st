@@ -19,7 +19,8 @@ Class {
 	#superclass : 'AbBaseOrchestrationStep',
 	#instVars : [
 		'items',
-		'stepResult'
+		'stepResult',
+		'previousStepResult'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -33,6 +34,16 @@ AbOrchestrationGroupStep >> items [
 { #category : 'accessing' }
 AbOrchestrationGroupStep >> items: aCollection [
 	items := aCollection asOrderedCollection
+]
+
+{ #category : 'accessing' }
+AbOrchestrationGroupStep >> previousStepResult [
+	^ previousStepResult
+]
+
+{ #category : 'accessing' }
+AbOrchestrationGroupStep >> previousStepResult: aString [
+	previousStepResult := aString
 ]
 
 { #category : 'accessing' }
