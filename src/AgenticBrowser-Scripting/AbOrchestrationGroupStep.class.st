@@ -13,6 +13,13 @@ Responsibility:
 Collaborators:
 - AbOrchestrationGroup: holds me and calls #run in order
 - AbTopicOrchestration / AbOrchestrationGroup: my items (duck-typed: must respond to #run and #result)
+
+Public API and Key Messages:
+- #on: anOrchestration - class-side factory (inherited from AbBaseOrchestrationStep)
+- #items: aCollection - set the runnable items
+- #run - execute items (implemented by subclasses)
+- #stepResult - result of this step after run
+- #previousStepResult: aString - inject the previous step's result before running
 "
 Class {
 	#name : 'AbOrchestrationGroupStep',

@@ -18,6 +18,24 @@ Collaborators:
 - AbSettings: provides default settings and the root directory for persistence
 - AbLocalLogger: default logger implementation
 - AbOrchestrationEnded: announced on run completion by subclasses
+
+Public API and Key Messages:
+- #buildBy: aBlock - configure the orchestration via a DSL builder block
+- #run - execute all steps in order (implemented by subclasses)
+- #result - returns the result string of the last completed step
+- #save / #saveTo: aFileReference - persist to disk via Fuel serialization
+- #loadFrom: aFileReference - class-side; deserialize a previously saved instance
+- #explore - open inspector on orchestration state (id, steps, result)
+
+Internal Representation:
+- id - UUID string; lazy-initialized on first access
+- name - human-readable label; defaults to 'orchestration'
+- steps - OrderedCollection of step instances
+- settings - AbSettings copy; defaults to AbSettings defaultCopied
+- logger - AbLocalLogger; transient (excluded from Fuel serialization)
+- announcer - Announcer; transient (excluded from Fuel serialization)
+- sharedDirectoryPath - working directory path; lazy-initialized from settings
+- previousResult - result injected from an outer context (e.g. a containing group)
 "
 Class {
 	#name : 'AbBaseOrchestration',

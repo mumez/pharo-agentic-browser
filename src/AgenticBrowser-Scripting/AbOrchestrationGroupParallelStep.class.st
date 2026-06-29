@@ -1,6 +1,13 @@
 "
-I run my items concurrently by forking each one, waiting for all to complete via AbOrchestrationEnded.
-After all items finish, I combine each item's result into a single string (stepResult).
+I run my items concurrently by forking each one, wait for all to complete via AbOrchestrationEnded,
+then combine their results into a single string.
+
+Execution detail: I subscribe to AbOrchestrationEnded on each item's announcer before forking.
+A shared Semaphore is signalled once per item completion, and I wait once per item. If any wait
+exceeds orchestrationGroupItemWaitTimeoutSeconds, AbOrchestrationStepTimeout is signalled.
+
+Combined results are formatted as '=== item name ===\nresult\n\n...' blocks, mirroring the
+format produced by AbOrchestrationParallelStep for topic-level parallel runs.
 "
 Class {
 	#name : 'AbOrchestrationGroupParallelStep',
