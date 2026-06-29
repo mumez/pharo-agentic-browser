@@ -29,7 +29,8 @@ Class {
 		'settings',
 		'logger',
 		'announcer',
-		'sharedDirectoryPath'
+		'sharedDirectoryPath',
+		'previousResult'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -111,6 +112,16 @@ AbBaseOrchestration >> safeName [
 			ifFalse: [ $- ] ].
 	safe ifEmpty: [ safe := 'orchestration' ].
 	^ safe
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> previousResult [
+	^ previousResult
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> previousResult: aString [
+	previousResult := aString
 ]
 
 { #category : 'accessing' }

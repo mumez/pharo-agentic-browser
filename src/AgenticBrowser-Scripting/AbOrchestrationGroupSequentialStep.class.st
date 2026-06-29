@@ -12,7 +12,9 @@ Class {
 AbOrchestrationGroupSequentialStep >> run [
 	| result |
 	result := nil.
-	self items do: [ :item | result := item run ].
+	self items do: [ :item |
+		result ifNotNil: [ item previousResult: result ].
+		result := item run ].
 	self stepResult: result.
 	^ result
 ]
