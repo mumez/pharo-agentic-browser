@@ -100,7 +100,7 @@ AbBaseOrchestration >> directoryName [
 
 { #category : 'inspecting' }
 AbBaseOrchestration >> explore [
-	{ #orchestration -> self. #steps -> self steps } asDictionary inspect
+	{ #orchestration -> self. #steps -> self steps. #result -> self result } asDictionary inspect
 ]
 
 { #category : 'accessing' }
