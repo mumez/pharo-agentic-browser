@@ -13,13 +13,21 @@ Responsibility:
 Collaborators:
 - AbOrchestrationGroup: holds me and calls #run in order
 - AbTopicOrchestration / AbOrchestrationGroup: my items (duck-typed: must respond to #run and #result)
+
+Public API and Key Messages:
+- #on: anOrchestration - class-side factory (inherited from AbBaseOrchestrationStep)
+- #items: aCollection - set the runnable items
+- #run - execute items (implemented by subclasses)
+- #stepResult - result of this step after run
+- #previousStepResult: aString - inject the previous step's result before running
 "
 Class {
 	#name : 'AbOrchestrationGroupStep',
 	#superclass : 'AbBaseOrchestrationStep',
 	#instVars : [
 		'items',
-		'stepResult'
+		'stepResult',
+		'previousStepResult'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -33,6 +41,16 @@ AbOrchestrationGroupStep >> items [
 { #category : 'accessing' }
 AbOrchestrationGroupStep >> items: aCollection [
 	items := aCollection asOrderedCollection
+]
+
+{ #category : 'accessing' }
+AbOrchestrationGroupStep >> previousStepResult [
+	^ previousStepResult
+]
+
+{ #category : 'accessing' }
+AbOrchestrationGroupStep >> previousStepResult: aString [
+	previousStepResult := aString
 ]
 
 { #category : 'accessing' }

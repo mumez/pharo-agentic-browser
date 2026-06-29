@@ -72,6 +72,52 @@ AgenticBrowser class >> exampleSequentialTopics [
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
+AgenticBrowser class >> exampleGroupParallelOrchestrations [
+	<script>
+	| groupScript |
+	groupScript := self groupScriptBy: [ :groupBuilder |
+		groupBuilder para: {
+			groupBuilder orchestrationBy: [ :builder |
+				builder seq: {
+					builder topicBy: [ :t |
+						t title: 'Research Pharo language'.
+						t prompt: 'Describe what Pharo Smalltalk is in one paragraph.' ]
+				} agentBy: [ :a | a claude ] ].
+			groupBuilder orchestrationBy: [ :builder |
+				builder seq: {
+					builder topicBy: [ :t |
+						t title: 'Research Pharo ecosystem'.
+						t prompt: 'Describe the Pharo Smalltalk ecosystem (tools, community) in one paragraph.' ]
+				} agentBy: [ :a | a claude ] ]
+		} ].
+	[groupScript run.
+	groupScript explore] fork.
+]
+
+{ #category : '*AgenticBrowser-Scripting-examples-scripting' }
+AgenticBrowser class >> exampleGroupSequentialOrchestrations [
+	<script>
+	| groupScript |
+	groupScript := self groupScriptBy: [ :groupBuilder |
+		groupBuilder seq: {
+			groupBuilder orchestrationBy: [ :builder |
+				builder seq: {
+					builder topicBy: [ :t |
+						t title: 'List Pharo features'.
+						t prompt: 'List 3 key Pharo Smalltalk features in one sentence each. Reply with only the list.' ]
+				} agentBy: [ :a | a claude ] ].
+			groupBuilder orchestrationBy: [ :builder |
+				builder seq: {
+					builder topicBy: [ :t |
+						t title: 'Summarize Pharo features'.
+						t prompt: 'Summarize the feature list from the previous step into a single sentence.' ]
+				} agentBy: [ :a | a claude ] ]
+		} ].
+	[groupScript run.
+	groupScript explore] fork.
+]
+
+{ #category : '*AgenticBrowser-Scripting-examples-scripting' }
 AgenticBrowser class >> exampleSingleTopic [
 	<script>
 	| orchestrationScript |
@@ -86,11 +132,26 @@ AgenticBrowser class >> exampleSingleTopic [
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> groupRunBy: aBlock [
+	^ (self groupScriptBy: aBlock) run
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> runBy: aBlock [
 	^ (self scriptBy: aBlock) run
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> groupScriptBy: aBlock [
+	^ self scriptBy: aBlock orchestrationType: AbOrchestrationGroup
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> scriptBy: aBlock [
-	^ AbTopicOrchestration buildBy: aBlock
+	^ self scriptBy: aBlock orchestrationType: AbTopicOrchestration
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> scriptBy: aBlock orchestrationType: anOrchestrationClass [
+	^ anOrchestrationClass buildBy: aBlock
 ]

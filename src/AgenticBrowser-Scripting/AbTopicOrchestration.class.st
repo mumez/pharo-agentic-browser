@@ -49,7 +49,7 @@ AbTopicOrchestration >> removeTopicsFromManager [
 AbTopicOrchestration >> run [
 	| stepResult |
 	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
-	stepResult := nil.
+	stepResult := self previousResult.
 	[
 		self steps do: [ :step |
 			step previousStepResult: stepResult.
