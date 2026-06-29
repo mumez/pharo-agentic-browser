@@ -17,7 +17,7 @@ Collaborators:
 Public API and Key Messages:
 - #path - The FileReference for the topic's working directory root.
 - #sourcePath - path / srcDirectory (e.g. .../MyTopic-abc123/src).
-- #ensureExists - Create the directory if it does not exist.
+- #ensureExists - Create the directory if it does not exist; seeds it from the topic-template via AbTopicTemplateDirectory.
 - #exportClassNamed:in: - Write one class to its Tonel .class.st file.
 - #exportPackageNamed: - Write an entire package snapshot to the source path.
 - #isImportingFromSource - True while a Tonel import through SisServer is in progress.
@@ -75,7 +75,7 @@ AbWorkingDirectory >> detectSrcDirectoryFromProjectMetafile [
 { #category : 'accessing' }
 AbWorkingDirectory >> defaultPath [
 
-	^ (Smalltalk imageDirectory / 'agentic-browser' / self directoryName) fullName
+	^ (AbSettings defaultAgenticBrowserRootDirectory / self directoryName) fullName
 ]
 
 { #category : 'accessing' }
@@ -93,9 +93,12 @@ AbWorkingDirectory >> endImportFromSource [
 { #category : 'operations' }
 AbWorkingDirectory >> ensureExists [
 
+	| isNew |
+	isNew := self path exists not.
 	[ self path ensureCreateDirectory ]
 		on: DirectoryExists
-		do: [ :e | "another thread already created it — this is fine" ]
+		do: [ :e | isNew := false ].
+	isNew ifTrue: [ AbTopicTemplateDirectory default copyTo: self ]
 ]
 
 { #category : 'exporting' }

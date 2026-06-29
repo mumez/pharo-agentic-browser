@@ -3,7 +3,7 @@ SmalltalkCISpec {
     SCIMetacelloLoadSpec {
       #baseline : 'AgenticBrowser',
       #directory : 'src',
-      #load : ['Tests'],
+      #load : ['Tests', 'WebUI-Tests', 'Scripting-Tests'],
       #onConflict : #useLoaded,
       #useLatestMetacello : false,
       #onWarningLog : true,

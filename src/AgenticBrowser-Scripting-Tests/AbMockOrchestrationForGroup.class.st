@@ -10,7 +10,8 @@ Class {
 		'runCount',
 		'runDelay',
 		'announcer',
-		'sharedDirectoryPath'
+		'sharedDirectoryPath',
+		'previousResult'
 	],
 	#category : 'AgenticBrowser-Scripting-Tests',
 	#package : 'AgenticBrowser-Scripting-Tests'
@@ -72,4 +73,14 @@ AbMockOrchestrationForGroup >> runResult [
 { #category : 'accessing' }
 AbMockOrchestrationForGroup >> runResult: aString [
 	runResult := aString
+]
+
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> previousResult [
+	^ previousResult
+]
+
+{ #category : 'accessing' }
+AbMockOrchestrationForGroup >> previousResult: aString [
+	previousResult := aString
 ]

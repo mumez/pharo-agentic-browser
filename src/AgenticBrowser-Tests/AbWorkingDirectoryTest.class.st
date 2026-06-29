@@ -234,6 +234,75 @@ AbWorkingDirectoryTest >> testSrcDirectoryDefaultsToSrc [
 ]
 
 { #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsCopiesTemplateContentsToNewDirectory [
+
+	| topic workDir templateDir templateFile agenticBrowserDir |
+	agenticBrowserDir := Smalltalk imageDirectory / 'agentic-browser'.
+	templateDir := agenticBrowserDir / 'topic-template'.
+	templateFile := templateDir / 'CLAUDE.md'.
+	[
+		templateDir ensureCreateDirectory.
+		templateFile writeStreamDo: [ :s | s nextPutAll: '# Test template' ].
+		topic := AbTopic new title: 'ab-test-template-copy'.
+		workDir := AbWorkingDirectory forTopic: topic.
+		workDir ensureExists.
+		self assert: (workDir path / 'CLAUDE.md') exists
+	] ensure: [
+		workDir path exists ifTrue: [ workDir path deleteAll ].
+		templateDir exists ifTrue: [
+			templateFile exists ifTrue: [ templateFile delete ].
+			templateDir children ifEmpty: [ templateDir delete ] ]
+	]
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsDoesNotCopyTemplateWhenDirectoryAlreadyExists [
+
+	| topic workDir templateDir templateFile agenticBrowserDir |
+	agenticBrowserDir := Smalltalk imageDirectory / 'agentic-browser'.
+	templateDir := agenticBrowserDir / 'topic-template'.
+	templateFile := templateDir / 'CLAUDE.md'.
+	[
+		templateDir ensureCreateDirectory.
+		templateFile writeStreamDo: [ :s | s nextPutAll: '# Test template' ].
+		topic := AbTopic new title: 'ab-test-no-copy-existing'.
+		workDir := AbWorkingDirectory forTopic: topic.
+		workDir path ensureCreateDirectory.
+		workDir ensureExists.
+		self deny: (workDir path / 'CLAUDE.md') exists
+	] ensure: [
+		workDir path exists ifTrue: [ workDir path deleteAll ].
+		templateDir exists ifTrue: [
+			templateFile exists ifTrue: [ templateFile delete ].
+			templateDir children ifEmpty: [ templateDir delete ] ]
+	]
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsDoesNotCopyTemplateForCustomPath [
+
+	| topic workDir customPath templateDir templateFile agenticBrowserDir |
+	agenticBrowserDir := Smalltalk imageDirectory / 'agentic-browser'.
+	templateDir := agenticBrowserDir / 'topic-template'.
+	templateFile := templateDir / 'CLAUDE.md'.
+	customPath := (FileLocator temp / ('ab-wd-' , UUID new asString36)) fullName.
+	[
+		templateDir ensureCreateDirectory.
+		templateFile writeStreamDo: [ :s | s nextPutAll: '# Test template' ].
+		topic := AbTopic new title: 'ab-test-custom-path'.
+		topic workingDirectoryPath: customPath.
+		workDir := AbWorkingDirectory forTopic: topic.
+		workDir ensureExists.
+		self deny: (workDir path / 'CLAUDE.md') exists
+	] ensure: [
+		workDir path exists ifTrue: [ workDir path deleteAll ].
+		templateDir exists ifTrue: [
+			templateFile exists ifTrue: [ templateFile delete ].
+			templateDir children ifEmpty: [ templateDir delete ] ]
+	]
+]
+
+{ #category : 'tests' }
 AbWorkingDirectoryTest >> testExportClassNamedWritesClassFile [
 
 	| topic workDir path classFile |
