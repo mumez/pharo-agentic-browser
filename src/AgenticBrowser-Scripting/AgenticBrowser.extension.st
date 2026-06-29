@@ -86,11 +86,26 @@ AgenticBrowser class >> exampleSingleTopic [
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> groupRunBy: aBlock [
+	^ (self groupScriptBy: aBlock) run
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> runBy: aBlock [
 	^ (self scriptBy: aBlock) run
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> groupScriptBy: aBlock [
+	^ self scriptBy: aBlock orchestrationType: AbOrchestrationGroup
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
 AgenticBrowser class >> scriptBy: aBlock [
-	^ AbTopicOrchestration buildBy: aBlock
+	^ self scriptBy: aBlock orchestrationType: AbTopicOrchestration
+]
+
+{ #category : '*AgenticBrowser-Scripting' }
+AgenticBrowser class >> scriptBy: aBlock orchestrationType: anOrchestrationClass [
+	^ anOrchestrationClass buildBy: aBlock
 ]
