@@ -178,20 +178,25 @@ When a goal is set, the topic runs until the agent writes a `result-<topicId>.md
 
 ### Real-world multi-agent workflow
 
+See [To-do List App: Multi-Agent Orchestration Example](to-do-list-orchestration-script.md) for a complete, runnable script that builds a Spec2 To-do list app from scratch across seven phases — setup, parallel research, design, TDD implementation, UI testing, review, and documentation — mixing agents and models to match task weight.
+
+A minimal version showing the same shape (parallel research → sequential synthesis → goal-driven implementation):
+
 ```smalltalk
 AgenticBrowser runBy: [ :builder |
-    builder seq: {
-        builder topicBy: [ :t | t prompt: 'Create a detailed plan for feature XXX.' ].
-        builder topicBy: [ :t | t prompt: 'Create a specification for feature XXX based on the plan above.' ]
-    } agentBy: [ :a | a claude; planMode ].
     builder para: {
-        builder topicBy: [ :t | t prompt: 'Implement feature XXX according to the spec above.' ].
-        builder topicBy: [ :t | t prompt: 'Write tests for feature XXX.'; goal: 'all tests pass' ]
+        builder topicBy: [ :t | t prompt: 'Research component A and summarize its API.' ].
+        builder topicBy: [ :t | t prompt: 'Research component B and summarize its API.' ]
+    } agentBy: [ :a | a claude model: 'haiku' ].
+    builder seq: {
+        builder topicBy: [ :t | t prompt: 'Write an implementation plan based on the research above.' ].
+        builder topicBy: [ :t |
+            t prompt: 'Implement feature XXX following the plan above.'.
+            t goal: 'all tests pass' ]
     } agentBy: [ :a | a codex ].
     builder seq: {
-        builder topicBy: [ :t | t prompt: 'Review the implementation of feature XXX.' ].
-        builder topicBy: [ :t | t prompt: 'Create a pull request for feature XXX.' ]
-    } agentBy: [ :a | a opencode ] ].
+        builder topicBy: [ :t | t prompt: 'Review the implementation of feature XXX and write a README.' ]
+    } agentBy: [ :a | a claude ] ].
 ```
 
 ## Advanced Usage

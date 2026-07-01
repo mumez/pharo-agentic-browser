@@ -46,20 +46,8 @@ AbTopicOrchestration >> removeTopicsFromManager [
 ]
 
 { #category : 'running' }
-AbTopicOrchestration >> run [
-	| stepResult |
-	self logger debug: 'Orchestration run: start name=' , self name , ' steps=' , self steps size printString.
-	stepResult := self previousResult.
-	[
-		self steps do: [ :step |
-			step previousStepResult: stepResult.
-			stepResult := step run.
-			step stepResult: stepResult ]
-	] ensure: [
-		self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ].
-		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
-	self logger debug: 'Orchestration run: end name=' , self name.
-	^ stepResult
+AbTopicOrchestration >> afterRun [
+	self settings lingerOrchestrationTopicsAfterRun ifFalse: [ self removeTopicsFromManager ]
 ]
 
 { #category : 'accessing' }

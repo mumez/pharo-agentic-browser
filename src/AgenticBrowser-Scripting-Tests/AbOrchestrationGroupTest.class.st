@@ -76,6 +76,20 @@ AbOrchestrationGroupTest >> testGroupRunNodesInOrderParaThenSeq [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testOrchestrationTopicByAgentByCreatesOrchestrationWithOneTopic [
+	| orch |
+	AbOrchestrationGroup buildBy: [ :builder |
+		orch := builder
+			orchestrationTopicBy: [ :t | t prompt: 'Write summary' ]
+			agentBy: [ :a | ].
+		self assert: (orch isKindOf: AbTopicOrchestration).
+		self assert: orch steps size equals: 1.
+		self assert: (orch steps first isKindOf: AbOrchestrationSequentialStep).
+		self assert: orch steps first topicBuilders size equals: 1.
+		builder seq: (OrderedCollection with: orch) ]
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testOrchestrationByCreatesOrchestration [
 	| group |
 	group := AbOrchestrationGroup buildBy: [ :builder |

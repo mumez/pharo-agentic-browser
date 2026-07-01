@@ -50,18 +50,12 @@ AbOrchestrationGroup >> prepareItems [
 ]
 
 { #category : 'running' }
-AbOrchestrationGroup >> run [
-	| stepResult |
-	self logger debug: 'OrchestrationGroup run: start name=' , self name , ' steps=' , self steps size printString.
-	stepResult := self previousResult.
-	[
-		self prepareItems.
-		self steps do: [ :node |
-			node previousStepResult: stepResult.
-			stepResult := node run.
-			node stepResult: stepResult ]
-	] ensure: [
-		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
-	self logger debug: 'OrchestrationGroup run: end name=' , self name.
-	^ self result
+AbOrchestrationGroup >> runLogLabel [
+	^ 'OrchestrationGroup'
 ]
+
+{ #category : 'running' }
+AbOrchestrationGroup >> prepareRun [
+	self prepareItems
+]
+
