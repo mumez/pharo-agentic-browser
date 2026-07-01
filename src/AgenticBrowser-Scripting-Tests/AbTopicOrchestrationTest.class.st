@@ -1091,6 +1091,175 @@ AbTopicOrchestrationTest >> testTopicWithGoalUsesSinglePromptContainingGoalInstr
 	] ensure: [ self unsubscribeTopicHandlers ]
 ]
 
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testResumeFiresEndedAnnouncement [
+	| orchestration endedAnnouncement |
+	endedAnnouncement := nil.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-ended-T1' ]
+			} agentBy: [ :a | a codex ].
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-ended-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	orchestration steps first stepResult: 'step1-done'.
+
+	orchestration announcer
+		when: AbOrchestrationEnded
+		do: [ :ann | endedAnnouncement := ann ]
+		for: self.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann | self simulateEndTurnWhenWorkingFor: ann topic ]
+		for: self.
+
+	[
+		orchestration resume.
+		self assert: endedAnnouncement notNil.
+		self assert: endedAnnouncement orchestration == orchestration
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testResumeInjectsLastCompletedStepResultIntoResumedStep [
+	| orchestration promptT2 |
+	promptT2 := nil.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-inject-T1' ]
+			} agentBy: [ :a | a codex ].
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-inject-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	orchestration steps first stepResult: 'previously-completed-result'.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-resume-inject-T2' ifTrue: [
+				topic announcer
+					when: AbTopicStatusChanged
+					do: [ :statusAnn |
+						statusAnn status = #working ifTrue: [
+							promptT2 := topic messages first text.
+							topic stateMachine handleEvent: #turnEnded ] ]
+					for: self ] ]
+		for: self.
+
+	[
+		orchestration resume.
+		self assert: (promptT2 includesSubstring: 'previously-completed-result')
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testResumeRunsAllStepsWhenNoneCompleted [
+	| orchestration step1Ran step2Ran |
+	step1Ran := false.
+	step2Ran := false.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-all-T1' ]
+			} agentBy: [ :a | a codex ].
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-all-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-resume-all-T1' ifTrue: [
+				step1Ran := true.
+				self simulateAiResultWhenWorkingFor: topic resultText: 'step1-result' ].
+			topic title = 'ab-test-resume-all-T2' ifTrue: [
+				step2Ran := true.
+				self simulateEndTurnWhenWorkingFor: topic ] ]
+		for: self.
+
+	[
+		orchestration resume.
+		self assert: step1Ran.
+		self assert: step2Ran
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testResumeSkipsCompletedStepsAndRunsRemainingOnes [
+	| orchestration step1Ran step2Ran |
+	step1Ran := false.
+	step2Ran := false.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-skip-T1' ]
+			} agentBy: [ :a | a codex ].
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-skip-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	orchestration steps first stepResult: 'step1-done'.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			| topic |
+			topic := ann topic.
+			topic title = 'ab-test-resume-skip-T1' ifTrue: [ step1Ran := true ].
+			topic title = 'ab-test-resume-skip-T2' ifTrue: [
+				step2Ran := true.
+				self simulateEndTurnWhenWorkingFor: topic ] ]
+		for: self.
+
+	[
+		orchestration resume.
+		self deny: step1Ran.
+		self assert: step2Ran
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testResumeWhenAllStepsCompleteDoesNotRerunSteps [
+	| orchestration topicsAdded result |
+	topicsAdded := 0.
+
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-done-T1' ]
+			} agentBy: [ :a | a codex ].
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-resume-done-T2' ]
+			} agentBy: [ :a | a codex ] ].
+
+	orchestration steps first stepResult: 'step1-result'.
+	orchestration steps second stepResult: 'step2-result'.
+
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann | topicsAdded := topicsAdded + 1 ]
+		for: self.
+
+	[
+		result := orchestration resume.
+		self assert: topicsAdded equals: 0.
+		self assert: result equals: 'step2-result'
+	] ensure: [ self unsubscribeTopicHandlers ]
+]
+
 { #category : 'private' }
 AbTopicOrchestrationTest >> unsubscribeTopicHandlers [
 	AbTopicManager forTest announcer unsubscribe: self.
