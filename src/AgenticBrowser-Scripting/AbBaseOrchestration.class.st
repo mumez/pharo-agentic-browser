@@ -21,7 +21,7 @@ Collaborators:
 
 Public API and Key Messages:
 - #buildBy: aBlock - configure the orchestration via a DSL builder block
-- #run - execute all steps in order (implemented by subclasses)
+- #run - execute all steps in order; blocks until complete (Template Method)
 - #result - returns the result string of the last completed step
 - #save / #saveTo: aFileReference - persist to disk via Fuel serialization
 - #loadFrom: aFileReference - class-side; deserialize a previously saved instance
@@ -208,4 +208,37 @@ AbBaseOrchestration >> settings [
 { #category : 'accessing' }
 AbBaseOrchestration >> settings: anAbSettings [
 	settings := anAbSettings
+]
+
+{ #category : 'running' }
+AbBaseOrchestration >> run [
+	| stepResult |
+	self logger debug: self runLogLabel , ' run: start name=' , self name , ' steps=' , self steps size printString.
+	stepResult := self previousResult.
+	[
+		self prepareRun.
+		self steps do: [ :step |
+			step previousStepResult: stepResult.
+			stepResult := step run.
+			step stepResult: stepResult ]
+	] ensure: [
+		self afterRun.
+		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
+	self logger debug: self runLogLabel , ' run: end name=' , self name.
+	^ stepResult
+]
+
+{ #category : 'running' }
+AbBaseOrchestration >> runLogLabel [
+	^ 'Orchestration'
+]
+
+{ #category : 'running' }
+AbBaseOrchestration >> prepareRun [
+	"hook: subclasses may override to perform pre-loop setup"
+]
+
+{ #category : 'running' }
+AbBaseOrchestration >> afterRun [
+	"hook: subclasses may override to perform post-loop cleanup before announcement"
 ]
