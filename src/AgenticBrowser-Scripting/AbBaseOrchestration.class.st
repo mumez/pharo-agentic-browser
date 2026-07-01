@@ -229,6 +229,27 @@ AbBaseOrchestration >> run [
 ]
 
 { #category : 'running' }
+AbBaseOrchestration >> resume [
+	| stepResult |
+	self logger debug: self runLogLabel , ' resume: start name=' , self name , ' steps=' , self steps size printString.
+	stepResult := self previousResult.
+	[
+		self prepareRun.
+		self steps do: [ :step |
+			step stepResult isNil
+				ifTrue: [
+					step previousStepResult: stepResult.
+					stepResult := step run.
+					step stepResult: stepResult ]
+				ifFalse: [ stepResult := step stepResult ] ]
+	] ensure: [
+		self afterRun.
+		self announcer announce: (AbOrchestrationEnded orchestration: self) ].
+	self logger debug: self runLogLabel , ' resume: end name=' , self name.
+	^ stepResult
+]
+
+{ #category : 'running' }
 AbBaseOrchestration >> runLogLabel [
 	^ 'Orchestration'
 ]
