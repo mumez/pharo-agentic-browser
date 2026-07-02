@@ -2,26 +2,26 @@
 I am the DSL builder for AbOrchestrationGroup.
 
 I provide #para: and #seq: to add execution nodes, and factory methods #orchestrationBy:,
-#orchestrationTopicBy:agentBy:, and #orchestrationGroupBy: to create child orchestrations and groups.
+#singleTopicBy:agentBy:, and #orchestrationGroupBy: to create child orchestrations and groups.
 
 Responsibility:
 - Provide #para: and #seq: DSL entry points (each adds a node to the group)
 - Provide #orchestrationBy: to create an AbTopicOrchestration via its own builder
-- Provide #orchestrationTopicBy:agentBy: as a shortcut to create an AbTopicOrchestration with a single sequential step containing one topic
+- Provide #singleTopicBy:agentBy: as a shortcut to create an AbTopicOrchestration with a single sequential step containing one topic, and add it to the group as a sequential node
 - Provide #orchestrationGroupBy: to create a nested AbOrchestrationGroup
 - Provide #sharedDirectoryPath: to set a common working directory propagated to all items at run time
 
 Collaborators:
 - AbOrchestrationGroup: the group under construction (holds my nodes via #group)
 - AbOrchestrationGroupParallelStep: created by #para:
-- AbOrchestrationGroupSequentialStep: created by #seq:
-- AbTopicOrchestration: created by #orchestrationBy: and #orchestrationTopicBy:agentBy:
+- AbOrchestrationGroupSequentialStep: created by #seq: and #singleTopicBy:agentBy:
+- AbTopicOrchestration: created by #orchestrationBy: and #singleTopicBy:agentBy:
 
 Public API and Key Messages:
 - #para: aCollection - add a parallel node containing the items in aCollection
 - #seq: aCollection - add a sequential node containing the items in aCollection
 - #orchestrationBy: aBlock - create AbTopicOrchestration; block receives AbTopicOrchestrationBuilder
-- #orchestrationTopicBy: topicBlock agentBy: agentBlock - shortcut: create AbTopicOrchestration with one sequential topic; topicBlock receives AbTopicBuilder, agentBlock receives AbCodingAgentBuilder
+- #singleTopicBy: topicBlock agentBy: agentBlock - shortcut: create AbTopicOrchestration with one sequential topic and add it to the group as a sequential node; topicBlock receives AbTopicBuilder, agentBlock receives AbCodingAgentBuilder
 - #orchestrationGroupBy: aBlock - create nested AbOrchestrationGroup; block receives AbOrchestrationGroupBuilder
 - #sharedDirectoryPath: aString - set the shared working directory for all items in the group
 "
@@ -63,7 +63,7 @@ AbOrchestrationGroupBuilder >> orchestrationGroupBy: aBlock [
 ]
 
 { #category : 'factory' }
-AbOrchestrationGroupBuilder >> orchestrationTopicBy: topicBuilderBlock agentBy: agentBuilderBlock [
+AbOrchestrationGroupBuilder >> singleTopicBy: topicBuilderBlock agentBy: agentBuilderBlock [
     self seq: {
         self orchestrationBy: [ :b |
             b seq: {b topicBy: topicBuilderBlock}
