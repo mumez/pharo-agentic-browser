@@ -64,9 +64,11 @@ AbOrchestrationGroupBuilder >> orchestrationGroupBy: aBlock [
 
 { #category : 'factory' }
 AbOrchestrationGroupBuilder >> orchestrationTopicBy: topicBuilderBlock agentBy: agentBuilderBlock [
-	^ self orchestrationBy: [ :b |
-		b seq: (OrderedCollection with: (b topicBy: topicBuilderBlock))
+    self seq: {
+        self orchestrationBy: [ :b |
+            b seq: {b topicBy: topicBuilderBlock}
 		agentBy: agentBuilderBlock ]
+    }
 ]
 
 { #category : 'building' }
