@@ -100,8 +100,18 @@ Metacello new
     repository: 'github://mumez/pharo-agentic-browser:main/src';
     load: 'Scripting'.
 ```
-
 For the full DSL reference and examples, see [docs/scripting.md](docs/scripting.md).
+
+### Installing all packages
+
+If you'd like to install all of these packages at once, you can use the `'all'` group.
+
+```smalltalk
+Metacello new
+    baseline: 'AgenticBrowser';
+    repository: 'github://mumez/pharo-agentic-browser:main/src';
+    load: 'all'.
+```
 
 ## Usage
 
