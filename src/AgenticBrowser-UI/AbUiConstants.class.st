@@ -79,6 +79,12 @@ AbUiConstants class >> boxSelectionBase64 [
  ^ 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IB2cksfwAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAOwA7ADsHSMWNgAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+oFGg8IJHPJgysAAAE8SURBVDjLzZMxawJBEIXfGzyvCZITjpz3EwxpEsFWMBD/SypJEe2uW1OkzH+RkMI2SGzE/AQvRnCDpNHAbgr3xFgdXJNX7cCbtzPwDZEkjMq3HRGcwMnS6PT+7AUHqj0srmklyGpj8P2xfRoyUp83IjLEkazZXqX9eAIANTW/pJTfjj3GmE5JyAoAWGtfCYzc+yvY6GnqjMFGT7Uf9kmeAoAFWiSbQlZKWRqB0bwX9rI6PfjpPTn/ATDI6niwHABoAoCgoATWrNzYq7xNe6/rRaTSRj2ZeXkD6snMi1TawP9RkRUkVou2iDfWftjNG6D9sCvijWO1aAsoVQAgWc0bsPdSqoU52JNogZYjzKG8fHQEop7MPO2Hd39QzgKMtWshQbKZ4UkS2g+eAUx2OwcXFFEH2O+Oydo1i57zLz7/iWRNmmChAAAAAElFTkSuQmCC'
 ]
 
+{ #category : 'icons-base64' }
+AbUiConstants class >> fileAttachmentBase64 [
+
+ ^ 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IB2cksfwAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAOwA7ADsHSMWNgAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+oHAwYfC4WbSh4AAAC2SURBVDjLY2CgJZDseCYr2fFMFp8aRnyaGRjYbkJ4v9SfV0g9xqaOCZcBTH+ZlBkZGTgZGRk4mf4yKeNUR6k3KTaABcXPjMzqMP7//wz6cDYzo7Fk50u4Wob/f2/CwoQROcAYGRk4ibH1/3+G77CApdgLjLi8wPifQZ+BkbkH6uSS/4wMF3F6ARuQbn3h8J+FZT8DAwMD458/jk+rJQ4M8mhEB/+Y/91l+M/wHRKN/+7SLDNRDAAGo0CogpZhGAAAAABJRU5ErkJggg=='
+]
+
 { #category : 'icons' }
 AbUiConstants class >> blueCircle [
     ^ self icons at: #blueCircle ifAbsentPut: [ self buildIconNamed: #blueCircle with: self blueCircleBase64 ]
@@ -117,4 +123,9 @@ AbUiConstants class >> gear [
 { #category : 'icons' }
 AbUiConstants class >> boxSelection [
     ^ self icons at: #boxSelection ifAbsentPut: [ self buildIconNamed: #boxSelection with: self boxSelectionBase64 ]
+]
+
+{ #category : 'icons' }
+AbUiConstants class >> fileAttachment [
+    ^ self icons at: #fileAttachment ifAbsentPut: [ self buildIconNamed: #fileAttachment with: self fileAttachmentBase64 ]
 ]

@@ -1,0 +1,87 @@
+Class {
+	#name : 'AbFileAttachment',
+	#superclass : 'Object',
+	#instVars : [
+		'name',
+		'fileReference'
+	],
+	#category : 'AgenticBrowser-Core',
+	#package : 'AgenticBrowser-Core'
+}
+
+{ #category : 'instance creation' }
+AbFileAttachment class >> fromFileReference: aFileReference [
+
+	| ref |
+	ref := aFileReference asFileReference.
+	^ self new
+		name: ref basename;
+		fileReference: ref;
+		yourself
+]
+
+{ #category : 'instance creation' }
+AbFileAttachment class >> fromPath: aString [
+
+	^ self fromFileReference: aString asFileReference
+]
+
+{ #category : 'accessing' }
+AbFileAttachment >> fileReference [
+
+	^ fileReference
+]
+
+{ #category : 'accessing' }
+AbFileAttachment >> fileReference: aFileReference [
+
+	fileReference := aFileReference
+]
+
+{ #category : 'accessing' }
+AbFileAttachment >> mentionString [
+
+	^ '[' , self name , ']'
+]
+
+{ #category : 'accessing' }
+AbFileAttachment >> name [
+
+	^ name
+]
+
+{ #category : 'accessing' }
+AbFileAttachment >> name: aString [
+
+	name := aString
+]
+
+{ #category : 'prompt' }
+AbFileAttachment >> applyToPromptParams: params [
+
+	params resourcePrompt: self uriString text: self textForPrompt
+]
+
+{ #category : 'prompt' }
+AbFileAttachment >> textForPrompt [
+
+	^ [ self truncatedForPrompt: self fileReference contents ]
+		  on: Error
+		  do: [ 'Attached file: ' , self fileReference basename ]
+]
+
+{ #category : 'private' }
+AbFileAttachment >> truncatedForPrompt: aString [
+
+	| maxSize |
+	maxSize := AbSettings default maxAttachmentSize.
+	^ aString size > maxSize
+		  ifTrue: [ (aString first: maxSize) , '...' ]
+		  ifFalse: [ aString ]
+]
+
+{ #category : 'prompt' }
+AbFileAttachment >> uriString [
+
+	^ self fileReference asUrl asString
+]

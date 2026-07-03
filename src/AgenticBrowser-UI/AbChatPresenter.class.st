@@ -3,11 +3,11 @@ I am the chat pane for a single topic, occupying the right side of the Agentic B
 
 Responsibility:
 - I display the message history through AbMessagesPresenter and route input through AbNormalInputPresenter or AbConfirmPresenter depending on whether approval is pending.
-- I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, and animated dots label.
+- I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, file attachment button, and animated dots label.
 - I subscribe to topic announcements (AbMessageAdded, AbTopicStatusChanged, AbTopicCurrentModelChanged, AbTopicCurrentModeChanged, AbTopicAvailableCommandsChanged) and update the UI accordingly.
 - I switch layouts dynamically between ""normal"" and ""approval"" mode when an AbMessage with isApprovalRequest = true arrives.
 - I prepend '/st-buddy ' to the first human message sent in a topic.
-- I collect @mention resources (code and screenshots) from the input text before sending a prompt.
+- I collect @mention resources (code and screenshots) and selected file attachments from the input text before sending a prompt.
 
 Collaborators:
 - AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApprovalWithOptionId:, setConfigOptionId:value:).
@@ -15,6 +15,7 @@ Collaborators:
 - AbNormalInputPresenter: My default input widget; I enable/disable Cancel based on topic status.
 - AbConfirmPresenter: Replaces the input area during approval mode.
 - AbScreenshotAttachment: I call #captureAndSave on click and insert the mention string.
+- AbFileAttachment: I create file attachments from user-selected files and add them only when their [filename] mention still exists.
 - AbCodeMentionParser / AbCodeMentionEmbedder / AbScreenshotParser: I parse @mentions from text before sending.
 
 Public API and Key Messages:
@@ -51,7 +52,10 @@ Class {
 		'modeDropList',
 		'modeOptions',
 		'modeConfigId',
-		'screenshotButton'
+		'screenshotButton',
+		'fileAttachmentButton',
+		'fileChooserBlock',
+		'pendingFileAttachments'
 	],
 	#category : 'AgenticBrowser-UI',
 	#package : 'AgenticBrowser-UI'
@@ -223,12 +227,17 @@ AbChatPresenter >> initializeStatusBar [
 				 withConstraints: [ :c | c width: 120 ];
 				 add: (screenshotButton := statusBarPresenter newButton)
 				 withConstraints: [ :c | c width: 28 ];
+				 add: (fileAttachmentButton := statusBarPresenter newButton)
+				 withConstraints: [ :c | c width: 28 ];
 				 add: statusBarPresenter newNullPresenter;
 				 addLast: (statusLabel := statusBarPresenter newLabel) expand: false;
 				 yourself).
 	screenshotButton
 		icon: AbUiConstants boxSelection;
-		action: [ self onScreenshotButtonClicked ]
+		action: [ self onScreenshotButtonClicked ].
+	fileAttachmentButton
+		icon: AbUiConstants fileAttachment;
+		action: [ self onFileAttachmentButtonClicked ]
 ]
 
 { #category : 'private' }
@@ -333,6 +342,24 @@ AbChatPresenter >> modeDropList [
 AbChatPresenter >> screenshotButton [
 
 	^ screenshotButton
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> fileAttachmentButton [
+
+	^ fileAttachmentButton
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> fileChooserBlock [
+
+	^ fileChooserBlock
+]
+
+{ #category : 'accessing' }
+AbChatPresenter >> fileChooserBlock: aBlock [
+
+	fileChooserBlock := aBlock
 ]
 
 { #category : 'accessing' }
@@ -451,9 +478,22 @@ AbChatPresenter >> onScreenshotButtonClicked [
 ]
 
 { #category : 'event handling' }
+AbChatPresenter >> onFileAttachmentButtonClicked [
+
+	| topic selectedFile attachment |
+	topic := self currentTopic ifNil: [ ^ self ].
+	topic workingDirectory ensureExists.
+	selectedFile := self selectFileForAttachmentIn: topic workingDirectory path.
+	selectedFile ifNil: [ ^ self ].
+	attachment := AbFileAttachment fromFileReference: selectedFile.
+	self pendingFileAttachments at: attachment mentionString put: attachment.
+	self normalInputPresenter insertMention: attachment mentionString
+]
+
+{ #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText mentions resources screenshots |
+	| text promptText mentions resources screenshots fileAttachments |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
@@ -465,7 +505,54 @@ AbChatPresenter >> onSendButtonClicked [
 	resources := AbCodeMentionEmbedder resourcesFor: mentions.
 	screenshots := AbScreenshotParser parseFrom: text.
 	screenshots do: [ :att | att fileReference exists ifTrue: [ resources add: att ] ].
+	fileAttachments := self fileAttachmentsIncludedInText: text.
+	fileAttachments do: [ :att | att fileReference exists ifTrue: [ resources add: att ] ].
+	self pendingFileAttachments removeAll.
 	self currentTopic sendPrompt: promptText withResources: resources
+]
+
+{ #category : 'private' }
+AbChatPresenter >> fileAttachmentsIncludedInText: aString [
+
+	^ (self pendingFileAttachments associations
+		   select: [ :assoc | aString includesSubstring: assoc key ])
+		  collect: [ :assoc | assoc value ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> pendingFileAttachments [
+
+	^ pendingFileAttachments ifNil: [ pendingFileAttachments := Dictionary new ]
+]
+
+{ #category : 'private' }
+AbChatPresenter >> selectFileForAttachmentIn: aDirectory [
+
+	self fileChooserBlock ifNotNil: [ :block | ^ block value: aDirectory ].
+	^ self selectFileFromUiIn: aDirectory
+]
+
+{ #category : 'private' }
+AbChatPresenter >> selectFileFromUiIn: aDirectory [
+
+	| uiManager selectedPath |
+	uiManager := UIManager default.
+	(uiManager respondsTo: #chooseExistingFileReference:extensions:path:) ifTrue: [
+		^ uiManager
+			  chooseExistingFileReference: 'Select attachment file'
+			  extensions: #('*')
+			  path: aDirectory ].
+	(uiManager respondsTo: #chooseExistingFileReference:path:) ifTrue: [
+		^ uiManager
+			  chooseExistingFileReference: 'Select attachment file'
+			  path: aDirectory ].
+	(uiManager respondsTo: #chooseFullFileNameMatching:label:path:) ifTrue: [
+		selectedPath := uiManager
+			                chooseFullFileNameMatching: #('*')
+			                label: 'Select attachment file'
+			                path: aDirectory fullName.
+		^ selectedPath ifNil: [ nil ] ifNotNil: [ selectedPath asFileReference ] ].
+	^ nil
 ]
 
 { #category : 'event handling' }
@@ -693,6 +780,7 @@ AbChatPresenter >> topic: anAbTopic [
 
 	self unsubscribeFromTopic: self currentTopic.
 	self currentTopic: anAbTopic.
+	self pendingFileAttachments removeAll.
 	anAbTopic ifNil: [
 		self commandNames: #().
 		self onTopicCurrentModelChanged: nil.

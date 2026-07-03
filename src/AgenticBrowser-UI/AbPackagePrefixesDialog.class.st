@@ -57,7 +57,8 @@ AbPackagePrefixesDialog >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Target Packages';
-		initialExtent: 500 @ 130
+		initialExtent: 500 @ 130;
+		withoutButtons
 ]
 
 { #category : 'accessing' }

@@ -136,7 +136,8 @@ AbNewTopicDialog >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'New Topic';
-		initialExtent: 580 @ 200
+		initialExtent: 580 @ 200;
+		withoutButtons
 ]
 
 { #category : 'accessing' }
