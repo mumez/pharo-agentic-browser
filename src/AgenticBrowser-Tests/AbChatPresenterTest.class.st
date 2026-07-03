@@ -659,6 +659,20 @@ AbChatPresenterTest >> testFileAttachmentButtonInsertsMentionAndUsesTopicWorking
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testFileAttachmentButtonEnsuresWorkingDirectoryExistsForNewTopic [
+
+	| topic receivedDirectory |
+	topic := self newMockTopic.
+	presenter topic: topic.
+	self deny: topic workingDirectory path exists.
+	presenter fileChooserBlock: [ :directory |
+		receivedDirectory := directory.
+		nil ].
+	presenter onFileAttachmentButtonClicked.
+	self assert: receivedDirectory exists
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testSendWithoutFileAttachmentMentionHasNoFileResource [
 
 	| topic capturedResources dir fileRef |
