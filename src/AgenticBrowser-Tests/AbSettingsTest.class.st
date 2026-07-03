@@ -104,6 +104,21 @@ AbSettingsTest >> testUseDefaultMcpServersSettable [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testMaxAttachmentSizeDefault [
+
+	self assert: AbSettings default maxAttachmentSize equals: 100000
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testMaxAttachmentSizeSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings maxAttachmentSize: 5000.
+	self assert: settings maxAttachmentSize equals: 5000
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testWatcherMessageThrottleSecondsDefault [
 
 	self assert: AbSettings default watcherMessageThrottleSeconds equals: 2

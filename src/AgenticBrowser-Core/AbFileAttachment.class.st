@@ -65,9 +65,19 @@ AbFileAttachment >> applyToPromptParams: params [
 { #category : 'prompt' }
 AbFileAttachment >> textForPrompt [
 
-	^ [ self fileReference contents ]
+	^ [ self truncatedForPrompt: self fileReference contents ]
 		  on: Error
 		  do: [ 'Attached file: ' , self fileReference basename ]
+]
+
+{ #category : 'private' }
+AbFileAttachment >> truncatedForPrompt: aString [
+
+	| maxSize |
+	maxSize := AbSettings default maxAttachmentSize.
+	^ aString size > maxSize
+		  ifTrue: [ (aString first: maxSize) , '...' ]
+		  ifFalse: [ aString ]
 ]
 
 { #category : 'prompt' }

@@ -3,6 +3,7 @@ I hold configuration for AgenticBrowser with a two-level hierarchy: a global sin
 
 Responsibility:
 - I store timeout durations and options for AI permission and package export approvals.
+- I cap how many characters of a file attachment's contents are embedded into a prompt via #maxAttachmentSize.
 - I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
 - I persist the list of available coding agents shown in the New Topic dialog.
 - I load from and save to ab-settings.json using STON/JSON serialization.
@@ -13,6 +14,7 @@ Collaborators:
 - AbMcpServersLoader: It reads #useDefaultMcpServers to decide whether to merge built-in servers.
 - AbTopicRelatedPackagesWatcher: It reads #watcherMessageThrottleDuration for throttle control.
 - AbTopicGoal: It reads #useCommandOnGoalSet and #goalSetCommand.
+- AbFileAttachment: It reads #maxAttachmentSize from the global default to truncate prompt content.
 
 Public API and Key Messages:
 - AbSettings class>>default - Global singleton; created lazily.
@@ -258,6 +260,12 @@ AbSettings >> defaultWatcherMessageThrottleSeconds [
 	^ 2
 ]
 
+{ #category : 'defaults' }
+AbSettings >> defaultMaxAttachmentSize [
+	self isDefault ifFalse: [ ^ self class default defaultMaxAttachmentSize ].
+	^ 5 * 1024 * 1024
+]
+
 { #category : 'accessing' }
 AbSettings >> goalSetCommand [
 
@@ -375,6 +383,18 @@ AbSettings >> watcherMessageThrottleSeconds: anInteger [
 AbSettings >> watcherMessageThrottleDuration [
 
 	^ self watcherMessageThrottleSeconds seconds
+]
+
+{ #category : 'accessing' }
+AbSettings >> maxAttachmentSize [
+
+	^ self at: #maxAttachmentSize ifAbsent: [ self defaultMaxAttachmentSize ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> maxAttachmentSize: anInteger [
+
+	self at: #maxAttachmentSize put: anInteger
 ]
 
 { #category : 'accessing-convenient' }
