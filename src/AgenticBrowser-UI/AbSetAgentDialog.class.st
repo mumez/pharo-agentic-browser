@@ -66,7 +66,8 @@ AbSetAgentDialog >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Set Agent';
-		initialExtent: 400 @ 120
+		initialExtent: 400 @ 120;
+		withoutButtons
 ]
 
 { #category : 'accessing' }
