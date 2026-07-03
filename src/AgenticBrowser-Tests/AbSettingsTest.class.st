@@ -106,7 +106,7 @@ AbSettingsTest >> testUseDefaultMcpServersSettable [
 { #category : 'tests' }
 AbSettingsTest >> testMaxAttachmentSizeDefault [
 
-	self assert: AbSettings default maxAttachmentSize equals: 100000
+	self assert: AbSettings default maxAttachmentSize equals: 5 * 1024 * 1024
 ]
 
 { #category : 'tests' }
