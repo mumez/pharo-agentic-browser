@@ -236,7 +236,7 @@ AbChatPresenter >> initializeStatusBar [
 		icon: AbUiConstants boxSelection;
 		action: [ self onScreenshotButtonClicked ].
 	fileAttachmentButton
-		icon: AbUiConstants boxSelection;
+		icon: AbUiConstants fileAttachment;
 		action: [ self onFileAttachmentButtonClicked ]
 ]
 
