@@ -632,6 +632,97 @@ AbChatPresenterTest >> testScreenshotButtonExistsInStatusBar [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testFileAttachmentButtonExistsInStatusBar [
+
+	self assert: presenter fileAttachmentButton isNotNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testFileAttachmentButtonInsertsMentionAndUsesTopicWorkingDirectory [
+
+	| topic workDir fileRef receivedDirectory |
+	topic := self newMockTopic.
+	workDir := FileLocator temp / ('ab-topic-work-' , UUID new asString36).
+	workDir ensureCreateDirectory.
+	fileRef := workDir / 'spec.txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'attachment text' ].
+	[
+		topic workingDirectoryPath: workDir fullName.
+		presenter topic: topic.
+		presenter fileChooserBlock: [ :directory |
+			receivedDirectory := directory.
+			fileRef ].
+		presenter onFileAttachmentButtonClicked.
+		self assert: receivedDirectory fullName equals: topic workingDirectory path fullName.
+		self assert: presenter normalInputPresenter inputText equals: '[spec.txt] ' ]
+		ensure: [ workDir exists ifTrue: [ workDir deleteAll ] ]
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithoutFileAttachmentMentionHasNoFileResource [
+
+	| topic capturedResources dir fileRef |
+	topic := self newMockTopic.
+	dir := FileLocator temp / ('ab-attach-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	fileRef := dir / 'notes.txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'hello' ].
+	[
+		presenter topic: topic.
+		presenter fileChooserBlock: [ :directory | fileRef ].
+		presenter onFileAttachmentButtonClicked.
+		presenter normalInputPresenter inputField text: 'just text'.
+		capturedResources := nil.
+		topic onSendBlock: [ :txt :res | capturedResources := res ].
+		presenter onSendButtonClicked.
+		self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
+		self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbFileAttachment ]) ]
+		ensure: [ dir exists ifTrue: [ dir deleteAll ] ]
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithFileAttachmentMentionAddsFileResource [
+
+	| topic capturedResources dir fileRef |
+	topic := self newMockTopic.
+	dir := FileLocator temp / ('ab-attach-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	fileRef := dir / 'notes.txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'hello' ].
+	[
+		presenter topic: topic.
+		presenter fileChooserBlock: [ :directory | fileRef ].
+		presenter onFileAttachmentButtonClicked.
+		capturedResources := nil.
+		topic onSendBlock: [ :txt :res | capturedResources := res ].
+		presenter onSendButtonClicked.
+		self assert: (capturedResources anySatisfy: [ :r | r isKindOf: AbFileAttachment ]) ]
+		ensure: [ dir exists ifTrue: [ dir deleteAll ] ]
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendWithMissingFileAttachmentMentionHasNoFileResource [
+
+	| topic capturedResources dir fileRef |
+	topic := self newMockTopic.
+	dir := FileLocator temp / ('ab-attach-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	fileRef := dir / 'notes.txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'hello' ].
+	[
+		presenter topic: topic.
+		presenter fileChooserBlock: [ :directory | fileRef ].
+		presenter onFileAttachmentButtonClicked.
+		fileRef delete.
+		capturedResources := nil.
+		topic onSendBlock: [ :txt :res | capturedResources := res ].
+		presenter onSendButtonClicked.
+		self assert: capturedResources notNil description: 'sendPrompt:withResources: was never called'.
+		self deny: (capturedResources anySatisfy: [ :r | r isKindOf: AbFileAttachment ]) ]
+		ensure: [ dir exists ifTrue: [ dir deleteAll ] ]
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testSendWithScreenshotMentionAddsImageResource [
 
 	| topic capturedResources form attachment |

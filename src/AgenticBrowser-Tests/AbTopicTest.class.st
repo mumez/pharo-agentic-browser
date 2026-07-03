@@ -897,6 +897,37 @@ AbTopicTest >> testSendWithTextResourceCallsResourcePrompt [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testSendWithFileAttachmentResourceCallsResourcePrompt [
+
+	| topic mockSession mockClient promptEntries dir fileRef resource |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockClient := MockObject new.
+	mockClient
+		on: #promptBy:
+		verify: [ :block |
+			| params |
+			params := ACPPromptParams new.
+			block value: params.
+			promptEntries := params rawValues at: 'prompt' ifAbsent: [ #() ].
+			ACPPromptResponse fromDictionary: { 'stopReason' -> 'end_turn' } asDictionary ].
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [  ].
+	mockSession on: #client verify: [ mockClient ].
+	topic session: mockSession.
+	dir := FileLocator temp / ('ab-file-attach-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	fileRef := dir / 'notes.txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'hello from file' ].
+	[
+		resource := AbFileAttachment fromFileReference: fileRef.
+		topic doExecutePrompt: 'hello' withResources: (OrderedCollection with: resource).
+		self assert: (promptEntries anySatisfy: [ :entry |
+			(entry at: 'type' ifAbsent: [ '' ]) = 'resource' ]) ]
+		ensure: [ dir exists ifTrue: [ dir deleteAll ] ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testSettingsReturnsCopyOfDefaultSettings [
 
 	| topic |
