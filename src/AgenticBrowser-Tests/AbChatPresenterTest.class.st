@@ -715,6 +715,26 @@ AbChatPresenterTest >> testSendWithFileAttachmentMentionAddsFileResource [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testSendWithFileAttachmentMentionContainingBracketAddsFileResource [
+
+	| topic capturedResources dir fileRef |
+	topic := self newMockTopic.
+	dir := FileLocator temp / ('ab-attach-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	fileRef := dir / 'report[2024].txt'.
+	fileRef writeStreamDo: [ :stream | stream nextPutAll: 'hello' ].
+	[
+		presenter topic: topic.
+		presenter fileChooserBlock: [ :directory | fileRef ].
+		presenter onFileAttachmentButtonClicked.
+		capturedResources := nil.
+		topic onSendBlock: [ :txt :res | capturedResources := res ].
+		presenter onSendButtonClicked.
+		self assert: (capturedResources anySatisfy: [ :r | r isKindOf: AbFileAttachment ]) ]
+		ensure: [ dir exists ifTrue: [ dir deleteAll ] ]
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testSendWithMissingFileAttachmentMentionHasNoFileResource [
 
 	| topic capturedResources dir fileRef |

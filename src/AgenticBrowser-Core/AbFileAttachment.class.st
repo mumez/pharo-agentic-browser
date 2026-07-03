@@ -73,5 +73,5 @@ AbFileAttachment >> textForPrompt [
 { #category : 'prompt' }
 AbFileAttachment >> uriString [
 
-	^ 'file://' , self fileReference fullName
+	^ self fileReference asUrl asString
 ]

@@ -514,28 +514,9 @@ AbChatPresenter >> onSendButtonClicked [
 { #category : 'private' }
 AbChatPresenter >> fileAttachmentsIncludedInText: aString [
 
-	| mentions |
-	mentions := self fileAttachmentMentionsInText: aString.
 	^ (self pendingFileAttachments associations
-		   select: [ :assoc | mentions includes: assoc key ])
+		   select: [ :assoc | aString includesSubstring: assoc key ])
 		  collect: [ :assoc | assoc value ]
-]
-
-{ #category : 'private' }
-AbChatPresenter >> fileAttachmentMentionsInText: aString [
-
-	| mentions stream token |
-	mentions := Set new.
-	stream := ReadStream on: aString.
-	[ stream atEnd ] whileFalse: [
-		stream next = $[ ifTrue: [
-			token := String streamContents: [ :out |
-				[ stream atEnd or: [ stream peek asciiValue = 93 ] ] whileFalse: [
-					out nextPut: stream next ] ].
-			(stream atEnd not and: [ stream peek asciiValue = 93 ]) ifTrue: [
-				stream next.
-				token ifNotEmpty: [ mentions add: '[' , token , ']' ] ] ] ].
-	^ mentions
 ]
 
 { #category : 'private' }
