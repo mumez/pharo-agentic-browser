@@ -161,6 +161,16 @@ Click the **`[ ]`** button in the status bar to capture a screen area and attach
 
 The file is saved to `<agenticBrowserRoot>/screenshots/sc-YYYYMMDD-NNN.png`. You can also reference a previously captured file manually by typing `@sc-YYYYMMDD-NNN.png` in the input field.
 
+### File Attachments
+
+Click the **+** button in the status bar to attach any file from disk.
+
+1. Click the button — a file selection dialog opens
+2. Choose a file — a mention like `[filename]` is inserted into the input field
+3. Send — the file's contents are attached to the prompt as a text resource
+
+Deleting the `[filename]` mention text before sending removes the attachment. If the file's contents exceed `AbSettings >> maxAttachmentSize` (default: 5 MB), the attached text is truncated.
+
 ### Goal Setting
 
 Right-click a topic and choose **Set Goal...** to enter a completion condition (e.g., `all tests pass`). AgenticBrowser sends a goal notification prompt to the AI:
