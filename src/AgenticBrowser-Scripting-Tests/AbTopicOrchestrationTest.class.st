@@ -395,6 +395,23 @@ AbTopicOrchestrationTest >> testOrchestrationBuilderSetsSharedDirectoryPathViaDS
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testOrchestrationStepResetForRerunClearsResultsAndTopicBuilders [
+	| step builder firstTopic secondTopic |
+	builder := AbTopicBuilder new.
+	firstTopic := builder topic.
+	step := AbOrchestrationSequentialStep new
+		topicBuilders: (OrderedCollection with: builder);
+		stepResult: 'old-result';
+		previousStepResult: 'old-previous';
+		yourself.
+	step resetForRerun.
+	self assert: step stepResult isNil.
+	self assert: step previousStepResult isNil.
+	secondTopic := builder topic.
+	self deny: firstTopic == secondTopic
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testOrchestrationFiresEndedAnnouncementOnRunComplete [
 	| orchestration endedAnnouncement |
 	endedAnnouncement := nil.
@@ -1017,6 +1034,16 @@ AbTopicOrchestrationTest >> testStepBySharedDirectoryPathOverridesOrchestrationP
 	self assert: seqStep sharedDirectoryPath equals: '/tmp/custom-seq'.
 	self assert: paraStep sharedDirectoryPath equals: '/tmp/custom-para'.
 	self assert: defaultStep sharedDirectoryPath equals: '/tmp/orchestration-path'
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testTopicBuilderResetForRerunDiscardsCachedTopic [
+	| builder firstTopic secondTopic |
+	builder := AbTopicBuilder new.
+	firstTopic := builder topic.
+	builder resetForRerun.
+	secondTopic := builder topic.
+	self deny: firstTopic == secondTopic
 ]
 
 { #category : 'tests' }

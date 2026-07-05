@@ -72,6 +72,11 @@ AbTopicBuilder >> prompt: aString [
 	prompt := aString
 ]
 
+{ #category : 'actions' }
+AbTopicBuilder >> resetForRerun [
+	topic := nil
+]
+
 { #category : 'accessing' }
 AbTopicBuilder >> title [
 	^ self topic title
