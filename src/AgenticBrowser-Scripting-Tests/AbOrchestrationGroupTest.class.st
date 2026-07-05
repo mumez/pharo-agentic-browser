@@ -220,6 +220,45 @@ AbOrchestrationGroupTest >> testSharedDirectoryPathNotAppliedWhenNotSet [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupStepResetForRerunClearsResultsAndItems [
+	| step orch |
+	orch := AbTopicOrchestration buildBy: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	orch previousResult: 'stale-previous'.
+	orch steps first stepResult: 'stale-step-result'.
+	step := AbOrchestrationGroupSequentialStep new
+		items: (OrderedCollection with: orch);
+		stepResult: 'stale-group-step-result';
+		previousStepResult: 'stale-group-previous-step-result';
+		yourself.
+	step resetForRerun.
+	self assert: step stepResult isNil.
+	self assert: step previousStepResult isNil.
+	self assert: orch previousResult isNil.
+	self assert: orch steps first stepResult isNil
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupResetForRerunRecursesIntoNestedGroup [
+	| innerGroup outerGroup orch |
+	orch := AbTopicOrchestration buildBy: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	orch steps first stepResult: 'stale-inner-result'.
+	innerGroup := AbOrchestrationGroup buildBy: [ :b |
+		b seq: (OrderedCollection with: orch) ].
+	outerGroup := AbOrchestrationGroup buildBy: [ :b |
+		b seq: (OrderedCollection with: innerGroup) ].
+	outerGroup previousResult: 'stale-outer-previous'.
+	outerGroup resetForRerun.
+	self assert: outerGroup previousResult isNil.
+	self assert: orch steps first stepResult isNil
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeRunsItemsInOrder [
 	| runOrder o1 o2 o3 node |
 	runOrder := OrderedCollection new.
