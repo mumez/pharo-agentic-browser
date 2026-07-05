@@ -498,7 +498,8 @@ AbChatPresenter >> onSendButtonClicked [
 	text := self normalInputPresenter inputText trimmed.
 	text ifEmpty: [ ^ self ].
 	self normalInputPresenter clearInput.
-	promptText := self isFirstMessageInTopic
+	promptText := (self isFirstMessageInTopic and: [
+		               self currentTopic settings useStBuddySkillOnInitialPrompt ])
 		              ifTrue: [ '/st-buddy ' , text ]
 		              ifFalse: [ text ].
 	mentions := AbCodeMentionParser parseFrom: text.

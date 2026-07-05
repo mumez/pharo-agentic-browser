@@ -33,6 +33,7 @@ Class {
 		'useDefaultMcpServersCheckbox',
 		'useCommandOnGoalSetCheckbox',
 		'goalSetCommandField',
+		'useStBuddySkillOnInitialPromptCheckbox',
 		'saveButton',
 		'cancelButton'
 	],
@@ -120,6 +121,11 @@ AbSettingsPresenter >> useCommandOnGoalSetCheckbox [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> useStBuddySkillOnInitialPromptCheckbox [
+	^ useStBuddySkillOnInitialPromptCheckbox
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> goalSetCommandField [
 	^ goalSetCommandField
 ]
@@ -144,6 +150,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
 	self settings useCommandOnGoalSet: useCommandOnGoalSetCheckbox state.
 	self settings goalSetCommand: goalSetCommandField text.
+	self settings useStBuddySkillOnInitialPrompt: useStBuddySkillOnInitialPromptCheckbox state.
 	self saveAction cull: self settings
 ]
 
@@ -203,6 +210,10 @@ AbSettingsPresenter >> initializePresenters [
 	goalSetCommandField := self newTextInput.
 	goalSetCommandField text: self settings goalSetCommand.
 
+	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
+	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
+	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
+
 	saveButton := self newButton.
 	saveButton label: 'Save'.
 	saveButton action: [ self saveSettings. self window close ].
@@ -225,6 +236,7 @@ AbSettingsPresenter >> defaultLayout [
 		add: useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
 		add: useCommandOnGoalSetCheckbox withConstraints: [ :c | c height: 28 ];
 		add: (self labeledRow: 'Goal settings command:' field: goalSetCommandField);
+		add: useStBuddySkillOnInitialPromptCheckbox withConstraints: [ :c | c height: 28 ];
 		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
 		yourself
 ]
@@ -252,5 +264,5 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ 385
+		initialExtent: 420 @ 420
 ]
