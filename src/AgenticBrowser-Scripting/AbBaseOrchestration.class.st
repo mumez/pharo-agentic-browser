@@ -229,6 +229,12 @@ AbBaseOrchestration >> run [
 ]
 
 { #category : 'running' }
+AbBaseOrchestration >> resetForRerun [
+	previousResult := nil.
+	self steps do: [ :step | step resetForRerun ]
+]
+
+{ #category : 'running' }
 AbBaseOrchestration >> resume [
 	| stepResult |
 	self logger debug: self runLogLabel , ' resume: start name=' , self name , ' steps=' , self steps size printString.

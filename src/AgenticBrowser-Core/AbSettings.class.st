@@ -255,6 +255,12 @@ AbSettings >> defaultUseDefaultMcpServers [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultUseStBuddySkillOnInitialPrompt [
+	self isDefault ifFalse: [ ^ self class default defaultUseStBuddySkillOnInitialPrompt ].
+	^ true
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleSeconds ].
 	^ 2
@@ -363,6 +369,20 @@ AbSettings >> useDefaultMcpServers [
 AbSettings >> useDefaultMcpServers: aBoolean [
 
 	self at: #useDefaultMcpServers put: aBoolean
+]
+
+{ #category : 'accessing' }
+AbSettings >> useStBuddySkillOnInitialPrompt [
+
+	^ self
+		  at: #useStBuddySkillOnInitialPrompt
+		  ifAbsent: [ self defaultUseStBuddySkillOnInitialPrompt ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useStBuddySkillOnInitialPrompt: aBoolean [
+
+	self at: #useStBuddySkillOnInitialPrompt put: aBoolean
 ]
 
 { #category : 'accessing' }

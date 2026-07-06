@@ -220,6 +220,114 @@ AbOrchestrationGroupTest >> testSharedDirectoryPathNotAppliedWhenNotSet [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupStepResetForRerunClearsResultsAndItems [
+	| step orch |
+	orch := AbTopicOrchestration buildBy: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	orch previousResult: 'stale-previous'.
+	orch steps first stepResult: 'stale-step-result'.
+	step := AbOrchestrationGroupSequentialStep new
+		items: (OrderedCollection with: orch);
+		stepResult: 'stale-group-step-result';
+		previousStepResult: 'stale-group-previous-step-result';
+		yourself.
+	step resetForRerun.
+	self assert: step stepResult isNil.
+	self assert: step previousStepResult isNil.
+	self assert: orch previousResult isNil.
+	self assert: orch steps first stepResult isNil
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupResetForRerunRecursesIntoNestedGroup [
+	| innerGroup outerGroup orch |
+	orch := AbTopicOrchestration buildBy: [ :builder |
+		builder seq: {
+			builder topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	orch steps first stepResult: 'stale-inner-result'.
+	innerGroup := AbOrchestrationGroup buildBy: [ :b |
+		b seq: (OrderedCollection with: orch) ].
+	outerGroup := AbOrchestrationGroup buildBy: [ :b |
+		b seq: (OrderedCollection with: innerGroup) ].
+	outerGroup previousResult: 'stale-outer-previous'.
+	outerGroup resetForRerun.
+	self assert: outerGroup previousResult isNil.
+	self assert: orch steps first stepResult isNil
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testOrchestrationLoadFromReturnsResetOrchestration [
+	| orch path loaded builder group firstTopic |
+	path := '/tmp/ab-test-orchestration-load.fuel'.
+	orch := AbTopicOrchestration buildBy: [ :b |
+		b seq: {
+			b topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	firstTopic := orch steps first topicBuilders first topic.
+	orch previousResult: 'stale-previous'.
+	orch steps first stepResult: 'stale-step-result'.
+	orch saveTo: path asFileReference.
+	[
+		group := AbOrchestrationGroup new.
+		builder := AbOrchestrationGroupBuilder on: group.
+		loaded := builder orchestrationLoadFrom: path asFileReference.
+		self assert: (loaded isKindOf: AbTopicOrchestration).
+		self assert: loaded previousResult isNil.
+		self assert: loaded steps first stepResult isNil.
+		self deny: loaded steps first topicBuilders first topic == firstTopic
+	] ensure: [ path asFileReference ensureDelete ]
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testOrchestrationGroupLoadFromReturnsResetGroup [
+	| innerOrch savedGroup path loaded builder group |
+	path := '/tmp/ab-test-orchestration-group-load.fuel'.
+	innerOrch := AbTopicOrchestration buildBy: [ :b |
+		b seq: {
+			b topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	savedGroup := AbOrchestrationGroup buildBy: [ :b |
+		b seq: (OrderedCollection with: innerOrch) ].
+	savedGroup previousResult: 'stale-previous'.
+	innerOrch steps first stepResult: 'stale-step-result'.
+	savedGroup saveTo: path asFileReference.
+	[
+		group := AbOrchestrationGroup new.
+		builder := AbOrchestrationGroupBuilder on: group.
+		loaded := builder orchestrationGroupLoadFrom: path asFileReference.
+		self assert: (loaded isKindOf: AbOrchestrationGroup).
+		self assert: loaded previousResult isNil.
+		self assert: loaded steps first items first steps first stepResult isNil
+	] ensure: [ path asFileReference ensureDelete ]
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testOrchestrationLoadFromCanBeAddedToSeq [
+	| orch path loaded group |
+	path := '/tmp/ab-test-orchestration-load-seq.fuel'.
+	orch := AbTopicOrchestration buildBy: [ :b |
+		b seq: {
+			b topicBy: [ :t | t title: 'T1' ]
+		} agentBy: [ :a | a codex ] ].
+	group := AbOrchestrationGroup buildBy: [ :builder |
+		builder seq: (OrderedCollection with: orch) ].
+	group saveTo: path asFileReference.
+	[
+		| newGroup newBuilder |
+		newGroup := AbOrchestrationGroup new.
+		newBuilder := AbOrchestrationGroupBuilder on: newGroup.
+		loaded := newBuilder orchestrationGroupLoadFrom: path asFileReference.
+		newBuilder seq: (OrderedCollection with: loaded).
+		self assert: newGroup steps size equals: 1.
+		self assert: (newGroup steps first isKindOf: AbOrchestrationGroupSequentialStep).
+		self assert: newGroup steps first items first equals: loaded
+	] ensure: [ path asFileReference ensureDelete ]
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeRunsItemsInOrder [
 	| runOrder o1 o2 o3 node |
 	runOrder := OrderedCollection new.

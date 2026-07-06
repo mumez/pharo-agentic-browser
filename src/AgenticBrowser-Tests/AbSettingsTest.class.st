@@ -169,6 +169,7 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'codingAgents').
 	self assert: (dict includesKey: 'goalSetCommand').
 	self assert: (dict includesKey: 'useCommandOnGoalSet').
+	self assert: (dict includesKey: 'useStBuddySkillOnInitialPrompt').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
 ]
 
@@ -232,4 +233,19 @@ AbSettingsTest >> testUseCommandOnGoalSetSettable [
 	settings := AbSettings defaultCopied.
 	settings useCommandOnGoalSet: true.
 	self assert: settings useCommandOnGoalSet equals: true
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptDefaultIsTrue [
+
+	self assert: AbSettings default useStBuddySkillOnInitialPrompt
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings useStBuddySkillOnInitialPrompt: false.
+	self assert: settings useStBuddySkillOnInitialPrompt equals: false
 ]

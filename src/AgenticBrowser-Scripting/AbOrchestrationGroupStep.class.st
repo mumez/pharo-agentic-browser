@@ -63,3 +63,10 @@ AbOrchestrationGroupStep >> stepResult: aString [
 	stepResult := aString
 ]
 
+{ #category : 'running' }
+AbOrchestrationGroupStep >> resetForRerun [
+	stepResult := nil.
+	previousStepResult := nil.
+	self items do: [ :item | item resetForRerun ]
+]
+

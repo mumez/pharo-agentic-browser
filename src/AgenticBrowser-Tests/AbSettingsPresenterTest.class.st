@@ -45,7 +45,7 @@ AbSettingsPresenterTest >> testAiTimeoutOptionDropListShowsDefaultSelection [
 	self
 		assert: presenter aiTimeoutOptionDropList selectedItem
 		equals: (AbConstants defaultApprovalOptions
-			detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
+				detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
 ]
 
 { #category : 'tests' }
@@ -53,7 +53,7 @@ AbSettingsPresenterTest >> testExportTimeoutOptionDropListShowsDefaultSelection 
 	self
 		assert: presenter exportTimeoutOptionDropList selectedItem
 		equals: (AbConstants defaultApprovalOptions
-			detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
+				detect: [ :assoc | assoc value = AbConstants rejectOnce ]) key
 ]
 
 { #category : 'tests' }
@@ -81,7 +81,7 @@ AbSettingsPresenterTest >> testSaveWritesOptionDropListsToSettings [
 	s := AbSettings new.
 	presenter := AbSettingsPresenter on: s.
 	allowOnceLabel := (AbConstants defaultApprovalOptions
-		detect: [ :assoc | assoc value = AbConstants allowOnce ]) key.
+			detect: [ :assoc | assoc value = AbConstants allowOnce ]) key.
 	presenter aiTimeoutOptionDropList selectItem: allowOnceLabel.
 	presenter exportTimeoutOptionDropList selectItem: allowOnceLabel.
 	presenter saveSettings.
@@ -136,4 +136,19 @@ AbSettingsPresenterTest >> testSaveWritesUseCommandOnGoalSetToSettings [
 	presenter useCommandOnGoalSetCheckbox state: true.
 	presenter saveSettings.
 	self assert: s useCommandOnGoalSet equals: true
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testUseStBuddySkillOnInitialPromptCheckboxShowsDefaultValue [
+	self assert: presenter useStBuddySkillOnInitialPromptCheckbox state equals: true
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesUseStBuddySkillOnInitialPromptToSettings [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter useStBuddySkillOnInitialPromptCheckbox state: false.
+	presenter saveSettings.
+	self assert: s useStBuddySkillOnInitialPrompt equals: false
 ]

@@ -126,6 +126,13 @@ AbOrchestrationStep >> promptForBuilder: aBuilder topic: aTopic injecting: aPrev
 	^ prompt
 ]
 
+{ #category : 'running' }
+AbOrchestrationStep >> resetForRerun [
+	stepResult := nil.
+	previousStepResult := nil.
+	self topicBuilders do: [ :builder | builder resetForRerun ]
+]
+
 { #category : 'private' }
 AbOrchestrationStep >> resultFromTopic: aTopic [
 	^ aTopic topicGoal isAchieved
