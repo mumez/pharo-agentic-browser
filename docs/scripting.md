@@ -229,12 +229,32 @@ script settings lingerOrchestrationTopicsAfterRun: true.
 script run.
 ```
 
+### Run in the background
+
+For long-running orchestrations, use `forkRun` or `forkRunThen:` to run in a separate process without blocking the caller. `terminate` interrupts a running orchestration.
+
+```smalltalk
+| script |
+script := AgenticBrowser scriptBy: [ :builder | ... ].
+script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ].
+"... later, if needed:"
+script terminate.
+```
+
+`forkRun` is equivalent to `forkRunThen: [ :orc | ]`. `isRunning` reports whether the orchestration's forked process is still alive.
+
 ### Timeout
 
 Each step waits up to `orchestrationStepWaitTimeoutSeconds` (default: 900 s) per topic. Adjust globally or per orchestration:
 
 ```smalltalk
 script settings orchestrationStepWaitTimeoutSeconds: 1800.
+```
+
+If a step times out and the orchestration stops partway through, call `resume` to continue from the first incomplete step, reusing the results already recorded for completed steps:
+
+```smalltalk
+script resume.
 ```
 
 ## Package Structure
