@@ -25,6 +25,8 @@ The block receives an `AbOrchestrationGroupBuilder`.
 | `seq: aCollection` | Add a node that runs its items one after another |
 | `orchestrationBy: aBlock` | Create an `AbTopicOrchestration` (same builder as `scriptBy:`); use as an item inside `para:` / `seq:` |
 | `orchestrationGroupBy: aBlock` | Create a nested `AbOrchestrationGroup`; use as an item inside `para:` / `seq:` |
+| `orchestrationLoadFrom: aFileReference` | Load a previously saved `AbTopicOrchestration` (Fuel) and reset it for a fresh run; use as an item inside `para:` / `seq:` |
+| `orchestrationGroupLoadFrom: aFileReference` | Load a previously saved `AbOrchestrationGroup` (Fuel) and reset it for a fresh run; use as an item inside `para:` / `seq:` |
 | `singleTopicBy: topicBlock agentBy: agentBlock` | Shortcut: build a one-topic orchestration and add it directly as a sequential group step |
 | `sharedDirectoryPath: aString` | Set a common working directory propagated to every item in the group at run time |
 
@@ -40,6 +42,24 @@ Results chain between group steps the same way they chain between topics inside 
 - When an item is a nested `AbOrchestrationGroup`, the same injection applies recursively.
 
 This means a final `singleTopicBy:agentBy:` step placed after a `para:` step automatically receives the combined results of every parallel branch in its prompt.
+
+## Loading Saved Orchestrations
+
+`orchestrationLoadFrom:` and `orchestrationGroupLoadFrom:` load a previously saved `AbTopicOrchestration` or `AbOrchestrationGroup` (see [Scripting API: Save and load](scripting.md#save-and-load)) and add it as an item inside `para:` / `seq:`, so a saved workflow can be reused as a building block in a new group without rebuilding it from scratch.
+
+Each call resets the loaded orchestration for a fresh run: any `stepResult`s recorded from a previous run are cleared, and cached topics are dropped, so it runs from its first step rather than resuming or replaying stale results — even if the saved file was written after a completed (or partially completed) run.
+
+```smalltalk
+AgenticBrowser groupRunBy: [ :groupBuilder |
+    groupBuilder seq: {
+        groupBuilder orchestrationLoadFrom: '/path/to/research.fuel' asFileReference.
+        groupBuilder orchestrationGroupLoadFrom: '/path/to/nested-group.fuel' asFileReference.
+        groupBuilder singleTopicBy: [ :t | t prompt: 'Summarize the results above.' ] agentBy: [ :a | a claude ]
+    }
+].
+```
+
+To instead continue a saved orchestration or group from where it left off (preserving completed step results), load it standalone via `AbTopicOrchestration loadFrom:` / `AbOrchestrationGroup loadFrom:` and call `resume` directly, rather than going through the group builder's `...LoadFrom:` methods.
 
 ## Example: Arena Pattern
 
@@ -118,7 +138,9 @@ Each item inside a `para:` group step waits up to `orchestrationGroupItemWaitTim
 ```smalltalk
 | groupScript |
 groupScript := AgenticBrowser groupScriptBy: [ :groupBuilder | ... ].
-groupScript run.
-groupScript explore.  "opens inspector with group state"
-groupScript result.   "returns the final step's combined/chained result string"
+groupScript forkRunThen: [ :orc |
+    orc explore.  "opens inspector with group state"
+    orc result.   "returns the final step's combined/chained result string" ].
 ```
+
+`forkRunThen:` runs the group in a background process and passes it to the block once finished, without blocking the caller (see [Scripting API: Run in the background](scripting.md#run-in-the-background)).

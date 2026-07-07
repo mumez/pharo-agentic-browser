@@ -229,6 +229,20 @@ script settings lingerOrchestrationTopicsAfterRun: true.
 script run.
 ```
 
+### Run in the background
+
+For long-running orchestrations, use `forkRun` or `forkRunThen:` to run in a separate process without blocking the caller. `terminate` interrupts a running orchestration.
+
+```smalltalk
+| script |
+script := AgenticBrowser scriptBy: [ :builder | ... ].
+script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ].
+"... later, if needed:"
+script terminate.
+```
+
+`forkRun` is equivalent to `forkRunThen: [ :orc | ]`. `isRunning` reports whether the orchestration's forked process is still alive.
+
 ### Timeout
 
 Each step waits up to `orchestrationStepWaitTimeoutSeconds` (default: 900 s) per topic. Adjust globally or per orchestration:
@@ -236,6 +250,36 @@ Each step waits up to `orchestrationStepWaitTimeoutSeconds` (default: 900 s) per
 ```smalltalk
 script settings orchestrationStepWaitTimeoutSeconds: 1800.
 ```
+
+If a step times out and the orchestration stops partway through, call `resume` to continue from the first incomplete step, reusing the results already recorded for completed steps:
+
+```smalltalk
+script resume.
+```
+
+### Save and load
+
+`save` / `saveTo:` and the class-side `loadFrom:` persist an orchestration via Fuel serialization. This works both before and after a run:
+
+- Before running, `save` persists the built configuration (steps, settings, agents) so it can be reconstructed later without re-running the builder block.
+- After running (or after a partial run that timed out), `save` also persists each step's recorded `stepResult`, so a loaded copy can be inspected with `result`/`explore`, or continued with `resume`.
+
+```smalltalk
+| script loaded |
+script := AgenticBrowser scriptBy: [ :builder | ... ].
+script save.                                  "-> <sharedDirectoryPath>/<shortReferenceName>.fuel"
+"or choose the destination explicitly:"
+script saveTo: '/path/to/my-script.fuel' asFileReference.
+
+script run.
+script save.                                  "now includes recorded step results"
+
+loaded := AbTopicOrchestration loadFrom: '/path/to/my-script.fuel'.
+loaded result.                                 "results from the saved run"
+loaded resume.                                 "continue if the saved run stopped early"
+```
+
+`loadFrom:` is defined per concrete orchestration class (`AbTopicOrchestration`, `AbOrchestrationGroup`) and errors if the deserialized object isn't an instance of that class.
 
 ## Package Structure
 
