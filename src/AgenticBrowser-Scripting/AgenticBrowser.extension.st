@@ -11,8 +11,7 @@ AgenticBrowser class >> exampleGoalDrivenTopic [
 				t prompt: 'Write a one-sentence summary of what Pharo Smalltalk is.'.
 				t goal: 'summary written to goal file' ]
 		} agentBy: [ :a | a claude ] ].
-	[orchestrationScript run.
-	orchestrationScript explore] fork.
+	orchestrationScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -33,8 +32,7 @@ AgenticBrowser class >> exampleMultipleSteps [
 				t title: 'Write Pharo overview'.
 				t prompt: 'Write a short overview paragraph of Pharo Smalltalk based on the research results above.' ]
 		} agentBy: [ :a | a claude ] ].
-	[orchestrationScript run.
-	orchestrationScript explore] fork.
+	orchestrationScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -50,8 +48,7 @@ AgenticBrowser class >> exampleParallelTopics [
 				t title: 'List Pharo tools'.
 				t prompt: 'List 3 Pharo Smalltalk development tools in one sentence each. Reply with only the list.' ]
 		} agentBy: [ :a | a claude ] ].
-	[orchestrationScript run.
-	orchestrationScript explore] fork.
+	orchestrationScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -67,8 +64,7 @@ AgenticBrowser class >> exampleSequentialTopics [
 				t title: 'Summarize Pharo features'.
 				t prompt: 'Summarize the feature list from the previous step in one sentence. Reply with only the summary.' ]
 		} agentBy: [ :a | a claude ] ].
-	[orchestrationScript run.
-	orchestrationScript explore] fork.
+	orchestrationScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -90,8 +86,7 @@ AgenticBrowser class >> exampleGroupParallelOrchestrations [
 						t prompt: 'Describe the Pharo Smalltalk ecosystem (tools, community) in one paragraph.' ]
 				} agentBy: [ :a | a claude ] ]
 		} ].
-	[groupScript run.
-	groupScript explore] fork.
+	groupScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -113,8 +108,7 @@ AgenticBrowser class >> exampleGroupSequentialOrchestrations [
 						t prompt: 'Summarize the feature list from the previous step into a single sentence.' ]
 				} agentBy: [ :a | a claude ] ]
 		} ].
-	[groupScript run.
-	groupScript explore] fork.
+	groupScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting-examples-scripting' }
@@ -127,8 +121,7 @@ AgenticBrowser class >> exampleSingleTopic [
 				t title: 'List Pharo features'.
 				t prompt: 'List 3 Pharo Smalltalk features in one sentence each. Reply with only the list.' ]
 		} agentBy: [ :a | a claude ] ].
-	[orchestrationScript run.
-	orchestrationScript explore] fork.
+	orchestrationScript forkRunThen: [ :orc | orc explore ].
 ]
 
 { #category : '*AgenticBrowser-Scripting' }
