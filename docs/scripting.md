@@ -257,6 +257,30 @@ If a step times out and the orchestration stops partway through, call `resume` t
 script resume.
 ```
 
+### Save and load
+
+`save` / `saveTo:` and the class-side `loadFrom:` persist an orchestration via Fuel serialization. This works both before and after a run:
+
+- Before running, `save` persists the built configuration (steps, settings, agents) so it can be reconstructed later without re-running the builder block.
+- After running (or after a partial run that timed out), `save` also persists each step's recorded `stepResult`, so a loaded copy can be inspected with `result`/`explore`, or continued with `resume`.
+
+```smalltalk
+| script loaded |
+script := AgenticBrowser scriptBy: [ :builder | ... ].
+script save.                                  "-> <sharedDirectoryPath>/<shortReferenceName>.fuel"
+"or choose the destination explicitly:"
+script saveTo: '/path/to/my-script.fuel' asFileReference.
+
+script run.
+script save.                                  "now includes recorded step results"
+
+loaded := AbTopicOrchestration loadFrom: '/path/to/my-script.fuel'.
+loaded result.                                 "results from the saved run"
+loaded resume.                                 "continue if the saved run stopped early"
+```
+
+`loadFrom:` is defined per concrete orchestration class (`AbTopicOrchestration`, `AbOrchestrationGroup`) and errors if the deserialized object isn't an instance of that class.
+
 ## Package Structure
 
 | Package | Contents |
