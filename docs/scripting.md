@@ -199,6 +199,10 @@ AgenticBrowser runBy: [ :builder |
     } agentBy: [ :a | a claude ] ].
 ```
 
+### Coordinating multiple orchestrations
+
+Everything above coordinates topics *within* one orchestration. To run several whole orchestrations together — in parallel or in sequence, including nesting groups inside groups, e.g. to run the same task with different agents and pick the best result — see [Orchestration Groups](orchestration-groups.md).
+
 ## Advanced Usage
 
 ### Inspect results after a run

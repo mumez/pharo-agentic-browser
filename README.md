@@ -44,6 +44,7 @@ The core workflow:
 - **Code mentions** — type `@ClassName` or `@ClassName>>methodName` in chat to embed the Tonel source as ACP resources
 - **MCP server support** — configure MCP servers via `mcp.json`; built-in Smalltalk MCP servers can be auto-merged
 - **Working directory management** — per-topic working directory for better context; custom paths for existing projects
+- **Topic template** — seed every new topic's working directory from `topic-template`, so coding-agent config (`CLAUDE.md`, `AGENTS.md`, `.claude`, `.opencode`, etc.) doesn't need to be set up per topic
 - **Multiple package prefixes** — track multiple package families (e.g. `#('ACP-*' 'BaselineOfACP')`) per topic
 - **Image change watching** — `AbTopicRelatedPackagesWatcher` monitors image changes, inserts system messages into chat, and asks for confirmation before synching packages
 - **Web UI** — browser-based interface via WebSocket ([docs/web-ui.md](docs/web-ui.md))
@@ -160,6 +161,26 @@ Click the **`[ ]`** button in the status bar to capture a screen area and attach
 4. Send — the PNG is attached to the prompt as an image resource
 
 The file is saved to `<agenticBrowserRoot>/screenshots/sc-YYYYMMDD-NNN.png`. You can also reference a previously captured file manually by typing `@sc-YYYYMMDD-NNN.png` in the input field.
+
+### File Attachments
+
+Click the **+** button in the status bar to attach any file from disk.
+
+1. Click the button — a file selection dialog opens
+2. Choose a file — a mention like `[filename]` is inserted into the input field
+3. Send — the file's contents are attached to the prompt as a text resource
+
+Deleting the `[filename]` mention text before sending removes the attachment. If the file's contents exceed `AbSettings >> maxAttachmentSize` (default: 5 MB), the attached text is truncated.
+
+### Topic Template
+
+When a new topic's working directory is created, AgenticBrowser copies the contents of `<agenticBrowserRoot>/topic-template` into it.
+
+By default this template holds a `CLAUDE.md` and `AGENTS.md` tailored for the `smalltalk-dev` plugin, generated the first time the template directory is accessed. You can replace these with your own customized versions.
+
+You can also place coding-agent project config directories here, such as `.claude` or `.opencode`, containing skills, commands, and rules shared across topics. This saves you from reconfiguring the coding agent for every new topic.
+
+> **Note:** The template is only copied into working directories created under the AgenticBrowser root. It is not copied when you set a custom directory path pointing at an existing project.
 
 ### Goal Setting
 

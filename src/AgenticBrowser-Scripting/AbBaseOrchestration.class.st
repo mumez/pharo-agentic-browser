@@ -48,7 +48,8 @@ Class {
 		'logger',
 		'announcer',
 		'sharedDirectoryPath',
-		'previousResult'
+		'previousResult',
+		'runningProcess'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -62,7 +63,7 @@ AbBaseOrchestration class >> buildBy: aBlock [
 { #category : 'persistence' }
 AbBaseOrchestration class >> loadFrom: aFileReference [
 	| loaded |
-	loaded := FLMaterializer materializeFromFileNamed: aFileReference fullName.
+	loaded := FLMaterializer materializeFromFileNamed: aFileReference asFileReference fullName.
 	loaded class == self ifFalse: [
 		self error: 'Deserialized object is not a ' , self name ].
 	^ loaded
@@ -98,7 +99,7 @@ AbBaseOrchestration >> steps: aCollection [
 
 { #category : 'fuel' }
 AbBaseOrchestration class >> fuelIgnoredInstanceVariableNames [
-	^ #( 'logger' 'announcer' )
+	^ #( 'logger' 'announcer' 'runningProcess' )
 ]
 
 { #category : 'accessing' }
@@ -155,8 +156,10 @@ AbBaseOrchestration >> save [
 
 { #category : 'persistence' }
 AbBaseOrchestration >> saveTo: aFileReference [
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: self toFileNamed: aFileReference fullName
+	| ref |
+	ref := aFileReference asFileReference.
+	ref parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: ref fullName
 ]
 
 { #category : 'accessing' }
@@ -229,6 +232,12 @@ AbBaseOrchestration >> run [
 ]
 
 { #category : 'running' }
+AbBaseOrchestration >> resetForRerun [
+	previousResult := nil.
+	self steps do: [ :step | step resetForRerun ]
+]
+
+{ #category : 'running' }
 AbBaseOrchestration >> resume [
 	| stepResult |
 	self logger debug: self runLogLabel , ' resume: start name=' , self name , ' steps=' , self steps size printString.
@@ -262,4 +271,35 @@ AbBaseOrchestration >> prepareRun [
 { #category : 'running' }
 AbBaseOrchestration >> afterRun [
 	"hook: subclasses may override to perform post-loop cleanup before announcement"
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> runningProcess [
+	^ runningProcess
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> runningProcess: aProcess [
+	runningProcess := aProcess
+]
+
+{ #category : 'running-fork' }
+AbBaseOrchestration >> isRunning [
+	^ self runningProcess notNil and: [ self runningProcess isTerminated not ]
+]
+
+{ #category : 'running-fork' }
+AbBaseOrchestration >> forkRunThen: aBlock [
+	self isRunning ifTrue: [ self error: 'Already running' ].
+	self runningProcess: [ self run. aBlock cull: self ] fork
+]
+
+{ #category : 'running-fork' }
+AbBaseOrchestration >> forkRun [
+	^ self forkRunThen: [ :orc | ]
+]
+
+{ #category : 'running-fork' }
+AbBaseOrchestration >> terminate [
+	self runningProcess ifNotNil: [ :proc | proc terminate ]
 ]
