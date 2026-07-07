@@ -156,8 +156,10 @@ AbBaseOrchestration >> save [
 
 { #category : 'persistence' }
 AbBaseOrchestration >> saveTo: aFileReference [
-	aFileReference parent ensureCreateDirectory.
-	FLSerializer serialize: self toFileNamed: aFileReference fullName
+	| ref |
+	ref := aFileReference asFileReference.
+	ref parent ensureCreateDirectory.
+	FLSerializer serialize: self toFileNamed: ref fullName
 ]
 
 { #category : 'accessing' }
