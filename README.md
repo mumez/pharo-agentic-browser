@@ -345,6 +345,10 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 | `exportApprovalWaitTimeoutSeconds` | `30` | Seconds to wait for human approval of a package export |
 | `exportApprovalTimeoutOption` | `#reject_once` | Auto-response on export timeout |
 | `watcherMessageThrottleSeconds` | `2` | Minimum seconds between watcher system messages for the same package |
+| `maxAttachmentSize` | `5242880` (5 MB) | Max characters of a file attachment's contents embedded into a prompt |
+| `useStBuddySkillOnInitialPrompt` | `true` | Prefix the initial prompt with the `st-buddy` skill instruction |
+| `useCommandOnGoalSet` | `false` | Prefix the goal notification prompt with `goalSetCommand` |
+| `goalSetCommand` | `'/goal'` | Command prefix used when `useCommandOnGoalSet` is true |
 
 ### Per-Topic Settings
 
