@@ -159,6 +159,7 @@ AbTopicManagerRipple >> topicJson: aTopic [
 		  at: 'currentModel' put: (aTopic currentModel ifNil: [ '' ]);
 		  at: 'currentMode' put: (aTopic currentMode ifNil: [ '' ]);
 		  at: 'lastUpdated' put: (aTopic lastUpdated ifNil: [ '' ] ifNotNil: [ :d | d printString ]);
+		  at: 'workingDirectoryPath' put: aTopic workingDirectoryPath;
 		  yourself
 ]
 

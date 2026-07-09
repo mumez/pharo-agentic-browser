@@ -544,7 +544,8 @@ Sent by the server after any operation that modifies topic metadata without addi
   "goal": "Implement the login feature",
   "currentModel": "claude-sonnet-4-6",
   "currentMode": "auto",
-  "lastUpdated": "2026-06-11T10:00:00+09:00"
+  "lastUpdated": "2026-06-11T10:00:00+09:00",
+  "workingDirectoryPath": "/home/user/pharo130/agentic-browser/my-topic-abc12345"
 }
 ```
 
@@ -559,6 +560,7 @@ Sent by the server after any operation that modifies topic metadata without addi
 | `currentModel` | string | Active model identifier (empty string if not set) |
 | `currentMode` | string | Active mode identifier (empty string if not set) |
 | `lastUpdated` | string | Timestamp string (offset-based ISO 8601) |
+| `workingDirectoryPath` | string | Absolute path to the topic's working directory on the server |
 
 **Topic statuses:** `initial` | `working` | `waitingForHuman` | `endTurn` | `goalAchieved`
 
