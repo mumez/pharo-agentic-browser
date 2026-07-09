@@ -225,7 +225,8 @@ AbSettings >> defaultCodingAgentsJsonString [
   {"name": "codex-acp", "command": ["codex-acp"]},
   {"name": "Cursor CLI", "command": ["agent", "acp"]},
   {"name": "Kilo Code", "command": ["kilo", "acp"]},
-  {"name": "Kiro CLI", "command": ["kiro-cli", "acp"]}
+  {"name": "Kiro CLI", "command": ["kiro-cli", "acp"]},
+  {"name": "Devin CLI", "command": ["devin", "acp"]}
 ]
 '
 ]
