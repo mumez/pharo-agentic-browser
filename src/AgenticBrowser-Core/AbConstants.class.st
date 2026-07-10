@@ -21,7 +21,7 @@ AbConstants class >> allowOnce [
 AbConstants class >> defaultApprovalOptions [
 
 	^ {
-		  'Confirm' -> self allowOnce.
+		  'Allow' -> self allowOnce.
 		  'Deny' -> self rejectOnce }
 ]
 
