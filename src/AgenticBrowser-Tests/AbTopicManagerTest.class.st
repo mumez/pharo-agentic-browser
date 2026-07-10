@@ -380,3 +380,36 @@ AbTopicManagerTest >> testTopicsNamedReturnsEmptyWhenNoMatch [
 	manager := AbTopicManager forTest.
 	self assert: (manager topicsNamed: 'nonexistent') isEmpty
 ]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testClassAnnouncerReturnsAnnouncer [
+
+	self assert: AbTopicManager announcer class equals: Announcer
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testAbTopicManagerLoadedConstructor [
+
+	| manager announcement |
+	manager := AbTopicManager forTest.
+	announcement := AbTopicManagerLoaded topicManager: manager.
+	self assert: announcement class equals: AbTopicManagerLoaded.
+	self assert: announcement topicManager == manager
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testLoadAnnouncesAbTopicManagerLoaded [
+
+	| received newManager |
+	received := nil.
+	newManager := AbTopicManager new.
+	AbTopicManager announcer
+		when: AbTopicManagerLoaded
+		do: [ :ann | received := ann topicManager ]
+		for: self.
+	[
+	AbTopicManager announcer
+		announce: (AbTopicManagerLoaded topicManager: newManager) ]
+		ensure: [ AbTopicManager announcer unsubscribe: self ].
+	self assert: received == newManager
+]

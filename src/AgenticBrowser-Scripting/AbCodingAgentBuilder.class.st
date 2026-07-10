@@ -17,7 +17,7 @@ Collaborators:
 - AbTopic: receives agent arguments, mode config, and model config
 
 Public API and Key Messages:
-- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro - select a preset agent
+- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro / #devin - select a preset agent
 - #planMode - start the agent in plan mode (where supported)
 - #model: aString - override the model name passed to the agent
 "
@@ -89,6 +89,11 @@ AbCodingAgentBuilder >> claude [
 { #category : 'shortcuts' }
 AbCodingAgentBuilder >> codex [
 	self useAgentArgumentsAt: 'codex-acp'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> devin [
+	self useAgentArgumentsAt: 'Devin CLI'
 ]
 
 { #category : 'shortcuts' }

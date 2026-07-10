@@ -43,7 +43,8 @@ Class {
 	],
 	#classInstVars : [
 		'default',
-		'forTest'
+		'forTest',
+		'announcer'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -59,6 +60,12 @@ AbTopicManager class >> default [
 AbTopicManager class >> default: anInstance [
 
 	default := anInstance
+]
+
+{ #category : 'announcements' }
+AbTopicManager class >> announcer [
+
+	^ announcer ifNil: [ announcer := Announcer new ]
 ]
 
 { #category : 'persistence' }
@@ -101,9 +108,12 @@ AbTopicManager class >> initialize [
 { #category : 'persistence' }
 AbTopicManager class >> load [
 
+	| newDefault |
 	self defaultFileReference exists ifFalse: [ ^ self ].
-	default ifNotNil: [ default cleanupAllTopics ].
-	default := self loadFrom: self defaultFileReference
+	self default ifNotNil: [ self default cleanupAllTopics ].
+	newDefault := self loadFrom: self defaultFileReference.
+	self default: newDefault.
+	self announcer weak announce: (AbTopicManagerLoaded topicManager: newDefault)
 ]
 
 { #category : 'persistence' }

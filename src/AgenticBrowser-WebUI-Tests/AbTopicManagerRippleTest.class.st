@@ -22,6 +22,13 @@ AbTopicManagerRippleTest >> setUp [
 	ripple webSocket: mockSocket
 ]
 
+{ #category : 'running' }
+AbTopicManagerRippleTest >> tearDown [
+
+	ripple unregistered.
+	super tearDown
+]
+
 { #category : 'private' }
 AbTopicManagerRippleTest >> requestMessage: anAddress body: aBody [
 
@@ -938,4 +945,60 @@ AbTopicManagerRippleTest >> testSetSettingsSignalsErrorForUnknownTopicId [
 			        at: 'settings' put: Dictionary new;
 			        yourself).
 	self should: [ ripple handleRequest: msg ] raise: RpError
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testRippleUpdatesTopicManagerOnAbTopicManagerLoaded [
+
+	| newManager |
+	newManager := AbTopicManager new.
+	AbTopicManager announcer
+		announce: (AbTopicManagerLoaded topicManager: newManager).
+	self assert: ripple topicManager == newManager
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testRippleSubscribesToNewTopicManagerEventsAfterLoad [
+
+	| newManager topic pushes |
+	newManager := AbTopicManager new.
+	AbTopicManager announcer
+		announce: (AbTopicManagerLoaded topicManager: newManager).
+	topic := self newTopic: 'New Manager Topic'.
+	newManager addTopic: topic.
+	mockSocket reset.
+	topic addSystemMessage: 'hello from new manager'.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'messageAdded' ] ].
+	self assert: pushes size equals: 1
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testRippleUnsubscribesFromOldTopicManagerAfterLoad [
+
+	| oldManager newManager topic pushes |
+	oldManager := AbTopicManager forTest.
+	newManager := AbTopicManager new.
+	topic := self newTopic: 'Old Manager Topic'.
+	oldManager addTopic: topic.
+	AbTopicManager announcer
+		announce: (AbTopicManagerLoaded topicManager: newManager).
+	mockSocket reset.
+	topic addSystemMessage: 'ignored message'.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'messageAdded' ] ].
+	self assert: pushes isEmpty
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromClassAnnouncer [
+
+	| newManager |
+	ripple unregistered.
+	newManager := AbTopicManager new.
+	AbTopicManager announcer
+		announce: (AbTopicManagerLoaded topicManager: newManager).
+	self deny: ripple topicManager == newManager
 ]
