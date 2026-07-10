@@ -64,7 +64,6 @@ AbTopicManagerRippleTest >> dispatch: aMessage [
 	| handler |
 	handler := RpWebSocketEventBusHandler new.
 	handler rippleClass: AbTopicManagerRipple.
-	handler register: mockSocket.
 	handler ripples at: mockSocket token put: ripple.
 	(RpMessageDispatcher message: aMessage socket: mockSocket handler: handler) dispatch
 ]
