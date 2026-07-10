@@ -66,6 +66,16 @@ AbTopicManagerRipple >> webSocket: aWebSocket [
 { #category : 'private' }
 AbTopicManagerRipple >> subscribeToTopicManager [
 
+	AbTopicManager announcer
+		when: AbTopicManagerLoaded
+		do: [ :ann | self onTopicManagerLoaded: ann ]
+		for: self.
+	self subscribeToTopicManagerEvents
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> subscribeToTopicManagerEvents [
+
 	self topicManager announcer
 		when: AbTopicAdded
 		do: [ :ann | self onTopicAdded: ann topic ]
@@ -106,8 +116,18 @@ AbTopicManagerRipple >> subscribeToTopic: aTopic [
 AbTopicManagerRipple >> unregistered [
 
 	super unregistered.
+	AbTopicManager announcer unsubscribe: self.
 	self topicManager announcer unsubscribe: self.
 	self topicManager topics do: [ :each | each announcer unsubscribe: self ]
+]
+
+{ #category : 'topic events' }
+AbTopicManagerRipple >> onTopicManagerLoaded: ann [
+
+	self topicManager announcer unsubscribe: self.
+	self topicManager topics do: [ :each | each announcer unsubscribe: self ].
+	self topicManager: ann topicManager.
+	self subscribeToTopicManagerEvents
 ]
 
 { #category : 'private' }
