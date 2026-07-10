@@ -113,7 +113,7 @@ AbTopicManager class >> load [
 	self default ifNotNil: [ self default cleanupAllTopics ].
 	newDefault := self loadFrom: self defaultFileReference.
 	self default: newDefault.
-	self announcer weak announce: (AbTopicManagerLoaded topicManager: newDefault)
+	self announcer announce: (AbTopicManagerLoaded topicManager: newDefault)
 ]
 
 { #category : 'persistence' }
