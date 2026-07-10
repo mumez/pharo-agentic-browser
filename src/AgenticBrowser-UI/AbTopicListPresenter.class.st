@@ -405,20 +405,22 @@ AbTopicListPresenter >> subscribeToTopicManager [
 ]
 
 { #category : 'subscriptions' }
+AbTopicListPresenter >> subscribeToTopic: aTopic [
+
+	aTopic announcer
+		when: AbTopicStatusChanged
+		do: [ self defer: [ self refresh ] ]
+		for: self
+]
+
+{ #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManagerEvents [
 
-	self topicManager topicsDo: [ :t |
-		t announcer
-			when: AbTopicStatusChanged
-			do: [ self defer: [ self refresh ] ]
-			for: self ].
+	self topicManager topicsDo: [ :t | self subscribeToTopic: t ].
 	self topicManager announcer
 		when: AbTopicAdded
 		do: [ :ann |
-			ann topic announcer
-				when: AbTopicStatusChanged
-				do: [ self defer: [ self refresh ] ]
-				for: self.
+			self subscribeToTopic: ann topic.
 			self defer: [ self refresh ] ]
 		for: self.
 	self topicManager announcer
