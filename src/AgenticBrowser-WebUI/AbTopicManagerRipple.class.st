@@ -66,7 +66,7 @@ AbTopicManagerRipple >> webSocket: aWebSocket [
 { #category : 'private' }
 AbTopicManagerRipple >> subscribeToTopicManager [
 
-	AbTopicManager announcer
+	AbTopicManager announcer weak
 		when: AbTopicManagerLoaded
 		do: [ :ann | self onTopicManagerLoaded: ann ]
 		for: self.

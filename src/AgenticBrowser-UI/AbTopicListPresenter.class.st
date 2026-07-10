@@ -397,7 +397,7 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
-	AbTopicManager announcer
+	AbTopicManager announcer weak
 		when: AbTopicManagerLoaded
 		do: [ :ann | self onTopicManagerLoaded: ann ]
 		for: self.
