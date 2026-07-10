@@ -102,8 +102,8 @@ AbTopicManager class >> initialize [
 AbTopicManager class >> load [
 
 	self defaultFileReference exists ifFalse: [ ^ self ].
-	default ifNotNil: [ default cleanupAllTopics ].
-	default := self loadFrom: self defaultFileReference
+	self default ifNotNil: [ self default cleanupAllTopics ].
+	self default: (self loadFrom: self defaultFileReference)
 ]
 
 { #category : 'persistence' }
