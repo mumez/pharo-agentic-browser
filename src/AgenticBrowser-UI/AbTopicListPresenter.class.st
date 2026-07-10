@@ -397,6 +397,16 @@ AbTopicListPresenter >> sortedTopics: aCollection [
 { #category : 'subscriptions' }
 AbTopicListPresenter >> subscribeToTopicManager [
 
+	AbTopicManager announcer
+		when: AbTopicManagerLoaded
+		do: [ :ann | self onTopicManagerLoaded: ann ]
+		for: self.
+	self subscribeToTopicManagerEvents
+]
+
+{ #category : 'subscriptions' }
+AbTopicListPresenter >> subscribeToTopicManagerEvents [
+
 	self topicManager topicsDo: [ :t |
 		t announcer
 			when: AbTopicStatusChanged
@@ -444,8 +454,19 @@ AbTopicListPresenter >> topicListLabelFor: aTopic [
 ]
 
 { #category : 'subscriptions' }
+AbTopicListPresenter >> onTopicManagerLoaded: ann [
+
+	self topicManager topicsDo: [ :t | t announcer unsubscribe: self ].
+	self topicManager announcer unsubscribe: self.
+	self topicManager: ann topicManager.
+	self subscribeToTopicManagerEvents.
+	self defer: [ self refresh ]
+]
+
+{ #category : 'subscriptions' }
 AbTopicListPresenter >> unsubscribeFromTopicManager [
 
+	AbTopicManager announcer unsubscribe: self.
 	self topicManager topicsDo: [ :t |
 		t announcer unsubscribe: self ].
 	self topicManager announcer unsubscribe: self

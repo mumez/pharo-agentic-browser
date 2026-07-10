@@ -213,6 +213,45 @@ AbTopicListPresenterTest >> testTopicAddedAnnouncerSubscriptionIsRegistered [
 		anySatisfy: [ :s | s announcementClass = AbTopicAdded ])
 ]
 
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testPresenterUpdatesTopicManagerOnAbTopicManagerLoaded [
+
+	| newManager |
+	presenter topicManager: AbTopicManager forTest.
+	presenter subscribeToTopicManager.
+	newManager := AbTopicManager new.
+	AbTopicManager announcer announce: (AbTopicManagerLoaded topicManager: newManager).
+	self assert: presenter topicManager == newManager
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testPresenterUnsubscribesFromOldTopicManagerAfterLoad [
+
+	| oldManager newManager newTopic received |
+	oldManager := AbTopicManager forTest.
+	presenter topicManager: oldManager.
+	presenter subscribeToTopicManager.
+	newManager := AbTopicManager new.
+	received := false.
+	AbTopicManager announcer announce: (AbTopicManagerLoaded topicManager: newManager).
+	newTopic := self newTopic: 'OldManagerTopic'.
+	oldManager addTopic: newTopic.
+	"If still subscribed to oldManager, topicList items would change"
+	self deny: (presenter topicList items includes: newTopic)
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testUnsubscribeFromTopicManagerAlsoUnsubscribesFromClassAnnouncer [
+
+	| newManager |
+	presenter topicManager: AbTopicManager forTest.
+	presenter subscribeToTopicManager.
+	presenter unsubscribeFromTopicManager.
+	newManager := AbTopicManager new.
+	AbTopicManager announcer announce: (AbTopicManagerLoaded topicManager: newManager).
+	self deny: presenter topicManager == newManager
+]
+
 { #category : 'accessing' }
 AbTopicListPresenterTest >> topic: anAbTopic [
 
