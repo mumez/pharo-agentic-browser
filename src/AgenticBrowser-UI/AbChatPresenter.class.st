@@ -536,24 +536,10 @@ AbChatPresenter >> selectFileForAttachmentIn: aDirectory [
 { #category : 'private' }
 AbChatPresenter >> selectFileFromUiIn: aDirectory [
 
-	| uiManager selectedPath |
-	uiManager := UIManager default.
-	(uiManager respondsTo: #chooseExistingFileReference:extensions:path:) ifTrue: [
-		^ uiManager
-			  chooseExistingFileReference: 'Select attachment file'
-			  extensions: #('*')
-			  path: aDirectory ].
-	(uiManager respondsTo: #chooseExistingFileReference:path:) ifTrue: [
-		^ uiManager
-			  chooseExistingFileReference: 'Select attachment file'
-			  path: aDirectory ].
-	(uiManager respondsTo: #chooseFullFileNameMatching:label:path:) ifTrue: [
-		selectedPath := uiManager
-			                chooseFullFileNameMatching: #('*')
-			                label: 'Select attachment file'
-			                path: aDirectory fullName.
-		^ selectedPath ifNil: [ nil ] ifNotNil: [ selectedPath asFileReference ] ].
-	^ nil
+	^ UIManager default
+		  chooseExistingFileReference: 'Select attachment file'
+		  extensions: nil
+		  path: aDirectory
 ]
 
 { #category : 'event handling' }
