@@ -46,7 +46,24 @@ Look at the feature honestly before templating anything:
 
 ### 3. Generate the DSL script
 
-Build the script using the exact builder API from the DSL reference — `AgenticBrowser runBy: [ :builder | builder seq: { ... } agentBy: [ :a | a claude ] ]`, `t title:`/`t prompt:`/`t goal:`, etc. A few things that make generated scripts actually work well as agent instructions, not just valid Smalltalk:
+Build the script using the exact builder API from the DSL reference — `t title:`/`t prompt:`/`t goal:`, `seq:agentBy:`/`para:agentBy:`, etc. — but assembled with `AgenticBrowser scriptBy:` + `forkRunThen:`, not `runBy:`:
+
+```smalltalk
+| script |
+script := AgenticBrowser scriptBy: [ :builder |
+    builder seq: { ... } agentBy: [ :a | a claude ] ].
+script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ].
+```
+
+Prefer this shape over `AgenticBrowser runBy: [ ... ]` in generated scripts. `runBy:` blocks the calling process until the entire orchestration finishes, which doesn't fit evaluation through the MCP `eval` tool.
+
+Don't hold `script` in a global (e.g. `Smalltalk at:put:`) just to check on it later — that adds naming-collision and cleanup concerns for no benefit. The local `| script |` temp is fine for the single `eval` call that forks the run. To check on a run afterward (from a separate `eval` call, where the temp is no longer in scope), find it by its running state instead:
+
+```smalltalk
+AbBaseOrchestration allSubInstances detect: [ :each | each isRunning ] ifNone: []
+```
+
+A few things that make generated scripts actually work well as agent instructions, not just valid Smalltalk:
 
 - **Set `builder sharedDirectoryPath:` to the target repository whenever this is feature work on an existing codebase** (which is the common case for this skill). Use an absolute path. Before finalizing the script, double-check that the path actually points at the right repo — it exists, it's the repo the user meant (not a sibling/similarly-named directory), and it's the directory the feature's files actually live under. Getting this wrong means the agents either can't find the code or silently edit the wrong checkout. Only omit `sharedDirectoryPath:` (letting it fall back to an auto-created `<agenticBrowserRoot>` directory) when the feature is genuinely a from-scratch build with no existing repo to target — confirm that's really the case rather than assuming.
 - **Testing is its own visible step, not just a TDD side-effect of implementing.** Even when the implement phase is goal-driven ("all tests pass"), add a distinct topic (or make it explicit in the prompt) that runs the test suite and reports results — don't let "tests exist" substitute for "tests were run and verified green". This project's tests typically run via the `st-test` skill / MCP tools.
@@ -82,7 +99,7 @@ Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug d
 
 ## How to run
 
-Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval.
+Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbBaseOrchestration allSubInstances detect: [ :each | each isRunning ] ifNone:[]`.
 ```
 
 The script inside must be copy-paste runnable as-is in a Playground — no placeholders like `<...>` left in it.
@@ -91,7 +108,7 @@ The script inside must be copy-paste runnable as-is in a Playground — no place
 
 Present the generated markdown content (or at least the script block) in the conversation, then ask explicitly: run it now via st-eval, or stop here with just the file? Call out the working directory (`sharedDirectoryPath:`) explicitly as part of this ask — the user should confirm the agents are about to run against the right repo before anything executes.
 
-- **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Report back the orchestration result (`script result`) once it completes; for anything long-running, mention `forkRunThen:`/timeouts from the DSL reference rather than blocking silently.
+- **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Because it's built with `scriptBy:`/`forkRunThen:`, the `eval` call returns immediately after forking rather than blocking until the orchestration finishes — the `script` temp doesn't survive into later `eval` calls, so follow up with `AbBaseOrchestration allSubInstances select: [ :each | each isRunning ]` (or watch for the `forkRunThen:` block's own report, e.g. via Transcript) to know when it's done, and report the result back to the user once it is. Mention `terminate` if the user wants to interrupt a running orchestration.
   - **If the MCP `eval` tool is unavailable or errors** — don't retry blindly. Fall back to the same option the preview file offers: tell the user the script is ready to paste into a Pharo Playground themselves, and point them at the `.scripting.md` file's script block.
   - **If a topic times out or doesn't reach its goal** — check the DSL reference's Timeout/`resume` section. Report which topic stalled and what its last known state was, then offer to re-invoke the run with `resume` (per the reference) rather than restarting the whole script from scratch.
 - **If the user says no (or doesn't confirm)** — stop. The `.scripting.md` file is the deliverable; do not evaluate anything against the image.
