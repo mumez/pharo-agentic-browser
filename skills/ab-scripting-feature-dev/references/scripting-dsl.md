@@ -63,6 +63,21 @@ Inside the block passed to `scriptBy:` / `runBy:`, the builder argument responds
 | `seq: topics agentBy: agentBlock` | Run topics one after another; result flows forward |
 | `para: topics agentBy: agentBlock` | Run topics concurrently; wait for all before next step |
 | `topicBy: aBlock` | Create a topic builder (used inside `seq:` / `para:` arrays) |
+| `sharedDirectoryPath: aString` | Set the working directory each topic works in |
+
+#### `sharedDirectoryPath:`
+
+Sets the working directory each topic in the orchestration operates in. If not specified, a directory is auto-created under `<agenticBrowserRoot>`.
+
+Set this when you want the agents to work against an existing development repository rather than a fresh directory — pointing agents at a known repository also helps them scope their context to the relevant codebase:
+
+```smalltalk
+AgenticBrowser runBy: [ :builder |
+    builder sharedDirectoryPath: '/path/to/existing/repo'.
+    builder seq: {
+        builder topicBy: [ :t | t prompt: 'Fix the failing test in lib/foo.js.' ]
+    } agentBy: [ :a | a claude ] ].
+```
 
 ### Topic Builder
 
