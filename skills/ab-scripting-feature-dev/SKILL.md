@@ -46,21 +46,22 @@ Look at the feature honestly before templating anything:
 
 ### 3. Generate the DSL script
 
-Build the script using the exact builder API from the DSL reference — `t title:`/`t prompt:`/`t goal:`, `seq:agentBy:`/`para:agentBy:`, etc. — but assembled with `AgenticBrowser scriptBy:` + `forkRunThen:`, not `runBy:`:
+Build the script using the exact builder API from the DSL reference — `t title:`/`t prompt:`/`t goal:`, `seq:agentBy:`/`para:agentBy:`, etc. — but assembled with `AgenticBrowser scriptBy:` + `forkRunThen:` + `register`, not a single `runBy:`:
 
 ```smalltalk
 | script |
 script := AgenticBrowser scriptBy: [ :builder |
     builder seq: { ... } agentBy: [ :a | a claude ] ].
 script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ].
+script register
 ```
 
 Prefer this shape over `AgenticBrowser runBy: [ ... ]` in generated scripts. `runBy:` blocks the calling process until the entire orchestration finishes, which doesn't fit evaluation through the MCP `eval` tool.
 
-Don't hold `script` in a global (e.g. `Smalltalk at:put:`) just to check on it later — that adds naming-collision and cleanup concerns for no benefit. The local `| script |` temp is fine for the single `eval` call that forks the run. To check on a run afterward (from a separate `eval` call, where the temp is no longer in scope), find it by its running state instead:
+Don't hold `script` in a global (e.g. `Smalltalk at:put:`) just to check on it later. Instead, use `register` for registering the orchestration script to AbOrchestrationManager. `register` returns orchestration id, and you can use the id afterward for retrieving the running script instance:
 
 ```smalltalk
-AbBaseOrchestration allSubInstances detect: [ :each | each isRunning ] ifNone: []
+AbOrchestrationManager default orchestrationAt: <orchestration script id>
 ```
 
 A few things that make generated scripts actually work well as agent instructions, not just valid Smalltalk:
@@ -69,7 +70,9 @@ A few things that make generated scripts actually work well as agent instruction
 - **Testing is its own visible step, not just a TDD side-effect of implementing.** Even when the implement phase is goal-driven ("all tests pass"), add a distinct topic (or make it explicit in the prompt) that runs the test suite and reports results — don't let "tests exist" substitute for "tests were run and verified green". This project's tests typically run via the `st-test` skill / MCP tools.
 - **The implement phase should follow TDD**: write a failing test first, then implement, then confirm green.
 - **Always add a lint & review phase after implementation.** Its prompt should explicitly tell the agent to consult the `st-lint` skill (or the `smalltalk-validator` MCP tools) against the changed Tonel files, and to consult the `smalltalk-developer` skill's style guide section, then fix whatever it finds. Set a `goal:` like `'lint clean and style-guide issues fixed'` so the topic doesn't end early with unresolved findings.
-- Use `t goal:` wherever "done" is checkable by inspecting a file/test result, so the topic loop (`#goalAchieved`) actually enforces completion instead of trusting the agent's self-report.
+- **Only add `goal:` to a topic that needs trial-and-error looping toward a completion condition — don't add it by default.** `goal:` is for long-running work where the agent must retry/iterate until some condition holds (e.g. "all tests pass"). Adding it mechanically to a simple, well-specified task backfires: even when the prompt already spells out exactly what to do, a terse summarizing `goal:` can override those details, and the agent ends up regressing to the goal instead of following the concrete steps.
+  - Good: prompt is "Implement feature xxx with TDD: write a failing test, then implement, then verify it passes" with `goal: 'all unit tests added for feature xxx are passing'` — the goal is a clear, verifiable completion condition that matches an iterative task.
+  - Bad: prompt is "Run tests A, B, and C and check for regressions" with `goal: 'confirm there are no regressions'` — here the goal is vague and tends to eclipse the specific tests (A, B, C) that must actually run; the agent may treat the goal as satisfied without running them.
 - Keep prompts self-contained — each topic prompt should read sensibly on its own even though `seq:` will inject the previous step's result under `=== Previous Topic Result ===`.
 
 ### 4. Write the preview file
