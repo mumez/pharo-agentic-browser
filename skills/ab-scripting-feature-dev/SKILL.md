@@ -74,6 +74,8 @@ A few things that make generated scripts actually work well as agent instruction
   - Good: prompt is "Implement feature xxx with TDD: write a failing test, then implement, then verify it passes" with `goal: 'all unit tests added for feature xxx are passing'` — the goal is a clear, verifiable completion condition that matches an iterative task.
   - Bad: prompt is "Run tests A, B, and C and check for regressions" with `goal: 'confirm there are no regressions'` — here the goal is vague and tends to eclipse the specific tests (A, B, C) that must actually run; the agent may treat the goal as satisfied without running them.
 - Keep prompts self-contained — each topic prompt should read sensibly on its own even though `seq:` will inject the previous step's result under `=== Previous Topic Result ===`.
+- **Keep the number of topics inside a single `seq:` (or `para:`) small.** The timeout applies per `seq:`/`para:` block, not per topic — so cramming plan, implement, test, and review into one `seq:` multiplies the risk of hitting the timeout before the whole chain finishes. Retries are also scoped to the `seq:`/`para:` block: if one topic near the end fails, everything in that block reruns from its first topic, not just the failed one. Unless a topic is genuinely trivial, avoid bundling multiple topics into a single `seq:` — prefer adding separate `seq:` blocks (or splitting into an orchestration group, see above) so a failure or retry stays local to the phase that needs it.
+
 
 ### 4. Write the preview file
 
