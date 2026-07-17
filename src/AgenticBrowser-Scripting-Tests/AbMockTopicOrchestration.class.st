@@ -16,6 +16,11 @@ AbMockTopicOrchestration >> orchestrationBuilderClass [
 ]
 
 { #category : 'accessing' }
+AbMockTopicOrchestration >> orchestrationManager [
+	^ AbOrchestrationManager forTest
+]
+
+{ #category : 'accessing' }
 AbMockTopicOrchestration >> topicManager [
 	^ AbTopicManager forTest
 ]

@@ -303,3 +303,18 @@ AbBaseOrchestration >> forkRun [
 AbBaseOrchestration >> terminate [
 	self runningProcess ifNotNil: [ :proc | proc terminate ]
 ]
+
+{ #category : 'accessing' }
+AbBaseOrchestration >> orchestrationManager [
+	^ AbOrchestrationManager default
+]
+
+{ #category : 'registration' }
+AbBaseOrchestration >> register [
+	^ self orchestrationManager register: self
+]
+
+{ #category : 'registration' }
+AbBaseOrchestration >> unregister [
+	self orchestrationManager unregister: self
+]
