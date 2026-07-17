@@ -104,8 +104,7 @@ Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug d
 
 ## How to run
 
-Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbBaseOrchestration allSubInstances detect: [ :each | each isRunning ] ifNone:[]`.
-```
+Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbOrchestrationManager default orchestrationAt: <orchestration script id>`.
 
 The script inside must be copy-paste runnable as-is in a Playground — no placeholders like `<...>` left in it.
 
@@ -113,7 +112,7 @@ The script inside must be copy-paste runnable as-is in a Playground — no place
 
 Present the generated markdown content (or at least the script block) in the conversation, then ask explicitly: run it now via st-eval, or stop here with just the file? Call out the working directory (`sharedDirectoryPath:`) explicitly as part of this ask — the user should confirm the agents are about to run against the right repo before anything executes.
 
-- **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Because it's built with `scriptBy:`/`forkRunThen:`, the `eval` call returns immediately after forking rather than blocking until the orchestration finishes — the `script` temp doesn't survive into later `eval` calls, so follow up with `AbBaseOrchestration allSubInstances select: [ :each | each isRunning ]` (or watch for the `forkRunThen:` block's own report, e.g. via Transcript) to know when it's done, and report the result back to the user once it is. Mention `terminate` if the user wants to interrupt a running orchestration.
+- **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Report the result back to the user mentioning `AbOrchestrationManager default orchestrationAt:`. Mention `script terminate` if the user wants to interrupt a running orchestration.
   - **If the MCP `eval` tool is unavailable or errors** — don't retry blindly. Fall back to the same option the preview file offers: tell the user the script is ready to paste into a Pharo Playground themselves, and point them at the `.scripting.md` file's script block.
   - **If a topic times out or doesn't reach its goal** — check the DSL reference's Timeout/`resume` section. Report which topic stalled and what its last known state was, then offer to re-invoke the run with `resume` (per the reference) rather than restarting the whole script from scratch.
 - **If the user says no (or doesn't confirm)** — stop. The `.scripting.md` file is the deliverable; do not evaluate anything against the image.
