@@ -13,7 +13,7 @@ Public API and Key Messages:
 - #register: anOrchestration - Register and return its id.
 - #unregister: anOrchestration - Remove from registry.
 - #orchestrationAt: anId - Look up by id; returns nil if absent.
-- #release - Clear all registered orchestrations.
+- #release - Clear all registered orchestrations, except those still running.
 
 Internal Representation:
 - orchestrations - Dictionary keyed by id String, valued by AbBaseOrchestration subinstances.

@@ -260,6 +260,22 @@ script terminate.
 
 `forkRun` is equivalent to `forkRunThen: [ :orc | ]`. `isRunning` reports whether the orchestration's forked process is still alive.
 
+### Look up a running orchestration later
+
+`register` adds the orchestration to `AbOrchestrationManager default`, returning its id. Use the id later — e.g. from another topic or agent session — to retrieve the same instance with `orchestrationAt:`:
+
+```smalltalk
+| script id |
+script := AgenticBrowser scriptBy: [ :builder | ... ].
+id := script register.
+script forkRun.
+
+"... later, possibly from a different context:"
+(AbOrchestrationManager default orchestrationAt: id) result.
+```
+
+Registration is not automatic and orchestrations are not removed automatically after they finish. Call `unregister` when you're done with a specific orchestration, or `AbOrchestrationManager default release` to clear all registered orchestrations at once (this skips any still running).
+
 ### Timeout
 
 Each step waits up to `orchestrationStepWaitTimeoutSeconds` (default: 900 s) per topic. Adjust globally or per orchestration:
