@@ -67,14 +67,31 @@ AbOrchestrationManagerTest >> testUnregisterRemovesOrchestration [
 
 { #category : 'tests' }
 AbOrchestrationManagerTest >> testReleaseEmptiesAll [
-	| o1 o2 |
+	| o1 o2 result |
 	o1 := self newOrchestration.
 	o2 := self newOrchestration.
 	AbOrchestrationManager forTest register: o1.
 	AbOrchestrationManager forTest register: o2.
-	AbOrchestrationManager forTest release.
+	result := AbOrchestrationManager forTest release.
+	self assert: result.
 	self assert: (AbOrchestrationManager forTest orchestrationAt: o1 id) isNil.
 	self assert: (AbOrchestrationManager forTest orchestrationAt: o2 id) isNil
+]
+
+{ #category : 'tests' }
+AbOrchestrationManagerTest >> testReleaseSkipsRunningOrchestrations [
+	| running idle proc result |
+	running := self newOrchestration.
+	idle := self newOrchestration.
+	proc := [ Processor yield ] newProcess.
+	running runningProcess: proc.
+	AbOrchestrationManager forTest register: running.
+	AbOrchestrationManager forTest register: idle.
+	result := AbOrchestrationManager forTest release.
+	self deny: result.
+	self assert: (AbOrchestrationManager forTest orchestrationAt: running id) == running.
+	self assert: (AbOrchestrationManager forTest orchestrationAt: idle id) isNil.
+	proc terminate
 ]
 
 { #category : 'tests' }

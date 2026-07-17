@@ -89,8 +89,10 @@ AbOrchestrationManager >> unregister: anOrchestration [
 	self orchestrations removeKey: anOrchestration id ifAbsent: [ ]
 ]
 
-{ #category : 'operations' }
+{ #category : 'releasing' }
 AbOrchestrationManager >> release [
 
-	self orchestrations removeAll
+	(self orchestrations select: [ :each | each isRunning not ])
+		do: [ :each | self unregister: each ].
+	^ self orchestrations isEmpty
 ]
