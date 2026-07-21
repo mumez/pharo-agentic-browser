@@ -1,3 +1,5 @@
+> Bundled snapshot for the `scripting-feature-dev` skill. If the current repository has its own `docs/scripting.md`, prefer that — it may be newer than this copy. Canonical source: https://github.com/mumez/pharo-agentic-browser/blob/main/docs/scripting.md
+
 # Scripting API
 
 The Scripting package adds a DSL for creating and coordinating multiple AI agent topics programmatically — no UI required.
