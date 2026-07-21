@@ -26,7 +26,7 @@ The generated script spins up real coding agents that write and run code against
 Ask for (skip whichever the user already gave you):
 
 - **Feature** — what should be built or changed
-- **Goal** — the observable condition that means "done" (this becomes each topic's `goal:`)
+- **Goal** — the observable condition that means "done" for the feature overall (used in the preview file's `## Goal` section). This is *not* automatically each topic's `goal:` — see step 3's rule on when a topic actually needs one.
 - **Target repository** — the existing checked-out repo the agents should work in, set via `sharedDirectoryPath:` (see the DSL reference). This is the primary way to keep agents scoped to the right codebase and context instead of starting from a blank auto-created directory. If the user doesn't name one explicitly, check whether the current working directory (or a repo already discussed in the conversation) is the obvious target and confirm it with the user rather than silently assuming or silently falling back to the DSL's default `<agenticBrowserRoot>` directory.
 - **Agent/model override** — optional; default to `a claude` on every phase unless the user names an agent/model (see the DSL reference's agent table). Don't ask about this unless the feature seems to call for mixing agents (e.g. heavy parallel research vs. focused implementation) — otherwise just default and move on.
 
@@ -119,6 +119,35 @@ Present the generated markdown content (or at least the script block) in the con
 - **If the user says no (or doesn't confirm)** — stop. The `.scripting.md` file is the deliverable; do not evaluate anything against the image.
 
 Never run the script before this explicit confirmation, even if the user's original request sounded like they wanted it executed immediately — the DSL causes real agents to make real changes.
+
+### 6. Observe a running orchestration
+
+`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), inspect the running orchestration rather than guessing:
+
+```smalltalk
+| orc |
+orc := AbOrchestrationManager default orchestrationAt: '<orchestration id>'.
+'isRunning: ' , orc isRunning printString , ' | stepDone: ' ,
+  (orc steps collect: [:s | s stepResult isNil not]) printString
+```
+
+This tells you whether it's still running and which step(s) haven't produced a `stepResult` yet.
+
+**A common stall pattern for `goal:`-bearing topics**: the agent finishes the actual work (and even commits it) but forgets to write the goal-result file (`result-<topicId>.md`), so the topic sits at `#endTurn` forever instead of `#goalAchieved`, and the orchestration never advances past that step even though `isRunning` is still `true`. Diagnose it like this:
+
+```smalltalk
+(AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
+```
+
+If the stalled topic shows `#endTurn` rather than `#goalAchieved`, check its messages for whether it actually wrote the result file (and confirm on the filesystem, e.g. via `find`, that `result-<topicId>.md` is missing). If the work is genuinely done and only the result file is missing, recover by nudging that topic directly — don't ask it to redo work, and don't reach for `resume` (which reruns the whole `seq:`/`para:` block from its first incomplete step) for this specific failure:
+
+```smalltalk
+| t |
+t := AbTopicManager default topics detect: [:x | x title = '<title>'].
+t sendPrompt: 'Your work is already complete (see <evidence, e.g. commit hash / passing tests>). You have not yet written the required goal result file. Please write your summary now to result-', t topicId , '.md in the current working directory (do not redo any other work) so the goal can be marked achieved.'.
+```
+
+This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps — this is a separate, lighter-weight recovery path specifically for a goal that was met but never detected.
 
 ## Notes
 
