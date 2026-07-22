@@ -357,6 +357,10 @@ Each topic starts with a copy of the global settings. Right-click a topic in the
 
 Per-topic settings are persisted with the topic via Fuel when `AbTopicManager save` is called.
 
+## Skills
+
+- [skills/](skills/) — Agent skills for coding agents, for use by anyone with AgenticBrowser installed (e.g. `ab-scripting-feature-dev`, which generates and runs Scripting DSL orchestrations for feature development in your own project)
+
 ## Related Projects
 
 - [pharo-acp](https://github.com/mumez/pharo-acp) — ACP client library for Pharo
