@@ -7,6 +7,7 @@
 ## Presentation
 
 - [Introducing Pharo Agentic Browser](https://mumez.github.io/pharo-agentic-browser-slides/introducing-pharo-agentic-browser-en.html)
+- [pharo-agentic-browser in 3 minutes](https://youtu.be/rkWCDvN3j7E) — a demo of generating a URL-routing Trie class from a simple prompt, using OpenCode with the GPT-5.6 Terra model.
 
 ## Overview
 
@@ -37,10 +38,10 @@ The core workflow:
 
 ## Why pharo-agentic-browser?
 
+- **Native to the image** — runs inside Pharo itself, with `@ClassName` code mentions and automatic tracking of package changes made by human and the agent, instead of bolting an external tool onto your workflow
 - **Mobile access** — the [Web UI](docs/web-ui.md) is a browser-based interface served over WebSocket, so you can check on and steer topics from a phone or tablet, not just a desktop Pharo image
 - **Multi-agent orchestration** — the [Scripting DSL](docs/scripting.md) coordinates multiple coding agents across sequential and parallel steps, with automatic result injection between them, instead of driving one agent session at a time
 - **Agent-agnostic** — works with any ACP-compatible agent (Claude Code, Gemini CLI, OpenCode, and others), so you aren't locked into a single vendor's CLI or IDE plugin
-- **Native to the image** — runs inside Pharo itself, with `@ClassName` code mentions and automatic tracking of package changes made by the agent, instead of bolting an external tool onto your workflow
 - **Conversational human-in-the-loop** — approvals happen as plain-text chat replies, not modal dialogs, so you can steer a topic without breaking flow
 
 ## Features
