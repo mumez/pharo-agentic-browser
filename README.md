@@ -1,6 +1,8 @@
 # pharo-agentic-browser
 
-A Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
+### Agentic AI Coding Workspace for Pharo
+
+**pharo-agentic-browser** brings **Pharo AI coding** to your image as a native **agentic coding environment**: a Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. It enables **AI-assisted Smalltalk development** by letting each session, called a **topic**, work as an autonomous agent on your code: you type a request, the agent works, and pauses only when it needs your approval.
 
 ## Presentation
 
