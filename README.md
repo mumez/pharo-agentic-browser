@@ -1,10 +1,13 @@
 # pharo-agentic-browser
 
-A Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. Each session is called a **topic**: you type a request, the agent works autonomously on your code, and pauses only when it needs your approval.
+### Agentic AI Coding Workspace for Pharo
+
+**pharo-agentic-browser** brings **Pharo AI coding** to your image as a native **agentic coding environment**: a Pharo-native UI tool for managing multiple AI coding agent sessions — Claude Code, Gemini CLI, OpenCode, and others — in parallel from inside your Pharo image. It enables **AI-assisted Smalltalk development** by letting each session, called a **topic**, work as an autonomous agent on your code: you type a request, the agent works, and pauses only when it needs your approval.
 
 ## Presentation
 
 - [Introducing Pharo Agentic Browser](https://mumez.github.io/pharo-agentic-browser-slides/introducing-pharo-agentic-browser-en.html)
+- [pharo-agentic-browser in 3 minutes](https://youtu.be/rkWCDvN3j7E) — a demo of generating a URL-routing Trie class from a simple prompt, using OpenCode with the GPT-5.6 Terra model.
 
 ## Overview
 
@@ -32,6 +35,14 @@ The core workflow:
 4. When the AI needs human judgment, it pauses and asks in the chat
 5. Respond in plain text — the AI resumes
 6. Topic status is always visible in the sidebar
+
+## Why pharo-agentic-browser?
+
+- **Native to the image** — runs inside Pharo itself, with `@ClassName` code mentions and automatic tracking of package changes made by human and the agent, instead of bolting an external tool onto your workflow
+- **Mobile access** — the [Web UI](docs/web-ui.md) is a browser-based interface served over WebSocket, so you can check on and steer topics from a phone or tablet, not just a desktop Pharo image
+- **Multi-agent orchestration** — the [Scripting DSL](docs/scripting.md) coordinates multiple coding agents across sequential and parallel steps, with automatic result injection between them, instead of driving one agent session at a time
+- **Agent-agnostic** — works with any ACP-compatible agent (Claude Code, Gemini CLI, OpenCode, and others), so you aren't locked into a single vendor's CLI or IDE plugin
+- **Conversational human-in-the-loop** — approvals happen as plain-text chat replies, not modal dialogs, so you can steer a topic without breaking flow
 
 ## Features
 
