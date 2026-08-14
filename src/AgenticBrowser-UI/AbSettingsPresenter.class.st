@@ -253,9 +253,11 @@ AbSettingsPresenter >> labeledRow: aLabelString field: aPresenter [
 
 { #category : 'layout' }
 AbSettingsPresenter >> actionButtonsLayout [
+	"The leading expanding spacer keeps the row's width calculation stable on Pharo 14, where a row of only fixed-width buttons overflows past the window edge."
 	^ SpBoxLayout newLeftToRight
-		addLast: saveButton withConstraints: [ :c | c width: 80 ];
-		addLast: cancelButton withConstraints: [ :c | c width: 80 ];
+		add: (self newLabel label: '') expand: true;
+		add: saveButton withConstraints: [ :c | c width: 80; height: 34 ];
+		add: cancelButton withConstraints: [ :c | c width: 80; height: 34 ];
 		yourself
 ]
 

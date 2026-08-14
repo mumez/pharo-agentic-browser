@@ -43,8 +43,10 @@ AbSetAgentDialog >> defaultLayout [
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  add: (SpBoxLayout newLeftToRight
-				   addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
-				   addLast: self okButton withConstraints: [ :c | c width: 80 ];
+				   "The leading expanding spacer keeps the row's width calculation stable on Pharo 14, where a row of only fixed-width buttons overflows past the window edge."
+				   add: (self newLabel label: '') expand: true;
+				   add: self cancelButton withConstraints: [ :c | c width: 80; height: 32 ];
+				   add: self okButton withConstraints: [ :c | c width: 80; height: 32 ];
 				   yourself)
 		  withConstraints: [ :c | c height: 32 ];
 		  yourself
