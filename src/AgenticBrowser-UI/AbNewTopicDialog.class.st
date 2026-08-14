@@ -65,9 +65,11 @@ AbNewTopicDialog >> agentRowLayout [
 { #category : 'layout' }
 AbNewTopicDialog >> buttonsRowLayout [
 
+	"The leading expanding spacer keeps the row's width calculation stable on Pharo 14, where a row of only fixed-width buttons overflows past the window edge."
 	^ SpBoxLayout newLeftToRight
-		  addLast: self cancelButton withConstraints: [ :c | c width: 80 ];
-		  addLast: self okButton withConstraints: [ :c | c width: 80 ];
+		  add: (self newLabel label: '') expand: true;
+		  add: self cancelButton withConstraints: [ :c | c width: 80; height: 32 ];
+		  add: self okButton withConstraints: [ :c | c width: 80; height: 32 ];
 		  yourself
 ]
 
@@ -218,6 +220,6 @@ AbNewTopicDialog >> workingDirectoryRowLayout [
 	^ SpBoxLayout newLeftToRight
 		  add: (self newLabel label: 'Working dir:') withConstraints: [ :c | c width: 80 ];
 		  add: self workingDirField;
-		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90 ];
+		  add: self selectWorkingDirButton withConstraints: [ :c | c width: 90; height: 32 ];
 		  yourself
 ]
