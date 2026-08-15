@@ -122,24 +122,20 @@ Never run the script before this explicit confirmation, even if the user's origi
 
 ### 6. Observe a running orchestration
 
-`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), inspect the running orchestration rather than guessing:
-
-```smalltalk
-| orc |
-orc := AbOrchestrationManager default orchestrationAt: '<orchestration id>'.
-'isRunning: ' , orc isRunning printString , ' | stepDone: ' ,
-  (orc steps collect: [:s | s stepResult isNil not]) printString
-```
-
-This tells you whether it's still running and which step(s) haven't produced a `stepResult` yet.
-
-**A common stall pattern for `goal:`-bearing topics**: the agent finishes the actual work (and even commits it) but forgets to write the goal-result file (`result-<topicId>.md`), so the topic sits at `#endTurn` forever instead of `#goalAchieved`, and the orchestration never advances past that step even though `isRunning` is still `true`. Diagnose it like this:
+`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), check each topic's `status` directly rather than just `orc isRunning`:
 
 ```smalltalk
 (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
 ```
 
-If the stalled topic shows `#endTurn` rather than `#goalAchieved`, check its messages for whether it actually wrote the result file (and confirm on the filesystem, e.g. via `find`, that `result-<topicId>.md` is missing). If the work is genuinely done and only the result file is missing, recover by nudging that topic directly — don't ask it to redo work, and don't reach for `resume` (which reruns the whole `seq:`/`para:` block from its first incomplete step) for this specific failure:
+**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. So for any topic that has a `goal:` set, `#endTurn` (not `#goalAchieved`) *is* the stall signature — check it every time, not just when something looks wrong.
+
+**When self-scheduling a wakeup to monitor** (via `ScheduleWakeup` or equivalent), bake this into the prompt every cycle:
+1. Check `status` for each goal-bearing topic.
+2. If any is at `#endTurn`, check the filesystem for a missing `result-<topicId>.md` and cross-check `git log` for new commits since the last check.
+3. If both indicate no progress, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule.
+
+**Recovery** (work is done, only the result file is missing — don't ask the topic to redo work, and don't reach for `resume`, which reruns the whole `seq:`/`para:` block):
 
 ```smalltalk
 | t |
@@ -147,7 +143,7 @@ t := AbTopicManager default topics detect: [:x | x title = '<title>'].
 t sendPrompt: 'Your work is already complete (see <evidence, e.g. commit hash / passing tests>). You have not yet written the required goal result file. Please write your summary now to result-', t topicId , '.md in the current working directory (do not redo any other work) so the goal can be marked achieved.'.
 ```
 
-This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps — this is a separate, lighter-weight recovery path specifically for a goal that was met but never detected.
+This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps.
 
 ## Notes
 
