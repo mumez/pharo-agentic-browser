@@ -128,12 +128,18 @@ Never run the script before this explicit confirmation, even if the user's origi
 (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
 ```
 
-**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. So for any topic that has a `goal:` set, `#endTurn` (not `#goalAchieved`) *is* the stall signature — check it every time, not just when something looks wrong.
+**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. `AbTopic>>#isStalled` detects this directly — true when the topic has a goal, its status is `#endTurn`, its session is still connected, no result file exists yet, and `lastUpdated` is older than `AbSettings>>#goalHavingTopicStallThresholdSeconds` (default 180s). Check it every cycle, not just when something looks wrong.
 
 **When self-scheduling a wakeup to monitor** (via `ScheduleWakeup` or equivalent), bake this into the prompt every cycle:
-1. Check `status` for each goal-bearing topic.
-2. If any is at `#endTurn`, check the filesystem for a missing `result-<topicId>.md` and cross-check `git log` for new commits since the last check.
-3. If both indicate no progress, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule.
+1. Check `status` for every topic (not just goal-bearing ones — some topics in the orchestration may have no goal at all):
+   ```smalltalk
+   (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
+   ```
+2. For each goal-bearing topic, also check `isStalled`:
+   ```smalltalk
+   (AbTopicManager default topics select: [:t | t hasGoal]) collect: [:t | t title , ' -> stalled=' , t isStalled printString ]
+   ```
+3. If any topic reports `true`, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule. (Don't rely on `git log` to corroborate — not every topic commits its work.)
 
 **Recovery** (work is done, only the result file is missing — don't ask the topic to redo work, and don't reach for `resume`, which reruns the whole `seq:`/`para:` block):
 
