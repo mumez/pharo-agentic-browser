@@ -114,6 +114,11 @@ AbTopicSession >> currentMode: aString [
 	currentMode := aString
 ]
 
+{ #category : 'testing' }
+AbTopicSession >> isConnected [
+	^ self client notNil
+]
+
 { #category : 'operations' }
 AbTopicSession >> disconnect [
 

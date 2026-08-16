@@ -400,6 +400,24 @@ AbTopic >> isGoalAchieved [
 ]
 
 { #category : 'testing' }
+AbTopic >> hasGoal [
+
+	^ topicGoal notNil
+]
+
+{ #category : 'testing' }
+AbTopic >> isStalled [
+
+	self hasGoal ifFalse: [ ^ false ].
+	self isEndTurn ifFalse: [ ^ false ].
+	self session isConnected ifFalse: [ ^ false ].
+	self topicGoal resultFile exists ifTrue: [ ^ false ].
+	self lastUpdated ifNil: [ ^ false ].
+	^ (DateAndTime now - self lastUpdated) asSeconds
+		  >= self settings goalHavingTopicStallThresholdSeconds
+]
+
+{ #category : 'testing' }
 AbTopic >> isInitial [
 
 	^ self status = #initial

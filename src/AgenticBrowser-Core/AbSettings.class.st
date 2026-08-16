@@ -273,6 +273,12 @@ AbSettings >> defaultMaxAttachmentSize [
 	^ 5 * 1024 * 1024
 ]
 
+{ #category : 'defaults' }
+AbSettings >> defaultGoalHavingTopicStallThresholdSeconds [
+	self isDefault ifFalse: [ ^ self class default defaultGoalHavingTopicStallThresholdSeconds ].
+	^ 180
+]
+
 { #category : 'accessing' }
 AbSettings >> goalSetCommand [
 
@@ -416,6 +422,20 @@ AbSettings >> maxAttachmentSize [
 AbSettings >> maxAttachmentSize: anInteger [
 
 	self at: #maxAttachmentSize put: anInteger
+]
+
+{ #category : 'accessing' }
+AbSettings >> goalHavingTopicStallThresholdSeconds [
+
+	^ self
+		  at: #goalHavingTopicStallThresholdSeconds
+		  ifAbsent: [ self defaultGoalHavingTopicStallThresholdSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> goalHavingTopicStallThresholdSeconds: anInteger [
+
+	self at: #goalHavingTopicStallThresholdSeconds put: anInteger
 ]
 
 { #category : 'accessing-convenient' }

@@ -990,6 +990,80 @@ AbTopicTest >> testCopyForNewSessionCopiesSettings [
 
 
 { #category : 'tests' }
+AbTopicTest >> testHasGoalFalseByDefault [
+
+	self deny: AbTopic new hasGoal
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testHasGoalTrueAfterTopicGoalAccessed [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal description: 'Do the thing'.
+	self assert: topic hasGoal
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testIsStalledFalseWithoutGoal [
+
+	| topic |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	topic session client: MockObject new.
+	self deny: topic isStalled
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testIsStalledFalseWhenNotEndTurn [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal description: 'Do the thing'.
+	topic session client: MockObject new.
+	self deny: topic isStalled
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testIsStalledFalseWhenNotConnected [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal description: 'Do the thing'.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	self deny: topic isStalled
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testIsStalledFalseWhenWithinThreshold [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal description: 'Do the thing'.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	topic session client: MockObject new.
+	topic addSystemMessage: 'still working'.
+	self deny: topic isStalled
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testIsStalledTrueWhenThresholdElapsedWithoutResultFile [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal description: 'Do the thing'.
+	topic settings goalHavingTopicStallThresholdSeconds: 0.
+	topic stateMachine handleEvent: #promptSent.
+	topic stateMachine handleEvent: #turnEnded.
+	topic session client: MockObject new.
+	topic addSystemMessage: 'still working'.
+	self assert: topic isStalled
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testCopyForNewSessionClearsSessionState [
 
 	| topic copy |

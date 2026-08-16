@@ -170,6 +170,7 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'goalSetCommand').
 	self assert: (dict includesKey: 'useCommandOnGoalSet').
 	self assert: (dict includesKey: 'useStBuddySkillOnInitialPrompt').
+	self assert: (dict includesKey: 'goalHavingTopicStallThresholdSeconds').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
 ]
 
@@ -248,4 +249,19 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptSettable [
 	settings := AbSettings defaultCopied.
 	settings useStBuddySkillOnInitialPrompt: false.
 	self assert: settings useStBuddySkillOnInitialPrompt equals: false
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testGoalHavingTopicStallThresholdSecondsDefault [
+
+	self assert: AbSettings default goalHavingTopicStallThresholdSeconds equals: 180
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testGoalHavingTopicStallThresholdSecondsSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings goalHavingTopicStallThresholdSeconds: 60.
+	self assert: settings goalHavingTopicStallThresholdSeconds equals: 60
 ]
