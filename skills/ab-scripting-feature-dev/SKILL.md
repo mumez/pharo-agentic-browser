@@ -106,6 +106,8 @@ Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug d
 
 Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbOrchestrationManager default orchestrationAt: <orchestration script id>`.
 
+```
+
 The script inside must be copy-paste runnable as-is in a Playground — no placeholders like `<...>` left in it.
 
 ### 5. Show the user and ask to run
