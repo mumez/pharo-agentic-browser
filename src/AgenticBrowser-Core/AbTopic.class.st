@@ -400,6 +400,28 @@ AbTopic >> isGoalAchieved [
 ]
 
 { #category : 'testing' }
+AbTopic >> hasGoal [
+	"Reads the raw instance variable, not `self topicGoal`, because that accessor lazily
+	creates an empty AbTopicGoal on first read, which would make this always answer true."
+
+	^ topicGoal notNil and: [
+		  topicGoal description notNil and: [
+			  topicGoal description notEmpty ] ]
+]
+
+{ #category : 'testing' }
+AbTopic >> isStalled [
+
+	self hasGoal ifFalse: [ ^ false ].
+	self isEndTurn ifFalse: [ ^ false ].
+	self session isConnected ifFalse: [ ^ false ].
+	self topicGoal resultFile exists ifTrue: [ ^ false ].
+	self lastUpdated ifNil: [ ^ false ].
+	^ (DateAndTime now - self lastUpdated) asSeconds
+		  >= self settings goalHavingTopicStallThresholdSeconds
+]
+
+{ #category : 'testing' }
 AbTopic >> isInitial [
 
 	^ self status = #initial

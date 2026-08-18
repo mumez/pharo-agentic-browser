@@ -69,7 +69,7 @@ A few things that make generated scripts actually work well as agent instruction
 - **Set `builder sharedDirectoryPath:` to the target repository whenever this is feature work on an existing codebase** (which is the common case for this skill). Use an absolute path. Before finalizing the script, double-check that the path actually points at the right repo — it exists, it's the repo the user meant (not a sibling/similarly-named directory), and it's the directory the feature's files actually live under. Getting this wrong means the agents either can't find the code or silently edit the wrong checkout. Only omit `sharedDirectoryPath:` (letting it fall back to an auto-created `<agenticBrowserRoot>` directory) when the feature is genuinely a from-scratch build with no existing repo to target — confirm that's really the case rather than assuming.
 - **Testing is its own visible step, not just a TDD side-effect of implementing.** Even when the implement phase is goal-driven ("all tests pass"), add a distinct topic (or make it explicit in the prompt) that runs the test suite and reports results — don't let "tests exist" substitute for "tests were run and verified green". This project's tests typically run via the `st-test` skill / MCP tools.
 - **The implement phase should follow TDD**: write a failing test first, then implement, then confirm green.
-- **Always add a lint & review phase after implementation.** Its prompt should explicitly tell the agent to consult the `st-lint` skill (or the `smalltalk-validator` MCP tools) against the changed Tonel files, and to consult the `smalltalk-developer` skill's style guide section, then fix whatever it finds. Set a `goal:` like `'lint clean and style-guide issues fixed'` so the topic doesn't end early with unresolved findings.
+- **Always add a lint & review phase after implementation.** Its prompt should explicitly tell the agent to consult the `st-lint` skill (or the `smalltalk-validator` MCP tools) against the changed Tonel files, and to consult the `smalltalk-developer` skill's style guide section, then fix whatever it finds.
 - **Only add `goal:` to a topic that needs trial-and-error looping toward a completion condition — don't add it by default.** `goal:` is for long-running work where the agent must retry/iterate until some condition holds (e.g. "all tests pass"). Adding it mechanically to a simple, well-specified task backfires: even when the prompt already spells out exactly what to do, a terse summarizing `goal:` can override those details, and the agent ends up regressing to the goal instead of following the concrete steps.
   - Good: prompt is "Implement feature xxx with TDD: write a failing test, then implement, then verify it passes" with `goal: 'all unit tests added for feature xxx are passing'` — the goal is a clear, verifiable completion condition that matches an iterative task.
   - Bad: prompt is "Run tests A, B, and C and check for regressions" with `goal: 'confirm there are no regressions'` — here the goal is vague and tends to eclipse the specific tests (A, B, C) that must actually run; the agent may treat the goal as satisfied without running them.
@@ -106,6 +106,8 @@ Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug d
 
 Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbOrchestrationManager default orchestrationAt: <orchestration script id>`.
 
+```
+
 The script inside must be copy-paste runnable as-is in a Playground — no placeholders like `<...>` left in it.
 
 ### 5. Show the user and ask to run
@@ -122,24 +124,26 @@ Never run the script before this explicit confirmation, even if the user's origi
 
 ### 6. Observe a running orchestration
 
-`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), inspect the running orchestration rather than guessing:
-
-```smalltalk
-| orc |
-orc := AbOrchestrationManager default orchestrationAt: '<orchestration id>'.
-'isRunning: ' , orc isRunning printString , ' | stepDone: ' ,
-  (orc steps collect: [:s | s stepResult isNil not]) printString
-```
-
-This tells you whether it's still running and which step(s) haven't produced a `stepResult` yet.
-
-**A common stall pattern for `goal:`-bearing topics**: the agent finishes the actual work (and even commits it) but forgets to write the goal-result file (`result-<topicId>.md`), so the topic sits at `#endTurn` forever instead of `#goalAchieved`, and the orchestration never advances past that step even though `isRunning` is still `true`. Diagnose it like this:
+`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), check each topic's `status` directly rather than just `orc isRunning`:
 
 ```smalltalk
 (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
 ```
 
-If the stalled topic shows `#endTurn` rather than `#goalAchieved`, check its messages for whether it actually wrote the result file (and confirm on the filesystem, e.g. via `find`, that `result-<topicId>.md` is missing). If the work is genuinely done and only the result file is missing, recover by nudging that topic directly — don't ask it to redo work, and don't reach for `resume` (which reruns the whole `seq:`/`para:` block from its first incomplete step) for this specific failure:
+**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. `AbTopic>>#isStalled` detects this directly — true when the topic has a goal, its status is `#endTurn`, its session is still connected, no result file exists yet, and `lastUpdated` is older than `AbSettings>>#goalHavingTopicStallThresholdSeconds` (default 180s). Check it every cycle, not just when something looks wrong.
+
+**When self-scheduling a wakeup to monitor** (via `ScheduleWakeup` or equivalent), bake this into the prompt every cycle:
+1. Check `status` for every topic (not just goal-bearing ones — some topics in the orchestration may have no goal at all):
+   ```smalltalk
+   (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
+   ```
+2. For each goal-bearing topic, also check `isStalled`:
+   ```smalltalk
+   (AbTopicManager default topics select: [:t | t hasGoal]) collect: [:t | t title , ' -> stalled=' , t isStalled printString ]
+   ```
+3. If any topic reports `true`, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule. (Don't rely on `git log` to corroborate — not every topic commits its work.)
+
+**Recovery** (work is done, only the result file is missing — don't ask the topic to redo work, and don't reach for `resume`, which reruns the whole `seq:`/`para:` block):
 
 ```smalltalk
 | t |
@@ -147,7 +151,7 @@ t := AbTopicManager default topics detect: [:x | x title = '<title>'].
 t sendPrompt: 'Your work is already complete (see <evidence, e.g. commit hash / passing tests>). You have not yet written the required goal result file. Please write your summary now to result-', t topicId , '.md in the current working directory (do not redo any other work) so the goal can be marked achieved.'.
 ```
 
-This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps — this is a separate, lighter-weight recovery path specifically for a goal that was met but never detected.
+This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps.
 
 ## Notes
 

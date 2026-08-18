@@ -34,6 +34,25 @@ AbTopicSessionTest >> testAnnouncerDelegatesToTopicAnnouncer [
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testIsConnectedFalseWhenNoClient [
+
+	| topic session |
+	topic := self newTopic.
+	session := topic session.
+	self deny: session isConnected
+]
+
+{ #category : 'tests' }
+AbTopicSessionTest >> testIsConnectedTrueWhenClientSet [
+
+	| topic session |
+	topic := self newTopic.
+	session := topic session.
+	session client: MockObject new.
+	self assert: session isConnected
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testClearSessionIdClearsSessionId [
 
 	| topic session |
