@@ -401,8 +401,12 @@ AbTopic >> isGoalAchieved [
 
 { #category : 'testing' }
 AbTopic >> hasGoal [
+	"Reads the raw instance variable, not `self topicGoal`, because that accessor lazily
+	creates an empty AbTopicGoal on first read, which would make this always answer true."
 
-	^ topicGoal notNil
+	^ topicGoal notNil and: [
+		  topicGoal description notNil and: [
+			  topicGoal description notEmpty ] ]
 ]
 
 { #category : 'testing' }

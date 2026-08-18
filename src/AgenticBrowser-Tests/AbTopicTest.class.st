@@ -1005,6 +1005,15 @@ AbTopicTest >> testHasGoalTrueAfterTopicGoalAccessed [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testHasGoalFalseWhenTopicGoalLazilyCreatedWithoutDescription [
+
+	| topic |
+	topic := AbTopic new.
+	topic topicGoal.
+	self deny: topic hasGoal
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testIsStalledFalseWithoutGoal [
 
 	| topic |
