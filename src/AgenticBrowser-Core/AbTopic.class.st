@@ -665,12 +665,15 @@ AbTopic >> acpRequestErrorTextFrom: anACPRequestError [
 
 { #category : 'private' }
 AbTopic >> doExecutePrompt: aString withResources: aCollection [
-	"FileException is included alongside NetworkError because the ACP transport writes to the
+	"FileWriteError is included alongside NetworkError because the ACP transport writes to the
 	agent subprocess over OS pipes; a dead subprocess (e.g. its pipes outlived a Pharo image
-	restart) surfaces as a FileException, not a NetworkError, when the transport writes to it."
+	restart) surfaces as a FileWriteError, not a NetworkError, when the transport writes to it.
+	This block also does other file I/O (working directory setup, mcp.json loading) that can
+	raise other FileException subclasses; those are deliberately left uncaught here so a
+	missing/unwritable working directory or bad mcp.json isn't misreported as a network error."
 
 	[[ self trySendPrompt: aString withResources: aCollection ]
-		on: NetworkError, FileException
+		on: NetworkError, FileWriteError
 		do: [ :netEx | self handleNetworkError: netEx ] ]
 	on: ACPRequestError
 	do: [ :acpEx | self handleAcpRequestError: acpEx ]
