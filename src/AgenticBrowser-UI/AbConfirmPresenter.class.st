@@ -154,11 +154,12 @@ AbConfirmPresenter >> optionLabels [
 AbConfirmPresenter >> optionAndActionButtonsLayout [
 
 	| row |
+	"On Pharo 14, SpBoxLayout>>addLast:withConstraints: miscalculates the row width once two or more trailing elements use it, squeezing later widgets down to a sliver; using add:withConstraints: for every trailing element (with the drop list marked expand:true) keeps the row width calculation correct."
 	row := SpBoxLayout newLeftToRight
-		       add: self optionDropList;
-		       addLast: self confirmButton withConstraints: [ :c | c width: 100 ].
+		       add: self optionDropList expand: true;
+		       add: self confirmButton withConstraints: [ :c | c width: 100; height: 32 ].
 	self showsDenyButton ifTrue: [
-		row addLast: self denyButton withConstraints: [ :c | c width: 80 ] ].
+		row add: self denyButton withConstraints: [ :c | c width: 80; height: 32 ] ].
 	^ row yourself
 ]
 
