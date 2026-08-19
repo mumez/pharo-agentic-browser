@@ -199,6 +199,6 @@ AbConfirmPresenter >> showsDenyButton [
 AbConfirmPresenter >> updateActionButtons [
 
 	self confirmButton label: (self showsDenyButton
-			 ifTrue: [ 'Confirm' ]
+			 ifTrue: [ 'Allow' ]
 			 ifFalse: [ 'Submit' ])
 ]
