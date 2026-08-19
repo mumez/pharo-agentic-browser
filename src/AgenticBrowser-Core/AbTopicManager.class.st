@@ -8,6 +8,7 @@ Responsibility:
 - I announce AbTopicRemoved when a topic is removed.
 - I clean up (stop watching, disconnect) topics on removal or image re-initialization.
 - I provide topic lookup by topicId, working directory path, and name.
+- I drop stale ACP client connections for all topics when the image resumes after a save/restart.
 
 Collaborators:
 - AbTopic: I own and lifecycle-manage all topic instances.
@@ -33,6 +34,7 @@ Internal Representation:
 Implementation Points:
 - announcer is excluded from Fuel serialization; subscribers must re-subscribe after each load.
 - #cleanupAllTopics stops watchers and disconnects agents; called before replacing the default instance on load.
+- class>>initialize registers this class on Smalltalk's start-up list; class>>startUp: calls #resetStaleConnections on the default instance when the image resumes, so topics left open across a save/restart reconnect instead of writing to a dead subprocess's pipes.
 "
 Class {
 	#name : 'AbTopicManager',
@@ -102,7 +104,19 @@ AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 AbTopicManager class >> initialize [
 
 	default ifNotNil: [ default cleanupAllTopics ].
-	default := forTest := nil
+	default := forTest := nil.
+	Smalltalk addToStartUpList: self
+]
+
+{ #category : 'system startup' }
+AbTopicManager class >> startUp: resuming [
+	"Called by the session manager when the image resumes. If topics were left open across
+	a Pharo image save/restart (not a Fuel reload), their ACP client still references the
+	previous session's dead subprocess and pipes; drop those stale references so the next
+	prompt reconnects and resumes the ACP session instead of writing to a closed pipe."
+
+	resuming ifFalse: [ ^ self ].
+	default ifNotNil: [ default resetStaleConnections ]
 ]
 
 { #category : 'persistence' }
@@ -170,6 +184,16 @@ AbTopicManager >> at: aTopicId [
 AbTopicManager >> cleanupAllTopics [
 
 	topics valuesDo: [ :topic | self teardownTopic: topic ]
+]
+
+{ #category : 'operations' }
+AbTopicManager >> resetStaleConnections [
+	"Drop each topic's ACP client without touching its watchers, so topics left open
+	across an image restart reconnect fresh on the next prompt. Unlike #cleanupAllTopics,
+	this does not stop related-packages watching, since the topics are still in active use."
+
+	topics valuesDo: [ :topic |
+		[ topic disconnect ] on: Error do: [ :e | "ignore; move on to the next topic" ] ]
 ]
 
 { #category : 'initialization' }

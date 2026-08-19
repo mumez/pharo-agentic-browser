@@ -42,7 +42,7 @@ AbConfirmPresenterTest >> testApprovalOptionsWithTwoItemsUsesConfirmDenyMode [
 			'Allow once' -> AbConstants allowOnce.
 			'Deny once' -> AbConstants rejectOnce }.
 
-	self assert: presenter confirmButtonLabel equals: 'Confirm'.
+	self assert: presenter confirmButtonLabel equals: 'Allow'.
 	self assert: presenter denyButtonLabel equals: 'Deny'.
 	self assert: presenter showsDenyButton
 ]

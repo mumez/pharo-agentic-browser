@@ -537,6 +537,7 @@ AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage:
 	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
 	aMessage approvalOption: anOptionSymbol.
+	self announceMessageAdded: aMessage.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]
@@ -664,9 +665,15 @@ AbTopic >> acpRequestErrorTextFrom: anACPRequestError [
 
 { #category : 'private' }
 AbTopic >> doExecutePrompt: aString withResources: aCollection [
+	"FileWriteError is included alongside NetworkError because the ACP transport writes to the
+	agent subprocess over OS pipes; a dead subprocess (e.g. its pipes outlived a Pharo image
+	restart) surfaces as a FileWriteError, not a NetworkError, when the transport writes to it.
+	This block also does other file I/O (working directory setup, mcp.json loading) that can
+	raise other FileException subclasses; those are deliberately left uncaught here so a
+	missing/unwritable working directory or bad mcp.json isn't misreported as a network error."
 
 	[[ self trySendPrompt: aString withResources: aCollection ]
-		on: NetworkError
+		on: NetworkError, FileWriteError
 		do: [ :netEx | self handleNetworkError: netEx ] ]
 	on: ACPRequestError
 	do: [ :acpEx | self handleAcpRequestError: acpEx ]

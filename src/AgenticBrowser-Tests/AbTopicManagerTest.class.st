@@ -83,6 +83,83 @@ AbTopicManagerTest >> testCleanupAllTopicsStopsWatchersAndUnsubscribesWorkingDir
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testResetStaleConnectionsClearsClientWithoutStoppingWatchers [
+
+	| manager topic session mockClient |
+	manager := AbTopicManager forTest.
+	topic := self newTopic: 'Reset stale connection'.
+	manager addTopic: topic.
+	topic startWatching.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	session sessionId: 'preserved-session'.
+	[
+	manager resetStaleConnections.
+	self assert: session client isNil.
+	self assert: session sessionId equals: 'preserved-session'.
+	self assert: topic relatedPackagesWatcher isWatching ]
+		ensure: [ topic stopWatching ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testResetStaleConnectionsIgnoresErrorsFromDeadConnections [
+
+	| manager topic session mockClient |
+	manager := AbTopicManager forTest.
+	topic := self newTopic: 'Dead pipe on resume'.
+	manager addTopic: topic.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ (FileWriteError fileName: 'stdin') signal: 'pipe closed' ].
+	session client: mockClient.
+
+	manager resetStaleConnections.
+
+	self assert: session client isNil
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStartUpTrueResetsStaleConnectionsOnDefaultManager [
+
+	| topic session mockClient originalDefault |
+	originalDefault := AbTopicManager default.
+	AbTopicManager default: AbTopicManager new.
+	topic := self newTopic: 'Stale on resume'.
+	AbTopicManager default addTopic: topic.
+	session := topic session.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ ].
+	session client: mockClient.
+	[
+	AbTopicManager startUp: true.
+	self assert: session client isNil ]
+		ensure: [
+			AbTopicManager default: originalDefault.
+			AbTopicManager forTest: nil ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStartUpFalseDoesNotResetStaleConnections [
+
+	| topic session mockClient originalDefault |
+	originalDefault := AbTopicManager default.
+	AbTopicManager default: AbTopicManager new.
+	topic := self newTopic: 'Not resuming'.
+	AbTopicManager default addTopic: topic.
+	session := topic session.
+	mockClient := MockObject new.
+	session client: mockClient.
+	[
+	AbTopicManager startUp: false.
+	self assert: session client == mockClient ]
+		ensure: [
+			AbTopicManager default: originalDefault.
+			AbTopicManager forTest: nil ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testDefaultFileReferenceIsInAgenticBrowserDirectory [
 
 	| file |
