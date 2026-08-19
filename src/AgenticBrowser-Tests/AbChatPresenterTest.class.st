@@ -199,7 +199,7 @@ AbChatPresenterTest >> testEnterApprovalModeShowsConfirmPresenter [
 	| approvalMessage |
 	approvalMessage := AbMessage aiPermissionRequestText: 'Allow package export?'.
 	presenter enterApprovalMode: approvalMessage.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Allow'.
 	self assert: presenter confirmPresenter denyButtonLabel equals: 'Deny'
 ]
 
@@ -557,9 +557,9 @@ AbChatPresenterTest >> testTopicStatusDoneDoesNotExitApprovalMode [
 	topic := self newTopic.
 	presenter topic: topic.
 	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Allow'.
 	presenter onTopicStatusChanged: topic status: #endTurn.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Allow'
 ]
 
 { #category : 'tests' }
@@ -569,9 +569,9 @@ AbChatPresenterTest >> testTopicStatusWorkingDoesNotExitApprovalMode [
 	topic := self newTopic.
 	presenter topic: topic.
 	presenter enterApprovalMode: (AbMessage aiPermissionRequestText: 'Allow?').
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'.
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Allow'.
 	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Confirm'
+	self assert: presenter confirmPresenter confirmButtonLabel equals: 'Allow'
 ]
 
 { #category : 'tests' }
