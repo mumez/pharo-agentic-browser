@@ -160,7 +160,7 @@ AbConfirmPresenter >> optionAndActionButtonsLayout [
 		       add: self confirmButton withConstraints: [ :c | c width: 100; height: 32 ].
 	self showsDenyButton ifTrue: [
 		row add: self denyButton withConstraints: [ :c | c width: 80; height: 32 ] ].
-	^ row yourself
+	^ row
 ]
 
 { #category : 'actions' }
