@@ -32,6 +32,7 @@ Implementation Points:
 - client is excluded from Fuel serialization (fuelIgnoredInstanceVariableNames) and is recreated on next #ensureConnected.
 - If the agent does not support MCP server registration, MCP servers are silently skipped and a system message is inserted into the topic.
 - Session resume falls back to load, then to new session creation, based on agent capability flags.
+- A plain image save/restart (not a Fuel reload) keeps client non-nil but pointing at a dead subprocess and its closed pipes; #disconnect always clears it even if the underlying client disconnect fails, so a fresh #ensureConnected can reconnect. AbTopicManager triggers this on image resume via its class-side #startUp:.
 "
 Class {
 	#name : 'AbTopicSession',
@@ -121,8 +122,13 @@ AbTopicSession >> isConnected [
 
 { #category : 'operations' }
 AbTopicSession >> disconnect [
+	"The client's subprocess pipes may already be dead (e.g. after a Pharo image restart
+	while the topic stayed open), so a graceful protocol disconnect can itself fail.
+	Always clear the client so the next #ensureConnected reconnects instead of reusing it."
 
-	self client ifNotNil: [ self client disconnect ].
+	[ self client ifNotNil: [ self client disconnect ] ]
+		on: Error
+		do: [ :e | "ignore: the connection is already unusable" ].
 	self initClientDerived
 ]
 

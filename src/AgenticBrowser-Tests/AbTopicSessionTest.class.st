@@ -101,6 +101,23 @@ AbTopicSessionTest >> testDisconnectKeepsSessionIdAndAvailableCommandsAndClearsO
 ]
 
 { #category : 'tests' }
+AbTopicSessionTest >> testDisconnectClearsClientEvenWhenUnderlyingDisconnectFails [
+
+	| topic session mockClient |
+	topic := self newTopic.
+	session := AbTopicSession on: topic.
+	mockClient := MockObject new.
+	mockClient on: #disconnect verify: [ Error signal: 'pipe closed' ].
+	session client: mockClient.
+	session sessionId: 'session-1'.
+
+	session disconnect.
+
+	self assert: session client isNil.
+	self assert: session sessionId equals: 'session-1'
+]
+
+{ #category : 'tests' }
 AbTopicSessionTest >> testDoConnectWithClientFallsBackToLoadWhenResumeUnsupported [
 
 	| topic session capabilities initializeResponse loadResult mockClient |

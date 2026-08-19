@@ -735,6 +735,22 @@ AbTopicTest >> testDoExecutePromptHandlesNetworkError [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testDoExecutePromptHandlesFileException [
+
+	| topic mockSession |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	mockSession := MockObject new.
+	mockSession on: #ensureConnected verify: [
+		(FileWriteError fileName: 'stdin') signal: 'pipe closed' ].
+	topic session: mockSession.
+	topic doExecutePrompt: 'hello' withResources: #().
+	self assert: topic status equals: #endTurn.
+	self assert: topic messages size equals: 1.
+	self assert: topic messages last sender equals: #system
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testDoExecutePromptHandlesAcpRequestError [
 
 	| topic mockSession mockClient |

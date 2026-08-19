@@ -665,9 +665,12 @@ AbTopic >> acpRequestErrorTextFrom: anACPRequestError [
 
 { #category : 'private' }
 AbTopic >> doExecutePrompt: aString withResources: aCollection [
+	"FileException is included alongside NetworkError because the ACP transport writes to the
+	agent subprocess over OS pipes; a dead subprocess (e.g. its pipes outlived a Pharo image
+	restart) surfaces as a FileException, not a NetworkError, when the transport writes to it."
 
 	[[ self trySendPrompt: aString withResources: aCollection ]
-		on: NetworkError
+		on: NetworkError, FileException
 		do: [ :netEx | self handleNetworkError: netEx ] ]
 	on: ACPRequestError
 	do: [ :acpEx | self handleAcpRequestError: acpEx ]
