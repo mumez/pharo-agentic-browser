@@ -404,6 +404,30 @@ AbTopicTest >> testRequestPackageExportTimesOutAndRejects [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testRequestPackageExportTimeoutAnnouncesMessageUpdate [
+	"AbChatPresenter relies on AbMessageAdded to know an approval was resolved and close its
+	confirm dialog; export-approval timeouts don't drive the state machine (unlike AI-permission
+	timeouts), so they must announce explicitly or the UI is left showing a stale prompt."
+
+	| topic option done timedOut announcedApprovalOptions |
+	topic := AbTopic new.
+	topic settings exportApprovalWaitTimeoutSeconds: 0.
+	announcedApprovalOptions := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announcedApprovalOptions add: ann message approvalOption ]
+		for: self.
+	done := Semaphore new.
+	[
+	option := topic requestPackageExport: 'Package ''Foo'' was modified. Export now?'.
+	done signal ] fork.
+	[ timedOut := done waitTimeoutMilliseconds: 200.
+	self deny: timedOut.
+	self assert: (announcedApprovalOptions includes: option) ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testRequestPackageExportTimesOutUsingExportApprovalTimeoutOption [
 
 	| topic option done timedOut |

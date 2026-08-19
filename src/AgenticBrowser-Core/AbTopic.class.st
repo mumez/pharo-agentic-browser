@@ -537,6 +537,7 @@ AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage:
 	aMessage approvalOption ifNotNil: [ ^ self ].
 	self logger debug: aString.
 	aMessage approvalOption: anOptionSymbol.
+	self announceMessageAdded: aMessage.
 	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
 		self stateMachine handleEvent: #humanResponded ]
 ]

@@ -436,8 +436,10 @@ AbChatPresenter >> onDenyButtonClicked [
 AbChatPresenter >> onMessageAdded: anAbMessage [
 
 	self messagesPresenter addOrUpdateMessage: anAbMessage.
-	anAbMessage isApprovalRequest ifTrue: [
-		self enterApprovalMode: anAbMessage ]
+	(anAbMessage isApprovalRequest and: [ anAbMessage approvalOption isNil ])
+		ifTrue: [ self enterApprovalMode: anAbMessage ].
+	(anAbMessage == self pendingApprovalMessage and: [
+		 anAbMessage approvalOption notNil ]) ifTrue: [ self exitApprovalMode ]
 ]
 
 { #category : 'event handling' }

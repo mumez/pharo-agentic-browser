@@ -459,6 +459,23 @@ AbChatPresenterTest >> testOnMessageAddedApprovalRequestEntersApprovalMode [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedResolvedApprovalExitsApprovalMode [
+
+	| msg |
+	msg := AbMessage aiPermissionRequestText: 'Allow?'.
+	presenter onMessageAdded: msg.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter.
+
+	msg approvalOption: AbConstants allowOnce.
+	presenter onMessageAdded: msg.
+
+	self
+		assert: presenter currentAnswerAreaPresenter
+		equals: presenter normalInputPresenter.
+	self assert: presenter pendingApprovalMessage isNil
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
 
 	| msg |
