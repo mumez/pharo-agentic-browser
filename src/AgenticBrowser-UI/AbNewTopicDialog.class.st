@@ -152,13 +152,13 @@ AbNewTopicDialog >> okButton [
 AbNewTopicDialog >> onOkClicked [
 
 	| titleText dirPath detectedPrefixes |
-	titleText := self titleField text trimmed.
+	titleText := self titleField text trimBoth.
 	titleText ifEmpty: [ ^ self ].
 	self topic: (AbTopic new
 				 title: titleText;
 				 agentArguments: self agentDropList selectedItem value;
 				 yourself).
-	dirPath := self workingDirField text trimmed.
+	dirPath := self workingDirField text trimBoth.
 	dirPath ifNotEmpty: [
 		self topic workingDirectoryPath: dirPath.
 		detectedPrefixes := self detectPackagePrefixesFromDirectory: dirPath.

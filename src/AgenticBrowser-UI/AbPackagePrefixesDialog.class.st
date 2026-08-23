@@ -73,7 +73,7 @@ AbPackagePrefixesDialog >> okButton [
 AbPackagePrefixesDialog >> onOkClicked [
 
 	self prefixPatterns: ((self prefixField text substrings: ',')
-						   collect: [ :each | each trimmed ]
+						   collect: [ :each | each trimBoth ]
 						   thenSelect: [ :each | each isNotEmpty ]).
 	self withWindowDo: [ :w | w close ]
 ]

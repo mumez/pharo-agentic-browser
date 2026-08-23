@@ -497,7 +497,7 @@ AbChatPresenter >> onSendButtonClicked [
 
 	| text promptText mentions resources screenshots fileAttachments |
 	self currentTopic ifNil: [ ^ self ].
-	text := self normalInputPresenter inputText trimmed.
+	text := self normalInputPresenter inputText trimBoth.
 	text ifEmpty: [ ^ self ].
 	self normalInputPresenter clearInput.
 	promptText := (self isFirstMessageInTopic and: [
