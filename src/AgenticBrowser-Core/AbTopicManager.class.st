@@ -60,13 +60,13 @@ AbTopicManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
-{ #category : 'instance creation' }
+{ #category : 'accessing-default' }
 AbTopicManager class >> default: anInstance [
 
 	default := anInstance
 ]
 
-{ #category : 'instance creation' }
+{ #category : 'accessing-default' }
 AbTopicManager class >> defaultLoaded: anInstance [
 	"Set anInstance as the default and announce AbTopicManagerLoaded so subscribers
 	(e.g. AbTopicListPresenter) refresh against it. Use this instead of #default: whenever
@@ -74,6 +74,7 @@ AbTopicManager class >> defaultLoaded: anInstance [
 	manager after a test swaps it out."
 
 	self default: anInstance.
+	anInstance ifNil: [ ^ self ].
 	self announcer announce: (AbTopicManagerLoaded topicManager: anInstance)
 ]
 
