@@ -66,6 +66,17 @@ AbTopicManager class >> default: anInstance [
 	default := anInstance
 ]
 
+{ #category : 'instance creation' }
+AbTopicManager class >> defaultLoaded: anInstance [
+	"Set anInstance as the default and announce AbTopicManagerLoaded so subscribers
+	(e.g. AbTopicListPresenter) refresh against it. Use this instead of #default: whenever
+	a UI may already be observing the previous default, such as restoring the original
+	manager after a test swaps it out."
+
+	self default: anInstance.
+	self announcer announce: (AbTopicManagerLoaded topicManager: anInstance)
+]
+
 { #category : 'announcements' }
 AbTopicManager class >> announcer [
 
@@ -139,8 +150,7 @@ AbTopicManager class >> load [
 	self defaultFileReference exists ifFalse: [ ^ self ].
 	self default ifNotNil: [ self default cleanupAllTopics ].
 	newDefault := self loadFrom: self defaultFileReference.
-	self default: newDefault.
-	self announcer announce: (AbTopicManagerLoaded topicManager: newDefault)
+	self defaultLoaded: newDefault
 ]
 
 { #category : 'persistence' }

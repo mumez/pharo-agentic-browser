@@ -136,7 +136,7 @@ AbTopicManagerTest >> testStartUpTrueResetsStaleConnectionsOnDefaultManager [
 	AbTopicManager startUp: true.
 	self assert: session client isNil ]
 		ensure: [
-			AbTopicManager default: originalDefault.
+			AbTopicManager defaultLoaded: originalDefault.
 			AbTopicManager forTest: nil ]
 ]
 
@@ -155,7 +155,7 @@ AbTopicManagerTest >> testStartUpFalseDoesNotResetStaleConnections [
 	AbTopicManager startUp: false.
 	self assert: session client == mockClient ]
 		ensure: [
-			AbTopicManager default: originalDefault.
+			AbTopicManager defaultLoaded: originalDefault.
 			AbTopicManager forTest: nil ]
 ]
 
@@ -168,7 +168,7 @@ AbTopicManagerTest >> testShutDownDoesNothingWhenDefaultIsNil [
 	[
 	AbTopicManager shutDown: true.
 	self assert: (AbTopicManager instVarNamed: 'default') isNil ]
-		ensure: [ AbTopicManager default: originalDefault ]
+		ensure: [ AbTopicManager defaultLoaded: originalDefault ]
 ]
 
 { #category : 'tests' }
@@ -187,7 +187,7 @@ AbTopicManagerTest >> testShutDownSavesTopicManagerWhenDefaultExists [
 	reloaded := AbTopicManager loadFrom: file.
 	self assert: reloaded topics first title equals: topic title ]
 		ensure: [
-			AbTopicManager default: originalDefault.
+			AbTopicManager defaultLoaded: originalDefault.
 			backupBytes
 				ifNil: [ file ensureDelete ]
 				ifNotNil: [ file binaryWriteStreamDo: [ :s | s nextPutAll: backupBytes ] ] ]
@@ -222,7 +222,7 @@ AbTopicManagerTest >> testInitializeStopsActiveWatchersBeforeReset [
 	[ AbTopicManager initialize.
 	  self deny: watcher isWatching ]
 		ensure: [
-			AbTopicManager default: originalDefault.
+			AbTopicManager defaultLoaded: originalDefault.
 			AbTopicManager forTest: nil ]
 ]
 
@@ -506,6 +506,26 @@ AbTopicManagerTest >> testAbTopicManagerLoadedConstructor [
 	announcement := AbTopicManagerLoaded topicManager: manager.
 	self assert: announcement class equals: AbTopicManagerLoaded.
 	self assert: announcement topicManager == manager
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testDefaultLoadedSetsDefaultAndAnnouncesAbTopicManagerLoaded [
+
+	| originalDefault newManager received |
+	originalDefault := AbTopicManager default.
+	newManager := AbTopicManager new.
+	received := nil.
+	AbTopicManager announcer
+		when: AbTopicManagerLoaded
+		do: [ :ann | received := ann topicManager ]
+		for: self.
+	[
+	AbTopicManager defaultLoaded: newManager.
+	self assert: AbTopicManager default == newManager.
+	self assert: received == newManager ]
+		ensure: [
+			AbTopicManager announcer unsubscribe: self.
+			AbTopicManager default: originalDefault ]
 ]
 
 { #category : 'tests' }
