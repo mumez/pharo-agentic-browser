@@ -67,9 +67,9 @@ AbMessagesPresenter >> defaultLayout [
 		  add: (SpBoxLayout newLeftToRight
 				   vAlignCenter;
 				   add: self newNullPresenter;
-				   add: self hideThinkCheckBox withConstraints: [ :c | c width: 110 ];
-				   yourself)
-		  withConstraints: [ :c | c height: 26 ];
+				   add: self hideThinkCheckBox
+					   withConstraints: [ :c | c width: 110; height: 26 ];
+				   yourself) expand: false;
 		  add: self messageTextPresenter;
 		  yourself
 ]
