@@ -13,7 +13,7 @@ Class {
 
 { #category : 'accessing' }
 AbLocalLogger class >> defaultLogLevel [
-	^ defaultLogLevel ifNil: [ defaultLogLevel := 3 ]
+	^ defaultLogLevel ifNil: [ defaultLogLevel := 2 ]
 ]
 
 { #category : 'accessing' }
