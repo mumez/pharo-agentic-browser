@@ -9,6 +9,7 @@ Responsibility:
 - I clean up (stop watching, disconnect) topics on removal or image re-initialization.
 - I provide topic lookup by topicId, working directory path, and name.
 - I drop stale ACP client connections for all topics when the image resumes after a save/restart.
+- I persist myself automatically whenever the image saves or quits, so topics survive a Pharo exit even if the AgenticBrowser window was never closed.
 
 Collaborators:
 - AbTopic: I own and lifecycle-manage all topic instances.
@@ -34,7 +35,8 @@ Internal Representation:
 Implementation Points:
 - announcer is excluded from Fuel serialization; subscribers must re-subscribe after each load.
 - #cleanupAllTopics stops watchers and disconnects agents; called before replacing the default instance on load.
-- class>>initialize registers this class on Smalltalk's start-up list; class>>startUp: calls #resetStaleConnections on the default instance when the image resumes, so topics left open across a save/restart reconnect instead of writing to a dead subprocess's pipes.
+- class>>initialize registers this class on Smalltalk's start-up and shut-down lists; class>>startUp: calls #resetStaleConnections on the default instance when the image resumes, so topics left open across a save/restart reconnect instead of writing to a dead subprocess's pipes.
+- class>>shutDown: calls #save only when a default instance already exists in memory, to avoid lazily creating and persisting an empty manager when AgenticBrowser was never opened this session.
 "
 Class {
 	#name : 'AbTopicManager',
@@ -58,10 +60,22 @@ AbTopicManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
-{ #category : 'instance creation' }
+{ #category : 'accessing-default' }
 AbTopicManager class >> default: anInstance [
 
 	default := anInstance
+]
+
+{ #category : 'accessing-default' }
+AbTopicManager class >> defaultLoaded: anInstance [
+	"Set anInstance as the default and announce AbTopicManagerLoaded so subscribers
+	(e.g. AbTopicListPresenter) refresh against it. Use this instead of #default: whenever
+	a UI may already be observing the previous default, such as restoring the original
+	manager after a test swaps it out."
+
+	self default: anInstance.
+	anInstance ifNil: [ ^ self ].
+	self announcer announce: (AbTopicManagerLoaded topicManager: anInstance)
 ]
 
 { #category : 'announcements' }
@@ -105,7 +119,8 @@ AbTopicManager class >> initialize [
 
 	default ifNotNil: [ default cleanupAllTopics ].
 	default := forTest := nil.
-	Smalltalk addToStartUpList: self
+	Smalltalk addToStartUpList: self.
+	Smalltalk addToShutDownList: self
 ]
 
 { #category : 'system startup' }
@@ -119,6 +134,20 @@ AbTopicManager class >> startUp: resuming [
 	default ifNotNil: [ default resetStaleConnections ]
 ]
 
+{ #category : 'system startup' }
+AbTopicManager class >> shutDown: isImageQuitting [
+	"Called by the session manager whenever the image saves or quits, including when Pharo
+	is closed without the AgenticBrowser window ever being closed. Only save if a default
+	instance already exists in memory; otherwise this would lazily create an empty manager
+	and overwrite whatever was previously persisted. The save is guarded so a serialization
+	failure cannot abort the image save/quit."
+
+	default ifNotNil: [ :defaultInstance |
+		[ defaultInstance save ]
+			on: Error
+			do: [ :e | "ignore; do not abort the image save/quit" ] ]
+]
+
 { #category : 'persistence' }
 AbTopicManager class >> load [
 
@@ -126,8 +155,7 @@ AbTopicManager class >> load [
 	self defaultFileReference exists ifFalse: [ ^ self ].
 	self default ifNotNil: [ self default cleanupAllTopics ].
 	newDefault := self loadFrom: self defaultFileReference.
-	self default: newDefault.
-	self announcer announce: (AbTopicManagerLoaded topicManager: newDefault)
+	self defaultLoaded: newDefault
 ]
 
 { #category : 'persistence' }

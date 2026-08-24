@@ -256,8 +256,8 @@ AbTopicListPresenter >> onRenameTopicRequest [
 				    request: 'New title:'
 				    initialAnswer: selectedTopic title
 				    title: 'Rename Topic'.
-	(newTitle isNil or: [ newTitle trimmed isEmpty ]) ifTrue: [ ^ self ].
-	selectedTopic title: newTitle trimmed.
+	(newTitle isNil or: [ newTitle trimBoth isEmpty ]) ifTrue: [ ^ self ].
+	selectedTopic title: newTitle trimBoth.
 	self defer: [ self refresh ]
 ]
 
@@ -290,8 +290,8 @@ AbTopicListPresenter >> onSetGoalRequest [
 		request: 'Goal (completion condition):'
 		initialAnswer: (topic topicGoal ifNotNil: [ :g | g description ] ifNil: [ '' ])
 		title: 'Set Goal'.
-	(goalText isNil or: [ goalText trimmed isEmpty ]) ifTrue: [ ^ self ].
-	topic goalDescription: goalText trimmed
+	(goalText isNil or: [ goalText trimBoth isEmpty ]) ifTrue: [ ^ self ].
+	topic goalDescription: goalText trimBoth
 ]
 
 { #category : 'private' }
@@ -317,9 +317,9 @@ AbTopicListPresenter >> onSetWorkingDirectoryRequest [
 		request: 'Working directory path:'
 		initialAnswer: topic workingDirectoryPath
 		title: 'Set Working Directory'.
-	(directoryPath isNil or: [ directoryPath trimmed isEmpty ])
+	(directoryPath isNil or: [ directoryPath trimBoth isEmpty ])
 		ifTrue: [ ^ self ].
-	topic workingDirectoryPath: directoryPath trimmed.
+	topic workingDirectoryPath: directoryPath trimBoth.
 	self defer: [ self refresh ]
 ]
 
