@@ -160,6 +160,40 @@ AbTopicManagerTest >> testStartUpFalseDoesNotResetStaleConnections [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testShutDownDoesNothingWhenDefaultIsNil [
+
+	| originalDefault |
+	originalDefault := AbTopicManager default.
+	AbTopicManager default: nil.
+	[
+	AbTopicManager shutDown: true.
+	self assert: (AbTopicManager instVarNamed: 'default') isNil ]
+		ensure: [ AbTopicManager default: originalDefault ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testShutDownSavesTopicManagerWhenDefaultExists [
+
+	| originalDefault backupBytes file topic manager reloaded |
+	originalDefault := AbTopicManager default.
+	file := AbTopicManager defaultFileReference.
+	backupBytes := file exists ifTrue: [ file binaryReadStream upToEnd ] ifFalse: [ nil ].
+	manager := AbTopicManager new.
+	topic := self newTopic: 'Shutdown save topic'.
+	manager addTopic: topic.
+	AbTopicManager default: manager.
+	[
+	AbTopicManager shutDown: true.
+	reloaded := AbTopicManager loadFrom: file.
+	self assert: reloaded topics first title equals: topic title ]
+		ensure: [
+			AbTopicManager default: originalDefault.
+			backupBytes
+				ifNil: [ file ensureDelete ]
+				ifNotNil: [ file binaryWriteStreamDo: [ :s | s nextPutAll: backupBytes ] ] ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testDefaultFileReferenceIsInAgenticBrowserDirectory [
 
 	| file |
