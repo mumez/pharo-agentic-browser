@@ -139,9 +139,13 @@ AbTopicManager class >> shutDown: isImageQuitting [
 	"Called by the session manager whenever the image saves or quits, including when Pharo
 	is closed without the AgenticBrowser window ever being closed. Only save if a default
 	instance already exists in memory; otherwise this would lazily create an empty manager
-	and overwrite whatever was previously persisted."
+	and overwrite whatever was previously persisted. The save is guarded so a serialization
+	failure cannot abort the image save/quit."
 
-	default ifNotNil: [ :defaultInstance | defaultInstance save ]
+	default ifNotNil: [ :defaultInstance |
+		[ defaultInstance save ]
+			on: Error
+			do: [ :e | "ignore; do not abort the image save/quit" ] ]
 ]
 
 { #category : 'persistence' }
