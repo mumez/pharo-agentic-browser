@@ -276,7 +276,7 @@ AbSettings >> defaultMaxAttachmentSize [
 { #category : 'defaults' }
 AbSettings >> defaultGoalHavingTopicStallThresholdSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultGoalHavingTopicStallThresholdSeconds ].
-	^ 180
+	^ 120
 ]
 
 { #category : 'accessing' }
