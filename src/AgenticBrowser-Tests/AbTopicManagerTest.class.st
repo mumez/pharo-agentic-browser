@@ -553,6 +553,43 @@ AbTopicManagerTest >> testResumeStalledTopicsSendsResumePromptOnlyToStalledTopic
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testStartUpTrueStartsMonitoringAndWatching [
+
+	| topic originalDefault |
+	originalDefault := AbTopicManager default.
+	AbTopicManager default: AbTopicManager new.
+	topic := self newTopic: 'Resume topic'.
+	AbTopicManager default addTopic: topic.
+	[
+	AbTopicManager startUp: true.
+	self assert: AbTopicManager default isMonitoringStalledTopics.
+	self assert: topic relatedPackagesWatcher isWatching ]
+		ensure: [
+			AbTopicManager default stopStalledTopicsMonitoring.
+			AbTopicManager defaultLoaded: originalDefault.
+			AbTopicManager forTest: nil ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testDefaultLoadedStopsPreviousMonitoring [
+
+	| oldManager newManager |
+	oldManager := AbTopicManager new.
+	oldManager startStalledTopicsMonitoring.
+	self assert: oldManager isMonitoringStalledTopics.
+
+	newManager := AbTopicManager new.
+	AbTopicManager default: oldManager.
+	[
+	AbTopicManager defaultLoaded: newManager.
+	self deny: oldManager isMonitoringStalledTopics.
+	self assert: newManager isMonitoringStalledTopics ]
+		ensure: [
+			newManager stopStalledTopicsMonitoring.
+			AbTopicManager default: nil ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testAbTopicManagerLoadedConstructor [
 
 	| manager announcement |

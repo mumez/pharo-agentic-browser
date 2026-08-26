@@ -85,6 +85,9 @@ AbTopicManager class >> defaultLoaded: anInstance [
 	a UI may already be observing the previous default, such as restoring the original
 	manager after a test swaps it out."
 
+	default ifNotNil: [
+		default cleanupAllTopics.
+		default stopStalledTopicsMonitoring ].
 	self default: anInstance.
 	anInstance ifNil: [ ^ self ].
 	anInstance startAllTopicsWatching.
@@ -147,7 +150,10 @@ AbTopicManager class >> startUp: resuming [
 	prompt reconnects and resumes the ACP session instead of writing to a closed pipe."
 
 	resuming ifFalse: [ ^ self ].
-	default ifNotNil: [ default resetStaleConnections ]
+	default ifNotNil: [
+		default resetStaleConnections.
+		default startAllTopicsWatching.
+		default startStalledTopicsMonitoring ]
 ]
 
 { #category : 'system startup' }
@@ -174,9 +180,9 @@ AbTopicManager class >> load [
 
 	| newDefault |
 	self defaultFileReference exists ifFalse: [ ^ self ].
-	self default ifNotNil: [
-		self default cleanupAllTopics.
-		self default stopStalledTopicsMonitoring ].
+	default ifNotNil: [
+		default cleanupAllTopics.
+		default stopStalledTopicsMonitoring ].
 	newDefault := self loadFrom: self defaultFileReference.
 	self defaultLoaded: newDefault
 ]
