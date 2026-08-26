@@ -255,7 +255,7 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptSettable [
 { #category : 'tests' }
 AbSettingsTest >> testGoalHavingTopicStallThresholdSecondsDefault [
 
-	self assert: AbSettings default goalHavingTopicStallThresholdSeconds equals: 180
+	self assert: AbSettings default goalHavingTopicStallThresholdSeconds equals: 120
 ]
 
 { #category : 'tests' }
