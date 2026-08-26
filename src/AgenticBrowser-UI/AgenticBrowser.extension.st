@@ -9,3 +9,9 @@ AgenticBrowser class >> open [
 		AbTopicManager load ].
 	^ AbBrowserPresenter open
 ]
+
+{ #category : '*AgenticBrowser-UI' }
+AgenticBrowser class >> openCurrent [
+	<script>
+	^ AbBrowserPresenter open
+]

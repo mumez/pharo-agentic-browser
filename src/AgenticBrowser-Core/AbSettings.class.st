@@ -6,6 +6,7 @@ Responsibility:
 - I cap how many characters of a file attachment's contents are embedded into a prompt via #maxAttachmentSize.
 - I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
 - I persist the list of available coding agents shown in the New Topic dialog.
+- I control how often AbTopicManager scans for stalled topics via #stallMonitoringIntervalSeconds.
 - I load from and save to ab-settings.json using STON/JSON serialization.
 - I delegate defaults to the global instance when I am a non-default (per-topic) copy.
 
@@ -276,7 +277,13 @@ AbSettings >> defaultMaxAttachmentSize [
 { #category : 'defaults' }
 AbSettings >> defaultGoalHavingTopicStallThresholdSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultGoalHavingTopicStallThresholdSeconds ].
-	^ 180
+	^ 120
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultStallMonitoringIntervalSeconds [
+	self isDefault ifFalse: [ ^ self class default defaultStallMonitoringIntervalSeconds ].
+	^ 30
 ]
 
 { #category : 'accessing' }
@@ -436,6 +443,20 @@ AbSettings >> goalHavingTopicStallThresholdSeconds [
 AbSettings >> goalHavingTopicStallThresholdSeconds: anInteger [
 
 	self at: #goalHavingTopicStallThresholdSeconds put: anInteger
+]
+
+{ #category : 'accessing' }
+AbSettings >> stallMonitoringIntervalSeconds [
+
+	^ self
+		  at: #stallMonitoringIntervalSeconds
+		  ifAbsent: [ self defaultStallMonitoringIntervalSeconds ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> stallMonitoringIntervalSeconds: anInteger [
+
+	self at: #stallMonitoringIntervalSeconds put: anInteger
 ]
 
 { #category : 'accessing-convenient' }

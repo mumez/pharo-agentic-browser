@@ -499,6 +499,97 @@ AbTopicManagerTest >> testClassAnnouncerReturnsAnnouncer [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testIsMonitoringStalledTopicsFalseByDefault [
+
+	self deny: AbTopicManager forTest isMonitoringStalledTopics
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStartStalledTopicsMonitoringStartsBackgroundProcess [
+
+	| manager |
+	manager := AbTopicManager new.
+	[
+	manager startStalledTopicsMonitoring.
+	self assert: manager isMonitoringStalledTopics ]
+		ensure: [ manager stopStalledTopicsMonitoring ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStopStalledTopicsMonitoringTerminatesBackgroundProcess [
+
+	| manager |
+	manager := AbTopicManager new.
+	manager startStalledTopicsMonitoring.
+	manager stopStalledTopicsMonitoring.
+	self deny: manager isMonitoringStalledTopics
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testResumeStalledTopicsSendsResumePromptOnlyToStalledTopics [
+
+	| manager stalledTopic healthyTopic sentPrompts |
+	manager := AbTopicManager forTest.
+	sentPrompts := OrderedCollection new.
+
+	stalledTopic := AbMockTopicNoPromptSend new.
+	stalledTopic topicGoal description: 'Do the thing'.
+	stalledTopic settings goalHavingTopicStallThresholdSeconds: 0.
+	stalledTopic onSendBlock: [ :text :res | sentPrompts add: text ].
+	stalledTopic stateMachine handleEvent: #promptSent.
+	stalledTopic stateMachine handleEvent: #turnEnded.
+	stalledTopic addSystemMessage: 'still working'.
+
+	healthyTopic := AbMockTopicNoPromptSend new.
+	healthyTopic onSendBlock: [ :text :res | sentPrompts add: text ].
+
+	manager addTopic: stalledTopic.
+	manager addTopic: healthyTopic.
+
+	manager resumeStalledTopics.
+
+	self assert: sentPrompts size equals: 1.
+	self assert: sentPrompts first equals: stalledTopic topicGoal resumePrompt
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStartUpTrueStartsMonitoringAndWatching [
+
+	| topic originalDefault |
+	originalDefault := AbTopicManager default.
+	AbTopicManager default: AbTopicManager new.
+	topic := self newTopic: 'Resume topic'.
+	AbTopicManager default addTopic: topic.
+	[
+	AbTopicManager startUp: true.
+	self assert: AbTopicManager default isMonitoringStalledTopics.
+	self assert: topic relatedPackagesWatcher isWatching ]
+		ensure: [
+			AbTopicManager default stopStalledTopicsMonitoring.
+			AbTopicManager defaultLoaded: originalDefault.
+			AbTopicManager forTest: nil ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testDefaultLoadedStopsPreviousMonitoring [
+
+	| oldManager newManager |
+	oldManager := AbTopicManager new.
+	oldManager startStalledTopicsMonitoring.
+	self assert: oldManager isMonitoringStalledTopics.
+
+	newManager := AbTopicManager new.
+	AbTopicManager default: oldManager.
+	[
+	AbTopicManager defaultLoaded: newManager.
+	self deny: oldManager isMonitoringStalledTopics.
+	self assert: newManager isMonitoringStalledTopics ]
+		ensure: [
+			newManager stopStalledTopicsMonitoring.
+			AbTopicManager default: nil ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testAbTopicManagerLoadedConstructor [
 
 	| manager announcement |

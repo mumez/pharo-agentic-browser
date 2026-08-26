@@ -116,7 +116,7 @@ Present the generated markdown content (or at least the script block) in the con
 
 - **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Report the result back to the user mentioning `AbOrchestrationManager default orchestrationAt:`. Mention `script terminate` if the user wants to interrupt a running orchestration.
   - **If the MCP `eval` tool is unavailable or errors** — don't retry blindly. Fall back to the same option the preview file offers: tell the user the script is ready to paste into a Pharo Playground themselves, and point them at the `.scripting.md` file's script block.
-  - **If a topic times out or doesn't reach its goal** — check the DSL reference's Timeout/`resume` section. Report which topic stalled and what its last known state was, then offer to re-invoke the run with `resume` (per the reference) rather than restarting the whole script from scratch.
+  - **If a topic times out or fails a step** — see "Observe a running orchestration" below for how stalls are detected and recovered.
   - **If the orchestration finishes successfully** — the registered orchestration lingers in `AbOrchestrationManager` after completion. Ask the user whether to clean it up now that it's done, offering either `(AbOrchestrationManager default orchestrationAt: <orchestration script id>) unregister` (just this one) or `AbOrchestrationManager default release` (all completed orchestrations — it skips any still running). Don't unregister without asking; the user may still want to inspect the finished orchestration via `orchestrationAt:`.
 - **If the user says no (or doesn't confirm)** — stop. The `.scripting.md` file is the deliverable; do not evaluate anything against the image.
 
@@ -130,28 +130,9 @@ Never run the script before this explicit confirmation, even if the user's origi
 (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
 ```
 
-**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. `AbTopic>>#isStalled` detects this directly — true when the topic has a goal, its status is `#endTurn`, its session is still connected, no result file exists yet, and `lastUpdated` is older than `AbSettings>>#goalHavingTopicStallThresholdSeconds` (default 180s). Check it every cycle, not just when something looks wrong.
+**Stall recovery is automatic.** `AbTopicManager` runs a background process that periodically checks every topic's `isStalled` and nudges any stalled one with its goal's resume prompt — no self-scheduled wakeup or manual recovery nudge needed for that case.
 
-**When self-scheduling a wakeup to monitor** (via `ScheduleWakeup` or equivalent), bake this into the prompt every cycle:
-1. Check `status` for every topic (not just goal-bearing ones — some topics in the orchestration may have no goal at all):
-   ```smalltalk
-   (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
-   ```
-2. For each goal-bearing topic, also check `isStalled`:
-   ```smalltalk
-   (AbTopicManager default topics select: [:t | t hasGoal]) collect: [:t | t title , ' -> stalled=' , t isStalled printString ]
-   ```
-3. If any topic reports `true`, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule. (Don't rely on `git log` to corroborate — not every topic commits its work.)
-
-**Recovery** (work is done, only the result file is missing — don't ask the topic to redo work, and don't reach for `resume`, which reruns the whole `seq:`/`para:` block):
-
-```smalltalk
-| t |
-t := AbTopicManager default topics detect: [:x | x title = '<title>'].
-t sendPrompt: 'Your work is already complete (see <evidence, e.g. commit hash / passing tests>). You have not yet written the required goal result file. Please write your summary now to result-', t topicId , '.md in the current working directory (do not redo any other work) so the goal can be marked achieved.'.
-```
-
-This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps.
+**If a topic is stuck for a different reason** (an actual timeout, or a failed step rather than a missing result file) — check the DSL reference's Timeout/`resume` section and offer to re-invoke the run with `resume` rather than restarting the whole script from scratch.
 
 ## Notes
 
