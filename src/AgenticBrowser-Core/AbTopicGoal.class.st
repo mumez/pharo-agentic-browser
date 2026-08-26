@@ -6,6 +6,7 @@ Responsibility:
 - I detect goal achievement by checking for the existence of a result file in the topic's working directory.
 - I store the result text (read from the file) once the goal is achieved.
 - I fire an optional callback block when the goal is achieved.
+- I build the resume prompt sent to a stalled topic to nudge it back toward goal completion.
 
 Collaborators:
 - AbTopic: I am owned by a topic; I read its workingDirectory path and settings for the notification prompt.
@@ -17,11 +18,13 @@ Public API and Key Messages:
 - #checkAchievement - Return true and capture result text if the result file exists; deletes the file on success.
 - #isAchieved - True once result is non-nil.
 - #whenAchieved: - Register a callback block (receives self as argument) fired on achievement.
+- #resumePrompt - The prompt text sent to a stalled topic to resume progress toward the goal.
 
 Internal Representation:
 - description - The human-readable goal condition string.
 - result - The file contents read from result-<topicId>.md; nil until achieved.
 - whenAchieved - Optional zero-or-one-argument block called on achievement.
+- resumePrompt - Optional override for the resume prompt text; falls back to #defaultResumePrompt when nil.
 
 Implementation Points:
 - The result file is result-<topicId>.md in the topic's working directory root (not the src subdirectory).
@@ -35,7 +38,8 @@ Class {
 		'topic',
 		'description',
 		'result',
-		'whenAchieved'
+		'whenAchieved',
+		'resumePrompt'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -103,6 +107,24 @@ AbTopicGoal >> resultFile [
 AbTopicGoal >> resultFileBasename [
 
 	^ 'result-' , topic topicId , '.md'
+]
+
+{ #category : 'accessing' }
+AbTopicGoal >> resumePrompt [
+
+	^ resumePrompt ifNil: [ self defaultResumePrompt ]
+]
+
+{ #category : 'accessing' }
+AbTopicGoal >> resumePrompt: aString [
+	resumePrompt := aString
+]
+
+{ #category : 'private' }
+AbTopicGoal >> defaultResumePrompt [
+
+	^ 'Your work may already be complete. If so, you have not yet written the required goal result file. Please write your summary now to {1} in the current working directory (do not redo any other work) so the goal can be marked achieved. Otherwise, keep retrying until the goal is achieved: {2}'
+		  format: { self resultFileBasename. self description }
 ]
 
 { #category : 'operations' }

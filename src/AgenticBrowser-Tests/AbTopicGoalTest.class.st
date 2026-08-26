@@ -140,6 +140,28 @@ AbTopicGoalTest >> testResultFileIsInWorkingDirectory [
 ]
 
 { #category : 'tests' }
+AbTopicGoalTest >> testResumePromptContainsResultFileNameAndDescription [
+
+	| goal topic |
+	topic := self newTopic.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	self assert: (goal resumePrompt includesSubstring: goal resultFileBasename).
+	self assert: (goal resumePrompt includesSubstring: 'all tests pass')
+]
+
+{ #category : 'tests' }
+AbTopicGoalTest >> testResumePromptCanBeOverridden [
+
+	| goal topic |
+	topic := self newTopic.
+	goal := AbTopicGoal on: topic.
+	goal description: 'all tests pass'.
+	goal resumePrompt: 'Custom resume prompt'.
+	self assert: goal resumePrompt equals: 'Custom resume prompt'
+]
+
+{ #category : 'tests' }
 AbTopicGoalTest >> testwhenAchievedIsCalledAfterCheckAchievement [
 
 	| goal topic resultFile called |

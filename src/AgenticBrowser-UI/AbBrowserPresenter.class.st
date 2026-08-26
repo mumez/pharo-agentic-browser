@@ -4,14 +4,13 @@ I am the top-level window that assembles the Agentic Browser UI.
 Responsibility:
 - I compose AbTopicListPresenter (left panel, 25%) and AbChatPresenter (right panel) in a horizontal paned layout.
 - I wire topic selection from the list to the chat pane.
-- I start all topic watchers when the window opens.
 - I provide a Settings menu item that opens AbSettingsPresenter for the global configuration.
-- On window close I release sub-presenters, stop all topic watchers, and persist both AbSettings and AbTopicManager to their fuel files.
+- On window close I release sub-presenters and persist both AbSettings and AbTopicManager to their fuel files. I do not tear down topics — agent connections and watchers keep running after the window closes.
 
 Collaborators:
 - AbTopicListPresenter: Left-panel component; I subscribe to its selection callback.
 - AbChatPresenter: Right-panel component; I call #topic: on it when the selection changes.
-- AbTopicManager: I call #startAllTopicsWatching on open and #cleanupAllTopics + #save on close.
+- AbTopicManager: I call #save on close. Watching (#startAllTopicsWatching), stall monitoring, and teardown (#cleanupAllTopics) are all owned by AbTopicManager itself — watching/monitoring start on #default/#load, and teardown only happens on an actual Pharo image quit (see AbTopicManager class>>shutDown:) — none of it depends on this window being open or closed.
 - AbSettings: I trigger #save on window close.
 - AbSettingsPresenter: I open it via #openOnDefault from the Settings menu.
 
@@ -66,8 +65,7 @@ AbBrowserPresenter >> initializePresenters [
 
 	super initializePresenters.
 	topicListPresenter := self instantiate: AbTopicListPresenter.
-	chatPresenter := self instantiate: AbChatPresenter.
-	AbTopicManager default startAllTopicsWatching
+	chatPresenter := self instantiate: AbChatPresenter
 ]
 
 { #category : 'initialization' }
@@ -106,13 +104,14 @@ AbBrowserPresenter >> messagesPresenter [
 { #category : 'private' }
 AbBrowserPresenter >> onWindowClosed [
 
-	| manager |
 	topicListPresenter release.
 	chatPresenter release.
-	manager := AbTopicManager default.
-	manager cleanupAllTopics.
-	AbSettings save.
-	AbTopicManager save
+	(UIManager default
+		 confirm: 'Save settings and topics before closing?'
+		 label: 'Confirm Save')
+		ifTrue: [
+			AbSettings save.
+			AbTopicManager save ]
 ]
 
 { #category : 'accessing' }

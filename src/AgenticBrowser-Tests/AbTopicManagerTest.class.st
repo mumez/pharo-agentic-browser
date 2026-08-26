@@ -499,6 +499,60 @@ AbTopicManagerTest >> testClassAnnouncerReturnsAnnouncer [
 ]
 
 { #category : 'tests' }
+AbTopicManagerTest >> testIsMonitoringStalledTopicsFalseByDefault [
+
+	self deny: AbTopicManager forTest isMonitoringStalledTopics
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStartStalledTopicsMonitoringStartsBackgroundProcess [
+
+	| manager |
+	manager := AbTopicManager new.
+	[
+	manager startStalledTopicsMonitoring.
+	self assert: manager isMonitoringStalledTopics ]
+		ensure: [ manager stopStalledTopicsMonitoring ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testStopStalledTopicsMonitoringTerminatesBackgroundProcess [
+
+	| manager |
+	manager := AbTopicManager new.
+	manager startStalledTopicsMonitoring.
+	manager stopStalledTopicsMonitoring.
+	self deny: manager isMonitoringStalledTopics
+]
+
+{ #category : 'tests' }
+AbTopicManagerTest >> testResumeStalledTopicsSendsResumePromptOnlyToStalledTopics [
+
+	| manager stalledTopic healthyTopic sentPrompts |
+	manager := AbTopicManager forTest.
+	sentPrompts := OrderedCollection new.
+
+	stalledTopic := AbMockTopicNoPromptSend new.
+	stalledTopic topicGoal description: 'Do the thing'.
+	stalledTopic settings goalHavingTopicStallThresholdSeconds: 0.
+	stalledTopic onSendBlock: [ :text :res | sentPrompts add: text ].
+	stalledTopic stateMachine handleEvent: #promptSent.
+	stalledTopic stateMachine handleEvent: #turnEnded.
+	stalledTopic addSystemMessage: 'still working'.
+
+	healthyTopic := AbMockTopicNoPromptSend new.
+	healthyTopic onSendBlock: [ :text :res | sentPrompts add: text ].
+
+	manager addTopic: stalledTopic.
+	manager addTopic: healthyTopic.
+
+	manager resumeStalledTopics.
+
+	self assert: sentPrompts size equals: 1.
+	self assert: sentPrompts first equals: stalledTopic topicGoal resumePrompt
+]
+
+{ #category : 'tests' }
 AbTopicManagerTest >> testAbTopicManagerLoadedConstructor [
 
 	| manager announcement |
