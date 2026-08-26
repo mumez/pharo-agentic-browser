@@ -14,12 +14,17 @@ Public API and Key Messages:
 - #orchestration - the parent orchestration context
 - #logger - delegates to orchestration logger
 - #settings - delegates to orchestration settings; falls back to AbSettings default
+- #onTimeout: aBlock - install a handler invoked with (self, anAbOrchestrationStepTimeout) instead of raising the debugger
+- #lastError - the most recent error handled via #handleTimeout: (nil if none)
+- #isTimedOut - true if #lastError is an AbOrchestrationStepTimeout
 "
 Class {
 	#name : 'AbBaseOrchestrationStep',
 	#superclass : 'Object',
 	#instVars : [
-		'orchestration'
+		'orchestration',
+		'onTimeoutBlock',
+		'lastError'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -42,9 +47,42 @@ AbBaseOrchestrationStep >> orchestration: anOrchestration [
 	orchestration := anOrchestration
 ]
 
+{ #category : 'error handling' }
+AbBaseOrchestrationStep >> handleTimeout: anException [
+	self lastError: anException.
+	onTimeoutBlock
+		ifNil: [ anException signal ]
+		ifNotNil: [ :aBlock | aBlock value: self value: anException ]
+]
+
+{ #category : 'testing' }
+AbBaseOrchestrationStep >> isTimedOut [
+	^ lastError isKindOf: AbOrchestrationStepTimeout
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestrationStep >> lastError [
+	^ lastError
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestrationStep >> lastError: anException [
+	lastError := anException
+]
+
 { #category : 'accessing' }
 AbBaseOrchestrationStep >> logger [
 	^ self orchestration logger
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestrationStep >> onTimeout: aBlock [
+	onTimeoutBlock := aBlock
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestrationStep >> onTimeoutBlock [
+	^ onTimeoutBlock
 ]
 
 { #category : 'running' }

@@ -52,5 +52,5 @@ AbOrchestrationGroupParallelStep >> run [
 { #category : 'private' }
 AbOrchestrationGroupParallelStep >> waitWithTimeoutOn: aSemaphore [
 	(aSemaphore waitTimeoutSeconds: self settings orchestrationGroupItemWaitTimeoutSeconds)
-		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
+		ifTrue: [ self handleTimeout: (AbOrchestrationStepTimeout step: self) ]
 ]

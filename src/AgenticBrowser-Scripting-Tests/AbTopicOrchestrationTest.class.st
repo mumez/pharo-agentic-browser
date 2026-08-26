@@ -955,6 +955,24 @@ AbTopicOrchestrationTest >> testSequentialStepRunRaisesTimeoutWhenTopicNeverComp
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepOnTimeoutHandlesInsteadOfRaisingDebugger [
+	| orchestration step handledStep handledException |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-never-seq-onTimeout' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	step := orchestration steps first.
+	step onTimeout: [ :aStep :ex | handledStep := aStep. handledException := ex ].
+	[ orchestration run ] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: handledStep == step.
+	self assert: (handledException isKindOf: AbOrchestrationStepTimeout).
+	self assert: step isTimedOut.
+	self assert: step lastError == handledException
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 	| orchestration achievedStatuses |
 	achievedStatuses := OrderedCollection new.
