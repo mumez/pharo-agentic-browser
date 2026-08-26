@@ -5,7 +5,7 @@ Responsibility:
 - I compose AbTopicListPresenter (left panel, 25%) and AbChatPresenter (right panel) in a horizontal paned layout.
 - I wire topic selection from the list to the chat pane.
 - I provide a Settings menu item that opens AbSettingsPresenter for the global configuration.
-- On window close I release sub-presenters and persist both AbSettings and AbTopicManager to their fuel files. I do not tear down topics — agent connections and watchers keep running after the window closes.
+- Before the window closes I confirm with the user and, if confirmed, persist both AbSettings and AbTopicManager to their fuel files (#requestWindowClose, invoked while the window is still open). After the window actually closes I release sub-presenters (#onWindowClosed). I do not tear down topics — agent connections and watchers keep running after the window closes.
 
 Collaborators:
 - AbTopicListPresenter: Left-panel component; I subscribe to its selection callback.
@@ -105,13 +105,19 @@ AbBrowserPresenter >> messagesPresenter [
 AbBrowserPresenter >> onWindowClosed [
 
 	topicListPresenter release.
-	chatPresenter release.
+	chatPresenter release
+]
+
+{ #category : 'private' }
+AbBrowserPresenter >> requestWindowClose [
+
 	(UIManager default
 		 confirm: 'Save settings and topics before closing?'
 		 label: 'Confirm Save')
 		ifTrue: [
 			AbSettings save.
-			AbTopicManager save ]
+			AbTopicManager save ].
+	^ true
 ]
 
 { #category : 'accessing' }
