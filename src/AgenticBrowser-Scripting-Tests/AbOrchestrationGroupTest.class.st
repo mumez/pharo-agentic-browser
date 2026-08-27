@@ -202,6 +202,38 @@ AbOrchestrationGroupTest >> testForkRunThenOnTimeoutInvokesTimeoutBlockInsteadOf
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepWaitTimeoutSecondsIsShortcutForSettings [
+	| group node |
+	group := AbOrchestrationGroup new.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		yourself.
+	node waitTimeoutSeconds: 42.
+	self assert: group settings orchestrationGroupItemWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepOnTimeoutRetryReRunsUntilItCompletes [
+	| group node item semaphore result |
+	item := AbMockOrchestrationForGroupCompletesAfterRetry new.
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: item);
+		yourself.
+	node onTimeout: [ :aStep :ex |
+		aStep waitTimeoutSeconds: 5.
+		result := aStep retry ].
+	group steps add: node.
+	semaphore := Semaphore new.
+	group forkRunThen: [ :orc | semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: item runCount equals: 2.
+	self assert: (result includesSubstring: 'retried-result')
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeReturnsLastItemResult [
 	| node result |
 	node := AbOrchestrationGroupSequentialStep new

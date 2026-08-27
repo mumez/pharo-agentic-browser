@@ -32,7 +32,7 @@ AbOrchestrationGroupParallelStep >> combinedResultsFromItems [
 ]
 
 { #category : 'running' }
-AbOrchestrationGroupParallelStep >> run [
+AbOrchestrationGroupParallelStep >> basicRun [
 	| semaphore result |
 	semaphore := Semaphore new.
 	self items do: [ :item |

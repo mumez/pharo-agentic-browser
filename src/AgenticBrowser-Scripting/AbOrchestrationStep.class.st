@@ -196,6 +196,11 @@ AbOrchestrationStep >> topics [
 	^ self topicBuilders collect: [ :each | each topic ]
 ]
 
+{ #category : 'accessing' }
+AbOrchestrationStep >> waitTimeoutSeconds: aNumber [
+	^ self settings orchestrationStepWaitTimeoutSeconds: aNumber
+]
+
 { #category : 'error handling' }
 AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
 	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)

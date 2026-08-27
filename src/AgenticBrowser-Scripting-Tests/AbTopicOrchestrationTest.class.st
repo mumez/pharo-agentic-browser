@@ -973,6 +973,19 @@ AbTopicOrchestrationTest >> testSequentialStepOnTimeoutHandlesInsteadOfRaisingDe
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepWaitTimeoutSecondsIsShortcutForSettings [
+	| orchestration step |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-waittimeout-shortcut' ]
+			} agentBy: [ :a | a codex ] ].
+	step := orchestration steps first.
+	step waitTimeoutSeconds: 42.
+	self assert: orchestration settings orchestrationStepWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 	| orchestration achievedStatuses |
 	achievedStatuses := OrderedCollection new.

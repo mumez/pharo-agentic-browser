@@ -10,11 +10,14 @@ Collaborators:
 
 Public API and Key Messages:
 - #on: anOrchestration - class-side factory; create a step linked to the given orchestration
-- #run - execute this step (subclass responsibility)
+- #run - template method; runs #basicRun (subclass responsibility) and routes an unhandled AbOrchestrationStepTimeout to #onTimeoutBlock
+- #basicRun - execute this step's actual work (subclass responsibility)
 - #orchestration - the parent orchestration context
 - #logger - delegates to orchestration logger
 - #settings - delegates to orchestration settings; falls back to AbSettings default
 - #onTimeout: aBlock - install a handler invoked with (self, anAbOrchestrationStepTimeout) instead of raising the debugger
+- #retry - re-run this step from scratch (#run again); intended for use inside an #onTimeout: block
+- #waitTimeoutSeconds: aNumber - shortcut to update this step's wait-timeout setting (subclass responsibility; resolves to the right AbSettings key)
 - #lastError - the most recent error caused via #signalTimeout (nil if none)
 - #isTimedOut - true if #lastError is an AbOrchestrationStepTimeout
 "
@@ -49,12 +52,17 @@ AbBaseOrchestrationStep >> orchestration: anOrchestration [
 
 { #category : 'error handling' }
 AbBaseOrchestrationStep >> signalTimeout [
-    | timeout |
-    timeout := AbOrchestrationStepTimeout step: self.
-    self lastError: timeout.
-    [ timeout signal ] on: timeout class do: [:ex |
-        self onTimeoutBlock ifNil: [ ex pass ]
-            ifNotNil: [ :aBlock | aBlock cull: self cull: ex ]]
+	| timeout |
+	timeout := AbOrchestrationStepTimeout step: self.
+	self lastError: timeout.
+	^ timeout signal
+]
+
+{ #category : 'error handling' }
+AbBaseOrchestrationStep >> handleTimeout: anException [
+	^ self onTimeoutBlock
+		ifNil: [ anException pass ]
+		ifNotNil: [ :aBlock | aBlock cull: self cull: anException ]
 ]
 
 { #category : 'testing' }
@@ -89,6 +97,23 @@ AbBaseOrchestrationStep >> onTimeoutBlock [
 
 { #category : 'running' }
 AbBaseOrchestrationStep >> run [
+	^ [ self basicRun ]
+		on: AbOrchestrationStepTimeout
+		do: [ :ex | self handleTimeout: ex ]
+]
+
+{ #category : 'running' }
+AbBaseOrchestrationStep >> basicRun [
+	self subclassResponsibility
+]
+
+{ #category : 'running' }
+AbBaseOrchestrationStep >> retry [
+	^ self run
+]
+
+{ #category : 'accessing' }
+AbBaseOrchestrationStep >> waitTimeoutSeconds: aNumber [
 	self subclassResponsibility
 ]
 
