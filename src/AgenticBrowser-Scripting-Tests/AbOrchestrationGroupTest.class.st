@@ -167,6 +167,41 @@ AbOrchestrationGroupTest >> testParaNodeWaitsForAllItems [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testForkRunThenInvokesBlockWithOrchestrationAfterRun [
+	| group o1 semaphore invokedWith |
+	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
+	group := AbOrchestrationGroup buildBy: [ :builder |
+		builder seq: (OrderedCollection with: o1) ].
+	semaphore := Semaphore new.
+	group forkRunThen: [ :orc | invokedWith := orc. semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: invokedWith == group.
+	self assert: o1 runCount equals: 1
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testForkRunThenOnTimeoutInvokesTimeoutBlockInsteadOfRaisingDebugger [
+	| group node semaphore handledStep handledException |
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: AbMockOrchestrationForGroupNeverCompletes new);
+		yourself.
+	group steps add: node.
+	semaphore := Semaphore new.
+	group
+		forkRunThen: [ :orc | ]
+		onTimeout: [ :aStep :ex |
+			handledStep := aStep.
+			handledException := ex.
+			semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: handledStep == node.
+	self assert: (handledException isKindOf: AbOrchestrationStepTimeout)
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeReturnsLastItemResult [
 	| node result |
 	node := AbOrchestrationGroupSequentialStep new

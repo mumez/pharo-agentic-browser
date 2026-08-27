@@ -23,6 +23,8 @@ Public API and Key Messages:
 - #buildBy: aBlock - configure the orchestration via a DSL builder block
 - #run - execute all steps in order; blocks until complete (Template Method)
 - #result - returns the result string of the last completed step
+- #forkRunThen: aBlock - run in a background process, then invoke aBlock with self
+- #forkRunThen:onTimeout: - like #forkRunThen:, plus a handler for an unhandled AbOrchestrationStepTimeout, invoked with (timeoutStep, exception); without it, the timeout raises the debugger as before
 - #save / #saveTo: aFileReference - persist to disk via Fuel serialization
 - #loadFrom: aFileReference - class-side; deserialize a previously saved instance
 - #explore - open inspector on orchestration state (id, steps, result)
@@ -290,8 +292,20 @@ AbBaseOrchestration >> isRunning [
 
 { #category : 'running-fork' }
 AbBaseOrchestration >> forkRunThen: aBlock [
+	^ self forkRunThen: aBlock onTimeout: nil
+]
+
+{ #category : 'running-fork' }
+AbBaseOrchestration >> forkRunThen: aBlock onTimeout: aTimeoutBlock [
 	self isRunning ifTrue: [ self error: 'Already running' ].
-	self runningProcess: [ self run. aBlock cull: self ] fork
+	self runningProcess: [
+		[ self run. aBlock cull: self ]
+			on: AbOrchestrationStepTimeout
+			do: [ :ex |
+				aTimeoutBlock
+					ifNil: [ ex pass ]
+					ifNotNil: [ aTimeoutBlock cull: ex step cull: ex ] ]
+	] fork
 ]
 
 { #category : 'running-fork' }
