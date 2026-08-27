@@ -15,7 +15,7 @@ Public API and Key Messages:
 - #logger - delegates to orchestration logger
 - #settings - delegates to orchestration settings; falls back to AbSettings default
 - #onTimeout: aBlock - install a handler invoked with (self, anAbOrchestrationStepTimeout) instead of raising the debugger
-- #lastError - the most recent error handled via #handleTimeout: (nil if none)
+- #lastError - the most recent error caused via #signalTimeout (nil if none)
 - #isTimedOut - true if #lastError is an AbOrchestrationStepTimeout
 "
 Class {
@@ -48,11 +48,13 @@ AbBaseOrchestrationStep >> orchestration: anOrchestration [
 ]
 
 { #category : 'error handling' }
-AbBaseOrchestrationStep >> handleTimeout: anException [
-	self lastError: anException.
-	onTimeoutBlock
-		ifNil: [ anException signal ]
-		ifNotNil: [ :aBlock | aBlock value: self value: anException ]
+AbBaseOrchestrationStep >> signalTimeout [
+    | timeout |
+    timeout := AbOrchestrationStepTimeout step: self.
+    self lastError: timeout.
+    [ timeout signal ] on: timeout class do: [:ex |
+        self onTimeoutBlock ifNil: [ ex pass ]
+            ifNotNil: [ :aBlock | aBlock cull: self cull: ex ]]
 ]
 
 { #category : 'testing' }

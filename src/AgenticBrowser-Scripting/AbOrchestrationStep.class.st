@@ -199,5 +199,5 @@ AbOrchestrationStep >> topics [
 { #category : 'error handling' }
 AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
 	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)
-		ifTrue: [ self handleTimeout: (AbOrchestrationStepTimeout step: self) ]
+		ifTrue: [ self signalTimeout ]
 ]
