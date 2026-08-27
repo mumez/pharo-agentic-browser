@@ -13,7 +13,7 @@ Class {
 }
 
 { #category : 'running' }
-AbOrchestrationSequentialStep >> run [
+AbOrchestrationSequentialStep >> basicRun [
 	| currentResult topics |
 	self logger debug: 'SequentialStep run: start topics=' , self topicBuilders size printString.
 	currentResult := self previousStepResult.

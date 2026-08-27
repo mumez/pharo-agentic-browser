@@ -13,7 +13,7 @@ Class {
 }
 
 { #category : 'running' }
-AbOrchestrationGroupSequentialStep >> run [
+AbOrchestrationGroupSequentialStep >> basicRun [
 	| result |
 	result := self previousStepResult.
 	self items do: [ :item |

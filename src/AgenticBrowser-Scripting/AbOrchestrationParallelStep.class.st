@@ -12,7 +12,7 @@ Class {
 }
 
 { #category : 'running' }
-AbOrchestrationParallelStep >> run [
+AbOrchestrationParallelStep >> basicRun [
 	| topics semaphores incomingResult |
 	self logger debug: 'ParallelStep run: start topics=' , self topicBuilders size printString.
 	incomingResult := self previousStepResult.

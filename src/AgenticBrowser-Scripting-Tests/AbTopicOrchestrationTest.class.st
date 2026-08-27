@@ -955,6 +955,70 @@ AbTopicOrchestrationTest >> testSequentialStepRunRaisesTimeoutWhenTopicNeverComp
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepOnTimeoutHandlesInsteadOfRaisingDebugger [
+	| orchestration step handledStep handledException |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-never-seq-onTimeout' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	step := orchestration steps first.
+	step onTimeout: [ :aStep :ex | handledStep := aStep. handledException := ex ].
+	[ orchestration run ] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: handledStep == step.
+	self assert: (handledException isKindOf: AbOrchestrationStepTimeout).
+	self assert: step isTimedOut.
+	self assert: step lastError == handledException
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepOnTimeoutRetryResetsTopicAndClearsTimedOut [
+	| orchestration step retried initialTopic retriedTopic |
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-seq-retry' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	step := orchestration steps first.
+	retried := false.
+	step onTimeout: [ :aStep :ex |
+		retried := true.
+		aStep waitTimeoutSeconds: 5.
+		aStep retry ].
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			initialTopic ifNil: [
+				initialTopic := ann topic
+			] ifNotNil: [
+				retriedTopic := ann topic.
+				self simulateEndTurnWhenWorkingFor: retriedTopic ] ]
+		for: self.
+	[ orchestration run ] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: retried.
+	self assert: initialTopic notNil.
+	self assert: retriedTopic notNil.
+	self deny: initialTopic == retriedTopic.
+	self deny: step isTimedOut.
+	self assert: step lastError isNil
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepWaitTimeoutSecondsIsShortcutForSettings [
+	| orchestration step |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-waittimeout-shortcut' ]
+			} agentBy: [ :a | a codex ] ].
+	step := orchestration steps first.
+	step waitTimeoutSeconds: 42.
+	self assert: orchestration settings orchestrationStepWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSequentialStepWaitsForGoalAchievedWhenGoalSet [
 	| orchestration achievedStatuses |
 	achievedStatuses := OrderedCollection new.

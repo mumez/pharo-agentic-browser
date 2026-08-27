@@ -167,6 +167,91 @@ AbOrchestrationGroupTest >> testParaNodeWaitsForAllItems [
 ]
 
 { #category : 'tests' }
+AbOrchestrationGroupTest >> testForkRunThenInvokesBlockWithOrchestrationAfterRun [
+	| group o1 semaphore invokedWith |
+	o1 := AbMockOrchestrationForGroup withResult: 'r1'.
+	group := AbOrchestrationGroup buildBy: [ :builder |
+		builder seq: (OrderedCollection with: o1) ].
+	semaphore := Semaphore new.
+	group forkRunThen: [ :orc | invokedWith := orc. semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: invokedWith == group.
+	self assert: o1 runCount equals: 1
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testForkRunThenOnTimeoutInvokesTimeoutBlockInsteadOfRaisingDebugger [
+	| group node semaphore handledStep handledException |
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: AbMockOrchestrationForGroupNeverCompletes new);
+		yourself.
+	group steps add: node.
+	semaphore := Semaphore new.
+	group
+		forkRunThen: [ :orc | ]
+		onTimeout: [ :aStep :ex |
+			handledStep := aStep.
+			handledException := ex.
+			semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: handledStep == node.
+	self assert: (handledException isKindOf: AbOrchestrationStepTimeout)
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepWaitTimeoutSecondsIsShortcutForSettings [
+	| group node |
+	group := AbOrchestrationGroup new.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		yourself.
+	node waitTimeoutSeconds: 42.
+	self assert: group settings orchestrationGroupItemWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepBasicRunUnsubscribesOnTimeout [
+	| group node item raised |
+	item := AbMockOrchestrationForGroupNeverCompletes new.
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: item);
+		yourself.
+	[ node run ] on: AbOrchestrationStepTimeout do: [ :ex | raised := ex ].
+	self assert: raised notNil.
+	self assert: item announcer numberOfSubscriptions equals: 0
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepOnTimeoutRetryReRunsUntilItCompletes [
+	| group node item semaphore result |
+	item := AbMockOrchestrationForGroupCompletesAfterRetry new.
+	group := AbOrchestrationGroup new.
+	group settings orchestrationGroupItemWaitTimeoutSeconds: 0.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		items: (OrderedCollection with: item);
+		yourself.
+	node onTimeout: [ :aStep :ex |
+		aStep waitTimeoutSeconds: 5.
+		result := aStep retry ].
+	group steps add: node.
+	semaphore := Semaphore new.
+	group forkRunThen: [ :orc | semaphore signal ].
+	self deny: (semaphore waitTimeoutSeconds: 5).
+	self assert: item runCount equals: 2.
+	self assert: (result includesSubstring: 'retried-result').
+	self deny: node isTimedOut.
+	self assert: node lastError isNil.
+	self assert: item announcer numberOfSubscriptions equals: 0
+]
+
+{ #category : 'tests' }
 AbOrchestrationGroupTest >> testSeqNodeReturnsLastItemResult [
 	| node result |
 	node := AbOrchestrationGroupSequentialStep new
