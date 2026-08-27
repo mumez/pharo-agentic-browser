@@ -73,6 +73,14 @@ AbOrchestrationGroupStep >> waitTimeoutSeconds: aNumber [
 AbOrchestrationGroupStep >> resetForRerun [
 	stepResult := nil.
 	previousStepResult := nil.
-	self items do: [ :item | item resetForRerun ]
+	self items do: [ :item |
+		(item respondsTo: #resetForRerun) ifTrue: [ item resetForRerun ] ]
+]
+
+{ #category : 'running' }
+AbOrchestrationGroupStep >> resetForRetry [
+	stepResult := nil.
+	self items do: [ :item |
+		(item respondsTo: #resetForRerun) ifTrue: [ item resetForRerun ] ]
 ]
 

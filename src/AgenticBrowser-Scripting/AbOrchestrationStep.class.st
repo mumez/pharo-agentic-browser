@@ -133,6 +133,12 @@ AbOrchestrationStep >> resetForRerun [
 	self topicBuilders do: [ :builder | builder resetForRerun ]
 ]
 
+{ #category : 'running' }
+AbOrchestrationStep >> resetForRetry [
+	stepResult := nil.
+	self topicBuilders do: [ :builder | builder resetForRerun ]
+]
+
 { #category : 'private' }
 AbOrchestrationStep >> resultFromTopic: aTopic [
 	^ aTopic topicGoal isAchieved

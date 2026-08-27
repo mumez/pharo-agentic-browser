@@ -97,6 +97,7 @@ AbBaseOrchestrationStep >> onTimeoutBlock [
 
 { #category : 'running' }
 AbBaseOrchestrationStep >> run [
+	lastError := nil.
 	^ [ self basicRun ]
 		on: AbOrchestrationStepTimeout
 		do: [ :ex | self handleTimeout: ex ]
@@ -109,7 +110,13 @@ AbBaseOrchestrationStep >> basicRun [
 
 { #category : 'running' }
 AbBaseOrchestrationStep >> retry [
+	self resetForRetry.
 	^ self run
+]
+
+{ #category : 'running' }
+AbBaseOrchestrationStep >> resetForRetry [
+	"Hook for subclasses to reset state before retry"
 ]
 
 { #category : 'accessing' }

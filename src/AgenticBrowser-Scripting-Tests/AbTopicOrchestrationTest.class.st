@@ -973,6 +973,39 @@ AbTopicOrchestrationTest >> testSequentialStepOnTimeoutHandlesInsteadOfRaisingDe
 ]
 
 { #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepOnTimeoutRetryResetsTopicAndClearsTimedOut [
+	| orchestration step retried initialTopic retriedTopic |
+	orchestration := AbMockTopicOrchestration new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-seq-retry' ]
+			} agentBy: [ :a | a codex ] ].
+	orchestration settings orchestrationStepWaitTimeoutSeconds: 0.
+	step := orchestration steps first.
+	retried := false.
+	step onTimeout: [ :aStep :ex |
+		retried := true.
+		aStep waitTimeoutSeconds: 5.
+		aStep retry ].
+	AbTopicManager forTest announcer
+		when: AbTopicAdded
+		do: [ :ann |
+			initialTopic ifNil: [
+				initialTopic := ann topic
+			] ifNotNil: [
+				retriedTopic := ann topic.
+				self simulateEndTurnWhenWorkingFor: retriedTopic ] ]
+		for: self.
+	[ orchestration run ] ensure: [ self unsubscribeTopicHandlers ].
+	self assert: retried.
+	self assert: initialTopic notNil.
+	self assert: retriedTopic notNil.
+	self deny: initialTopic == retriedTopic.
+	self deny: step isTimedOut.
+	self assert: step lastError isNil
+]
+
+{ #category : 'tests' }
 AbTopicOrchestrationTest >> testSequentialStepWaitTimeoutSecondsIsShortcutForSettings [
 	| orchestration step |
 	orchestration := AbMockTopicOrchestrationNeverCompletes new
