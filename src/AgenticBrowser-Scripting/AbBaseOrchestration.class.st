@@ -275,6 +275,13 @@ AbBaseOrchestration >> afterRun [
 	"hook: subclasses may override to perform post-loop cleanup before announcement"
 ]
 
+{ #category : 'running' }
+AbBaseOrchestration >> runOnTimeout: aTimeoutBlock [
+    ^ [ self run ]
+		on: AbOrchestrationStepTimeout
+		do: [ :ex | aTimeoutBlock cull: ex step cull: ex ]
+]
+
 { #category : 'accessing' }
 AbBaseOrchestration >> runningProcess [
 	^ runningProcess
