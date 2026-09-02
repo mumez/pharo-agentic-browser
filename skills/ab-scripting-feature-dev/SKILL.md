@@ -46,17 +46,20 @@ Look at the feature honestly before templating anything:
 
 ### 3. Generate the DSL script
 
-Build the script using the exact builder API from the DSL reference — `t title:`/`t prompt:`/`t goal:`, `seq:agentBy:`/`para:agentBy:`, etc. — but assembled with `AgenticBrowser scriptBy:` + `forkRunThen:` + `register`, not a single `runBy:`:
+Build the script using the exact builder API from the DSL reference — `t title:`/`t prompt:`/`t goal:`, `seq:agentBy:`/`para:agentBy:`, etc. — but assembled with `AgenticBrowser scriptBy:` + `forkRunThen:onTimeout:` + `register`, not a single `runBy:`:
 
 ```smalltalk
 | script |
 script := AgenticBrowser scriptBy: [ :builder |
     builder seq: { ... } agentBy: [ :a | a claude ] ].
-script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ].
+script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ]
+    onTimeout: [ :timeoutStep :ex | Transcript crShow: 'Timed out: ' , timeoutStep printString ].
 script register
 ```
 
 Prefer this shape over `AgenticBrowser runBy: [ ... ]` in generated scripts. `runBy:` blocks the calling process until the entire orchestration finishes, which doesn't fit evaluation through the MCP `eval` tool.
+
+Always use `forkRunThen:onTimeout:`, not bare `forkRunThen:`. A background process has no interactive debugger to raise into — an unhandled `AbOrchestrationStepTimeout` there just kills the fork silently, and the user is left waiting with no explanation. The `onTimeout:` block receives `(timeoutStep, exception)`; logging the timed-out step (as above) is the minimum so a later status check (see step 6) can tell the user which step stalled and why, instead of just "it's not running anymore."
 
 Don't hold `script` in a global (e.g. `Smalltalk at:put:`) just to check on it later. Instead, use `register` for registering the orchestration script to AbOrchestrationManager. `register` returns orchestration id, and you can use the id afterward for retrieving the running script instance:
 
@@ -104,7 +107,7 @@ Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug d
 
 ## How to run
 
-Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:` runs the orchestration in the background and returns immediately — watch for the `forkRunThen:` block's own report (e.g. via Transcript), or check progress with `AbOrchestrationManager default orchestrationAt: <orchestration script id>`.
+Paste the script above into a Pharo Playground, or ask the assistant to run it via st-eval. `forkRunThen:onTimeout:` runs the orchestration in the background and returns immediately — watch for the completion block's own report (e.g. via Transcript), the `onTimeout:` block's report if a step stalls, or check progress with `AbOrchestrationManager default orchestrationAt: <orchestration script id>`.
 
 ```
 
@@ -116,7 +119,7 @@ Present the generated markdown content (or at least the script block) in the con
 
 - **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Report the result back to the user mentioning `AbOrchestrationManager default orchestrationAt:`. Mention `script terminate` if the user wants to interrupt a running orchestration.
   - **If the MCP `eval` tool is unavailable or errors** — don't retry blindly. Fall back to the same option the preview file offers: tell the user the script is ready to paste into a Pharo Playground themselves, and point them at the `.scripting.md` file's script block.
-  - **If a topic times out or doesn't reach its goal** — check the DSL reference's Timeout/`resume` section. Report which topic stalled and what its last known state was, then offer to re-invoke the run with `resume` (per the reference) rather than restarting the whole script from scratch.
+  - **If a topic times out or fails a step** — see "Observe a running orchestration" below for how stalls are detected and recovered.
   - **If the orchestration finishes successfully** — the registered orchestration lingers in `AbOrchestrationManager` after completion. Ask the user whether to clean it up now that it's done, offering either `(AbOrchestrationManager default orchestrationAt: <orchestration script id>) unregister` (just this one) or `AbOrchestrationManager default release` (all completed orchestrations — it skips any still running). Don't unregister without asking; the user may still want to inspect the finished orchestration via `orchestrationAt:`.
 - **If the user says no (or doesn't confirm)** — stop. The `.scripting.md` file is the deliverable; do not evaluate anything against the image.
 
@@ -124,34 +127,42 @@ Never run the script before this explicit confirmation, even if the user's origi
 
 ### 6. Observe a running orchestration
 
-`forkRunThen:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), check each topic's `status` directly rather than just `orc isRunning`:
+`forkRunThen:onTimeout:` returns immediately, so once the user wants a status check (or asks periodically "how's it going"), check each topic's `status` directly rather than just `orc isRunning`:
 
 ```smalltalk
 (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
 ```
 
-**`isRunning: true` alone is not evidence of progress for a `goal:`-bearing topic.** A common stall: the agent finishes the work (even commits it) but forgets to write `result-<topicId>.md`, so the topic sits at `#endTurn` instead of `#goalAchieved` forever, even though `isRunning` stays `true`. `AbTopic>>#isStalled` detects this directly — true when the topic has a goal, its status is `#endTurn`, its session is still connected, no result file exists yet, and `lastUpdated` is older than `AbSettings>>#goalHavingTopicStallThresholdSeconds` (default 180s). Check it every cycle, not just when something looks wrong.
+**Stall recovery is automatic.** `AbTopicManager` runs a background process that periodically checks every topic's `isStalled` and nudges any stalled one with its goal's resume prompt — no self-scheduled wakeup or manual recovery nudge needed for that case.
 
-**When self-scheduling a wakeup to monitor** (via `ScheduleWakeup` or equivalent), bake this into the prompt every cycle:
-1. Check `status` for every topic (not just goal-bearing ones — some topics in the orchestration may have no goal at all):
-   ```smalltalk
-   (AbTopicManager default topics collect: [:t | t title , ' -> ' , t status printString ]) printString
-   ```
-2. For each goal-bearing topic, also check `isStalled`:
-   ```smalltalk
-   (AbTopicManager default topics select: [:t | t hasGoal]) collect: [:t | t title , ' -> stalled=' , t isStalled printString ]
-   ```
-3. If any topic reports `true`, that's a confirmed stall — apply the recovery nudge below immediately, in the same turn. Don't just report "still running" and reschedule. (Don't rely on `git log` to corroborate — not every topic commits its work.)
-
-**Recovery** (work is done, only the result file is missing — don't ask the topic to redo work, and don't reach for `resume`, which reruns the whole `seq:`/`para:` block):
+**If a step actually timed out** (`orc isRunning` has gone false but the orchestration never reached the `forkRunThen:onTimeout:` completion block — that's the `onTimeout:` handler having fired instead), find the offending step and check it's genuinely the one that stalled, not just slow:
 
 ```smalltalk
-| t |
-t := AbTopicManager default topics detect: [:x | x title = '<title>'].
-t sendPrompt: 'Your work is already complete (see <evidence, e.g. commit hash / passing tests>). You have not yet written the required goal result file. Please write your summary now to result-', t topicId , '.md in the current working directory (do not redo any other work) so the goal can be marked achieved.'.
+(script steps detect: [:s | s isTimedOut] ifNone: [ nil ])
 ```
 
-This lets the topic write the missing result file, transition to `#goalAchieved`, and unblock the orchestration's goal-watching loop without restarting anything. Reserve `resume` (see the DSL reference's Timeout/`resume` section) for actual timeouts or failed steps.
+With that step in hand, pick a recovery based on scope:
+
+- **Retry — just re-run the one stuck step, in place.** Extend its timeout and call `resume` (which re-runs only steps whose `stepResult` is still nil, so it picks up exactly at the timed-out step and reuses everything already completed before it):
+  ```smalltalk
+  (script steps detect: [:s | s isTimedOut]) waitTimeoutSeconds: 1800.
+  [ script resume ] fork.
+  ```
+- **Resume — bump the orchestration-wide timeout** when the whole run is consistently too slow (not just one flaky step) and later steps would likely hit the same wall:
+  ```smalltalk
+  script settings orchestrationStepWaitTimeoutSeconds: 1800.
+  [ script resume ] fork.
+  ```
+
+Either way, fork the `resume` call — like `run`, `resume` blocks the calling process until the rest of the orchestration finishes, which doesn't fit evaluation through the MCP `eval` tool.
+
+For a step expected to be flaky by nature (not just this run), it's better to build the self-heal directly into the generated script instead of relying on manual monitoring — attach a per-step `onTimeout:` that extends the timeout and calls `retry` immediately, inline, without stopping the background process:
+
+```smalltalk
+(script steps last) onTimeout: [ :aStep :ex |
+    aStep waitTimeoutSeconds: 1800.
+    aStep retry ].
+```
 
 ## Notes
 

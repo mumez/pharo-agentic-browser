@@ -21,3 +21,7 @@ AbMockOrchestrationForGroupNeverCompletes >> announcer [
 AbMockOrchestrationForGroupNeverCompletes >> run [
 	"Never fires AbOrchestrationEnded — caller will time out waiting"
 ]
+
+{ #category : 'running' }
+AbMockOrchestrationForGroupNeverCompletes >> resetForRerun [
+]

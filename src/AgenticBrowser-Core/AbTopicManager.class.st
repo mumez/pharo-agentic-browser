@@ -10,6 +10,8 @@ Responsibility:
 - I provide topic lookup by topicId, working directory path, and name.
 - I drop stale ACP client connections for all topics when the image resumes after a save/restart.
 - I persist myself automatically whenever the image saves or quits, so topics survive a Pharo exit even if the AgenticBrowser window was never closed.
+- I run a background process that periodically scans all topics for stalled ones and nudges them with a resume prompt.
+- I start watching for related-package changes across all my topics automatically. Both watching and stall monitoring start as soon as I am accessed (via #default or #load), independent of any UI (Pharo window, Web UI, or orchestration scripts) — watching a topic's packages is harmless even in a headless environment where no human edits will ever happen.
 
 Collaborators:
 - AbTopic: I own and lifecycle-manage all topic instances.
@@ -25,25 +27,31 @@ Public API and Key Messages:
 - #topics - All registered topics as an Array.
 - #topicNamed: - Look up the first topic by name (lexicographic topicId order).
 - #topicForWorkingDirectoryPath: - Look up a topic by its working directory path.
+- #startStalledTopicsMonitoring / #stopStalledTopicsMonitoring - Start or stop the background stall-monitoring process.
+- #resumeStalledTopics - Send each stalled topic's goal resume prompt once, synchronously.
 
 Internal Representation:
 - topics - Dictionary keyed by topicId String, valued by AbTopic.
 - announcer - Lazy Announcer; excluded from Fuel and recreated lazily after load.
+- stallMonitoringProcess - Background Process that periodically calls #resumeStalledTopics; excluded from Fuel.
 - default (class inst var) - The global singleton instance.
 - forTest (class inst var) - Isolated instance used by the test suite; does not affect the global instance.
 
 Implementation Points:
 - announcer is excluded from Fuel serialization; subscribers must re-subscribe after each load.
-- #cleanupAllTopics stops watchers and disconnects agents; called before replacing the default instance on load.
+- #cleanupAllTopics stops watchers and disconnects agents; called before replacing the default instance on load, and on actual image quit (not a plain save) via class>>shutDown:.
 - class>>initialize registers this class on Smalltalk's start-up and shut-down lists; class>>startUp: calls #resetStaleConnections on the default instance when the image resumes, so topics left open across a save/restart reconnect instead of writing to a dead subprocess's pipes.
-- class>>shutDown: calls #save only when a default instance already exists in memory, to avoid lazily creating and persisting an empty manager when AgenticBrowser was never opened this session.
+- class>>shutDown: calls #save only when a default instance already exists in memory, to avoid lazily creating and persisting an empty manager when AgenticBrowser was never opened this session. It only tears down watchers/connections/monitoring when isImageQuitting is true; a plain image save (isImageQuitting false) leaves them running since the image keeps executing afterward.
+- The monitoring loop sleeps for AbSettings>>#stallMonitoringIntervalSeconds between scans and swallows per-topic errors so one failing #sendPrompt: does not stop the rest from being checked.
+- class>>default starts watching and monitoring the instant the singleton is lazily created; class>>defaultLoaded: (used by class>>load) starts both on the freshly loaded instance too, so any entry point that touches the default manager (Pharo UI, Web UI, orchestration scripts) gets them for free.
 "
 Class {
 	#name : 'AbTopicManager',
 	#superclass : 'Object',
 	#instVars : [
 		'topics',
-		'announcer'
+		'announcer',
+		'stallMonitoringProcess'
 	],
 	#classInstVars : [
 		'default',
@@ -57,7 +65,11 @@ Class {
 { #category : 'instance creation' }
 AbTopicManager class >> default [
 
-	^ default ifNil: [ default := self new ]
+	default ifNil: [
+		default := self new.
+		default startAllTopicsWatching.
+		default startStalledTopicsMonitoring ].
+	^ default
 ]
 
 { #category : 'accessing-default' }
@@ -73,8 +85,13 @@ AbTopicManager class >> defaultLoaded: anInstance [
 	a UI may already be observing the previous default, such as restoring the original
 	manager after a test swaps it out."
 
+	default ifNotNil: [
+		default cleanupAllTopics.
+		default stopStalledTopicsMonitoring ].
 	self default: anInstance.
 	anInstance ifNil: [ ^ self ].
+	anInstance startAllTopicsWatching.
+	anInstance startStalledTopicsMonitoring.
 	self announcer announce: (AbTopicManagerLoaded topicManager: anInstance)
 ]
 
@@ -111,13 +128,15 @@ AbTopicManager class >> forTest: anInstance [
 { #category : 'fuel' }
 AbTopicManager class >> fuelIgnoredInstanceVariableNames [
 
-	^ #( 'announcer' )
+	^ #( 'announcer' 'stallMonitoringProcess' )
 ]
 
 { #category : 'class initialization' }
 AbTopicManager class >> initialize [
 
-	default ifNotNil: [ default cleanupAllTopics ].
+	default ifNotNil: [
+		default cleanupAllTopics.
+		default stopStalledTopicsMonitoring ].
 	default := forTest := nil.
 	Smalltalk addToStartUpList: self.
 	Smalltalk addToShutDownList: self
@@ -131,7 +150,10 @@ AbTopicManager class >> startUp: resuming [
 	prompt reconnects and resumes the ACP session instead of writing to a closed pipe."
 
 	resuming ifFalse: [ ^ self ].
-	default ifNotNil: [ default resetStaleConnections ]
+	default ifNotNil: [
+		default resetStaleConnections.
+		default startAllTopicsWatching.
+		default startStalledTopicsMonitoring ]
 ]
 
 { #category : 'system startup' }
@@ -140,9 +162,14 @@ AbTopicManager class >> shutDown: isImageQuitting [
 	is closed without the AgenticBrowser window ever being closed. Only save if a default
 	instance already exists in memory; otherwise this would lazily create an empty manager
 	and overwrite whatever was previously persisted. The save is guarded so a serialization
-	failure cannot abort the image save/quit."
+	failure cannot abort the image save/quit. Watchers, agent connections, and stall
+	monitoring are only torn down when the image is actually quitting (not on a plain save),
+	since they should otherwise keep running regardless of whether any UI window is open."
 
 	default ifNotNil: [ :defaultInstance |
+		isImageQuitting ifTrue: [
+			defaultInstance cleanupAllTopics.
+			defaultInstance stopStalledTopicsMonitoring ].
 		[ defaultInstance save ]
 			on: Error
 			do: [ :e | "ignore; do not abort the image save/quit" ] ]
@@ -153,7 +180,9 @@ AbTopicManager class >> load [
 
 	| newDefault |
 	self defaultFileReference exists ifFalse: [ ^ self ].
-	self default ifNotNil: [ self default cleanupAllTopics ].
+	default ifNotNil: [
+		default cleanupAllTopics.
+		default stopStalledTopicsMonitoring ].
 	newDefault := self loadFrom: self defaultFileReference.
 	self defaultLoaded: newDefault
 ]
@@ -221,7 +250,9 @@ AbTopicManager >> resetStaleConnections [
 	this does not stop related-packages watching, since the topics are still in active use."
 
 	topics valuesDo: [ :topic |
-		[ topic disconnect ] on: Error do: [ :e | "ignore; move on to the next topic" ] ]
+		[ topic disconnect ]
+			on: Error
+			do: [ :e | topic logger warn: 'resetStaleConnections: disconnect failed - ' , e messageText ] ]
 ]
 
 { #category : 'initialization' }
@@ -249,7 +280,9 @@ AbTopicManager >> startAllTopicsWatching [
 AbTopicManager >> teardownTopic: aTopic [
 
 	aTopic stopWatching.
-	[ aTopic disconnect ] on: Error do: [ :e | "ignore disconnect errors" ]
+	[ aTopic disconnect ]
+		on: Error
+		do: [ :e | aTopic logger warn: 'teardownTopic: disconnect failed - ' , e messageText ]
 ]
 
 { #category : 'accessing' }
@@ -293,4 +326,45 @@ AbTopicManager >> topicsDo: aBlock [
 AbTopicManager >> stopAllTopicsWatching [
 
 	topics valuesDo: [ :t | t stopWatching ]
+]
+
+{ #category : 'testing' }
+AbTopicManager >> isMonitoringStalledTopics [
+
+	^ stallMonitoringProcess notNil and: [ stallMonitoringProcess isTerminated not ]
+]
+
+{ #category : 'operations' }
+AbTopicManager >> resumeStalledTopics [
+
+	(self topics select: [ :t | t isStalled ]) do: [ :t |
+		[ t sendPrompt: t topicGoal resumePrompt ]
+			on: Error
+			do: [ :e | t logger warn: 'resumeStalledTopics: sendPrompt: failed - ' , e messageText ] ]
+]
+
+{ #category : 'private' }
+AbTopicManager >> runStallMonitoringLoop [
+
+	[ stallMonitoringProcess notNil ] whileTrue: [
+		(Delay forSeconds: AbSettings default stallMonitoringIntervalSeconds) wait.
+		self resumeStalledTopics ]
+]
+
+{ #category : 'monitoring' }
+AbTopicManager >> startStalledTopicsMonitoring [
+
+	self isMonitoringStalledTopics ifTrue: [ ^ self ].
+	stallMonitoringProcess := [ self runStallMonitoringLoop ] newProcess
+		name: 'AgenticBrowser topics stall monitor';
+		priority: Processor userBackgroundPriority;
+		yourself.
+	stallMonitoringProcess resume
+]
+
+{ #category : 'monitoring' }
+AbTopicManager >> stopStalledTopicsMonitoring [
+
+	stallMonitoringProcess ifNotNil: [ :p | p terminate ].
+	stallMonitoringProcess := nil
 ]

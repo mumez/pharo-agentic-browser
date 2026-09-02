@@ -288,6 +288,32 @@ If a step times out and the orchestration stops partway through, call `resume` t
 script resume.
 ```
 
+#### Handling timeouts instead of raising the debugger
+
+By default, a step timeout signals `AbOrchestrationStepTimeout`, which raises the debugger if unhandled. You can install a handler instead, at the orchestration level or per step.
+
+**Orchestration-level**, via `runOnTimeout:` (foreground) or `forkRunThen:onTimeout:` (background). Both invoke the handler block with `(timeoutStep, exception)` instead of raising the debugger:
+
+```smalltalk
+script runOnTimeout: [ :timeoutStep :ex |
+    Transcript crShow: 'Timed out: ' , timeoutStep printString ].
+```
+
+```smalltalk
+script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ]
+    onTimeout: [ :timeoutStep :ex | Transcript crShow: 'Timed out: ' , timeoutStep printString ].
+```
+
+**Per step**, via `onTimeout:` on an individual step (get it from `script steps`). This takes precedence over an orchestration-level handler for that step:
+
+```smalltalk
+(script steps first) onTimeout: [ :aStep :ex |
+    aStep waitTimeoutSeconds: 1800.
+    aStep retry ].
+```
+
+`retry` re-runs the step from scratch, so it's typically used together with `waitTimeoutSeconds:` to extend the timeout before retrying. `waitTimeoutSeconds:` updates the step's own `settings` copy (seeded from the orchestration's settings on first use), so it only affects that step — other steps and the orchestration's shared settings are unaffected.
+
 ### Save and load
 
 `save` / `saveTo:` and the class-side `loadFrom:` persist an orchestration via Fuel serialization. This works both before and after a run:

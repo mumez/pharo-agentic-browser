@@ -32,25 +32,27 @@ AbOrchestrationGroupParallelStep >> combinedResultsFromItems [
 ]
 
 { #category : 'running' }
-AbOrchestrationGroupParallelStep >> run [
+AbOrchestrationGroupParallelStep >> basicRun [
 	| semaphore result |
 	semaphore := Semaphore new.
-	self items do: [ :item |
-		self previousStepResult ifNotNil: [ :prev | item previousResult: prev ].
-		item announcer
-			when: AbOrchestrationEnded
-			do: [ semaphore signal ]
-			for: self.
-		[ item run ] fork ].
-	self items size timesRepeat: [ self waitWithTimeoutOn: semaphore ].
-	self items do: [ :item | item announcer unsubscribe: self ].
-	result := self combinedResultsFromItems.
-	self stepResult: result.
-	^ result
+	[
+		self items do: [ :item |
+			self previousStepResult ifNotNil: [ :prev | item previousResult: prev ].
+			item announcer
+				when: AbOrchestrationEnded
+				do: [ semaphore signal ]
+				for: self.
+			[ item run ] fork ].
+		self items size timesRepeat: [ self waitWithTimeoutOn: semaphore ].
+		result := self combinedResultsFromItems.
+		self stepResult: result.
+		^ result
+	] ensure: [
+		self items do: [ :item | item announcer unsubscribe: self ] ]
 ]
 
 { #category : 'private' }
 AbOrchestrationGroupParallelStep >> waitWithTimeoutOn: aSemaphore [
 	(aSemaphore waitTimeoutSeconds: self settings orchestrationGroupItemWaitTimeoutSeconds)
-		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
+		ifTrue: [ self signalTimeout ]
 ]

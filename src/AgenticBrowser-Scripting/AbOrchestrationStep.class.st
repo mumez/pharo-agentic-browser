@@ -133,6 +133,12 @@ AbOrchestrationStep >> resetForRerun [
 	self topicBuilders do: [ :builder | builder resetForRerun ]
 ]
 
+{ #category : 'running' }
+AbOrchestrationStep >> resetForRetry [
+	stepResult := nil.
+	self topicBuilders do: [ :builder | builder resetForRerun ]
+]
+
 { #category : 'private' }
 AbOrchestrationStep >> resultFromTopic: aTopic [
 	^ aTopic topicGoal isAchieved
@@ -196,8 +202,13 @@ AbOrchestrationStep >> topics [
 	^ self topicBuilders collect: [ :each | each topic ]
 ]
 
+{ #category : 'accessing' }
+AbOrchestrationStep >> waitTimeoutSeconds: aNumber [
+	^ self settings orchestrationStepWaitTimeoutSeconds: aNumber
+]
+
 { #category : 'error handling' }
 AbOrchestrationStep >> waitWithTimeoutOn: aSemaphore [
 	(aSemaphore waitTimeoutSeconds: self settings orchestrationStepWaitTimeoutSeconds)
-		ifTrue: [ (AbOrchestrationStepTimeout step: self) signal ]
+		ifTrue: [ self signalTimeout ]
 ]

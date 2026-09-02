@@ -17,7 +17,8 @@ Collaborators:
 Public API and Key Messages:
 - #on: anOrchestration - class-side factory (inherited from AbBaseOrchestrationStep)
 - #items: aCollection - set the runnable items
-- #run - execute items (implemented by subclasses)
+- #basicRun - execute items (implemented by subclasses)
+- #waitTimeoutSeconds: aNumber - shortcut for settings orchestrationGroupItemWaitTimeoutSeconds:
 - #stepResult - result of this step after run
 - #previousStepResult: aString - inject the previous step's result before running
 "
@@ -63,10 +64,21 @@ AbOrchestrationGroupStep >> stepResult: aString [
 	stepResult := aString
 ]
 
+{ #category : 'accessing' }
+AbOrchestrationGroupStep >> waitTimeoutSeconds: aNumber [
+	^ self settings orchestrationGroupItemWaitTimeoutSeconds: aNumber
+]
+
 { #category : 'running' }
 AbOrchestrationGroupStep >> resetForRerun [
 	stepResult := nil.
 	previousStepResult := nil.
+	self items do: [ :item | item resetForRerun ]
+]
+
+{ #category : 'running' }
+AbOrchestrationGroupStep >> resetForRetry [
+	stepResult := nil.
 	self items do: [ :item | item resetForRerun ]
 ]
 

@@ -171,6 +171,7 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'useCommandOnGoalSet').
 	self assert: (dict includesKey: 'useStBuddySkillOnInitialPrompt').
 	self assert: (dict includesKey: 'goalHavingTopicStallThresholdSeconds').
+	self assert: (dict includesKey: 'stallMonitoringIntervalSeconds').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
 ]
 
@@ -254,7 +255,7 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptSettable [
 { #category : 'tests' }
 AbSettingsTest >> testGoalHavingTopicStallThresholdSecondsDefault [
 
-	self assert: AbSettings default goalHavingTopicStallThresholdSeconds equals: 180
+	self assert: AbSettings default goalHavingTopicStallThresholdSeconds equals: 120
 ]
 
 { #category : 'tests' }
@@ -264,4 +265,19 @@ AbSettingsTest >> testGoalHavingTopicStallThresholdSecondsSettable [
 	settings := AbSettings defaultCopied.
 	settings goalHavingTopicStallThresholdSeconds: 60.
 	self assert: settings goalHavingTopicStallThresholdSeconds equals: 60
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testStallMonitoringIntervalSecondsDefault [
+
+	self assert: AbSettings default stallMonitoringIntervalSeconds equals: 30
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testStallMonitoringIntervalSecondsSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings stallMonitoringIntervalSeconds: 15.
+	self assert: settings stallMonitoringIntervalSeconds equals: 15
 ]

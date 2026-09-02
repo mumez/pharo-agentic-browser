@@ -84,3 +84,8 @@ AbMockOrchestrationForGroup >> previousResult [
 AbMockOrchestrationForGroup >> previousResult: aString [
 	previousResult := aString
 ]
+
+{ #category : 'running' }
+AbMockOrchestrationForGroup >> resetForRerun [
+	self previousResult: nil
+]
