@@ -40,3 +40,7 @@ AbMockOrchestrationForGroupCompletesAfterRetry >> run [
 AbMockOrchestrationForGroupCompletesAfterRetry >> runCount [
 	^ runCount ifNil: [ 0 ]
 ]
+
+{ #category : 'running' }
+AbMockOrchestrationForGroupCompletesAfterRetry >> resetForRerun [
+]
