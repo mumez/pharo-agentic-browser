@@ -1033,7 +1033,20 @@ AbTopicOrchestrationTest >> testSequentialStepWaitTimeoutSecondsIsShortcutForSet
 			} agentBy: [ :a | a codex ] ].
 	step := orchestration steps first.
 	step waitTimeoutSeconds: 42.
-	self assert: orchestration settings orchestrationStepWaitTimeoutSeconds equals: 42
+	self assert: step settings orchestrationStepWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
+AbTopicOrchestrationTest >> testSequentialStepWaitTimeoutSecondsDoesNotMutateOrchestrationSettings [
+	| orchestration step |
+	orchestration := AbMockTopicOrchestrationNeverCompletes new
+		buildBy: [ :builder |
+			builder seq: {
+				builder topicBy: [ :t | t title: 'ab-test-waittimeout-isolation' ]
+			} agentBy: [ :a | a codex ] ].
+	step := orchestration steps first.
+	step waitTimeoutSeconds: 42.
+	self assert: orchestration settings orchestrationStepWaitTimeoutSeconds ~= 42
 ]
 
 { #category : 'tests' }

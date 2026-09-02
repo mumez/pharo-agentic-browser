@@ -5,8 +5,8 @@ I hold the orchestration context and provide the shared #on: factory and #orches
 Subclasses are AbOrchestrationStep (topic-level steps) and AbOrchestrationGroupStep (group-level steps).
 
 Collaborators:
-- AbBaseOrchestration (subclasses): provides logger, settings, and shared state
-- AbSettings: accessed via the orchestration; falls back to AbSettings default when orchestration is nil
+- AbBaseOrchestration (subclasses): provides logger and shared state
+- AbSettings: my own copy, lazily seeded from the orchestration's settings so that #waitTimeoutSeconds: on one step never mutates another step's or the orchestration's timeout
 
 Public API and Key Messages:
 - #on: anOrchestration - class-side factory; create a step linked to the given orchestration
@@ -14,7 +14,7 @@ Public API and Key Messages:
 - #basicRun - execute this step's actual work (subclass responsibility)
 - #orchestration - the parent orchestration context
 - #logger - delegates to orchestration logger
-- #settings - delegates to orchestration settings; falls back to AbSettings default
+- #settings - this step's own AbSettings copy; lazily seeded from the orchestration's settings on first access
 - #onTimeout: aBlock - install a handler invoked with (self, anAbOrchestrationStepTimeout) instead of raising the debugger
 - #retry - re-run this step from scratch (#run again); intended for use inside an #onTimeout: block
 - #waitTimeoutSeconds: aNumber - shortcut to update this step's wait-timeout setting (subclass responsibility; resolves to the right AbSettings key)
@@ -27,7 +27,8 @@ Class {
 	#instVars : [
 		'orchestration',
 		'onTimeoutBlock',
-		'lastError'
+		'lastError',
+		'settings'
 	],
 	#category : 'AgenticBrowser-Scripting',
 	#package : 'AgenticBrowser-Scripting'
@@ -126,7 +127,5 @@ AbBaseOrchestrationStep >> waitTimeoutSeconds: aNumber [
 
 { #category : 'accessing' }
 AbBaseOrchestrationStep >> settings [
-	^ orchestration
-		ifNil: [ AbSettings default ]
-		ifNotNil: [ :orch | orch settings ]
+	^ settings ifNil: [ settings := AbSettings copiedFrom: self orchestration settings ]
 ]

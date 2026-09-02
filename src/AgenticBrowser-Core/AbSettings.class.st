@@ -57,9 +57,15 @@ AbSettings class >> defaultAgenticBrowserRootDirectory [
 ]
 
 { #category : 'instance creation' }
+AbSettings class >> copiedFrom: otherSettings [
+
+	^ self new initFrom: otherSettings
+]
+
+{ #category : 'instance creation' }
 AbSettings class >> defaultCopied [
 
-	^ self new initFrom: self default
+	^ self copiedFrom: self default
 ]
 
 { #category : 'persistence' }

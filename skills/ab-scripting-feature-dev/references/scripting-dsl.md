@@ -314,7 +314,7 @@ script forkRunThen: [ :orc | Transcript crShow: 'Done: ' , orc result ]
     aStep retry ].
 ```
 
-`retry` re-runs the step from scratch, so it's typically used together with `waitTimeoutSeconds:` to extend the timeout before retrying. `waitTimeoutSeconds:` is a per-step shortcut for `settings orchestrationStepWaitTimeoutSeconds:`.
+`retry` re-runs the step from scratch, so it's typically used together with `waitTimeoutSeconds:` to extend the timeout before retrying. `waitTimeoutSeconds:` updates the step's own `settings` copy (seeded from the orchestration's settings on first use), so it only affects that step — other steps and the orchestration's shared settings are unaffected.
 
 ### Save and load
 

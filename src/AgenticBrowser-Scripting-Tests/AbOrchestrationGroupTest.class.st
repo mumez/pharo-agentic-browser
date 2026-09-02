@@ -144,6 +144,7 @@ AbOrchestrationGroupTest >> testParaNodeRunsItemsConcurrently [
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	o2 runDelay: 50.
 	node := AbOrchestrationGroupParallelStep new
+		orchestration: AbOrchestrationGroup new;
 		items: (OrderedCollection with: o1 with: o2);
 		yourself.
 	node run.
@@ -159,6 +160,7 @@ AbOrchestrationGroupTest >> testParaNodeWaitsForAllItems [
 	o2 := AbMockOrchestrationForGroup withResult: 'r2'.
 	o2 runDelay: 10.
 	node := AbOrchestrationGroupParallelStep new
+		orchestration: AbOrchestrationGroup new;
 		items: (OrderedCollection with: o1 with: o2);
 		yourself.
 	node run.
@@ -209,7 +211,18 @@ AbOrchestrationGroupTest >> testGroupParallelStepWaitTimeoutSecondsIsShortcutFor
 		orchestration: group;
 		yourself.
 	node waitTimeoutSeconds: 42.
-	self assert: group settings orchestrationGroupItemWaitTimeoutSeconds equals: 42
+	self assert: node settings orchestrationGroupItemWaitTimeoutSeconds equals: 42
+]
+
+{ #category : 'tests' }
+AbOrchestrationGroupTest >> testGroupParallelStepWaitTimeoutSecondsDoesNotMutateGroupSettings [
+	| group node |
+	group := AbOrchestrationGroup new.
+	node := AbOrchestrationGroupParallelStep new
+		orchestration: group;
+		yourself.
+	node waitTimeoutSeconds: 42.
+	self assert: group settings orchestrationGroupItemWaitTimeoutSeconds ~= 42
 ]
 
 { #category : 'tests' }
