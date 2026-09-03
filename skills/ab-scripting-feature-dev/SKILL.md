@@ -21,16 +21,30 @@ The generated script spins up real coding agents that write and run code against
 
 ## Workflow
 
+### 0. Parse arguments
+
+This skill can be invoked with positional arguments in addition to normal conversational use:
+
+```
+/ab-scripting-feature-dev [<output-dir>] [generate-only] <feature description...>
+```
+
+- `<output-dir>` — optional, only recognized as such if it looks like a path (contains `.`, `/`, or `\`). If present, it overrides the default preview-file directory (`docs/scripting-features`, see step 4).
+- `generate-only` — optional literal keyword. If present anywhere among the leading positional args, skip the run confirmation in step 5 entirely: generate the preview file and stop.
+
+Both leading args are optional and order-independent.
+
 ### 1. Collect feature and goal
 
-Ask for (skip whichever the user already gave you):
+Ask for (skip whichever the user already gave you, including anything already resolved via step 0's argument parsing):
 
 - **Feature** — what should be built or changed
 - **Goal** — the observable condition that means "done" for the feature overall (used in the preview file's `## Goal` section). This is *not* automatically each topic's `goal:` — see step 3's rule on when a topic actually needs one.
 - **Target repository** — the existing checked-out repo the agents should work in, set via `sharedDirectoryPath:` (see the DSL reference). This is the primary way to keep agents scoped to the right codebase and context instead of starting from a blank auto-created directory. If the user doesn't name one explicitly, check whether the current working directory (or a repo already discussed in the conversation) is the obvious target and confirm it with the user rather than silently assuming or silently falling back to the DSL's default `<agenticBrowserRoot>` directory.
 - **Agent/model override** — optional; default to `a claude` on every phase unless the user names an agent/model (see the DSL reference's agent table). Don't ask about this unless the feature seems to call for mixing agents (e.g. heavy parallel research vs. focused implementation) — otherwise just default and move on.
+- **Output directory** — optional; defaults to `docs/scripting-features` (see step 4). Only ask if not already given via step 0's `<output-dir>` argument and the user seems likely to want a non-default location (e.g. they mention keeping scripts elsewhere) — otherwise just use the default silently.
 
-If the feature description is too vague to turn into a concrete prompt (e.g. "make it better"), ask one clarifying question rather than guessing — a vague prompt produces a vague agent run.
+If the feature description is too vague to turn into a concrete prompt (e.g. "make it better"), ask one clarifying question rather than guessing — a vague prompt produces a vague agent run. In non-interactive invocations (step 0) where no further input is possible, proceed with the best reasonable interpretation instead of blocking, and note the assumption in the preview file.
 
 ### 2. Size the work and pick a shape
 
@@ -82,7 +96,7 @@ A few things that make generated scripts actually work well as agent instruction
 
 ### 4. Write the preview file
 
-Save to `docs/scripting-features/feature-<slug>.scripting.md` (kebab-case slug derived from the feature name; create the directory if it doesn't exist yet). Structure:
+Save to `<output-dir>/feature-<slug>.scripting.md` (kebab-case slug derived from the feature name; create the directory if it doesn't exist yet). Structure:
 
 ```markdown
 # Feature: <feature name>
@@ -115,7 +129,9 @@ The script inside must be copy-paste runnable as-is in a Playground — no place
 
 ### 5. Show the user and ask to run
 
-Present the generated markdown content (or at least the script block) in the conversation, then ask explicitly: run it now via st-eval, or stop here with just the file? Call out the working directory (`sharedDirectoryPath:`) explicitly as part of this ask — the user should confirm the agents are about to run against the right repo before anything executes.
+**If `generate-only` was given (step 0):** jusr write the generated markdown content and stop — do not ask whether to run it, and do not evaluate anything against the image.
+
+Otherwise, present the generated markdown content (or at least the script block) in the conversation, then ask explicitly: run it now via st-eval, or stop here with just the file? Call out the working directory (`sharedDirectoryPath:`) explicitly as part of this ask — the user should confirm the agents are about to run against the right repo before anything executes.
 
 - **If the user says yes** — run the script by evaluating it through the `smalltalk-interop` MCP `eval` tool (or the `st-eval` skill), exactly as written in the preview file. Report the result back to the user mentioning `AbOrchestrationManager default orchestrationAt:`. Mention `script terminate` if the user wants to interrupt a running orchestration.
   - **If the MCP `eval` tool is unavailable or errors** — don't retry blindly. Fall back to the same option the preview file offers: tell the user the script is ready to paste into a Pharo Playground themselves, and point them at the `.scripting.md` file's script block.
@@ -166,5 +182,5 @@ For a step expected to be flaky by nature (not just this run), it's better to bu
 
 ## Notes
 
-- If the user asks to revise the script, edit the same `docs/scripting-features/feature-<slug>.scripting.md` in place and re-show the preview — don't create a second file for the same feature unless they explicitly want variants (e.g. an arena comparing two agents).
+- If the user asks to revise the script, edit the same `feature-<slug>.scripting.md` in place and re-show the preview — don't create a second file for the same feature unless they explicitly want variants (e.g. an arena comparing two agents).
 - If the DSL reference (bundled `references/`) has changed since you last read it in this conversation, re-read before generating — don't rely on memory of the DSL shape across a long session.
