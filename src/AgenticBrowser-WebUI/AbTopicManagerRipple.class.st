@@ -8,7 +8,7 @@ Responsibility:
 - I push real-time topic events (messageAdded, statusChanged, etc.) to the client via server-send.
 - I subscribe to ALL events for ALL topics at connect time and when new topics are added.
   All connected clients receive messageAdded, statusChanged, modelChanged, modeChanged,
-  commandsChanged, topicAdded, and topicRemoved for every topic (broadcast model).
+  commandsChanged, goalChanged, topicAdded, and topicRemoved for every topic (broadcast model).
 
 Public API and Key Messages:
 - AbTopicManagerRipple class>>roomName - 'agentic-browser' room identifier
@@ -109,6 +109,10 @@ AbTopicManagerRipple >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicAvailableCommandsChanged
 		do: [ :ann | self onCommandsChanged: ann ]
+		for: self.
+	aTopic announcer
+		when: AbTopicGoalChanged
+		do: [ :ann | self onGoalChanged: ann ]
 		for: self
 ]
 
@@ -627,6 +631,16 @@ AbTopicManagerRipple >> onModeChanged: ann [
 		 at: 'event' put: 'modeChanged';
 		 at: 'topicId' put: ann topic topicId;
 		 at: 'options' put: (self modeOptionsJson: ann topic);
+		 yourself)
+]
+
+{ #category : 'topic events' }
+AbTopicManagerRipple >> onGoalChanged: ann [
+
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'goalChanged';
+		 at: 'topicId' put: ann topic topicId;
+		 at: 'goal' put: (ann goal ifNil: [ '' ]);
 		 yourself)
 ]
 
