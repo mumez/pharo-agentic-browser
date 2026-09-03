@@ -29,10 +29,18 @@ This skill can be invoked with positional arguments in addition to normal conver
 /ab-scripting-feature-dev [<output-dir>] [generate-only] <feature description...>
 ```
 
-- `<output-dir>` — optional, only recognized as such if it looks like a path (contains `.`, `/`, or `\`). If present, it overrides the default preview-file directory (`docs/scripting-features`, see step 4).
-- `generate-only` — optional literal keyword. If present anywhere among the leading positional args, skip the run confirmation in step 5 entirely: generate the preview file and stop.
+Example:
 
-Both leading args are optional and order-independent.
+```
+/ab-scripting-feature-dev doc/my-features generate-only Add a dark-mode toggle to the settings panel
+```
+
+Consume tokens from the front one at a time, stopping at the first token that matches neither rule below — everything from that point on (including that token) is the feature description:
+
+- `<output-dir>` — a token that looks like a path (contains `.`, `/`, or `\`). If present, it overrides the default preview-file directory (`docs/scripting-features`, see step 4).
+- `generate-only` — the literal keyword. If present, skip the run confirmation in step 5 entirely: generate the preview file and stop.
+
+Both are optional and order-independent (either can come first, or be omitted). If the feature description itself would legitimately start with a path-like token or the literal word "generate-only", ask the user to confirm rather than guessing which reading they meant.
 
 ### 1. Collect feature and goal
 
@@ -129,7 +137,7 @@ The script inside must be copy-paste runnable as-is in a Playground — no place
 
 ### 5. Show the user and ask to run
 
-**If `generate-only` was given (step 0):** jusr write the generated markdown content and stop — do not ask whether to run it, and do not evaluate anything against the image.
+**If `generate-only` was given (step 0):** just write the generated markdown content and stop — do not ask whether to run it, and do not evaluate anything against the image.
 
 Otherwise, present the generated markdown content (or at least the script block) in the conversation, then ask explicitly: run it now via st-eval, or stop here with just the file? Call out the working directory (`sharedDirectoryPath:`) explicitly as part of this ask — the user should confirm the agents are about to run against the right repo before anything executes.
 
