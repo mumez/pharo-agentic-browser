@@ -10,7 +10,7 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 - Default port: `8080`
 - No authentication required (LAN single-user).
 
-On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
+On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
 
 **Client registration requirements (send immediately after connect):**
 - `{ "type": "register", "address": "serverEventPushed" }` — required to receive all server-initiated push events (`messageAdded`, `statusChanged`, etc.)
@@ -411,7 +411,7 @@ Push events arrive in two ways depending on the event type:
 
 | Delivery | Message type | Events |
 |----------|-------------|--------|
-| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `topicAdded`, `topicRemoved` |
+| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved` |
 | `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
 
 For `send`-type events, the `body` always contains an `event` field. All `send`-type events are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them.
@@ -473,6 +473,18 @@ Use `statusChanged` with `status: "endTurn"` to detect when the agent finishes a
   "commands": [CommandData, ...]
 }
 ```
+
+### `goalChanged` — goal description changed for a topic
+
+```json
+{
+  "event": "goalChanged",
+  "topicId": "abc123",
+  "goal": "Implement the login feature"
+}
+```
+
+Fired whenever a topic's goal is set, regardless of the trigger (web UI `/topic/setGoal`, spec UI, or a script). Use this to keep the goal display in sync even when the goal is set outside the web UI.
 
 ### `topicAdded` — a new topic was created
 

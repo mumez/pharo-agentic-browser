@@ -807,6 +807,26 @@ AbTopicManagerRippleTest >> testSetGoalPublishesTopicsUpdated [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testGoalChangedPushesEventWhenGoalSetDirectlyOnTopic [
+
+	| topic pushes |
+	topic := self newMockTopic: 'Scripted Goal Topic'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	topic goalDescription: 'Implement feature X'.
+	pushes := mockSocket sentMessages select: [ :m |
+		          (m at: 'type') = 'send'
+		          and: [ ((m at: 'body') at: 'event') = 'goalChanged' ] ].
+	self assert: pushes size equals: 1.
+	self
+		assert: ((pushes first at: 'body') at: 'topicId')
+		equals: topic topicId.
+	self
+		assert: ((pushes first at: 'body') at: 'goal')
+		equals: 'Implement feature X'
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testDeleteTopicSignalsErrorWhenBusy [
 
 	| topic msg |

@@ -186,15 +186,6 @@ AbTopic >> agentArguments: anArray [
 ]
 
 { #category : 'private' }
-AbTopic >> announceGoalAchieved [
-
-	self announcer announce: (AbTopicGoalAchieved new
-			 topic: self;
-			 goal: self topicGoal;
-			 yourself)
-]
-
-{ #category : 'private' }
 AbTopic >> announceMessageAdded: aMessage [
 
 	self announcer announce: (AbMessageAdded new
@@ -259,8 +250,7 @@ AbTopic >> checkGoalAchievement [
 	self topicGoal ifNil: [ ^ false ].
 	self topicGoal checkAchievement ifFalse: [ ^ false ].
 	self stateMachine handleEvent: #goalReached.
-	self announceGoalAchieved.
-	self topicGoal fireWhenAchieved.
+	self topicGoal achieved.
 	^ true
 ]
 
@@ -330,7 +320,7 @@ AbTopic >> ensureWorkingDirectoryForConnection [
 { #category : 'operations' }
 AbTopic >> goalDescription: aString [
 
-	self topicGoal description: aString.
+	self topicGoal updateDescription: aString.
 	self sendPrompt: self topicGoal notificationPrompt
 ]
 
