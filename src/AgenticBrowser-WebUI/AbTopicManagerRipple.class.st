@@ -319,11 +319,13 @@ AbTopicManagerRipple >> handleCreateTopic: aMessage [
 
 	| body topic workingDirPath |
 	body := aMessage body.
+	"resolveWorkingDirPath:isNewFolder: raises the specific 10009/10010 RpErrors and must stay
+	 outside the on: Error handler below, which rewraps any other creation failure as 10006."
 	workingDirPath := (body at: 'workingDir' ifAbsent: [ nil ]) ifNotNil: [ :dirName |
 		self
 			resolveWorkingDirPath: dirName
 			isNewFolder: (body at: 'isNewFolder' ifAbsent: [ false ]) ].
-	[ topic := self newTopicFrom: body workingDirPath: workingDirPath ]
+	[ topic := self createTopicFrom: body workingDirPath: workingDirPath ]
 		on: Error
 		do: [ :e | self createTopicFailedError: e messageText ].
 	self webSocket
@@ -332,7 +334,7 @@ AbTopicManagerRipple >> handleCreateTopic: aMessage [
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> newTopicFrom: body workingDirPath: workingDirPath [
+AbTopicManagerRipple >> createTopicFrom: body workingDirPath: workingDirPath [
 
 	| topic |
 	topic := AbTopic new.
@@ -368,8 +370,8 @@ AbTopicManagerRipple >> resolveWorkingDirPath: aDirName isNewFolder: aBoolean [
 
 	| target |
 	self validateWorkingDirName: aDirName.
-	target := AbSettings defaultAgenticBrowserRootDirectory / aDirName.
-	(target fullName beginsWith: AbSettings defaultAgenticBrowserRootDirectory fullName)
+	target := self workingDirsRootDirectory / aDirName.
+	(target fullName beginsWith: self workingDirsRootDirectory fullName)
 		ifFalse: [ self invalidWorkingDirNameError: aDirName ].
 	(target exists and: [ aBoolean ]) ifTrue: [ self workingDirAlreadyExistsError: aDirName ].
 	^ target
@@ -378,18 +380,21 @@ AbTopicManagerRipple >> resolveWorkingDirPath: aDirName isNewFolder: aBoolean [
 { #category : 'private' }
 AbTopicManagerRipple >> validateWorkingDirName: aDirName [
 
-	((aDirName includesSubstring: '/')
-		or: [ (aDirName includesSubstring: '\')
-			or: [ (aDirName includesSubstring: '..')
-				or: [ aDirName asFileReference isAbsolute
-					or: [ self isReservedWorkingDirName: aDirName ] ] ] ])
+	(aDirName trimmed isEmpty
+		or: [ aDirName trimmed = '.'
+			or: [ (aDirName includesSubstring: '/')
+				or: [ (aDirName includesSubstring: '\')
+					or: [ (aDirName includesSubstring: '..')
+						or: [ aDirName asFileReference isAbsolute
+							or: [ self isReservedWorkingDirName: aDirName ] ] ] ] ] ])
 		ifTrue: [ self invalidWorkingDirNameError: aDirName ]
 ]
 
 { #category : 'private' }
 AbTopicManagerRipple >> isReservedWorkingDirName: aString [
 
-	^ #( 'topic-template' 'screenshots' ) includes: aString
+	^ { AbTopicTemplateDirectory reservedFolderName. AbScreenshotAttachment reservedFolderName }
+		  includes: aString
 ]
 
 { #category : 'json' }

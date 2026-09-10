@@ -71,8 +71,11 @@ AbTopicManagerRippleTest >> dispatch: aMessage [
 { #category : 'private' }
 AbTopicManagerRippleTest >> withTempWorkingDirsRoot: aBlock [
 
+	"Nested under the real agentic-browser root (not FileLocator temp) so that
+	 AbTopicTemplateDirectory>>copyTo:'s own root guard still allows template seeding
+	 into folders created under this temp root during a test."
 	| tempRoot |
-	tempRoot := FileLocator temp / ('ab-wd-root-' , UUID new asString36).
+	tempRoot := AbSettings defaultAgenticBrowserRootDirectory / ('ab-wd-root-' , UUID new asString36).
 	tempRoot ensureCreateDirectory.
 	ripple workingDirsRootDirectory: tempRoot.
 	[ aBlock value: tempRoot ] ensure: [ tempRoot deleteAll ]
@@ -278,64 +281,67 @@ AbTopicManagerRippleTest >> testListWorkingDirsExcludesReservedFolders [
 { #category : 'tests' }
 AbTopicManagerRippleTest >> testCreateTopicWithNewWorkingDirCreatesAndSeedsFromTemplate [
 
-	| dirName msg reply topicId topic workingDirPath |
-	dirName := 'ab-test-new-wd-' , UUID new asString36.
-	msg := self requestMessage: '/topics/create'
-		       body: (Dictionary new
-				        at: 'title' put: 'New WD Topic';
-				        at: 'workingDir' put: dirName;
-				        at: 'isNewFolder' put: true;
-				        yourself).
-	ripple handleRequest: msg.
-	reply := mockSocket lastReply.
-	topicId := (reply at: 'body') at: 'topicId'.
-	topic := AbTopicManager forTest at: topicId.
-	workingDirPath := AbSettings defaultAgenticBrowserRootDirectory / dirName.
-	self assert: topic workingDirectoryPath equals: workingDirPath fullName.
-	self assert: workingDirPath exists.
-	AbTopicTemplateDirectory default path children do: [ :templateFile |
-		self assert: (workingDirPath / templateFile basename) exists ]
+	self withTempWorkingDirsRoot: [ :tempRoot |
+		| dirName msg reply topicId topic workingDirPath |
+		dirName := 'ab-test-new-wd-' , UUID new asString36.
+		msg := self requestMessage: '/topics/create'
+			       body: (Dictionary new
+					        at: 'title' put: 'New WD Topic';
+					        at: 'workingDir' put: dirName;
+					        at: 'isNewFolder' put: true;
+					        yourself).
+		ripple handleRequest: msg.
+		reply := mockSocket lastReply.
+		topicId := (reply at: 'body') at: 'topicId'.
+		topic := AbTopicManager forTest at: topicId.
+		workingDirPath := tempRoot / dirName.
+		self assert: topic workingDirectoryPath equals: workingDirPath fullName.
+		self assert: workingDirPath exists.
+		AbTopicTemplateDirectory default path children do: [ :templateFile |
+			self assert: (workingDirPath / templateFile basename) exists ] ]
 ]
 
 { #category : 'tests' }
 AbTopicManagerRippleTest >> testCreateTopicWithExistingWorkingDirReusesFolderWhenIsNewFolderAbsent [
 
-	| dirName preExisting markerFile msg reply topicId topic |
-	dirName := 'ab-test-existing-wd-' , UUID new asString36.
-	preExisting := AbSettings defaultAgenticBrowserRootDirectory / dirName.
-	preExisting ensureCreateDirectory.
-	markerFile := preExisting / 'marker.txt'.
-	markerFile writeStreamDo: [ :s | s nextPutAll: 'keep-me' ].
-	msg := self requestMessage: '/topics/create'
-		       body: (Dictionary new
-				        at: 'title' put: 'Reuse WD Topic';
-				        at: 'workingDir' put: dirName;
-				        yourself).
-	ripple handleRequest: msg.
-	reply := mockSocket lastReply.
-	topicId := (reply at: 'body') at: 'topicId'.
-	topic := AbTopicManager forTest at: topicId.
-	self assert: topic workingDirectoryPath equals: preExisting fullName.
-	self assert: markerFile exists
-		description: 'existing folder contents must be preserved when reusing'
+	self withTempWorkingDirsRoot: [ :tempRoot |
+		| dirName preExisting markerFile msg reply topicId topic |
+		dirName := 'ab-test-existing-wd-' , UUID new asString36.
+		preExisting := tempRoot / dirName.
+		preExisting ensureCreateDirectory.
+		markerFile := preExisting / 'marker.txt'.
+		markerFile writeStreamDo: [ :s | s nextPutAll: 'keep-me' ].
+		msg := self requestMessage: '/topics/create'
+			       body: (Dictionary new
+					        at: 'title' put: 'Reuse WD Topic';
+					        at: 'workingDir' put: dirName;
+					        yourself).
+		ripple handleRequest: msg.
+		reply := mockSocket lastReply.
+		topicId := (reply at: 'body') at: 'topicId'.
+		topic := AbTopicManager forTest at: topicId.
+		self assert: topic workingDirectoryPath equals: preExisting fullName.
+		self assert: markerFile exists
+			description: 'existing folder contents must be preserved when reusing' ]
 ]
 
 { #category : 'tests' }
 AbTopicManagerRippleTest >> testCreateTopicWithExistingWorkingDirAndIsNewFolderTrueSignalsCollisionError [
 
-	| dirName preExisting msg |
-	dirName := 'ab-test-collide-wd-' , UUID new asString36.
-	preExisting := AbSettings defaultAgenticBrowserRootDirectory / dirName.
-	preExisting ensureCreateDirectory.
-	msg := self requestMessage: '/topics/create'
-		       body: (Dictionary new
-				        at: 'title' put: 'Collide WD Topic';
-				        at: 'workingDir' put: dirName;
-				        at: 'isNewFolder' put: true;
-				        yourself).
-	[ ripple handleRequest: msg ]
-		on: RpError
-		do: [ :e | self assert: e code equals: 10009 ]
+	self withTempWorkingDirsRoot: [ :tempRoot |
+		| dirName preExisting msg |
+		dirName := 'ab-test-collide-wd-' , UUID new asString36.
+		preExisting := tempRoot / dirName.
+		preExisting ensureCreateDirectory.
+		msg := self requestMessage: '/topics/create'
+			       body: (Dictionary new
+					        at: 'title' put: 'Collide WD Topic';
+					        at: 'workingDir' put: dirName;
+					        at: 'isNewFolder' put: true;
+					        yourself).
+		[ ripple handleRequest: msg ]
+			on: RpError
+			do: [ :e | self assert: e code equals: 10009 ] ]
 ]
 
 { #category : 'tests' }
@@ -402,6 +408,34 @@ AbTopicManagerRippleTest >> testCreateTopicSignalsErrorForReservedWorkingDirName
 		       body: (Dictionary new
 				        at: 'title' put: 'Bad WD Topic';
 				        at: 'workingDir' put: 'screenshots';
+				        yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10010 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCreateTopicSignalsErrorForEmptyWorkingDirName [
+
+	| msg |
+	msg := self requestMessage: '/topics/create'
+		       body: (Dictionary new
+				        at: 'title' put: 'Bad WD Topic';
+				        at: 'workingDir' put: '';
+				        yourself).
+	[ ripple handleRequest: msg ]
+		on: RpError
+		do: [ :e | self assert: e code equals: 10010 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCreateTopicSignalsErrorForDotWorkingDirName [
+
+	| msg |
+	msg := self requestMessage: '/topics/create'
+		       body: (Dictionary new
+				        at: 'title' put: 'Bad WD Topic';
+				        at: 'workingDir' put: '.';
 				        yourself).
 	[ ripple handleRequest: msg ]
 		on: RpError
