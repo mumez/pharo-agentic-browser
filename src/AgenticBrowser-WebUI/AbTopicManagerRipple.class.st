@@ -16,17 +16,17 @@ Public API and Key Messages:
 - #topicManager: - Inject a test AbTopicManager (defaults to AbTopicManager default)
 - #webSocket: - Sets socket and activates AbTopicManager subscription (call after topicManager:)
 - #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
-- /workingDirs/list - Lists immediate subfolders of the agentic-browser root (excluding
+- /workingDirectories/list - Lists immediate subfolders of the agentic-browser root (excluding
   reserved 'topic-template' and 'screenshots') with creation/modification timestamps.
-- /topics/create - Accepts optional 'workingDir' (a plain relative folder name) and
-  'isNewFolder' (default false) body keys. When 'isNewFolder' is true and the folder
-  already exists, creation fails with a FOLDER_EXISTS-equivalent error (code 10009);
+- /topics/create - Accepts optional 'workingDirectory' (a plain relative folder name) and
+  'checkExistingDirectory' (default false) body keys. When 'checkExistingDirectory' is true and
+  the folder already exists, creation fails with a FOLDER_EXISTS-equivalent error (code 10009);
   otherwise an existing folder is reused and a missing one is created and seeded from
   the topic-template. Invalid/reserved folder names fail with code 10010.
 
 Internal Representation:
 - topicManager - The AbTopicManager used; defaults to AbTopicManager default
-- workingDirsRootDirectory - Root directory for /workingDirs/list; defaults to
+- workingDirectoriesRootDirectory - Root directory for /workingDirectories/list; defaults to
   AbSettings defaultAgenticBrowserRootDirectory (overridable for test isolation)
 "
 Class {
@@ -34,7 +34,7 @@ Class {
 	#superclass : 'RpRipple',
 	#instVars : [
 		'topicManager',
-		'workingDirsRootDirectory'
+		'workingDirectoriesRootDirectory'
 	],
 	#category : 'AgenticBrowser-WebUI',
 	#package : 'AgenticBrowser-WebUI'
@@ -67,15 +67,15 @@ AbTopicManagerRipple >> topicManager: aManager [
 ]
 
 { #category : 'accessing' }
-AbTopicManagerRipple >> workingDirsRootDirectory [
+AbTopicManagerRipple >> workingDirectoriesRootDirectory [
 
-	^ workingDirsRootDirectory ifNil: [ AbSettings defaultAgenticBrowserRootDirectory ]
+	^ workingDirectoriesRootDirectory ifNil: [ AbSettings defaultAgenticBrowserRootDirectory ]
 ]
 
 { #category : 'accessing' }
-AbTopicManagerRipple >> workingDirsRootDirectory: aFileReference [
+AbTopicManagerRipple >> workingDirectoriesRootDirectory: aFileReference [
 
-	workingDirsRootDirectory := aFileReference
+	workingDirectoriesRootDirectory := aFileReference
 ]
 
 { #category : 'accessing' }
@@ -193,13 +193,13 @@ AbTopicManagerRipple >> saveFailedError: aReason [
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> workingDirAlreadyExistsError: aDirName [
+AbTopicManagerRipple >> workingDirectoryAlreadyExistsError: aDirName [
 
 	^ (RpError application: 'Working directory already exists: ' , aDirName code: 10009) signal
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> invalidWorkingDirNameError: aDirName [
+AbTopicManagerRipple >> invalidWorkingDirectoryNameError: aDirName [
 
 	^ (RpError application: 'Invalid working directory name: ' , aDirName code: 10010) signal
 ]
@@ -281,7 +281,7 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/agents/list' ifTrue: [ ^ self handleListAgents: aMessage ].
 	aMessage address = '/topics/list' ifTrue: [ ^ self handleListTopics: aMessage ].
 	aMessage address = '/topics/create' ifTrue: [ ^ self handleCreateTopic: aMessage ].
-	aMessage address = '/workingDirs/list' ifTrue: [ ^ self handleListWorkingDirs: aMessage ].
+	aMessage address = '/workingDirectories/list' ifTrue: [ ^ self handleListWorkingDirectories: aMessage ].
 	aMessage address = '/topic/setTitle' ifTrue: [ ^ self handleRenameTopic: aMessage ].
 	aMessage address = '/topic/delete' ifTrue: [ ^ self handleDeleteTopic: aMessage ].
 	aMessage address = '/topic/setAgent' ifTrue: [ ^ self handleSetAgent: aMessage ].
@@ -317,15 +317,16 @@ AbTopicManagerRipple >> handleListTopics: aMessage [
 { #category : 'request handling' }
 AbTopicManagerRipple >> handleCreateTopic: aMessage [
 
-	| body topic workingDirPath |
+	| body topic workingDirectoryPath |
 	body := aMessage body.
-	"resolveWorkingDirPath:isNewFolder: raises the specific 10009/10010 RpErrors and must stay
-	 outside the on: Error handler below, which rewraps any other creation failure as 10006."
-	workingDirPath := (body at: 'workingDir' ifAbsent: [ nil ]) ifNotNil: [ :dirName |
+	"resolveWorkingDirectoryPath:checkExistingDirectory: raises the specific 10009/10010 RpErrors
+	 and must stay outside the on: Error handler below, which rewraps any other creation failure
+	 as 10006."
+	workingDirectoryPath := (body at: 'workingDirectory' ifAbsent: [ nil ]) ifNotNil: [ :dirName |
 		self
-			resolveWorkingDirPath: dirName
-			isNewFolder: (body at: 'isNewFolder' ifAbsent: [ false ]) ].
-	[ topic := self createTopicFrom: body workingDirPath: workingDirPath ]
+			resolveWorkingDirectoryPath: dirName
+			checkExistingDirectory: (body at: 'checkExistingDirectory' ifAbsent: [ false ]) ].
+	[ topic := self createTopicFrom: body workingDirectoryPath: workingDirectoryPath ]
 		on: Error
 		do: [ :e | self createTopicFailedError: e messageText ].
 	self webSocket
@@ -334,69 +335,69 @@ AbTopicManagerRipple >> handleCreateTopic: aMessage [
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> createTopicFrom: body workingDirPath: workingDirPath [
+AbTopicManagerRipple >> createTopicFrom: body workingDirectoryPath: workingDirectoryPath [
 
 	| topic |
 	topic := AbTopic new.
 	topic title: (body at: 'title' ifAbsent: [ 'Untitled' ]).
 	(body at: 'agentArguments' ifAbsent: [ nil ]) ifNotNil: [ :args |
 		topic agentArguments: args asArray ].
-	workingDirPath ifNotNil: [
-		topic workingDirectoryPath: workingDirPath fullName.
+	workingDirectoryPath ifNotNil: [
+		topic workingDirectoryPath: workingDirectoryPath fullName.
 		topic workingDirectory ensureExists ].
 	self topicManager addTopic: topic.
 	^ topic
 ]
 
 { #category : 'request handling' }
-AbTopicManagerRipple >> handleListWorkingDirs: aMessage [
+AbTopicManagerRipple >> handleListWorkingDirectories: aMessage [
 
 	| root folders |
-	root := self workingDirsRootDirectory.
+	root := self workingDirectoriesRootDirectory.
 	folders := root exists
 		ifTrue: [
 			(root children select: [ :each | each isDirectory ])
-				reject: [ :each | self isReservedWorkingDirName: each basename ] ]
+				reject: [ :each | self isReservedWorkingDirectoryName: each basename ] ]
 		ifFalse: [ #() ].
 	self webSocket
 		sendReply: (Dictionary new
-			at: 'workingDirs' put: (folders collect: [ :each | self workingDirJson: each ]) asArray;
+			at: 'workingDirectories' put: (folders collect: [ :each | self workingDirectoryJson: each ]) asArray;
 			yourself)
 		for: aMessage
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> resolveWorkingDirPath: aDirName isNewFolder: aBoolean [
+AbTopicManagerRipple >> resolveWorkingDirectoryPath: aDirName checkExistingDirectory: aBoolean [
 
 	| target |
-	self validateWorkingDirName: aDirName.
-	target := self workingDirsRootDirectory / aDirName.
-	(target fullName beginsWith: self workingDirsRootDirectory fullName)
-		ifFalse: [ self invalidWorkingDirNameError: aDirName ].
-	(target exists and: [ aBoolean ]) ifTrue: [ self workingDirAlreadyExistsError: aDirName ].
+	self validateWorkingDirectoryName: aDirName.
+	target := self workingDirectoriesRootDirectory / aDirName.
+	(target fullName beginsWith: self workingDirectoriesRootDirectory fullName)
+		ifFalse: [ self invalidWorkingDirectoryNameError: aDirName ].
+	(target exists and: [ aBoolean ]) ifTrue: [ self workingDirectoryAlreadyExistsError: aDirName ].
 	^ target
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> validateWorkingDirName: aDirName [
+AbTopicManagerRipple >> validateWorkingDirectoryName: aDirName [
 
 	(aDirName trimBoth isEmpty
 		or: [ aDirName trimBoth = '.'
 			or: [ (#( '..' '/' '\' ) anySatisfy: [ :each | aDirName includesSubstring: each ])
 				or: [ aDirName asFileReference isAbsolute
-					or: [ self isReservedWorkingDirName: aDirName ] ] ] ])
-		ifTrue: [ self invalidWorkingDirNameError: aDirName ]
+					or: [ self isReservedWorkingDirectoryName: aDirName ] ] ] ])
+		ifTrue: [ self invalidWorkingDirectoryNameError: aDirName ]
 ]
 
 { #category : 'private' }
-AbTopicManagerRipple >> isReservedWorkingDirName: aString [
+AbTopicManagerRipple >> isReservedWorkingDirectoryName: aString [
 
 	^ { AbTopicTemplateDirectory reservedFolderName. AbScreenshotAttachment reservedFolderName }
 		  includes: aString
 ]
 
 { #category : 'json' }
-AbTopicManagerRipple >> workingDirJson: aFileReference [
+AbTopicManagerRipple >> workingDirectoryJson: aFileReference [
 
 	^ Dictionary new
 		  at: 'name' put: aFileReference basename;
