@@ -147,17 +147,58 @@ Creates a new topic.
 ```json
 {
   "title": "My Topic",
-  "agentArguments": ["claude-code"]
+  "agentArguments": ["claude-code"],
+  "workingDir": "my-folder",
+  "isNewFolder": false
 }
 ```
 
 - `title` — display name (defaults to `"Untitled"` if omitted)
 - `agentArguments` — array of agent CLI arguments (optional)
+- `workingDir` — optional. A plain relative folder name (no path separators, no `..`, not an
+  absolute path, and not one of the reserved names `topic-template`/`screenshots`) naming a
+  subfolder of the agentic-browser root to use as the topic's working directory. See
+  `request /workingDirs/list` below for discovering existing folder names.
+  - If omitted entirely, today's default behavior is unchanged: the server auto-assigns a
+    `<safeTopicName>-<uuid8>` folder.
+  - If the named folder already exists and `isNewFolder` is `false`/omitted, it is reused as-is
+    (its contents are preserved).
+  - If the named folder does not exist, it is created and seeded from the topic-template.
+  - If the named folder already exists and `isNewFolder` is `true`, the request fails with
+    `failureCode: 10009` instead of reusing it (see Error Codes).
+- `isNewFolder` — optional boolean, defaults to `false`. Only meaningful together with
+  `workingDir`; set it to `true` when the caller intends to create a brand-new folder and wants
+  a name collision reported as an error rather than silently reused.
 
 **Reply body:**
 ```json
 { "topicId": "abc123" }
 ```
+
+---
+
+### `request /workingDirs/list`
+
+Returns the subfolders available under the agentic-browser root that can be used as a topic's
+`workingDir` when creating a topic (see `request /topics/create` above). The reserved folders
+`topic-template` and `screenshots` are excluded.
+
+**Request body:** _(empty)_
+
+**Reply body:**
+```json
+{
+  "workingDirs": [
+    { "name": "my-folder", "createdAt": "2026-09-01T12:00:00+09:00", "modifiedAt": "2026-09-05T08:30:00+09:00" }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Folder name — pass this as `workingDir` to `/topics/create` to reuse it |
+| `createdAt` | string | Folder creation timestamp |
+| `modifiedAt` | string | Folder last-modified timestamp |
 
 ---
 
@@ -682,6 +723,8 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10006` | `Failed to save: <reason>` | `/app/save` encountered an error |
 | `10007` | `No model config available for: <topicId>` | `/topic/setModel` called before agent connected and sent model options |
 | `10008` | `No mode config available for: <topicId>` | `/topic/setMode` called before agent connected and sent mode options |
+| `10009` | `Working directory already exists: <workingDir>` | `/topics/create` called with `isNewFolder: true` and a `workingDir` folder that already exists |
+| `10010` | `Invalid working directory name: <workingDir>` | `/topics/create`'s `workingDir` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`) |
 
 ---
 
