@@ -380,8 +380,8 @@ AbTopicManagerRipple >> resolveWorkingDirPath: aDirName isNewFolder: aBoolean [
 { #category : 'private' }
 AbTopicManagerRipple >> validateWorkingDirName: aDirName [
 
-	(aDirName trimmed isEmpty
-		or: [ aDirName trimmed = '.'
+	(aDirName trimBoth isEmpty
+		or: [ aDirName trimBoth = '.'
 			or: [ (aDirName includesSubstring: '/')
 				or: [ (aDirName includesSubstring: '\')
 					or: [ (aDirName includesSubstring: '..')
