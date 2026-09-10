@@ -382,11 +382,9 @@ AbTopicManagerRipple >> validateWorkingDirName: aDirName [
 
 	(aDirName trimBoth isEmpty
 		or: [ aDirName trimBoth = '.'
-			or: [ (aDirName includesSubstring: '/')
-				or: [ (aDirName includesSubstring: '\')
-					or: [ (aDirName includesSubstring: '..')
-						or: [ aDirName asFileReference isAbsolute
-							or: [ self isReservedWorkingDirName: aDirName ] ] ] ] ] ])
+			or: [ (#( '..' '/' '\' ) anySatisfy: [ :each | aDirName includesSubstring: each ])
+				or: [ aDirName asFileReference isAbsolute
+					or: [ self isReservedWorkingDirName: aDirName ] ] ] ])
 		ifTrue: [ self invalidWorkingDirNameError: aDirName ]
 ]
 
