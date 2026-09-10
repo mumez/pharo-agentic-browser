@@ -12,7 +12,13 @@ Class {
 { #category : 'accessing' }
 AbScreenshotAttachment class >> screenshotDirectory [
 
-	^ AbSettings defaultAgenticBrowserRootDirectory / 'screenshots'
+	^ AbSettings defaultAgenticBrowserRootDirectory / self reservedFolderName
+]
+
+{ #category : 'accessing' }
+AbScreenshotAttachment class >> reservedFolderName [
+
+	^ 'screenshots'
 ]
 
 { #category : 'accessing' }
