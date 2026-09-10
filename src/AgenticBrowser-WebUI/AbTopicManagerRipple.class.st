@@ -156,49 +156,49 @@ AbTopicManagerRipple >> onTopicManagerLoaded: ann [
 	self subscribeToTopicManagerEvents
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> topicNotFoundError: aTopicId [
 
 	^ (RpError application: 'Topic not found: ' , aTopicId code: 10001) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> topicBusyError: aTopicId [
 
 	^ (RpError application: 'Topic is busy: ' , aTopicId code: 10002) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> noPendingApprovalError: aTopicId [
 
 	^ (RpError application: 'No pending approval for topic: ' , aTopicId code: 10003) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> invalidOptionError: anOptionId [
 
 	^ (RpError application: 'Invalid optionId: ' , anOptionId printString code: 10004) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> createTopicFailedError: aReason [
 
 	^ (RpError application: 'Failed to create topic: ' , aReason code: 10005) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> saveFailedError: aReason [
 
 	^ (RpError application: 'Failed to save: ' , aReason code: 10006) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> workingDirectoryAlreadyExistsError: aDirName [
 
 	^ (RpError application: 'Working directory already exists: ' , aDirName code: 10009) signal
 ]
 
-{ #category : 'private' }
+{ #category : 'signaling' }
 AbTopicManagerRipple >> invalidWorkingDirectoryNameError: aDirName [
 
 	^ (RpError application: 'Invalid working directory name: ' , aDirName code: 10010) signal
