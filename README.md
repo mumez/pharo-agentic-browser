@@ -42,7 +42,7 @@ The core workflow:
 - **Mobile access** — the [Web UI](docs/web-ui.md) is a browser-based interface served over WebSocket, so you can check on and steer topics from a phone or tablet, not just a desktop Pharo image
 - **Multi-agent orchestration** — the [Scripting DSL](docs/scripting.md) coordinates multiple coding agents across sequential and parallel steps, with automatic result injection between them, instead of driving one agent session at a time
 - **Agent-agnostic** — works with any ACP-compatible agent (Claude Code, Gemini CLI, OpenCode, and others), so you aren't locked into a single vendor's CLI or IDE plugin
-- **Conversational human-in-the-loop** — approvals happen as plain-text chat replies, not modal dialogs, so you can steer a topic without breaking flow
+- **Conversational human-in-the-loop** — approvals happen as chat replies, not modal dialogs, so you can steer a topic without breaking flow
 
 ## Features
 
@@ -139,8 +139,8 @@ AgenticBrowser open.
 4. Click **Create** — the topic appears in the left sidebar
 5. Right-click the topic and choose **Set Target Packages...** to configure which packages to watch
 6. Type a request and press **Send** — status changes to `❇️` (working)
-7. When the AI requests permission, the Send button changes to **Confirm** and Cancel to **Deny**, and status shows `?`
-8. Click **Confirm** to approve or **Deny** to reject
+7. When the AI requests permission, the Send button changes to **Allow** and Cancel to **Deny**, and status shows `?`
+8. Click **Allow** to approve or **Deny** to reject
 9. The AI resumes; when finished, status changes to `●` (endTurn)
 
 You can also right-click a topic to **Rename...**, **Delete**, or **Set Goal...**.
@@ -313,7 +313,7 @@ Each topic has an FSM with five states:
 
 ### Human-in-the-Loop Approval
 
-When the AI requests permission, `AbTopicHandler#requestPermission:` puts the UI into approval mode (Send button becomes **Confirm**, Cancel becomes **Deny**). When the user clicks a button, the UI returns to normal mode.
+When the AI requests permission, `AbTopicHandler#requestPermission:` puts the UI into approval mode (Send button becomes **Allow**, Cancel becomes **Deny**). When the user clicks a button, the UI returns to normal mode.
 
 ### Goal Setting (`AbTopicGoal`)
 

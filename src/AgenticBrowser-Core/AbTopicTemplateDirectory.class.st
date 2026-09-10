@@ -50,6 +50,12 @@ AbTopicTemplateDirectory class >> reset [
 	default := nil
 ]
 
+{ #category : 'accessing' }
+AbTopicTemplateDirectory class >> reservedFolderName [
+
+	^ 'topic-template'
+]
+
 { #category : 'operations' }
 AbTopicTemplateDirectory >> copyTo: aWorkingDirectory [
 
@@ -116,7 +122,7 @@ AbTopicTemplateDirectory >> generatedefaultFiles [
 { #category : 'initialization' }
 AbTopicTemplateDirectory >> initialize [
 
-	path := AbSettings defaultAgenticBrowserRootDirectory / 'topic-template'
+	path := AbSettings defaultAgenticBrowserRootDirectory / self class reservedFolderName
 ]
 
 { #category : 'accessing' }
