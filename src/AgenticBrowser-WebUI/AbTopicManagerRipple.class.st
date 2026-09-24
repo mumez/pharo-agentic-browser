@@ -438,13 +438,12 @@ AbTopicManagerRipple >> handleGetSettings: aMessage [
 	topicId := aMessage body at: 'topicId'.
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
-	settings := topic settings.
+	settings := Dictionary new.
+	self topicSettingKeys do: [ :key |
+		settings at: key put: (topic settings perform: key asSymbol) ].
 	self webSocket
 		sendReply: (Dictionary new
-			at: 'settings' put: (Dictionary new
-				at: 'useCommandOnGoalSet' put: settings useCommandOnGoalSet;
-				at: 'goalSetCommand' put: settings goalSetCommand;
-				yourself);
+			at: 'settings' put: settings;
 			yourself)
 		for: aMessage
 ]
@@ -458,11 +457,19 @@ AbTopicManagerRipple >> handleSetSettings: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	settings := body at: 'settings'.
-	(settings includesKey: 'useCommandOnGoalSet') ifTrue: [
-		topic settings useCommandOnGoalSet: (settings at: 'useCommandOnGoalSet') ].
-	(settings includesKey: 'goalSetCommand') ifTrue: [
-		topic settings goalSetCommand: (settings at: 'goalSetCommand') ].
+	self topicSettingKeys do: [ :key |
+		settings at: key ifPresent: [ :value |
+			topic settings perform: key asSymbol asMutator with: value ] ].
 	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> topicSettingKeys [
+	"Topic settings exposed to the web UI via /topic/getSettings and /topic/setSettings"
+
+	^ #( 'useCommandOnGoalSet' 'goalSetCommand' 'useDefaultMcpServers'
+	     'aiPermissionWaitTimeoutSeconds' 'aiPermissionTimeoutOption'
+	     'useStBuddySkillOnInitialPrompt' )
 ]
 
 { #category : 'request handling' }

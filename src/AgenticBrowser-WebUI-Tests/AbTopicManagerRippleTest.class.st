@@ -1143,7 +1143,11 @@ AbTopicManagerRippleTest >> testGetSettingsRepliesWithDefaultValues [
 	self assert: (settings includesKey: 'useCommandOnGoalSet').
 	self assert: (settings includesKey: 'goalSetCommand').
 	self assert: (settings at: 'useCommandOnGoalSet') equals: false.
-	self assert: (settings at: 'goalSetCommand') equals: '/goal'
+	self assert: (settings at: 'goalSetCommand') equals: '/goal'.
+	self assert: (settings at: 'useDefaultMcpServers') equals: true.
+	self assert: (settings at: 'aiPermissionWaitTimeoutSeconds') equals: 1800.
+	self assert: (settings at: 'aiPermissionTimeoutOption') equals: AbConstants rejectOnce.
+	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true
 ]
 
 { #category : 'tests' }
@@ -1158,13 +1162,21 @@ AbTopicManagerRippleTest >> testSetSettingsUpdatesTopicSettings [
 			        at: 'settings' put: (Dictionary new
 				         at: 'useCommandOnGoalSet' put: true;
 				         at: 'goalSetCommand' put: '/mygoal';
+				         at: 'useDefaultMcpServers' put: false;
+				         at: 'aiPermissionWaitTimeoutSeconds' put: 60;
+				         at: 'aiPermissionTimeoutOption' put: 'allow_once';
+				         at: 'useStBuddySkillOnInitialPrompt' put: false;
 				         yourself);
 			        yourself).
 	ripple handleRequest: msg.
 	reply := mockSocket lastReply.
 	self assert: ((reply at: 'body') at: 'ok').
 	self assert: topic settings useCommandOnGoalSet equals: true.
-	self assert: topic settings goalSetCommand equals: '/mygoal'
+	self assert: topic settings goalSetCommand equals: '/mygoal'.
+	self assert: topic settings useDefaultMcpServers equals: false.
+	self assert: topic settings aiPermissionWaitTimeoutSeconds equals: 60.
+	self assert: topic settings aiPermissionTimeoutOption equals: AbConstants allowOnce.
+	self assert: topic settings useStBuddySkillOnInitialPrompt equals: false
 ]
 
 { #category : 'tests' }
