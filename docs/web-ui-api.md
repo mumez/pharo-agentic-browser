@@ -340,7 +340,11 @@ Returns the topic's current settings. Only the fields meaningful in the WebUI co
 {
   "settings": {
     "useCommandOnGoalSet": false,
-    "goalSetCommand": "/goal"
+    "goalSetCommand": "/goal",
+    "useDefaultMcpServers": true,
+    "aiPermissionWaitTimeoutSeconds": 1800,
+    "aiPermissionTimeoutOption": "reject_once",
+    "useStBuddySkillOnInitialPrompt": true
   }
 }
 ```
@@ -349,6 +353,10 @@ Returns the topic's current settings. Only the fields meaningful in the WebUI co
 |---|---|---|
 | `useCommandOnGoalSet` | boolean | When `true`, the goal notification prompt is prefixed with `goalSetCommand` |
 | `goalSetCommand` | string | The command prefix prepended to the goal notification prompt (default: `"/goal"`) |
+| `useDefaultMcpServers` | boolean | When `true`, built-in Smalltalk MCP servers are merged into `mcp.json` (default: `true`) |
+| `aiPermissionWaitTimeoutSeconds` | integer | Seconds to wait for a human response to an AI permission request (default: `1800`) |
+| `aiPermissionTimeoutOption` | string | Auto-response on timeout: `"allow_once"`, `"allow_always"`, or `"reject_once"` (default: `"reject_once"`) |
+| `useStBuddySkillOnInitialPrompt` | boolean | When `true`, the initial prompt is prefixed with the `st-buddy` skill instruction (default: `true`) |
 
 **Errors:** `10001` if the `topicId` does not exist.
 
@@ -375,6 +383,10 @@ Updates per-topic settings. Only the fields present in the `settings` body are a
 |---|---|---|
 | `useCommandOnGoalSet` | boolean | Enable/disable command prefix on goal notification |
 | `goalSetCommand` | string | Command prefix to prepend (e.g. `"/goal"`, `"/mygoal"`) |
+| `useDefaultMcpServers` | boolean | Enable/disable merging built-in Smalltalk MCP servers |
+| `aiPermissionWaitTimeoutSeconds` | integer | AI permission request wait timeout in seconds |
+| `aiPermissionTimeoutOption` | string | Auto-response on timeout (`"allow_once"`, `"allow_always"`, `"reject_once"`) |
+| `useStBuddySkillOnInitialPrompt` | boolean | Enable/disable the `st-buddy` skill prefix on the initial prompt |
 
 **Errors:** `10001` if the `topicId` does not exist.
 
