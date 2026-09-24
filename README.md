@@ -353,7 +353,7 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 | `codingAgents` | (built-in list) | Array of `{name, command}` dicts shown in the New Topic dialog |
 | `useDefaultMcpServers` | `true` | Merge built-in Smalltalk MCP servers into `mcp.json` |
 | `aiPermissionWaitTimeoutSeconds` | `1800` | Seconds to wait for human response to an AI permission request |
-| `aiPermissionTimeoutOption` | `#reject_once` | Auto-response on timeout: `#allow_once`, `#allow_always`, or `#reject_once` |
+| `aiPermissionTimeoutOption` | `#reject_once` | Auto-response on timeout: `#allow_once` or `#reject_once` (Allow / Deny in the Settings dialog). `#allow_always` can be set only via scripting or the API, and only takes effect if the agent offers an "always allow" option |
 | `exportApprovalWaitTimeoutSeconds` | `30` | Seconds to wait for human approval of a package export |
 | `exportApprovalTimeoutOption` | `#reject_once` | Auto-response on export timeout |
 | `watcherMessageThrottleSeconds` | `2` | Minimum seconds between watcher system messages for the same package |
