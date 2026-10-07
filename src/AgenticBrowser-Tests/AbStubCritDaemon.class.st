@@ -21,9 +21,50 @@ Class {
 		'statusReplies',
 		'commandBlock'
 	],
+	#classInstVars : [
+		'finishedSemaphore',
+		'defaultStatusStdout'
+	],
 	#category : 'AgenticBrowser-Tests',
 	#package : 'AgenticBrowser-Tests'
 }
+
+{ #category : 'class initialization' }
+AbStubCritDaemon class >> initialize [
+
+	self resetScript
+]
+
+{ #category : 'scripting' }
+AbStubCritDaemon class >> resetScript [
+
+	finishedSemaphore := nil.
+	defaultStatusStdout := nil
+]
+
+{ #category : 'scripting' }
+AbStubCritDaemon class >> finishedSemaphore: aSemaphore [
+
+	finishedSemaphore := aSemaphore
+]
+
+{ #category : 'scripting' }
+AbStubCritDaemon class >> signalFinished [
+
+	finishedSemaphore ifNotNil: [ :semaphore | semaphore signal ]
+]
+
+{ #category : 'scripting' }
+AbStubCritDaemon class >> defaultStatusStdout [
+
+	^ defaultStatusStdout
+]
+
+{ #category : 'scripting' }
+AbStubCritDaemon class >> defaultStatusStdout: aString [
+
+	defaultStatusStdout := aString
+]
 
 { #category : 'instance creation' }
 AbStubCritDaemon class >> forTopic: anAbTopic [
@@ -72,7 +113,14 @@ AbStubCritDaemon >> runShellCommand: aCommandString [
 	self executedCommands add: aCommandString.
 	self commandBlock ifNotNil: [ :block | ^ block value: aCommandString ].
 	(aCommandString beginsWith: 'crit status') ifTrue: [
-		self statusReplies ifEmpty: [ ^ '{"daemon":{"running":false}}' ].
-		^ self statusReplies removeFirst ].
+		self statusReplies ifNotEmpty: [ ^ self statusReplies removeFirst ].
+		^ self class defaultStatusStdout ifNil: [ '{"daemon":{"running":false}}' ] ].
 	^ ''
+]
+
+{ #category : 'operations' }
+AbStubCritDaemon >> startReviewForHost: aHostString ifStarted: started ifFailed: failed [
+
+	[ super startReviewForHost: aHostString ifStarted: started ifFailed: failed ]
+		ensure: [ self class signalFinished ]
 ]

@@ -16,6 +16,7 @@ Public API and Key Messages:
 - #topicManager: - Inject a test AbTopicManager (defaults to AbTopicManager default)
 - #webSocket: - Sets socket and activates AbTopicManager subscription (call after topicManager:)
 - #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
+- /crit/start - Starts crit review for a topic and later pushes critReviewStarted or critReviewFailed to this client.
 - /workingDirectories/list - Lists immediate subfolders of the agentic-browser root (excluding
   reserved 'topic-template' and 'screenshots') with creation/modification timestamps.
 - /topics/create - Accepts optional 'workingDirectory' (a plain relative folder name) and
@@ -34,7 +35,8 @@ Class {
 	#superclass : 'RpRipple',
 	#instVars : [
 		'topicManager',
-		'workingDirectoriesRootDirectory'
+		'workingDirectoriesRootDirectory',
+		'critDaemonClass'
 	],
 	#category : 'AgenticBrowser-WebUI',
 	#package : 'AgenticBrowser-WebUI'
@@ -156,6 +158,30 @@ AbTopicManagerRipple >> onTopicManagerLoaded: ann [
 	self subscribeToTopicManagerEvents
 ]
 
+{ #category : 'accessing' }
+AbTopicManagerRipple >> critDaemonClass [
+
+	^ critDaemonClass ifNil: [ AbCritDaemon ]
+]
+
+{ #category : 'accessing' }
+AbTopicManagerRipple >> critDaemonClass: aClass [
+
+	critDaemonClass := aClass
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> critDaemonFor: aTopic [
+
+	^ self critDaemonClass forTopic: aTopic
+]
+
+{ #category : 'signaling' }
+AbTopicManagerRipple >> critReviewNotAvailableError: aReasonString [
+
+	^ (RpError application: 'Crit review not available: ' , aReasonString code: 10011) signal
+]
+
 { #category : 'signaling' }
 AbTopicManagerRipple >> topicNotFoundError: aTopicId [
 
@@ -218,6 +244,7 @@ AbTopicManagerRipple >> topicJson: aTopic [
 		  at: 'currentMode' put: (aTopic currentMode ifNil: [ '' ]);
 		  at: 'lastUpdated' put: (aTopic lastUpdated ifNil: [ '' ] ifNotNil: [ :d | d printString ]);
 		  at: 'workingDirectoryPath' put: aTopic workingDirectoryPath;
+		  at: 'critReviewAvailable' put: (self critDaemonFor: aTopic) isAvailable;
 		  yourself
 ]
 
@@ -597,7 +624,46 @@ AbTopicManagerRipple >> handleSend: aMessage [
 	aMessage address = '/prompt/send' ifTrue: [ ^ self handleSendPrompt: aMessage ].
 	aMessage address = '/prompt/cancel' ifTrue: [ ^ self handleCancelPrompt: aMessage ].
 	aMessage address = '/approval/resolve' ifTrue: [ ^ self handleResolveApproval: aMessage ].
+	aMessage address = '/crit/start' ifTrue: [ ^ self handleStartCritReview: aMessage ].
 	(RpError general: 'Unknown address: ' , aMessage address) signal
+]
+
+{ #category : 'send handling' }
+AbTopicManagerRipple >> handleStartCritReview: aMessage [
+
+	| body topicId topic host daemon |
+	body := aMessage body.
+	topicId := body at: 'topicId'.
+	topic := self topicManager at: topicId.
+	topic ifNil: [ self topicNotFoundError: topicId ].
+	host := body at: 'host'.
+	daemon := self critDaemonFor: topic.
+	daemon startRefusalReason ifNotNil: [ :reason | self critReviewNotAvailableError: reason ].
+	[ daemon
+		startReviewForHost: host
+		ifStarted: [ :url :port | self pushCritReviewStarted: topic port: port url: url ]
+		ifFailed: [ :reason | self pushCritReviewFailed: topic reason: reason ] ] fork
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> pushCritReviewStarted: aTopic port: anInteger url: aString [
+
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'critReviewStarted';
+		 at: 'topicId' put: aTopic topicId;
+		 at: 'port' put: anInteger;
+		 at: 'url' put: aString;
+		 yourself)
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> pushCritReviewFailed: aTopic reason: aString [
+
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'critReviewFailed';
+		 at: 'topicId' put: aTopic topicId;
+		 at: 'reason' put: aString;
+		 yourself)
 ]
 
 { #category : 'send handling' }
