@@ -92,6 +92,32 @@ AbCritDaemonTest >> testUnavailableReasonWhenUseCritIsFalse [
 ]
 
 { #category : 'tests' }
+AbCritDaemonTest >> testIsValidReviewHostAcceptsHostnamesAndRejectsInjection [
+
+	self assert: (AbCritDaemon isValidReviewHost: 'localhost').
+	self assert: (AbCritDaemon isValidReviewHost: '192.168.1.10').
+	self assert: (AbCritDaemon isValidReviewHost: 'host.example.com').
+	self deny: (AbCritDaemon isValidReviewHost: '').
+	self deny: (AbCritDaemon isValidReviewHost: 'evil' , String lf , 'x').
+	self deny: (AbCritDaemon isValidReviewHost: 'a/b').
+	self deny: (AbCritDaemon isValidReviewHost: 'a b')
+]
+
+{ #category : 'tests' }
+AbCritDaemonTest >> testStartReviewRejectsInvalidHostWithoutACommand [
+
+	| topic daemon reason |
+	topic := self readyTopicNamed: 'bad-host'.
+	daemon := self daemonFor: topic.
+	daemon
+		startReviewForHost: 'evil http://x'
+		ifStarted: [ :url :port | self fail: url ]
+		ifFailed: [ :failed | reason := failed ].
+	self assert: reason equals: 'invalid host'.
+	self assert: daemon executedCommands isEmpty
+]
+
+{ #category : 'tests' }
 AbCritDaemonTest >> testUnavailableReasonWhenGitIsMissing [
 
 	| topic |

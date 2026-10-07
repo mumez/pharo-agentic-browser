@@ -312,7 +312,7 @@ AbTopic >> disconnect [
 { #category : 'private' }
 AbTopic >> ensureWorkingDirectoryForConnection [
 
-	self workingDirectory ensureExists.
+	self workingDirectory ensureExistsAmongTopics: AbTopicManager default topics.
 	self startWatching.
 	^ self workingDirectory path fullName
 ]

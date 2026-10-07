@@ -9,7 +9,7 @@ Responsibility:
 
 Collaborators:
 - AbSettings: I read #useCrit and #critPortInterval before assigning a port.
-- AbWorkingDirectory: #ensureExists asks me to assign a port after the template copy.
+- AbWorkingDirectory: #ensureExistsAmongTopics: asks me to assign a port after the template copy.
 - AbTopic: I read each topic's working directory when collecting ports already in use, and I warn through the target topic's logger when the range is exhausted.
 
 Public API and Key Messages:
@@ -20,12 +20,16 @@ Public API and Key Messages:
 
 Internal Representation:
 - directory - FileReference of the working directory that contains .crit.config.json.
+- PortAssignmentMutex (class) - Serializes read-pick-write port assignment.
 "
 Class {
 	#name : 'AbCritConfigFile',
 	#superclass : 'Object',
 	#instVars : [
 		'directory'
+	],
+	#classVars : [
+		'PortAssignmentMutex'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -64,6 +68,15 @@ AbCritConfigFile class >> defaultContentsJsonString [
 { #category : 'port assignment' }
 AbCritConfigFile class >> assignPortIn: anAbWorkingDirectory amongTopics: aTopicCollection [
 
+	^ self portAssignmentMutex critical: [
+		  self
+			  basicAssignPortIn: anAbWorkingDirectory
+			  amongTopics: aTopicCollection ]
+]
+
+{ #category : 'private' }
+AbCritConfigFile class >> basicAssignPortIn: anAbWorkingDirectory amongTopics: aTopicCollection [
+
 	| interval used port |
 	AbSettings default useCrit ifFalse: [ ^ nil ].
 	interval := AbSettings default critPortInterval ifNil: [ ^ nil ].
@@ -79,6 +92,12 @@ AbCritConfigFile class >> assignPortIn: anAbWorkingDirectory amongTopics: aTopic
 			        ^ nil ].
 	(self in: anAbWorkingDirectory path) writePort: port.
 	^ port
+]
+
+{ #category : 'private' }
+AbCritConfigFile class >> portAssignmentMutex [
+
+	^ PortAssignmentMutex ifNil: [ PortAssignmentMutex := Mutex new ]
 ]
 
 { #category : 'private' }

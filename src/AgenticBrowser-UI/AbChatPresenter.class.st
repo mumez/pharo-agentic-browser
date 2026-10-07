@@ -484,7 +484,7 @@ AbChatPresenter >> onFileAttachmentButtonClicked [
 
 	| topic selectedFile attachment |
 	topic := self currentTopic ifNil: [ ^ self ].
-	topic workingDirectory ensureExists.
+	topic workingDirectory ensureExistsAmongTopics: AbTopicManager default topics.
 	selectedFile := self selectFileForAttachmentIn: topic workingDirectory path.
 	selectedFile ifNil: [ ^ self ].
 	attachment := AbFileAttachment fromFileReference: selectedFile.

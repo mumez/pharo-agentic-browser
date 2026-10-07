@@ -473,6 +473,7 @@ Validation errors are signaled before the launch starts:
 
 - unknown `topicId`: `10001`
 - crit review unavailable, or the topic status is `initial`: `10011` with message `Crit review not available: <reason>`
+- invalid `host` (empty, or characters outside letters, digits, `.`, `-`, `:`): `10012` with message `Invalid crit review host: <host>`
 
 `<reason>` is one of `useCrit is false`, `working directory has no .git`, `no crit port assigned`, or `topic status is initial`.
 
@@ -787,6 +788,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10009` | `Working directory already exists: <workingDirectory>` | `/topics/create` called with `checkExistingDirectory: true` and a `workingDirectory` folder that already exists |
 | `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`) |
 | `10011` | `Crit review not available: <reason>` | `/crit/start` when crit review is unavailable, or the topic status is `initial` |
+| `10012` | `Invalid crit review host: <host>` | `/crit/start` when `host` is empty or contains characters outside letters, digits, `.`, `-`, `:` |
 
 ---
 

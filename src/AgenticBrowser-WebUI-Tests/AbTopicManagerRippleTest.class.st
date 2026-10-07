@@ -1307,6 +1307,25 @@ AbTopicManagerRippleTest >> testStartCritSignalsTopicNotFound [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritSignalsInvalidHost [
+
+	| topic msg error previousUse |
+	previousUse := AbSettings default useCrit.
+	AbSettings default useCrit: true.
+	topic := self newTopic: 'bad-host'.
+	ripple topicManager addTopic: topic.
+	msg := self sendMessage: '/crit/start' body: (Dictionary new
+		at: 'topicId' put: topic topicId;
+		at: 'host' put: 'evil' , String lf , 'host';
+		yourself).
+	[ self dispatch: msg.
+	error := mockSocket lastError at: 'error'.
+	self assert: error code equals: 10012.
+	self assert: (error messageText beginsWith: 'Invalid crit review host:') ]
+		ensure: [ AbSettings default useCrit: previousUse ]
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testStartCritSignalsUnavailable [
 
 	| topic msg error previousUse |

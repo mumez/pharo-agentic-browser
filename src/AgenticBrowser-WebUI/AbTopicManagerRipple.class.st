@@ -183,6 +183,14 @@ AbTopicManagerRipple >> critReviewNotAvailableError: aReasonString [
 ]
 
 { #category : 'signaling' }
+AbTopicManagerRipple >> critReviewInvalidHostError: aHostString [
+
+	^ (RpError
+		   application: 'Invalid crit review host: ' , aHostString asString
+		   code: 10012) signal
+]
+
+{ #category : 'signaling' }
 AbTopicManagerRipple >> topicNotFoundError: aTopicId [
 
 	^ (RpError application: 'Topic not found: ' , aTopicId code: 10001) signal
@@ -371,7 +379,7 @@ AbTopicManagerRipple >> createTopicFrom: body workingDirectoryPath: workingDirec
 		topic agentArguments: args asArray ].
 	workingDirectoryPath ifNotNil: [
 		topic workingDirectoryPath: workingDirectoryPath fullName.
-		topic workingDirectory ensureExists ].
+		topic workingDirectory ensureExistsAmongTopics: self topicManager topics ].
 	self topicManager addTopic: topic.
 	^ topic
 ]
@@ -637,6 +645,8 @@ AbTopicManagerRipple >> handleStartCritReview: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	host := body at: 'host'.
+	(AbCritDaemon isValidReviewHost: host) ifFalse: [
+		self critReviewInvalidHostError: host ].
 	daemon := self critDaemonFor: topic.
 	daemon startRefusalReason ifNotNil: [ :reason | self critReviewNotAvailableError: reason ].
 	[ daemon

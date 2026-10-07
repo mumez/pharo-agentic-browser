@@ -47,6 +47,15 @@ AbCritDaemon class >> forTopic: anAbTopic [
 		  yourself
 ]
 
+{ #category : 'testing' }
+AbCritDaemon class >> isValidReviewHost: aString [
+
+	^ aString isString and: [
+		  aString notEmpty and: [
+			  aString allSatisfy: [ :char |
+				  char isAlphaNumeric or: [ #($. $- $:) includes: char ] ] ] ]
+]
+
 { #category : 'class initialization' }
 AbCritDaemon class >> initialize [
 
@@ -140,7 +149,9 @@ AbCritDaemon >> startRefusalReason [
 { #category : 'operations' }
 AbCritDaemon >> startReviewForHost: aHostString ifStarted: started ifFailed: failed [
 
-	[ self startRefusalReason ifNotNil: [ :reason | ^ self fail: reason with: failed ].
+	[ (self class isValidReviewHost: aHostString) ifFalse: [
+		  ^ self fail: 'invalid host' with: failed ].
+	self startRefusalReason ifNotNil: [ :reason | ^ self fail: reason with: failed ].
 	self withLaunchMutexDo: [
 		self launchForHost: aHostString ifStarted: started ifFailed: failed ] ]
 		on: Error
