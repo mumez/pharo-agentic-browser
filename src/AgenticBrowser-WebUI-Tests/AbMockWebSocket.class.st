@@ -70,10 +70,13 @@ AbMockWebSocket >> send: body to: address [
 { #category : 'sending' }
 AbMockWebSocket >> sendError: anError for: msg [
 
-	sentMessages add: (Dictionary new
+	| errorFrame |
+	errorFrame := Dictionary new
 		 at: 'type' put: 'err';
 		 at: 'error' put: anError;
-		 yourself)
+		 yourself.
+	msg isRequest ifTrue: [ errorFrame at: 'correlationId' put: msg correlationId ].
+	sentMessages add: errorFrame
 ]
 
 { #category : 'testing' }

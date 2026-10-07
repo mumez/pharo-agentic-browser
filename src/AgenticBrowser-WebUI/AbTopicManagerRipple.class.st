@@ -16,7 +16,8 @@ Public API and Key Messages:
 - #topicManager: - Inject a test AbTopicManager (defaults to AbTopicManager default)
 - #webSocket: - Sets socket and activates AbTopicManager subscription (call after topicManager:)
 - #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
-- /crit/start - Starts crit review for a topic and later pushes critReviewStarted or critReviewFailed to this client.
+- /crit/start - Request. Replies {ok: true} once validation passes, then starts crit review for a topic and
+  later pushes critReviewStarted or critReviewFailed to this client.
 - /workingDirectories/list - Lists immediate subfolders of the agentic-browser root (excluding
   reserved 'topic-template' and 'screenshots') with creation/modification timestamps.
 - /topics/create - Accepts optional 'workingDirectory' (a plain relative folder name) and
@@ -309,6 +310,7 @@ AbTopicManagerRipple >> handleRequest: aMessage [
 	aMessage address = '/topic/getSettings' ifTrue: [ ^ self handleGetSettings: aMessage ].
 	aMessage address = '/topic/setSettings' ifTrue: [ ^ self handleSetSettings: aMessage ].
 	aMessage address = '/app/save' ifTrue: [ ^ self handleSaveApp: aMessage ].
+	aMessage address = '/crit/start' ifTrue: [ ^ self handleStartCritReview: aMessage ].
 	(RpError general: 'Unknown address: ' , aMessage address) signal
 ]
 
@@ -431,7 +433,7 @@ AbTopicManagerRipple >> handleRenameTopic: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic title: (body at: 'title').
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self replyOkFor: aMessage.
 	self publishTopicsUpdated
 ]
 
@@ -444,7 +446,7 @@ AbTopicManagerRipple >> handleDeleteTopic: aMessage [
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic isWorking ifTrue: [ self topicBusyError: topicId ].
 	self topicManager removeTopic: topic.
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self replyOkFor: aMessage
 ]
 
 { #category : 'request handling' }
@@ -476,7 +478,7 @@ AbTopicManagerRipple >> handleSetSettings: aMessage [
 	self topicSettingKeys do: [ :key |
 		settings at: key ifPresent: [ :value |
 			topic settings perform: key asSymbol asMutator with: value ] ].
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self replyOkFor: aMessage
 ]
 
 { #category : 'private' }
@@ -498,7 +500,7 @@ AbTopicManagerRipple >> handleSetAgent: aMessage [
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic isWorking ifTrue: [ self topicBusyError: topicId ].
 	topic agentArguments: (body at: 'agentArguments') asArray.
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self replyOkFor: aMessage.
 	self publishTopicsUpdated
 ]
 
@@ -511,7 +513,7 @@ AbTopicManagerRipple >> handleSetGoal: aMessage [
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
 	topic goalDescription: (body at: 'goal').
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage.
+	self replyOkFor: aMessage.
 	self publishTopicsUpdated
 ]
 
@@ -547,7 +549,7 @@ AbTopicManagerRipple >> applyConfigOption: aBlock from: aMessage noConfigError: 
 	configOption ifNil: [
 		^ (RpError application: 'No ' , aLabel , ' config available for: ' , topicId code: anErrorCode) signal ].
 	topic setConfigOptionId: configOption id value: (body at: 'optionId').
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self replyOkFor: aMessage
 ]
 
 { #category : 'request handling' }
@@ -570,7 +572,7 @@ AbTopicManagerRipple >> handleSaveApp: aMessage [
 	[ self topicManager save ]
 		on: Error
 		do: [ :e | self saveFailedError: e messageText ].
-	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
+	self replyOkFor: aMessage
 ]
 
 { #category : 'request handling' }
@@ -580,9 +582,7 @@ AbTopicManagerRipple >> handleSelectTopic: aMessage [
 	topicId := aMessage body at: 'topicId'.
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
-	self webSocket
-		sendReply: (Dictionary new at: 'ok' put: true; yourself)
-		for: aMessage.
+	self replyOkFor: aMessage.
 	self pushCurrentTopicViewState: topic
 ]
 
@@ -613,11 +613,10 @@ AbTopicManagerRipple >> handleSend: aMessage [
 	aMessage address = '/prompt/send' ifTrue: [ ^ self handleSendPrompt: aMessage ].
 	aMessage address = '/prompt/cancel' ifTrue: [ ^ self handleCancelPrompt: aMessage ].
 	aMessage address = '/approval/resolve' ifTrue: [ ^ self handleResolveApproval: aMessage ].
-	aMessage address = '/crit/start' ifTrue: [ ^ self handleStartCritReview: aMessage ].
 	(RpError general: 'Unknown address: ' , aMessage address) signal
 ]
 
-{ #category : 'send handling' }
+{ #category : 'request handling' }
 AbTopicManagerRipple >> handleStartCritReview: aMessage [
 
 	| body topicId topic host daemon |
@@ -630,10 +629,17 @@ AbTopicManagerRipple >> handleStartCritReview: aMessage [
 		self critReviewInvalidHostError: host ].
 	daemon := topic critDaemon.
 	daemon refusalReasonOnStart ifNotNil: [ :reason | self critReviewNotAvailableError: reason ].
+	self replyOkFor: aMessage.
 	[ daemon
 		startReviewForHost: host
 		ifStarted: [ :url :port | self pushCritReviewStarted: topic port: port url: url ]
 		ifFailed: [ :reason | self pushCritReviewFailed: topic reason: reason ] ] fork
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> replyOkFor: aMessage [
+
+	self webSocket sendReply: (Dictionary new at: 'ok' put: true; yourself) for: aMessage
 ]
 
 { #category : 'private' }

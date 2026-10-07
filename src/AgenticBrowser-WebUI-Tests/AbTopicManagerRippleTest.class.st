@@ -1298,12 +1298,14 @@ AbTopicManagerRippleTest >> testTopicJsonCritReviewAvailableWhenReady [
 AbTopicManagerRippleTest >> testStartCritSignalsTopicNotFound [
 
 	| msg |
-	msg := self sendMessage: '/crit/start' body: (Dictionary new
+	msg := self requestMessage: '/crit/start' body: (Dictionary new
 		at: 'topicId' put: 'missing';
 		at: 'host' put: 'localhost';
 		yourself).
 	self dispatch: msg.
-	self assert: (mockSocket lastError at: 'error') code equals: 10001
+	self assert: (mockSocket lastError at: 'error') code equals: 10001.
+	self assert: (mockSocket lastError at: 'correlationId') equals: 'corr-1'.
+	self assert: (mockSocket sentMessages noneSatisfy: [ :each | (each at: 'type') = 'reply' ])
 ]
 
 { #category : 'tests' }
@@ -1314,7 +1316,7 @@ AbTopicManagerRippleTest >> testStartCritSignalsInvalidHost [
 	AbSettings default useCrit: true.
 	topic := self newTopic: 'bad-host'.
 	ripple topicManager addTopic: topic.
-	msg := self sendMessage: '/crit/start' body: (Dictionary new
+	msg := self requestMessage: '/crit/start' body: (Dictionary new
 		at: 'topicId' put: topic topicId;
 		at: 'host' put: 'evil' , String lf , 'host';
 		yourself).
@@ -1333,7 +1335,7 @@ AbTopicManagerRippleTest >> testStartCritSignalsUnavailable [
 	AbSettings default useCrit: true.
 	topic := self newTopic: 'no-git'.
 	ripple topicManager addTopic: topic.
-	msg := self sendMessage: '/crit/start' body: (Dictionary new
+	msg := self requestMessage: '/crit/start' body: (Dictionary new
 		at: 'topicId' put: topic topicId;
 		at: 'host' put: 'localhost';
 		yourself).
@@ -1357,7 +1359,7 @@ AbTopicManagerRippleTest >> testStartCritSignalsInitialStatus [
 	topic workingDirectoryPath: dir fullName.
 	(AbCritConfigFile in: dir) writePort: 9080.
 	ripple topicManager addTopic: topic.
-	msg := self sendMessage: '/crit/start' body: (Dictionary new
+	msg := self requestMessage: '/crit/start' body: (Dictionary new
 		at: 'topicId' put: topic topicId;
 		at: 'host' put: 'localhost';
 		yourself).
@@ -1379,12 +1381,14 @@ AbTopicManagerRippleTest >> testStartCritPushesStartedUrl [
 		AbStubCritDaemon defaultStatusStdout: '{"daemon":{"running":true}}'.
 		AbStubCritDaemon finishedSemaphore: finished.
 		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
-		msg := self sendMessage: '/crit/start' body: (Dictionary new
+		msg := self requestMessage: '/crit/start' body: (Dictionary new
 			at: 'topicId' put: topic topicId;
 			at: 'host' put: '192.168.1.10';
 			yourself).
 		self dispatch: msg.
 		self assert: (mockSocket sentMessages noneSatisfy: [ :each | (each at: 'type') = 'err' ]).
+		self assert: (mockSocket lastReply at: 'correlationId') equals: 'corr-1'.
+		self assert: ((mockSocket lastReply at: 'body') at: 'ok').
 		self assert: (finished waitTimeoutSeconds: 2) equals: false.
 		pushes := self critPushesNamed: 'critReviewStarted'.
 		self assert: pushes size equals: 1.
@@ -1404,7 +1408,7 @@ AbTopicManagerRippleTest >> testStartCritPushesFailureWithoutChangingStatus [
 		AbStubCritDaemon defaultStatusStdout: 'not-json'.
 		AbStubCritDaemon finishedSemaphore: finished.
 		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
-		msg := self sendMessage: '/crit/start' body: (Dictionary new
+		msg := self requestMessage: '/crit/start' body: (Dictionary new
 			at: 'topicId' put: topic topicId;
 			at: 'host' put: '192.168.1.10';
 			yourself).
