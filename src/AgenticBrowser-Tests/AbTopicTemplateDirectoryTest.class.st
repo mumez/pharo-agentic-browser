@@ -50,7 +50,8 @@ AbTopicTemplateDirectoryTest >> testSetupDirectoryGeneratesDefaultFilesWhenEmpty
 		            setupDirectory.
 	[
 		self assert: (templateDir / 'CLAUDE.md') exists.
-		self assert: (templateDir / 'AGENTS.md') exists
+		self assert: (templateDir / 'AGENTS.md') exists.
+		self deny: (templateDir / '.crit.config.json') exists
 	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
 ]
 

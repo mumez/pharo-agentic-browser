@@ -317,3 +317,64 @@ AbWorkingDirectoryTest >> testExportClassNamedWritesClassFile [
 	self assert: (classFile contents includesSubstring: 'AbTopic') ]
 		ensure: [ workDir path deleteAll ]
 ]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsAssigns9080Then9081WhenUseCritIsTrue [
+
+	| root first second |
+	AbSettings initialize.
+	AbSettings default useCrit: true.
+	root := FileLocator temp / ('ab-wd-crit-' , UUID new asString36).
+	root ensureCreateDirectory.
+	first := self newTopic: 'crit-a'.
+	second := self newTopic: 'crit-b'.
+	first workingDirectoryPath: (root / 'a') fullName.
+	second workingDirectoryPath: (root / 'b') fullName.
+	[
+		AbTopicManager forTest addTopic: first.
+		AbTopicManager forTest addTopic: second.
+		first workingDirectory ensureExists.
+		second workingDirectory ensureExists.
+		self assert: (AbCritConfigFile in: first workingDirectory path) port equals: 9080.
+		self assert: (AbCritConfigFile in: second workingDirectory path) port equals: 9081
+	] ensure: [
+		root exists ifTrue: [ root deleteAll ].
+		AbSettings initialize ]
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsAssignsNoPortWhenUseCritIsFalse [
+
+	| root topic |
+	AbSettings initialize.
+	root := FileLocator temp / ('ab-wd-crit-' , UUID new asString36).
+	topic := self newTopic: 'crit-off'.
+	topic workingDirectoryPath: (root / 'off') fullName.
+	[
+		AbTopicManager forTest addTopic: topic.
+		topic workingDirectory ensureExists.
+		self deny: (topic workingDirectory path / '.crit.config.json') exists
+	] ensure: [
+		root exists ifTrue: [ root deleteAll ].
+		AbSettings initialize ]
+]
+
+{ #category : 'tests' }
+AbWorkingDirectoryTest >> testEnsureExistsLeavesAnExistingDirectoryUnassigned [
+
+	| root topic dir |
+	AbSettings initialize.
+	AbSettings default useCrit: true.
+	root := FileLocator temp / ('ab-wd-crit-' , UUID new asString36).
+	dir := root / 'existing'.
+	dir ensureCreateDirectory.
+	topic := self newTopic: 'crit-existing'.
+	topic workingDirectoryPath: dir fullName.
+	[
+		AbTopicManager forTest addTopic: topic.
+		topic workingDirectory ensureExists.
+		self deny: (dir / '.crit.config.json') exists
+	] ensure: [
+		root exists ifTrue: [ root deleteAll ].
+		AbSettings initialize ]
+]

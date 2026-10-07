@@ -278,6 +278,11 @@ AbTopic >> client [
 ]
 
 { #category : 'accessing' }
+AbTopic >> critDaemon [
+	^ self session critDaemon
+]
+
+{ #category : 'accessing' }
 AbTopic >> currentModel [
 	^ self session currentModel
 ]

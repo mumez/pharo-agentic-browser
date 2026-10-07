@@ -4,7 +4,7 @@ I render the left-sidebar topic list and dispatch all topic-level operations via
 Responsibility:
 - I display all registered AbTopics as a sorted list with status icons and agent-name labels.
 - I support two sort modes: alphabetical by title and descending by last-updated timestamp.
-- I provide a context menu with operations: Rename, Delete, Inspect, Change Agent, Set Goal, Set Working Directory, Clear Session ID, Set Target Packages, Apply Updated External Packages, and Edit Settings.
+- I provide a context menu with operations: Rename, Delete, Inspect, Change Agent, Set Goal, Set Working Directory, Clear Session ID, Set Target Packages, Apply Updated External Packages, Edit Settings, and Review by crit when crit review is available.
 - I subscribe to AbTopicManager and each topic's announcer so the list refreshes automatically on status changes and topic add/remove events.
 - I fire a user-supplied block when a topic is selected, allowing AbBrowserPresenter to update AbChatPresenter.
 
@@ -41,6 +41,17 @@ Class {
 }
 
 { #category : 'private' }
+AbTopicListPresenter >> addReviewByCritItemTo: aGroup for: aTopic [
+
+	aTopic critDaemon isAvailable ifFalse: [ ^ self ].
+	aGroup addItem: [ :item |
+		item
+			name: 'Review by crit';
+			enabled: aTopic isInitial not;
+			action: [ self onReviewByCritRequest ] ]
+]
+
+{ #category : 'private' }
 AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
 
 	| packageNames |
@@ -60,7 +71,7 @@ AbTopicListPresenter >> applyUpdatedExternalPackagesFor: aTopic [
 AbTopicListPresenter >> buildTopicContextMenu [
 
 	| topic notWorking |
-	topic := topicList selectedItem.
+	topic := self topicList selectedItem.
 	notWorking := topic isWorking not.
 	^ SpMenuPresenter new
 		  addGroup: [ :group |
@@ -80,8 +91,8 @@ AbTopicListPresenter >> buildTopicContextMenu [
 				  addItem: [ :item | item name: 'Set Target Packages...'; enabled: notWorking; action: [ self onSetTargetPackagesRequest ] ];
 				  addItem: [ :item | item name: 'Apply Updated External Packages'; enabled: notWorking; action: [ self onApplyUpdatedExternalPackagesRequest ] ] ];
 		  addGroup: [ :group |
-			  group
-				  addItem: [ :item | item name: 'Edit Settings...'; action: [ self onEditSettingsRequest ] ] ];
+			  group addItem: [ :item | item name: 'Edit Settings...'; action: [ self onEditSettingsRequest ] ].
+			  self addReviewByCritItemTo: group for: topic ];
 		  yourself
 ]
 
@@ -164,6 +175,18 @@ AbTopicListPresenter >> onEditSettingsRequest [
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
 	AbSettingsPresenter openOnTopic: topic
+]
+
+{ #category : 'private' }
+AbTopicListPresenter >> onReviewByCritRequest [
+
+	| topic |
+	topic := self topicList selectedItem.
+	topic ifNil: [ ^ self ].
+	[ topic critDaemon
+		startReviewForHost: 'localhost'
+		ifStarted: [ :url :port | ]
+		ifFailed: [ :reason | ] ] forkAt: Processor userBackgroundPriority
 ]
 
 { #category : 'private' }

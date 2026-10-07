@@ -458,6 +458,29 @@ Resolves the pending approval for a topic by selecting one of the available opti
 
 ---
 
+### `/crit/start`
+
+Starts a crit diff review for the topic's working directory, or reuses the daemon already running there. Returns immediately. The result is pushed later to this connection only.
+
+**Body:**
+```json
+{ "topicId": "abc123", "host": "192.168.1.10" }
+```
+
+`host` is the browser's hostname. The review URL is `http://<host>:<port>/`.
+
+Validation errors are signaled before the launch starts:
+
+- unknown `topicId`: `10001`
+- crit review unavailable, or the topic status is `initial`: `10011` with message `Crit review not available: <reason>`
+- invalid `host` (empty, or characters outside letters, digits, `.`, `-`, `:`): `10012` with message `Invalid crit review host: <host>`
+
+`<reason>` is one of `useCrit is false`, `working directory has no .git`, `no crit port assigned`, or `topic status is initial`.
+
+On completion the server pushes one of `critReviewStarted` or `critReviewFailed` to the requesting connection. It also posts a system message, which other clients see through `messageAdded`.
+
+---
+
 ## Server Push Events
 
 Push events arrive in two ways depending on the event type:
@@ -467,7 +490,7 @@ Push events arrive in two ways depending on the event type:
 | `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved` |
 | `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
 
-For `send`-type events, the `body` always contains an `event` field. All `send`-type events are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them.
+For `send`-type events, the `body` always contains an `event` field. `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, and `topicRemoved` are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them. `critReviewStarted` and `critReviewFailed` are sent only to the connection that called `/crit/start`, because the URL contains that browser's host.
 
 For `publish`-type events, only clients that sent `{ "type": "register", "address": "topicsUpdated" }` receive them.
 
@@ -557,6 +580,31 @@ Fired whenever a topic's goal is set, regardless of the trigger (web UI `/topic/
 }
 ```
 
+### `critReviewStarted` — crit is ready for this client
+
+Sent only to the connection that called `/crit/start`.
+
+```json
+{
+  "event": "critReviewStarted",
+  "topicId": "abc123",
+  "port": 9080,
+  "url": "http://192.168.1.10:9080/"
+}
+```
+
+### `critReviewFailed` — crit did not start
+
+Sent only to the connection that called `/crit/start`. The same reason is also posted as a system message.
+
+```json
+{
+  "event": "critReviewFailed",
+  "topicId": "abc123",
+  "reason": "crit status failed (is crit on PATH?)"
+}
+```
+
 ---
 
 ## Pub/Sub: `register` / `unregister`
@@ -610,7 +658,8 @@ Sent by the server after any operation that modifies topic metadata without addi
   "currentModel": "claude-sonnet-4-6",
   "currentMode": "auto",
   "lastUpdated": "2026-06-11T10:00:00+09:00",
-  "workingDirectoryPath": "/home/user/pharo130/agentic-browser/my-topic-abc12345"
+  "workingDirectoryPath": "/home/user/pharo130/agentic-browser/my-topic-abc12345",
+  "critReviewAvailable": false
 }
 ```
 
@@ -626,6 +675,7 @@ Sent by the server after any operation that modifies topic metadata without addi
 | `currentMode` | string | Active mode identifier (empty string if not set) |
 | `lastUpdated` | string | Timestamp string (offset-based ISO 8601) |
 | `workingDirectoryPath` | string | Absolute path to the topic's working directory on the server |
+| `critReviewAvailable` | boolean | True when `useCrit` is on, the working directory has `.git`, and `.crit.config.json` has a port in 1..65535. The web UI hides the review control when this is false, and disables it when `status` is `initial`. |
 
 **Topic statuses:** `initial` | `working` | `waitingForHuman` | `endTurn` | `goalAchieved`
 
@@ -737,6 +787,8 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10008` | `No mode config available for: <topicId>` | `/topic/setMode` called before agent connected and sent mode options |
 | `10009` | `Working directory already exists: <workingDirectory>` | `/topics/create` called with `checkExistingDirectory: true` and a `workingDirectory` folder that already exists |
 | `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`) |
+| `10011` | `Crit review not available: <reason>` | `/crit/start` when crit review is unavailable, or the topic status is `initial` |
+| `10012` | `Invalid crit review host: <host>` | `/crit/start` when `host` is empty or contains characters outside letters, digits, `.`, `-`, `:` |
 
 ---
 

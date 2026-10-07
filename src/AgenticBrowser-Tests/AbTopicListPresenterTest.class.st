@@ -252,6 +252,83 @@ AbTopicListPresenterTest >> testUnsubscribeFromTopicManagerAlsoUnsubscribesFromC
 	self deny: presenter topicManager == newManager
 ]
 
+{ #category : 'private' }
+AbTopicListPresenterTest >> selectTopicInList [
+
+	| mock |
+	mock := MockObject new.
+	mock on: #selectedItem verify: [ topic ].
+	presenter instVarNamed: 'topicList' put: mock
+]
+
+{ #category : 'private' }
+AbTopicListPresenterTest >> reviewByCritItem [
+
+	| items |
+	items := presenter buildTopicContextMenu menuGroups flatCollect: [ :group | group menuItems ].
+	^ items detect: [ :item | item name = 'Review by crit' ] ifNone: [ nil ]
+]
+
+{ #category : 'private' }
+AbTopicListPresenterTest >> prepareCritDirectory [
+
+	| dir |
+	dir := FileLocator temp / ('ab-menu-crit-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.git') ensureCreateDirectory.
+	topic workingDirectoryPath: dir fullName.
+	(AbCritConfigFile in: dir) writePort: 9080.
+	^ dir
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testReviewByCritIsAbsentWhenUnavailable [
+
+	| dir |
+	AbSettings initialize.
+	dir := self prepareCritDirectory.
+	AbSettings default useCrit: false.
+	self selectTopicInList.
+	[ self assert: self reviewByCritItem isNil ] ensure: [
+		dir exists ifTrue: [ dir deleteAll ].
+		AbSettings initialize ]
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testReviewByCritIsDisabledWhileTopicIsInitial [
+
+	| dir item |
+	AbSettings initialize.
+	AbSettings default useCrit: true.
+	dir := self prepareCritDirectory.
+	self selectTopicInList.
+	[
+		item := self reviewByCritItem.
+		self assert: item notNil.
+		self deny: item isEnabled
+	] ensure: [
+		dir exists ifTrue: [ dir deleteAll ].
+		AbSettings initialize ]
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testReviewByCritIsEnabledAfterTopicLeavesInitial [
+
+	| dir item |
+	AbSettings initialize.
+	AbSettings default useCrit: true.
+	dir := self prepareCritDirectory.
+	topic stateMachine handleEvent: #promptSent.
+	self selectTopicInList.
+	[
+		item := self reviewByCritItem.
+		self assert: item notNil.
+		self assert: item isEnabled
+	] ensure: [
+		dir exists ifTrue: [ dir deleteAll ].
+		AbSettings initialize ]
+]
+
 { #category : 'accessing' }
 AbTopicListPresenterTest >> topic: anAbTopic [
 

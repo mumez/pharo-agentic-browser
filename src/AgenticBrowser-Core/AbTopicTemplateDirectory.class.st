@@ -111,7 +111,7 @@ AbTopicTemplateDirectory >> exists [
 ]
 
 { #category : 'private' }
-AbTopicTemplateDirectory >> generatedefaultFiles [
+AbTopicTemplateDirectory >> generateDefaultFiles [
 
 	(self path / 'CLAUDE.md') writeStreamDo: [ :s |
 		s nextPutAll: self class defaultClaudeMdContent ].
@@ -141,6 +141,6 @@ AbTopicTemplateDirectory >> path: aFileReference [
 AbTopicTemplateDirectory >> setupDirectory [
 
 	self path ensureCreateDirectory.
-	self path children ifEmpty: [ self generatedefaultFiles ].
+	self path children ifEmpty: [ self generateDefaultFiles ].
 	^ self
 ]

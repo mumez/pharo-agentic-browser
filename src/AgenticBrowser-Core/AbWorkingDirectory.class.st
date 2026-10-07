@@ -17,7 +17,7 @@ Collaborators:
 Public API and Key Messages:
 - #path - The FileReference for the topic's working directory root.
 - #sourcePath - path / srcDirectory (e.g. .../MyTopic-abc123/src).
-- #ensureExists - Create the directory if it does not exist; seeds it from the topic-template via AbTopicTemplateDirectory.
+- #ensureExists - Create the directory if it does not exist; seeds it from the topic-template via AbTopicTemplateDirectory, then assigns a crit port when useCrit is true.
 - #exportClassNamed:in: - Write one class to its Tonel .class.st file.
 - #exportPackageNamed: - Write an entire package snapshot to the source path.
 - #isImportingFromSource - True while a Tonel import through SisServer is in progress.
@@ -98,7 +98,9 @@ AbWorkingDirectory >> ensureExists [
 	[ self path ensureCreateDirectory ]
 		on: DirectoryExists
 		do: [ :e | isNew := false ].
-	isNew ifTrue: [ AbTopicTemplateDirectory default copyTo: self ]
+	isNew ifTrue: [
+		AbTopicTemplateDirectory default copyTo: self.
+		AbCritConfigFile assignPortIn: self ]
 ]
 
 { #category : 'exporting' }

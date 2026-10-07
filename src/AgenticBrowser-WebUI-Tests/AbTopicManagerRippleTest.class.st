@@ -26,6 +26,7 @@ AbTopicManagerRippleTest >> setUp [
 AbTopicManagerRippleTest >> tearDown [
 
 	ripple unregistered.
+	AbStubCritDaemon resetScript.
 	super tearDown
 ]
 
@@ -93,7 +94,8 @@ AbTopicManagerRippleTest >> testTopicAsJsonContainsRequiredFields [
 	self assert: (json includesKey: 'agentArguments').
 	self assert: (json includesKey: 'currentModel').
 	self assert: (json includesKey: 'currentMode').
-	self assert: (json includesKey: 'lastUpdated')
+	self assert: (json includesKey: 'lastUpdated').
+	self assert: (json at: 'critReviewAvailable') equals: false
 ]
 
 { #category : 'tests' }
@@ -1254,4 +1256,163 @@ AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromClassAnnouncer [
 	AbTopicManager announcer
 		announce: (AbTopicManagerLoaded topicManager: newManager).
 	self deny: ripple topicManager == newManager
+]
+
+{ #category : 'private' }
+AbTopicManagerRippleTest >> withReadyCritTopicDo: aBlock [
+
+	| dir topic previousUse previousRange |
+	previousUse := AbSettings default useCrit.
+	previousRange := AbSettings default critPortRange.
+	AbSettings default useCrit: true.
+	dir := FileLocator temp / ('ab-ripple-crit-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.git') ensureCreateDirectory.
+	topic := self newTopic: 'crit'.
+	topic workingDirectoryPath: dir fullName.
+	(AbCritConfigFile in: dir) writePort: 9080.
+	topic stateMachine handleEvent: #promptSent.
+	ripple topicManager addTopic: topic.
+	[ aBlock value: topic ] ensure: [
+		dir exists ifTrue: [ dir deleteAll ].
+		AbSettings default useCrit: previousUse.
+		AbSettings default critPortRange: previousRange.
+		AbStubCritDaemon resetScript ]
+]
+
+{ #category : 'private' }
+AbTopicManagerRippleTest >> critPushesNamed: anEvent [
+
+	^ mockSocket sentMessages select: [ :each |
+		  (each at: 'type') = 'send' and: [ ((each at: 'body') at: 'event') = anEvent ] ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testTopicJsonCritReviewAvailableWhenReady [
+
+	self withReadyCritTopicDo: [ :topic |
+		self assert: ((ripple topicJson: topic) at: 'critReviewAvailable') ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritSignalsTopicNotFound [
+
+	| msg |
+	msg := self sendMessage: '/crit/start' body: (Dictionary new
+		at: 'topicId' put: 'missing';
+		at: 'host' put: 'localhost';
+		yourself).
+	self dispatch: msg.
+	self assert: (mockSocket lastError at: 'error') code equals: 10001
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritSignalsInvalidHost [
+
+	| topic msg error previousUse |
+	previousUse := AbSettings default useCrit.
+	AbSettings default useCrit: true.
+	topic := self newTopic: 'bad-host'.
+	ripple topicManager addTopic: topic.
+	msg := self sendMessage: '/crit/start' body: (Dictionary new
+		at: 'topicId' put: topic topicId;
+		at: 'host' put: 'evil' , String lf , 'host';
+		yourself).
+	[ self dispatch: msg.
+	error := mockSocket lastError at: 'error'.
+	self assert: error code equals: 10012.
+	self assert: (error messageText beginsWith: 'Invalid crit review host:') ]
+		ensure: [ AbSettings default useCrit: previousUse ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritSignalsUnavailable [
+
+	| topic msg error previousUse |
+	previousUse := AbSettings default useCrit.
+	AbSettings default useCrit: true.
+	topic := self newTopic: 'no-git'.
+	ripple topicManager addTopic: topic.
+	msg := self sendMessage: '/crit/start' body: (Dictionary new
+		at: 'topicId' put: topic topicId;
+		at: 'host' put: 'localhost';
+		yourself).
+	[ self dispatch: msg.
+	error := mockSocket lastError at: 'error'.
+	self assert: error code equals: 10011.
+	self assert: error messageText equals: 'Crit review not available: working directory has no .git' ]
+		ensure: [ AbSettings default useCrit: previousUse ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritSignalsInitialStatus [
+
+	| dir topic msg error previousUse |
+	previousUse := AbSettings default useCrit.
+	AbSettings default useCrit: true.
+	dir := FileLocator temp / ('ab-ripple-crit-' , UUID new asString36).
+	dir ensureCreateDirectory.
+	(dir / '.git') ensureCreateDirectory.
+	topic := self newTopic: 'initial'.
+	topic workingDirectoryPath: dir fullName.
+	(AbCritConfigFile in: dir) writePort: 9080.
+	ripple topicManager addTopic: topic.
+	msg := self sendMessage: '/crit/start' body: (Dictionary new
+		at: 'topicId' put: topic topicId;
+		at: 'host' put: 'localhost';
+		yourself).
+	[ self dispatch: msg.
+	error := mockSocket lastError at: 'error'.
+	self assert: error code equals: 10011.
+	self assert: error messageText equals: 'Crit review not available: topic status is initial' ]
+		ensure: [
+			dir exists ifTrue: [ dir deleteAll ].
+			AbSettings default useCrit: previousUse ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritPushesStartedUrl [
+
+	| finished msg pushes body |
+	finished := Semaphore new.
+	self withReadyCritTopicDo: [ :topic |
+		AbStubCritDaemon defaultStatusStdout: '{"daemon":{"running":true}}'.
+		AbStubCritDaemon finishedSemaphore: finished.
+		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
+		msg := self sendMessage: '/crit/start' body: (Dictionary new
+			at: 'topicId' put: topic topicId;
+			at: 'host' put: '192.168.1.10';
+			yourself).
+		self dispatch: msg.
+		self assert: (mockSocket sentMessages noneSatisfy: [ :each | (each at: 'type') = 'err' ]).
+		self assert: (finished waitTimeoutSeconds: 2) equals: false.
+		pushes := self critPushesNamed: 'critReviewStarted'.
+		self assert: pushes size equals: 1.
+		body := pushes first at: 'body'.
+		self assert: (body at: 'topicId') equals: topic topicId.
+		self assert: (body at: 'port') equals: 9080.
+		self assert: (body at: 'url') equals: 'http://192.168.1.10:9080/'.
+		self assert: topic messages last text equals: 'Crit review: http://192.168.1.10:9080/' ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritPushesFailureWithoutChangingStatus [
+
+	| finished msg pushes |
+	finished := Semaphore new.
+	self withReadyCritTopicDo: [ :topic |
+		AbStubCritDaemon defaultStatusStdout: 'not-json'.
+		AbStubCritDaemon finishedSemaphore: finished.
+		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
+		msg := self sendMessage: '/crit/start' body: (Dictionary new
+			at: 'topicId' put: topic topicId;
+			at: 'host' put: '192.168.1.10';
+			yourself).
+		self dispatch: msg.
+		self assert: (finished waitTimeoutSeconds: 2) equals: false.
+		pushes := self critPushesNamed: 'critReviewFailed'.
+		self assert: pushes size equals: 1.
+		self assert: ((pushes first at: 'body') at: 'reason') equals: 'crit status failed (is crit on PATH?)'.
+		self assert: ((pushes first at: 'body') at: 'topicId') equals: topic topicId.
+		self assert: topic isWorking ]
 ]
