@@ -5,6 +5,7 @@ Responsibility:
 - I store timeout durations and options for AI permission and package export approvals.
 - I cap how many characters of a file attachment's contents are embedded into a prompt via #maxAttachmentSize.
 - I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
+- I control whether crit review is offered (#useCrit) and the inclusive port range string (#critPortRange) assigned to new working directories.
 - I persist the list of available coding agents shown in the New Topic dialog.
 - I control how often AbTopicManager scans for stalled topics via #stallMonitoringIntervalSeconds.
 - I load from and save to ab-settings.json using STON/JSON serialization.
@@ -269,6 +270,18 @@ AbSettings >> defaultUseStBuddySkillOnInitialPrompt [
 ]
 
 { #category : 'defaults' }
+AbSettings >> defaultUseCrit [
+	self isDefault ifFalse: [ ^ self class default defaultUseCrit ].
+	^ false
+]
+
+{ #category : 'defaults' }
+AbSettings >> defaultCritPortRange [
+	self isDefault ifFalse: [ ^ self class default defaultCritPortRange ].
+	^ '9080-9100'
+]
+
+{ #category : 'defaults' }
 AbSettings >> defaultWatcherMessageThrottleSeconds [
 	self isDefault ifFalse: [ ^ self class default defaultWatcherMessageThrottleSeconds ].
 	^ 2
@@ -406,6 +419,30 @@ AbSettings >> useStBuddySkillOnInitialPrompt: aBoolean [
 ]
 
 { #category : 'accessing' }
+AbSettings >> useCrit [
+
+	^ self at: #useCrit ifAbsent: [ self defaultUseCrit ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> useCrit: aBoolean [
+
+	self at: #useCrit put: aBoolean
+]
+
+{ #category : 'accessing' }
+AbSettings >> critPortRange [
+
+	^ self at: #critPortRange ifAbsent: [ self defaultCritPortRange ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> critPortRange: aString [
+
+	self at: #critPortRange put: aString
+]
+
+{ #category : 'accessing' }
 AbSettings >> watcherMessageThrottleSeconds [
 
 	^ self
@@ -423,6 +460,21 @@ AbSettings >> watcherMessageThrottleSeconds: anInteger [
 AbSettings >> watcherMessageThrottleDuration [
 
 	^ self watcherMessageThrottleSeconds seconds
+]
+
+{ #category : 'accessing-convenient' }
+AbSettings >> critPortInterval [
+	"Answer the inclusive port Interval described by critPortRange, or nil when that string is not a valid range. Kept out of 'accessing' so it is not persisted."
+
+	| range parts low high |
+	range := self critPortRange.
+	(range isString and: [ range matchesRegex: '^[0-9]+-[0-9]+$' ]) ifFalse: [ ^ nil ].
+	parts := range splitOn: $-.
+	low := parts first asInteger.
+	high := parts second asInteger.
+	((low between: 1 and: 65535) and: [
+		 (high between: 1 and: 65535) and: [ low <= high ] ]) ifFalse: [ ^ nil ].
+	^ low to: high
 ]
 
 { #category : 'accessing' }

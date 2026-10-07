@@ -172,7 +172,10 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'useStBuddySkillOnInitialPrompt').
 	self assert: (dict includesKey: 'goalHavingTopicStallThresholdSeconds').
 	self assert: (dict includesKey: 'stallMonitoringIntervalSeconds').
-	self deny: (dict includesKey: 'watcherMessageThrottleDuration')
+	self assert: (dict includesKey: 'useCrit').
+	self assert: (dict includesKey: 'critPortRange').
+	self deny: (dict includesKey: 'watcherMessageThrottleDuration').
+	self deny: (dict includesKey: 'critPortInterval')
 ]
 
 { #category : 'tests' }
@@ -280,4 +283,67 @@ AbSettingsTest >> testStallMonitoringIntervalSecondsSettable [
 	settings := AbSettings defaultCopied.
 	settings stallMonitoringIntervalSeconds: 15.
 	self assert: settings stallMonitoringIntervalSeconds equals: 15
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseCritDefaultIsFalse [
+
+	self deny: AbSettings default useCrit
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseCritSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings useCrit: true.
+	self assert: settings useCrit
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCritPortRangeDefault [
+
+	self assert: AbSettings default critPortRange equals: '9080-9100'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCritPortRangeSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings critPortRange: '9100-9110'.
+	self assert: settings critPortRange equals: '9100-9110'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultCopiedUnsetCritSettingsFallBackToDefault [
+
+	| copied |
+	AbSettings default useCrit: true.
+	AbSettings default critPortRange: '9101-9102'.
+	copied := AbSettings defaultCopied.
+	self assert: copied useCrit.
+	self assert: copied critPortRange equals: '9101-9102'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCritPortIntervalParsesInclusiveRange [
+
+	AbSettings default critPortRange: '9080-9100'.
+	self assert: AbSettings default critPortInterval equals: (9080 to: 9100)
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCritPortIntervalAcceptsSinglePort [
+
+	AbSettings default critPortRange: '9080-9080'.
+	self assert: AbSettings default critPortInterval equals: (9080 to: 9080)
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testCritPortIntervalRejectsMalformedOrOutOfBoundsRanges [
+
+	#( 'abc' '9080' '9080-' '-9100' ' 9080-9100' '9080-9100 ' '9080-9100-1' '' '0-9100' '9080-65536' '9100-9080' '0-0' ) do: [ :each |
+		AbSettings default critPortRange: each.
+		self assert: AbSettings default critPortInterval isNil ]
 ]
