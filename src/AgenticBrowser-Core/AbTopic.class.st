@@ -278,6 +278,11 @@ AbTopic >> client [
 ]
 
 { #category : 'accessing' }
+AbTopic >> critDaemon [
+	^ self session critDaemon
+]
+
+{ #category : 'accessing' }
 AbTopic >> currentModel [
 	^ self session currentModel
 ]
@@ -312,7 +317,7 @@ AbTopic >> disconnect [
 { #category : 'private' }
 AbTopic >> ensureWorkingDirectoryForConnection [
 
-	self workingDirectory ensureExistsAmongTopics: AbTopicManager default topics.
+	self workingDirectory ensureExists.
 	self startWatching.
 	^ self workingDirectory path fullName
 ]

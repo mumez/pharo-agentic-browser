@@ -3,7 +3,7 @@ I represent the topic-template directory that seeds new working directories.
 
 Responsibility:
 - I am a singleton. On first access via #default, I set up the template directory
-  and populate it with default files (CLAUDE.md, AGENTS.md, .crit.config.json) when it is empty.
+  and populate it with default files (CLAUDE.md, AGENTS.md) when it is empty.
 - I copy my contents into a newly-created AbWorkingDirectory, but only when
   that directory is under the same agentic-browser root.
 
@@ -116,9 +116,7 @@ AbTopicTemplateDirectory >> generateDefaultFiles [
 	(self path / 'CLAUDE.md') writeStreamDo: [ :s |
 		s nextPutAll: self class defaultClaudeMdContent ].
 	(self path / 'AGENTS.md') writeStreamDo: [ :s |
-		s nextPutAll: self class defaultAgentsMdContent ].
-	(self path / AbCritConfigFile fileName) writeStreamDo: [ :s |
-		s nextPutAll: AbCritConfigFile defaultContentsJsonString ]
+		s nextPutAll: self class defaultAgentsMdContent ]
 ]
 
 { #category : 'initialization' }

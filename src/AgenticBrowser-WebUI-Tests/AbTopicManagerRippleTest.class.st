@@ -1378,7 +1378,7 @@ AbTopicManagerRippleTest >> testStartCritPushesStartedUrl [
 	self withReadyCritTopicDo: [ :topic |
 		AbStubCritDaemon defaultStatusStdout: '{"daemon":{"running":true}}'.
 		AbStubCritDaemon finishedSemaphore: finished.
-		ripple critDaemonClass: AbStubCritDaemon.
+		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
 		msg := self sendMessage: '/crit/start' body: (Dictionary new
 			at: 'topicId' put: topic topicId;
 			at: 'host' put: '192.168.1.10';
@@ -1403,7 +1403,7 @@ AbTopicManagerRippleTest >> testStartCritPushesFailureWithoutChangingStatus [
 	self withReadyCritTopicDo: [ :topic |
 		AbStubCritDaemon defaultStatusStdout: 'not-json'.
 		AbStubCritDaemon finishedSemaphore: finished.
-		ripple critDaemonClass: AbStubCritDaemon.
+		topic session critDaemon: (AbStubCritDaemon forTopic: topic).
 		msg := self sendMessage: '/crit/start' body: (Dictionary new
 			at: 'topicId' put: topic topicId;
 			at: 'host' put: '192.168.1.10';

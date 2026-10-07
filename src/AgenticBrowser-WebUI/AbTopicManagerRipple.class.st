@@ -35,8 +35,7 @@ Class {
 	#superclass : 'RpRipple',
 	#instVars : [
 		'topicManager',
-		'workingDirectoriesRootDirectory',
-		'critDaemonClass'
+		'workingDirectoriesRootDirectory'
 	],
 	#category : 'AgenticBrowser-WebUI',
 	#package : 'AgenticBrowser-WebUI'
@@ -158,24 +157,6 @@ AbTopicManagerRipple >> onTopicManagerLoaded: ann [
 	self subscribeToTopicManagerEvents
 ]
 
-{ #category : 'accessing' }
-AbTopicManagerRipple >> critDaemonClass [
-
-	^ critDaemonClass ifNil: [ AbCritDaemon ]
-]
-
-{ #category : 'accessing' }
-AbTopicManagerRipple >> critDaemonClass: aClass [
-
-	critDaemonClass := aClass
-]
-
-{ #category : 'private' }
-AbTopicManagerRipple >> critDaemonFor: aTopic [
-
-	^ self critDaemonClass forTopic: aTopic
-]
-
 { #category : 'signaling' }
 AbTopicManagerRipple >> critReviewNotAvailableError: aReasonString [
 
@@ -252,7 +233,7 @@ AbTopicManagerRipple >> topicJson: aTopic [
 		  at: 'currentMode' put: (aTopic currentMode ifNil: [ '' ]);
 		  at: 'lastUpdated' put: (aTopic lastUpdated ifNil: [ '' ] ifNotNil: [ :d | d printString ]);
 		  at: 'workingDirectoryPath' put: aTopic workingDirectoryPath;
-		  at: 'critReviewAvailable' put: (self critDaemonFor: aTopic) isAvailable;
+		  at: 'critReviewAvailable' put: aTopic critDaemon isAvailable;
 		  yourself
 ]
 
@@ -379,7 +360,7 @@ AbTopicManagerRipple >> createTopicFrom: body workingDirectoryPath: workingDirec
 		topic agentArguments: args asArray ].
 	workingDirectoryPath ifNotNil: [
 		topic workingDirectoryPath: workingDirectoryPath fullName.
-		topic workingDirectory ensureExistsAmongTopics: self topicManager topics ].
+		topic workingDirectory ensureExists ].
 	self topicManager addTopic: topic.
 	^ topic
 ]
@@ -647,8 +628,8 @@ AbTopicManagerRipple >> handleStartCritReview: aMessage [
 	host := body at: 'host'.
 	(AbCritDaemon isValidReviewHost: host) ifFalse: [
 		self critReviewInvalidHostError: host ].
-	daemon := self critDaemonFor: topic.
-	daemon startRefusalReason ifNotNil: [ :reason | self critReviewNotAvailableError: reason ].
+	daemon := topic critDaemon.
+	daemon refusalReasonOnStart ifNotNil: [ :reason | self critReviewNotAvailableError: reason ].
 	[ daemon
 		startReviewForHost: host
 		ifStarted: [ :url :port | self pushCritReviewStarted: topic port: port url: url ]

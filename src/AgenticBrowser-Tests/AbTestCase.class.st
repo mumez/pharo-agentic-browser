@@ -8,7 +8,8 @@ Class {
 { #category : 'running' }
 AbTestCase >> setUp [
 
-	AbTopicManager forTest: AbTopicManager new
+	AbTopicManager forTest: AbTopicManager new.
+	AbCritConfigFile topicManager: AbTopicManager forTest
 ]
 
 { #category : 'running' }
@@ -20,6 +21,7 @@ AbTestCase >> tearDown [
 		(dir basename beginsWith: 'ab-test-') ifTrue: [
 			dir exists ifTrue: [ dir deleteAll ] ] ].
 	AbTopicManager forTest: nil.
+	AbCritConfigFile topicManager: nil.
 	self cleanupTestDirectories
 ]
 

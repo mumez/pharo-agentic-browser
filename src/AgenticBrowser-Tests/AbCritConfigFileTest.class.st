@@ -66,6 +66,38 @@ AbCritConfigFileTest >> testPortIsNilForUnusableValues [
 ]
 
 { #category : 'tests' }
+AbCritConfigFileTest >> testPortIsCachedAfterFirstRead [
+
+	| config |
+	self writeJson: (Dictionary new at: 'port' put: 9080; yourself) in: root.
+	config := AbCritConfigFile in: root.
+	self assert: config port equals: 9080.
+	self writeJson: (Dictionary new at: 'port' put: 9081; yourself) in: root.
+	self assert: config port equals: 9080
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testPortIsReadAgainWhileUnassigned [
+
+	| config |
+	config := AbCritConfigFile in: root.
+	self assert: config port isNil.
+	self writeJson: (Dictionary new at: 'port' put: 9080; yourself) in: root.
+	self assert: config port equals: 9080
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testWritePortUpdatesCachedPort [
+
+	| config |
+	config := AbCritConfigFile in: root.
+	config writePort: 9080.
+	self assert: config port equals: 9080.
+	config writePort: 9081.
+	self assert: config port equals: 9081
+]
+
+{ #category : 'tests' }
 AbCritConfigFileTest >> testPortReadsBounds [
 
 	self writeJson: (Dictionary new at: 'port' put: 1; yourself) in: root.
@@ -105,11 +137,23 @@ AbCritConfigFileTest >> testWritePortUsesBuiltInDefaultWhenFileIsMissingOrUnread
 { #category : 'tests' }
 AbCritConfigFileTest >> testDefaultContentsDescribeAnUnassignedPort [
 
-	| parsed |
-	parsed := STONJSON fromString: AbCritConfigFile defaultContentsJsonString.
-	self assert: (parsed at: 'port') equals: 0.
-	self assert: (parsed at: 'no_open').
-	self assert: (parsed at: 'ignore_patterns') equals: #( '.crit.config.json' )
+	| contents |
+	contents := AbCritConfigFile defaultContents.
+	self assert: (contents at: 'port') equals: 0.
+	self assert: (contents at: 'no_open').
+	self assert: (contents at: 'ignore_patterns') equals: #( '.crit.config.json' )
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testAssignPortInSkipsPortsUsedByTopicManagerTopics [
+
+	| taken fresh |
+	AbSettings default useCrit: true.
+	taken := self topicAt: (self directoryNamed: 'taken').
+	fresh := self topicAt: (self directoryNamed: 'fresh').
+	(AbCritConfigFile in: taken workingDirectory path) writePort: 9080.
+	AbTopicManager forTest addTopic: taken.
+	self assert: (AbCritConfigFile assignPortIn: fresh workingDirectory) equals: 9081
 ]
 
 { #category : 'tests' }

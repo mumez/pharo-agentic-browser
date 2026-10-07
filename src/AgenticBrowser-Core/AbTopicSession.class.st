@@ -12,6 +12,7 @@ Collaborators:
 - AbTopic: I am owned by a topic; I delegate back to it for working directory setup and as handler target.
 - AbTopicHandler: I set it as the ACP client handler to receive agent callbacks.
 - AbMcpServersLoader: I call it to resolve the MCP server list on every connect.
+- AbCritDaemon: I cache one for my topic, since crit review presumes an agent session.
 - ACPClient: I create and manage the low-level ACP protocol client.
 
 Public API and Key Messages:
@@ -20,6 +21,7 @@ Public API and Key Messages:
 - #setConfigOptionId:value: - Send a config change to the agent (e.g. model/mode selection).
 - #updateConfigOptions: - Synchronize config options and announce model/mode changes.
 - #sessionId - The persistent ACP session identifier used for resume/load.
+- #critDaemon - Lazily created AbCritDaemon for my topic.
 
 Internal Representation:
 - client - The ACPClient instance; nil when not connected (excluded from Fuel serialization).
@@ -27,6 +29,7 @@ Internal Representation:
 - availableCommands - Slash commands reported by the agent; persisted so the UI dropdown is populated before the next session connects.
 - configOptions - OrderedCollection of ACPConfigOption from the agent; drives the UI droplists.
 - currentModel / currentMode - Cached current values; suppress no-op announcements.
+- critDaemon - Cached AbCritDaemon (excluded from Fuel serialization).
 
 Implementation Points:
 - client is excluded from Fuel serialization (fuelIgnoredInstanceVariableNames) and is recreated on next #ensureConnected.
@@ -44,7 +47,8 @@ Class {
 		'availableCommands',
 		'currentModel',
 		'currentMode',
-		'configOptions'
+		'configOptions',
+		'critDaemon'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -53,7 +57,7 @@ Class {
 { #category : 'fuel' }
 AbTopicSession class >> fuelIgnoredInstanceVariableNames [
 
-	^ #( 'client' )
+	^ #( 'client' 'critDaemon' )
 ]
 
 { #category : 'instance creation' }
@@ -67,6 +71,18 @@ AbTopicSession class >> on: anAbTopic [
 { #category : 'accessing' }
 AbTopicSession >> announcer [
 	^ self topic announcer
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> critDaemon [
+
+	^ critDaemon ifNil: [ critDaemon := AbCritDaemon forTopic: self topic ]
+]
+
+{ #category : 'accessing' }
+AbTopicSession >> critDaemon: anAbCritDaemon [
+
+	critDaemon := anAbCritDaemon
 ]
 
 { #category : 'accessing' }

@@ -82,6 +82,15 @@ AbCritDaemonTest >> spawnCount: aDaemon [
 ]
 
 { #category : 'tests' }
+AbCritDaemonTest >> testTopicCachesCritDaemon [
+
+	| topic |
+	topic := self readyTopicNamed: 'cached'.
+	self assert: topic critDaemon identicalTo: topic critDaemon.
+	self assert: topic critDaemon topic identicalTo: topic
+]
+
+{ #category : 'tests' }
 AbCritDaemonTest >> testUnavailableReasonWhenUseCritIsFalse [
 
 	| topic |
@@ -146,7 +155,7 @@ AbCritDaemonTest >> testIsAvailableWhenSwitchGitAndPortHold [
 	daemon := AbCritDaemon forTopic: topic.
 	self assert: daemon unavailableReason isNil.
 	self assert: daemon isAvailable.
-	self assert: daemon startRefusalReason isNil
+	self assert: daemon refusalReasonOnStart isNil
 ]
 
 { #category : 'tests' }
@@ -160,7 +169,7 @@ AbCritDaemonTest >> testStartRefusalReasonWhenTopicIsInitial [
 	(AbCritConfigFile in: dir) writePort: 9080.
 	daemon := AbCritDaemon forTopic: topic.
 	self assert: daemon isAvailable.
-	self assert: daemon startRefusalReason equals: 'topic status is initial'
+	self assert: daemon refusalReasonOnStart equals: 'topic status is initial'
 ]
 
 { #category : 'tests' }
@@ -168,7 +177,7 @@ AbCritDaemonTest >> testStartRefusalReasonPrefersUnavailableOverInitial [
 
 	| topic |
 	topic := self topicAt: (self directoryNamed: 'both').
-	self assert: (AbCritDaemon forTopic: topic) startRefusalReason equals: 'useCrit is false'
+	self assert: (AbCritDaemon forTopic: topic) refusalReasonOnStart equals: 'useCrit is false'
 ]
 
 { #category : 'tests' }
@@ -176,7 +185,7 @@ AbCritDaemonTest >> testPollBudgetIsTenSeconds [
 
 	| daemon |
 	daemon := AbCritDaemon forTopic: (self readyTopicNamed: 'budget').
-	self assert: daemon readyPollAttempts * daemon readyPollDelay asMilliSeconds equals: 10000
+	self assert: daemon pollAttemptsUntilRunning * daemon pollDelayUntilRunning asMilliSeconds equals: 10000
 ]
 
 { #category : 'tests' }
@@ -289,6 +298,24 @@ AbCritDaemonTest >> testStartReviewSpawnErrorPostsMessageAndLeavesStatus [
 	self assert: reason equals: 'spawn failed'.
 	self assert: (topic messages last text includesSubstring: 'Crit review failed: spawn failed (log: ').
 	self assert: topic isWorking
+]
+
+{ #category : 'tests' }
+AbCritDaemonTest >> testStartReviewRefusesMissingPortWithoutACommand [
+
+	| dir topic daemon reason |
+	dir := self directoryNamed: 'no-port'.
+	(dir / '.git') ensureCreateDirectory.
+	topic := self topicAt: dir.
+	AbSettings default useCrit: true.
+	topic stateMachine handleEvent: #promptSent.
+	daemon := self daemonFor: topic.
+	daemon
+		startReviewForHost: 'localhost'
+		ifStarted: [ :url :port | self fail: url ]
+		ifFailed: [ :failed | reason := failed ].
+	self assert: reason equals: 'no crit port assigned'.
+	self assert: daemon executedCommands isEmpty
 ]
 
 { #category : 'tests' }

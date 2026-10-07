@@ -51,7 +51,7 @@ AbTopicTemplateDirectoryTest >> testSetupDirectoryGeneratesDefaultFilesWhenEmpty
 	[
 		self assert: (templateDir / 'CLAUDE.md') exists.
 		self assert: (templateDir / 'AGENTS.md') exists.
-		self assert: (templateDir / '.crit.config.json') exists
+		self deny: (templateDir / '.crit.config.json') exists
 	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
 ]
 
@@ -68,23 +68,6 @@ AbTopicTemplateDirectoryTest >> testSetupDirectorySkipsGenerationWhenNotEmpty [
 		            setupDirectory.
 	[
 		self deny: (templateDir / 'CLAUDE.md') exists.
-		self deny: (templateDir / 'AGENTS.md') exists.
-		self deny: (templateDir / '.crit.config.json') exists
-	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
-]
-
-{ #category : 'tests' }
-AbTopicTemplateDirectoryTest >> testSetupDirectoryWritesUnassignedCritConfig [
-
-	| templateDir instance parsed |
-	templateDir := FileLocator temp / ('ab-template-' , UUID new asString36).
-	instance := AbTopicTemplateDirectory new
-		            path: templateDir;
-		            setupDirectory.
-	[
-		parsed := STONJSON fromString: (templateDir / '.crit.config.json') contents.
-		self assert: (parsed at: 'port') equals: 0.
-		self assert: (parsed at: 'no_open').
-		self assert: (parsed at: 'ignore_patterns') equals: #( '.crit.config.json' )
+		self deny: (templateDir / 'AGENTS.md') exists
 	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
 ]

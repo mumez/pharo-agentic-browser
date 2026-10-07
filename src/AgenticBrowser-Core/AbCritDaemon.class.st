@@ -9,18 +9,20 @@ Responsibility:
 
 Collaborators:
 - AbTopic: I read its working directory, status, and logger, and I post the review message on it.
-- AbCritConfigFile: I read the assigned port.
+- AbCritConfigFile: I read the assigned port through one cached instance.
+- AbTopicSession: It caches me so repeated availability checks reuse my config file.
 - AbSettings: I read #useCrit and the crit log directory.
 - AbStubCritDaemon: Tests override #runShellCommand: so no process is spawned.
 
 Public API and Key Messages:
 - AbCritDaemon class>>forTopic: - Daemon for one topic.
-- #isAvailable / #unavailableReason / #startRefusalReason - Whether the control is shown and whether a start may proceed.
+- #isAvailable / #unavailableReason / #refusalReasonOnStart - Whether the control is shown and whether a start may proceed.
 - #startReviewForHost:ifStarted:ifFailed: - Synchronous start. ifStarted: receives the url and port. ifFailed: receives the reason.
 
 Internal Representation:
 - topic - The AbTopic whose working directory crit serves.
-- readyPollAttempts / readyPollDelay - How many status checks to make, and the pause between them. Defaults are 20 and 500 ms.
+- configFile - Lazily created AbCritConfigFile for the working directory.
+- pollAttemptsUntilRunning / pollDelayUntilRunning - How many status checks to make, and the pause between them. Defaults are 20 and 500 ms.
 - launchMutexes (class) - One Mutex per working-directory path, covering status, spawn, and poll.
 "
 Class {
@@ -28,8 +30,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'topic',
-		'readyPollAttempts',
-		'readyPollDelay'
+		'configFile',
+		'pollAttemptsUntilRunning',
+		'pollDelayUntilRunning'
 	],
 	#classInstVars : [
 		'launchMutexes',
@@ -101,27 +104,27 @@ AbCritDaemon >> topic: anAbTopic [
 ]
 
 { #category : 'accessing' }
-AbCritDaemon >> readyPollAttempts [
+AbCritDaemon >> pollAttemptsUntilRunning [
 
-	^ readyPollAttempts ifNil: [ 20 ]
+	^ pollAttemptsUntilRunning ifNil: [ 20 ]
 ]
 
 { #category : 'accessing' }
-AbCritDaemon >> readyPollAttempts: anInteger [
+AbCritDaemon >> pollAttemptsUntilRunning: anInteger [
 
-	readyPollAttempts := anInteger
+	pollAttemptsUntilRunning := anInteger
 ]
 
 { #category : 'accessing' }
-AbCritDaemon >> readyPollDelay [
+AbCritDaemon >> pollDelayUntilRunning [
 
-	^ readyPollDelay ifNil: [ 500 milliSeconds ]
+	^ pollDelayUntilRunning ifNil: [ 500 milliSeconds ]
 ]
 
 { #category : 'accessing' }
-AbCritDaemon >> readyPollDelay: aDuration [
+AbCritDaemon >> pollDelayUntilRunning: aDuration [
 
-	readyPollDelay := aDuration
+	pollDelayUntilRunning := aDuration
 ]
 
 { #category : 'testing' }
@@ -140,7 +143,7 @@ AbCritDaemon >> unavailableReason [
 ]
 
 { #category : 'accessing' }
-AbCritDaemon >> startRefusalReason [
+AbCritDaemon >> refusalReasonOnStart [
 
 	^ self unavailableReason ifNil: [
 		  self topic isInitial ifTrue: [ 'topic status is initial' ] ]
@@ -151,7 +154,7 @@ AbCritDaemon >> startReviewForHost: aHostString ifStarted: started ifFailed: fai
 
 	[ (self class isValidReviewHost: aHostString) ifFalse: [
 		  ^ self fail: 'invalid host' with: failed ].
-	self startRefusalReason ifNotNil: [ :reason | ^ self fail: reason with: failed ].
+	self refusalReasonOnStart ifNotNil: [ :reason | ^ self fail: reason with: failed ].
 	self withLaunchMutexDo: [
 		self launchForHost: aHostString ifStarted: started ifFailed: failed ] ]
 		on: Error
@@ -185,10 +188,10 @@ AbCritDaemon >> directory [
 	^ self topic workingDirectory path
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
 AbCritDaemon >> configFile [
 
-	^ AbCritConfigFile in: self directory
+	^ configFile ifNil: [ configFile := AbCritConfigFile in: self directory ]
 ]
 
 { #category : 'private' }
@@ -198,9 +201,7 @@ AbCritDaemon >> isDaemonRunning [
 	json := STONJSON fromString: (self runShellCommand: 'crit status --json').
 	daemon := json isDictionary ifTrue: [ json at: 'daemon' ifAbsent: [ nil ] ] ifFalse: [ nil ].
 	running := daemon isDictionary ifTrue: [ daemon at: 'running' ifAbsent: [ nil ] ] ifFalse: [ nil ].
-	(running == true or: [ running == false ]) ifFalse: [
-		self error: 'crit status failed (is crit on PATH?)' ].
-	^ running
+	^ running ifNil: [ self error: 'crit status failed (is crit on PATH?)' ]
 ]
 
 { #category : 'private' }
@@ -214,22 +215,26 @@ AbCritDaemon >> spawn [
 { #category : 'private' }
 AbCritDaemon >> waitUntilRunning [
 
-	1 to: self readyPollAttempts do: [ :index |
+	1 to: self pollAttemptsUntilRunning do: [ :index |
 		([ self isDaemonRunning ] on: Error do: [ false ]) ifTrue: [ ^ true ].
-		index = self readyPollAttempts ifFalse: [ self readyPollDelay wait ] ].
+		index = self pollAttemptsUntilRunning ifFalse: [ self pollDelayUntilRunning wait ] ].
 	^ false
 ]
 
 { #category : 'private' }
 AbCritDaemon >> reviewUrlForHost: aHostString [
 
-	^ 'http://' , aHostString , ':' , self configFile port printString , '/'
+	^ 'http://{1}:{2}/' format: {
+			  aHostString.
+			  self configFile port }
 ]
 
 { #category : 'private' }
 AbCritDaemon >> fail: aReasonString with: aReasonBlock [
 
-	self topic addSystemMessage: 'Crit review failed: ' , aReasonString , ' (log: ' , self logFile fullName , ')'.
+	self topic addSystemMessage: ('Crit review failed: {1} (log: {2})' format: {
+				 aReasonString.
+				 self logFile fullName }).
 	self topic logger warn: { self class name. #startReview. aReasonString }.
 	aReasonBlock value: aReasonString
 ]

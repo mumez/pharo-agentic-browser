@@ -70,8 +70,8 @@ AbStubCritDaemon class >> defaultStatusStdout: aString [
 AbStubCritDaemon class >> forTopic: anAbTopic [
 
 	^ (super forTopic: anAbTopic)
-		  readyPollDelay: 0 milliSeconds;
-		  readyPollAttempts: 3;
+		  pollDelayUntilRunning: 0 milliSeconds;
+		  pollAttemptsUntilRunning: 3;
 		  yourself
 ]
 

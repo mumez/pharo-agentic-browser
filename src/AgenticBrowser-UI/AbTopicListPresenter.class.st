@@ -43,7 +43,7 @@ Class {
 { #category : 'private' }
 AbTopicListPresenter >> addReviewByCritItemTo: aGroup for: aTopic [
 
-	(AbCritDaemon forTopic: aTopic) isAvailable ifFalse: [ ^ self ].
+	aTopic critDaemon isAvailable ifFalse: [ ^ self ].
 	aGroup addItem: [ :item |
 		item
 			name: 'Review by crit';
@@ -183,7 +183,7 @@ AbTopicListPresenter >> onReviewByCritRequest [
 	| topic |
 	topic := self topicList selectedItem.
 	topic ifNil: [ ^ self ].
-	[ (AbCritDaemon forTopic: topic)
+	[ topic critDaemon
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | ]
 		ifFailed: [ :reason | ] ] forkAt: Processor userBackgroundPriority

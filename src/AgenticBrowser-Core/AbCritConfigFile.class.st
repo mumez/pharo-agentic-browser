@@ -9,27 +9,36 @@ Responsibility:
 
 Collaborators:
 - AbSettings: I read #useCrit and #critPortInterval before assigning a port.
-- AbWorkingDirectory: #ensureExistsAmongTopics: asks me to assign a port after the template copy.
+- AbWorkingDirectory: #ensureExists asks me to assign a port after the template copy.
+- AbTopicManager: my class-side topicManager supplies the topics whose ports are already in use.
 - AbTopic: I read each topic's working directory when collecting ports already in use, and I warn through the target topic's logger when the range is exhausted.
 
 Public API and Key Messages:
 - AbCritConfigFile class>>in: - Config file for one directory.
-- AbCritConfigFile class>>assignPortIn:amongTopics: - Assign the lowest free port, or nil when assignment does not happen.
-- #port - Assigned port, or nil.
+- AbCritConfigFile class>>assignPortIn: - Assign the lowest free port among the topicManager's topics, or nil when assignment does not happen.
+- AbCritConfigFile class>>assignPortIn:amongTopics: - Same, among the given topics.
+- AbCritConfigFile class>>topicManager: - Inject the AbTopicManager to consult (defaults to AbTopicManager default).
+- #port - Assigned port, or nil. Cached once read, since an assigned port does not change.
 - #writePort: - Set port in the existing document, or in the built-in default when the file is missing or unreadable.
 
 Internal Representation:
 - directory - FileReference of the working directory that contains .crit.config.json.
+- port - Cached assigned port; nil until a valid port is read or written.
 - PortAssignmentMutex (class) - Serializes read-pick-write port assignment.
+- topicManager (class inst var) - AbTopicManager whose topics are scanned for used ports; nil means AbTopicManager default.
 "
 Class {
 	#name : 'AbCritConfigFile',
 	#superclass : 'Object',
 	#instVars : [
-		'directory'
+		'directory',
+		'port'
 	],
 	#classVars : [
 		'PortAssignmentMutex'
+	],
+	#classInstVars : [
+		'topicManager'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -59,10 +68,24 @@ AbCritConfigFile class >> defaultContents [
 		  yourself
 ]
 
-{ #category : 'defaults' }
-AbCritConfigFile class >> defaultContentsJsonString [
+{ #category : 'accessing' }
+AbCritConfigFile class >> topicManager [
 
-	^ STONJSON toStringPretty: self defaultContents
+	^ topicManager ifNil: [ AbTopicManager default ]
+]
+
+{ #category : 'accessing' }
+AbCritConfigFile class >> topicManager: anAbTopicManager [
+
+	topicManager := anAbTopicManager
+]
+
+{ #category : 'port assignment' }
+AbCritConfigFile class >> assignPortIn: anAbWorkingDirectory [
+
+	^ self
+		  assignPortIn: anAbWorkingDirectory
+		  amongTopics: self topicManager topics
 ]
 
 { #category : 'port assignment' }
@@ -134,6 +157,12 @@ AbCritConfigFile >> file [
 { #category : 'accessing' }
 AbCritConfigFile >> port [
 
+	^ port ifNil: [ port := self readPort ]
+]
+
+{ #category : 'private' }
+AbCritConfigFile >> readPort [
+
 	| raw |
 	raw := [ (STONJSON fromString: self file contents) at: 'port' ifAbsent: [ nil ] ]
 		       on: Error
@@ -149,7 +178,8 @@ AbCritConfigFile >> writePort: anInteger [
 	contents := self contentsOrDefault.
 	contents at: 'port' put: anInteger.
 	self file writeStreamDo: [ :stream |
-		stream nextPutAll: (STONJSON toStringPretty: contents) ]
+		stream nextPutAll: (STONJSON toStringPretty: contents) ].
+	port := anInteger
 ]
 
 { #category : 'private' }
