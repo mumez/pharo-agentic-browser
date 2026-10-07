@@ -404,6 +404,31 @@ Returns error `10006` if the save operation fails.
 
 ---
 
+### `request /crit/start`
+
+Starts a crit diff review for the topic's working directory, or reuses the daemon already running there. The reply comes right after validation passes; it does not wait for crit to start. The result is pushed later to this connection only.
+
+**Request body:**
+```json
+{ "topicId": "abc123", "host": "192.168.1.10" }
+```
+
+`host` is the browser's hostname. The review URL is `http://<host>:<port>/`.
+
+**Reply body:** `{ "ok": true }`
+
+Validation errors are returned as `err` with the request's `correlationId`, and no reply is sent:
+
+- unknown `topicId`: `10001`
+- crit review unavailable, or the topic status is `initial`: `10011` with message `Crit review not available: <reason>`
+- invalid `host` (empty, or characters outside letters, digits, `.`, `-`, `:`): `10012` with message `Invalid crit review host: <host>`
+
+`<reason>` is one of `useCrit is false`, `working directory has no .git`, `no crit port assigned`, or `topic status is initial`.
+
+After the reply, the server pushes one of `critReviewStarted` or `critReviewFailed` to the requesting connection. It also posts a system message, which other clients see through `messageAdded`.
+
+---
+
 ## Send Endpoints (fire-and-forget, no reply)
 
 ### `/messages/getAll`
@@ -455,29 +480,6 @@ Resolves the pending approval for a topic by selecting one of the available opti
 ```json
 { "topicId": "abc123", "optionId": "allowOnce" }
 ```
-
----
-
-### `/crit/start`
-
-Starts a crit diff review for the topic's working directory, or reuses the daemon already running there. Returns immediately. The result is pushed later to this connection only.
-
-**Body:**
-```json
-{ "topicId": "abc123", "host": "192.168.1.10" }
-```
-
-`host` is the browser's hostname. The review URL is `http://<host>:<port>/`.
-
-Validation errors are signaled before the launch starts:
-
-- unknown `topicId`: `10001`
-- crit review unavailable, or the topic status is `initial`: `10011` with message `Crit review not available: <reason>`
-- invalid `host` (empty, or characters outside letters, digits, `.`, `-`, `:`): `10012` with message `Invalid crit review host: <host>`
-
-`<reason>` is one of `useCrit is false`, `working directory has no .git`, `no crit port assigned`, or `topic status is initial`.
-
-On completion the server pushes one of `critReviewStarted` or `critReviewFailed` to the requesting connection. It also posts a system message, which other clients see through `messageAdded`.
 
 ---
 
