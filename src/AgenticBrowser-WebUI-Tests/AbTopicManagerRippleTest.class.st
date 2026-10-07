@@ -1304,6 +1304,7 @@ AbTopicManagerRippleTest >> testStartCritSignalsTopicNotFound [
 		yourself).
 	self dispatch: msg.
 	self assert: (mockSocket lastError at: 'error') code equals: 10001.
+	self assert: (mockSocket lastError at: 'correlationId') equals: 'corr-1'.
 	self assert: (mockSocket sentMessages noneSatisfy: [ :each | (each at: 'type') = 'reply' ])
 ]
 
