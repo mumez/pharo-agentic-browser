@@ -63,7 +63,6 @@ AbCritConfigFile class >> defaultContentsJsonString [
 
 { #category : 'port assignment' }
 AbCritConfigFile class >> assignPortIn: anAbWorkingDirectory amongTopics: aTopicCollection [
-	"Assign the lowest free port to anAbWorkingDirectory. Answer nil without writing when useCrit is false, the range is invalid, or every port in the range is already used."
 
 	| interval used port |
 	AbSettings default useCrit ifFalse: [ ^ nil ].
@@ -115,7 +114,6 @@ AbCritConfigFile >> file [
 
 { #category : 'accessing' }
 AbCritConfigFile >> port [
-	"Answer the assigned port, or nil when the file is missing, unreadable, or the port is not an integer in 1..65535."
 
 	| raw |
 	raw := [ (STONJSON fromString: self file contents) at: 'port' ifAbsent: [ nil ] ]

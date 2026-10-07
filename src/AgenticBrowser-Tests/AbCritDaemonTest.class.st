@@ -286,21 +286,20 @@ AbCritDaemonTest >> testStartReviewRefusesInitialWithoutACommand [
 
 { #category : 'private' }
 AbCritDaemonTest >> gateBlockEntered: entered release: release state: state [
-	"state is { spawnedBoolean. statusCount }. The first status call waits on release so a second start can overlap."
 
 	^ [ :cmd |
 	  (cmd beginsWith: 'crit status')
 		  ifTrue: [
-			  state first
+			  (state at: #spawned)
 				  ifTrue: [ '{"daemon":{"running":true}}' ]
 				  ifFalse: [
-					  state at: 2 put: state second + 1.
-					  state second = 1 ifTrue: [
+					  state at: #statusCount put: (state at: #statusCount) + 1.
+					  (state at: #statusCount) = 1 ifTrue: [
 						  entered signal.
 						  release wait ].
 					  '{"daemon":{"running":false}}' ] ]
 		  ifFalse: [
-			  state at: 1 put: true.
+			  state at: #spawned put: true.
 			  '' ] ]
 ]
 
@@ -324,7 +323,10 @@ AbCritDaemonTest >> testOverlappingStartsSpawnOnce [
 	entered := Semaphore new.
 	release := Semaphore new.
 	done := Semaphore new.
-	state := { false. 0 }.
+	state := Dictionary new
+		         at: #spawned put: false;
+		         at: #statusCount put: 0;
+		         yourself.
 	first commandBlock: (self gateBlockEntered: entered release: release state: state).
 	second commandBlock: first commandBlock.
 	[ [ self start: first thenSignal: done ] fork.

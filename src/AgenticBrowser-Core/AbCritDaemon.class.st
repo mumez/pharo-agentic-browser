@@ -139,7 +139,6 @@ AbCritDaemon >> startRefusalReason [
 
 { #category : 'operations' }
 AbCritDaemon >> startReviewForHost: aHostString ifStarted: started ifFailed: failed [
-	"Synchronous. Posts one system message and evaluates exactly one block. Does not signal."
 
 	[ self startRefusalReason ifNotNil: [ :reason | ^ self fail: reason with: failed ].
 	self withLaunchMutexDo: [

@@ -464,7 +464,6 @@ AbSettings >> watcherMessageThrottleDuration [
 
 { #category : 'accessing-convenient' }
 AbSettings >> critPortInterval [
-	"Answer the inclusive port Interval described by critPortRange, or nil when that string is not a valid range. Kept out of 'accessing' so it is not persisted."
 
 	| range parts low high |
 	range := self critPortRange.
