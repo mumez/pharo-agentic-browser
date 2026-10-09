@@ -97,13 +97,11 @@ AbCritConfigFile class >> ensurePortIn: anAbWorkingDirectory amongTopics: aTopic
 	config port ifNotNil: [ :configured |
 		(used includes: configured) ifFalse: [ ^ configured ] ].
 	interval := AbSettings default critPortInterval ifNil: [
-		            ^ self error: 'invalid critPortRange: ' , AbSettings default critPortRange asString ].
+		^ self error: 'invalid critPortRange: ' , AbSettings default critPortRange asString ].
 	port := interval
-		        detect: [ :each | (used includes: each) not ]
-		        ifNone: [
-			        ^ self error: ('crit port range exhausted: {1}-{2}' format: {
-						          interval first.
-						          interval last }) ].
+		detect: [ :each | (used includes: each) not ]
+		ifNone: [
+			^ self error: ('crit port range exhausted: {1}-{2}' format: { interval first. interval last }) ].
 	config writePort: port.
 	^ port
 ]
