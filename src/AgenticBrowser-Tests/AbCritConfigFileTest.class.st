@@ -144,108 +144,143 @@ AbCritConfigFileTest >> testDefaultContentsDescribeAnUnassignedPort [
 	self assert: (contents at: 'ignore_patterns') equals: #( '.crit.config.json' )
 ]
 
-{ #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortInSkipsPortsUsedByTopicManagerTopics [
+{ #category : 'private' }
+AbCritConfigFileTest >> topicAt: aDirectory critRunning: aBoolean [
 
-	| taken fresh |
-	AbSettings default useCrit: true.
-	taken := self topicAt: (self directoryNamed: 'taken').
+	| topic stub |
+	topic := self topicAt: aDirectory.
+	stub := AbStubCritDaemon forTopic: topic.
+	stub commandBlock: [ :command |
+		'{"daemon":{"running":' , aBoolean printString , '}}' ].
+	topic session critDaemon: stub.
+	^ topic
+]
+
+{ #category : 'private' }
+AbCritConfigFileTest >> topicWithPort: anInteger named: aString critRunning: aBoolean [
+
+	| dir |
+	dir := self directoryNamed: aString.
+	self writeJson: (Dictionary new at: 'port' put: anInteger; yourself) in: dir.
+	^ self topicAt: dir critRunning: aBoolean
+]
+
+{ #category : 'private' }
+AbCritConfigFileTest >> ensurePortErrorFor: aTopic amongTopics: aTopicCollection [
+
+	^ [
+	  AbCritConfigFile ensurePortIn: aTopic workingDirectory amongTopics: aTopicCollection.
+	  nil ]
+		  on: Error
+		  do: [ :ex | ex messageText ]
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortInSkipsPortsOfRunningTopicManagerTopics [
+
+	| held fresh |
+	held := self topicWithPort: 9080 named: 'held' critRunning: true.
 	fresh := self topicAt: (self directoryNamed: 'fresh').
-	(AbCritConfigFile in: taken workingDirectory path) writePort: 9080.
-	AbTopicManager forTest addTopic: taken.
-	self assert: (AbCritConfigFile assignPortIn: fresh workingDirectory) equals: 9081
+	AbTopicManager forTest addTopic: held.
+	self assert: (AbCritConfigFile ensurePortIn: fresh workingDirectory) equals: 9081
 ]
 
 { #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortAssigns9080Then9081 [
-
-	| firstDir secondDir first second |
-	AbSettings default useCrit: true.
-	firstDir := self directoryNamed: 'first'.
-	secondDir := self directoryNamed: 'second'.
-	first := self topicAt: firstDir.
-	second := self topicAt: secondDir.
-	self assert: (AbCritConfigFile assignPortIn: first workingDirectory amongTopics: { first }) equals: 9080.
-	self assert: (AbCritConfigFile in: firstDir) port equals: 9080.
-	self assert: (AbCritConfigFile assignPortIn: second workingDirectory amongTopics: { first. second }) equals: 9081.
-	self assert: (AbCritConfigFile in: secondDir) port equals: 9081
-]
-
-{ #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortSkipsHandWrittenAndUnreadablePorts [
-
-	| taken broken fresh takenTopic brokenTopic freshTopic |
-	AbSettings default useCrit: true.
-	taken := self directoryNamed: 'taken'.
-	broken := self directoryNamed: 'broken'.
-	fresh := self directoryNamed: 'fresh'.
-	self writeJson: (Dictionary new at: 'port' put: 9080; yourself) in: taken.
-	(broken / '.crit.config.json') writeStreamDo: [ :stream | stream nextPutAll: '{' ].
-	takenTopic := self topicAt: taken.
-	brokenTopic := self topicAt: broken.
-	freshTopic := self topicAt: fresh.
-	self assert: (AbCritConfigFile
-		assignPortIn: freshTopic workingDirectory
-		amongTopics: { takenTopic. brokenTopic. freshTopic }) equals: 9081
-]
-
-{ #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortIgnoresTheTargetDirectory [
-
-	| dir topic |
-	AbSettings default useCrit: true.
-	dir := self directoryNamed: 'target'.
-	self writeJson: (Dictionary new at: 'port' put: 9080; yourself) in: dir.
-	topic := self topicAt: dir.
-	self assert: (AbCritConfigFile assignPortIn: topic workingDirectory amongTopics: { topic }) equals: 9080
-]
-
-{ #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortDoesNothingWhenUseCritIsFalse [
+AbCritConfigFileTest >> testEnsurePortCreatesConfigFromDefaultsWhenMissing [
 
 	| dir topic parsed |
-	dir := self directoryNamed: 'off'.
-	self writeJson: (Dictionary new at: 'port' put: 0; at: 'no_open' put: true; yourself) in: dir.
+	dir := self directoryNamed: 'missing'.
 	topic := self topicAt: dir.
-	self assert: (AbCritConfigFile assignPortIn: topic workingDirectory amongTopics: { topic }) isNil.
+	self assert: (AbCritConfigFile ensurePortIn: topic workingDirectory amongTopics: { topic }) equals: 9080.
 	parsed := STONJSON fromString: (dir / '.crit.config.json') contents.
-	self assert: (parsed at: 'port') equals: 0
+	self assert: (parsed at: 'port') equals: 9080.
+	self assert: (parsed at: 'no_open')
 ]
 
 { #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortDoesNothingWhenRangeIsInvalid [
+AbCritConfigFileTest >> testEnsurePortKeepsFreeConfiguredPortWithoutWriting [
+
+	| topic file before |
+	topic := self topicWithPort: 9085 named: 'own' critRunning: false.
+	file := topic workingDirectory path / '.crit.config.json'.
+	before := file contents.
+	self assert: (AbCritConfigFile ensurePortIn: topic workingDirectory amongTopics: { topic }) equals: 9085.
+	self assert: file contents equals: before
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortReassignsPortHeldByRunningTopic [
+
+	| held dir topic parsed |
+	held := self topicWithPort: 9080 named: 'held' critRunning: true.
+	dir := self directoryNamed: 'clash'.
+	self writeJson: (Dictionary new at: 'port' put: 9080; at: 'extra' put: 'stay'; yourself) in: dir.
+	topic := self topicAt: dir.
+	self assert: (AbCritConfigFile ensurePortIn: topic workingDirectory amongTopics: { held. topic }) equals: 9081.
+	parsed := STONJSON fromString: (dir / '.crit.config.json') contents.
+	self assert: (parsed at: 'port') equals: 9081.
+	self assert: (parsed at: 'extra') equals: 'stay'
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortIgnoresPortsOfStoppedTopics [
+
+	| stopped fresh |
+	stopped := self topicWithPort: 9080 named: 'stopped' critRunning: false.
+	fresh := self topicAt: (self directoryNamed: 'fresh').
+	self assert: (AbCritConfigFile ensurePortIn: fresh workingDirectory amongTopics: { stopped. fresh }) equals: 9080
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortCountsStatusErrorsAsStopped [
+
+	| failing fresh |
+	failing := self topicWithPort: 9080 named: 'failing' critRunning: true.
+	failing critDaemon commandBlock: [ :command | self error: 'crit missing' ].
+	fresh := self topicAt: (self directoryNamed: 'fresh').
+	self assert: (AbCritConfigFile ensurePortIn: fresh workingDirectory amongTopics: { failing. fresh }) equals: 9080
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortSkipsHandWrittenAndUnreadablePortsOfRunningTopics [
+
+	| broken taken brokenTopic fresh |
+	taken := self topicWithPort: 9080 named: 'taken' critRunning: true.
+	broken := self directoryNamed: 'broken'.
+	(broken / '.crit.config.json') writeStreamDo: [ :stream | stream nextPutAll: '{' ].
+	brokenTopic := self topicAt: broken critRunning: true.
+	fresh := self topicAt: (self directoryNamed: 'fresh').
+	self assert: (AbCritConfigFile
+		 ensurePortIn: fresh workingDirectory
+		 amongTopics: { taken. brokenTopic. fresh }) equals: 9081
+]
+
+{ #category : 'tests' }
+AbCritConfigFileTest >> testEnsurePortSignalsInvalidRangeWithoutWriting [
 
 	| dir topic parsed |
-	AbSettings default useCrit: true.
 	AbSettings default critPortRange: '9080-'.
 	dir := self directoryNamed: 'bad-range'.
 	self writeJson: (Dictionary new at: 'port' put: 0; yourself) in: dir.
 	topic := self topicAt: dir.
-	self assert: (AbCritConfigFile assignPortIn: topic workingDirectory amongTopics: { topic }) isNil.
+	self assert: (self ensurePortErrorFor: topic amongTopics: { topic }) equals: 'invalid critPortRange: 9080-'.
 	parsed := STONJSON fromString: (dir / '.crit.config.json') contents.
 	self assert: (parsed at: 'port') equals: 0
 ]
 
 { #category : 'tests' }
-AbCritConfigFileTest >> testAssignPortExhaustedWritesNothingAndWarns [
+AbCritConfigFileTest >> testEnsurePortSignalsExhaustedRangeWithoutWriting [
 
-	| held dir heldTopic topic warnings logger parsed |
-	AbSettings default useCrit: true.
+	| held dir topic parsed |
 	AbSettings default critPortRange: '9080-9080'.
-	held := self directoryNamed: 'held'.
+	held := self topicWithPort: 9080 named: 'held' critRunning: true.
 	dir := self directoryNamed: 'full'.
-	self writeJson: (Dictionary new at: 'port' put: 9080; yourself) in: held.
 	self writeJson: (Dictionary new at: 'port' put: 0; at: 'extra' put: 'stay'; yourself) in: dir.
-	heldTopic := self topicAt: held.
 	topic := self topicAt: dir.
-	warnings := OrderedCollection new.
-	logger := MockObject new.
-	logger on: #warn: withArguments: nil verify: [ :record | warnings add: record ].
-	topic instVarNamed: 'logger' put: logger.
-	self assert: (AbCritConfigFile assignPortIn: topic workingDirectory amongTopics: { heldTopic. topic }) isNil.
+	self
+		assert: (self ensurePortErrorFor: topic amongTopics: { held. topic })
+		equals: 'crit port range exhausted: 9080-9080'.
 	parsed := STONJSON fromString: (dir / '.crit.config.json') contents.
 	self assert: (parsed at: 'port') equals: 0.
-	self assert: (parsed at: 'extra') equals: 'stay'.
-	self assert: warnings size equals: 1.
-	self assert: (warnings first asString includesSubstring: 'crit port range exhausted')
+	self assert: (parsed at: 'extra') equals: 'stay'
 ]
