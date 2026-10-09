@@ -210,6 +210,20 @@ AbCritDaemonTest >> testPollBudgetIsTenSeconds [
 ]
 
 { #category : 'tests' }
+AbCritDaemonTest >> testStartTimeoutReasonDerivesSecondsFromPollBudget [
+
+	| daemon |
+	daemon := AbCritDaemon forTopic: (self readyTopicNamed: 'reason').
+	self
+		assert: daemon startTimeoutReason
+		equals: 'crit did not start within 10 seconds on port 9080 (the port may be in use by another process)'.
+	daemon
+		pollAttemptsUntilRunning: 4;
+		pollDelayUntilRunning: 500 milliSeconds.
+	self assert: (daemon startTimeoutReason beginsWith: 'crit did not start within 2 seconds on port 9080')
+]
+
+{ #category : 'tests' }
 AbCritDaemonTest >> testStartReviewReusesRunningDaemon [
 
 	| topic daemon url port |
@@ -261,7 +275,8 @@ AbCritDaemonTest >> testStartReviewTimesOutWhenDaemonNeverRuns [
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
 		ifFailed: [ :failed | reason := failed ].
-	self assert: reason equals: 'crit did not start within 10 seconds on port 9080 (the port may be in use by another process)'.
+	self assert: reason equals: daemon startTimeoutReason.
+	self assert: (reason includesSubstring: 'on port 9080 (the port may be in use by another process)').
 	self assert: topic messages last text equals: 'Crit review failed: ' , reason , ' (log: ' , log fullName , ')'.
 	self assert: (self spawnCount: daemon) equals: 1.
 	self assert: topic isWorking
@@ -297,7 +312,7 @@ AbCritDaemonTest >> testStartReviewPollStatusErrorsCountAsNotRunning [
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
 		ifFailed: [ :failed | reason := failed ].
-	self assert: (reason beginsWith: 'crit did not start within 10 seconds on port 9080').
+	self assert: reason equals: daemon startTimeoutReason.
 	self assert: (self spawnCount: daemon) equals: 1
 ]
 

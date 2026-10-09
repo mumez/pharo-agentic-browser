@@ -173,8 +173,14 @@ AbCritDaemon >> ensurePort [
 { #category : 'private' }
 AbCritDaemon >> startTimeoutReason [
 
-	^ 'crit did not start within 10 seconds on port {1} (the port may be in use by another process)'
-		  format: { self configFile port }
+	^ 'crit did not start within {1} seconds on port {2} (the port may be in use by another process)'
+		format: { self pollBudget asSeconds. self configFile port }
+]
+
+{ #category : 'private' }
+AbCritDaemon >> pollBudget [
+
+	^ self pollDelayUntilRunning * self pollAttemptsUntilRunning
 ]
 
 { #category : 'private' }
