@@ -1261,6 +1261,14 @@ AbTopicManagerRippleTest >> testUnregisteredUnsubscribesFromClassAnnouncer [
 { #category : 'private' }
 AbTopicManagerRippleTest >> withReadyCritTopicDo: aBlock [
 
+	self withCritTopicWithoutConfigDo: [ :topic |
+		(AbCritConfigFile in: topic workingDirectory path) writePort: 9080.
+		aBlock value: topic ]
+]
+
+{ #category : 'private' }
+AbTopicManagerRippleTest >> withCritTopicWithoutConfigDo: aBlock [
+
 	| dir topic previousUse previousRange |
 	previousUse := AbSettings default useCrit.
 	previousRange := AbSettings default critPortRange.
@@ -1270,7 +1278,6 @@ AbTopicManagerRippleTest >> withReadyCritTopicDo: aBlock [
 	(dir / '.git') ensureCreateDirectory.
 	topic := self newTopic: 'crit'.
 	topic workingDirectoryPath: dir fullName.
-	(AbCritConfigFile in: dir) writePort: 9080.
 	topic stateMachine handleEvent: #promptSent.
 	ripple topicManager addTopic: topic.
 	[ aBlock value: topic ] ensure: [
@@ -1292,6 +1299,38 @@ AbTopicManagerRippleTest >> testTopicJsonCritReviewAvailableWhenReady [
 
 	self withReadyCritTopicDo: [ :topic |
 		self assert: ((ripple topicJson: topic) at: 'critReviewAvailable') ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testTopicJsonCritReviewAvailableWithoutCritConfig [
+
+	self withCritTopicWithoutConfigDo: [ :topic |
+		self assert: ((ripple topicJson: topic) at: 'critReviewAvailable') ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testStartCritWithoutCritConfigWritesPortAndPushesStartedUrl [
+
+	| finished stub msg pushes |
+	finished := Semaphore new.
+	self withCritTopicWithoutConfigDo: [ :topic |
+		AbStubCritDaemon finishedSemaphore: finished.
+		stub := AbStubCritDaemon forTopic: topic.
+		stub statusReplies
+			add: '{"daemon":{"running":false}}';
+			add: '{"daemon":{"running":true}}'.
+		topic session critDaemon: stub.
+		msg := self requestMessage: '/crit/start' body: (Dictionary new
+			at: 'topicId' put: topic topicId;
+			at: 'host' put: 'localhost';
+			yourself).
+		self dispatch: msg.
+		self assert: ((mockSocket lastReply at: 'body') at: 'ok').
+		self assert: (finished waitTimeoutSeconds: 2) equals: false.
+		pushes := self critPushesNamed: 'critReviewStarted'.
+		self assert: pushes size equals: 1.
+		self assert: ((pushes first at: 'body') at: 'port') equals: 9080.
+		self assert: (AbCritConfigFile in: topic workingDirectory path) port equals: 9080 ]
 ]
 
 { #category : 'tests' }

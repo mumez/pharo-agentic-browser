@@ -406,7 +406,7 @@ Returns error `10006` if the save operation fails.
 
 ### `request /crit/start`
 
-Starts a crit diff review for the topic's working directory, or reuses the daemon already running there. The reply comes right after validation passes; it does not wait for crit to start. The result is pushed later to this connection only.
+Starts a crit diff review for the topic's working directory, or reuses the daemon already running there. Before it starts a new daemon, the server picks the port. It keeps the port in `.crit.config.json` unless another topic's running crit holds it. Otherwise it writes the lowest free port in `critPortRange`, and creates the file if it is missing. The reply comes right after validation passes; it does not wait for crit to start. The result is pushed later to this connection only.
 
 **Request body:**
 ```json
@@ -423,7 +423,7 @@ Validation errors are returned as `err` with the request's `correlationId`, and 
 - crit review unavailable, or the topic status is `initial`: `10011` with message `Crit review not available: <reason>`
 - invalid `host` (empty, or characters outside letters, digits, `.`, `-`, `:`): `10012` with message `Invalid crit review host: <host>`
 
-`<reason>` is one of `useCrit is false`, `working directory has no .git`, `no crit port assigned`, or `topic status is initial`.
+`<reason>` is one of `useCrit is false`, `working directory has no .git`, or `topic status is initial`.
 
 After the reply, the server pushes one of `critReviewStarted` or `critReviewFailed` to the requesting connection. It also posts a system message, which other clients see through `messageAdded`.
 
@@ -607,6 +607,16 @@ Sent only to the connection that called `/crit/start`. The same reason is also p
 }
 ```
 
+`reason` is one of:
+
+- `crit status failed (is crit on PATH?)`
+- `invalid critPortRange: <range>`
+- `crit port range exhausted: <low>-<high>`, when every port in `critPortRange` is held by another topic's running crit
+- `crit did not start within 10 seconds on port <port> (the port may be in use by another process)`
+- the message of an error raised while spawning crit
+
+The review control stays enabled, so the user can retry.
+
 ---
 
 ## Pub/Sub: `register` / `unregister`
@@ -677,7 +687,7 @@ Sent by the server after any operation that modifies topic metadata without addi
 | `currentMode` | string | Active mode identifier (empty string if not set) |
 | `lastUpdated` | string | Timestamp string (offset-based ISO 8601) |
 | `workingDirectoryPath` | string | Absolute path to the topic's working directory on the server |
-| `critReviewAvailable` | boolean | True when `useCrit` is on, the working directory has `.git`, and `.crit.config.json` has a port in 1..65535. The web UI hides the review control when this is false, and disables it when `status` is `initial`. |
+| `critReviewAvailable` | boolean | True when `useCrit` is on and the working directory has `.git`. `.crit.config.json` is not required; `/crit/start` assigns a port. The web UI hides the review control when this is false, and disables it when `status` is `initial`. |
 
 **Topic statuses:** `initial` | `working` | `waitingForHuman` | `endTurn` | `goalAchieved`
 
