@@ -5,7 +5,7 @@ Responsibility:
 - I store timeout durations and options for AI permission and package export approvals.
 - I cap how many characters of a file attachment's contents are embedded into a prompt via #maxAttachmentSize.
 - I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
-- I control whether crit review is offered (#useCrit) and the inclusive port range string (#critPortRange) assigned to new working directories.
+- I control whether crit review is offered (#useCrit) and the inclusive port range string (#critPortRange) from which a port is picked when crit starts.
 - I persist the list of available coding agents shown in the New Topic dialog.
 - I control how often AbTopicManager scans for stalled topics via #stallMonitoringIntervalSeconds.
 - I load from and save to ab-settings.json using STON/JSON serialization.

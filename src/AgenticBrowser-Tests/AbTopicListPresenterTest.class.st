@@ -270,15 +270,41 @@ AbTopicListPresenterTest >> reviewByCritItem [
 ]
 
 { #category : 'private' }
-AbTopicListPresenterTest >> prepareCritDirectory [
+AbTopicListPresenterTest >> prepareCritDirectoryWithoutConfig [
 
 	| dir |
 	dir := FileLocator temp / ('ab-menu-crit-' , UUID new asString36).
 	dir ensureCreateDirectory.
 	(dir / '.git') ensureCreateDirectory.
 	topic workingDirectoryPath: dir fullName.
+	^ dir
+]
+
+{ #category : 'private' }
+AbTopicListPresenterTest >> prepareCritDirectory [
+
+	| dir |
+	dir := self prepareCritDirectoryWithoutConfig.
 	(AbCritConfigFile in: dir) writePort: 9080.
 	^ dir
+]
+
+{ #category : 'tests' }
+AbTopicListPresenterTest >> testReviewByCritIsEnabledWithoutCritConfig [
+
+	| dir item |
+	AbSettings initialize.
+	AbSettings default useCrit: true.
+	dir := self prepareCritDirectoryWithoutConfig.
+	topic stateMachine handleEvent: #promptSent.
+	self selectTopicInList.
+	[
+		item := self reviewByCritItem.
+		self assert: item notNil.
+		self assert: item isEnabled
+	] ensure: [
+		dir exists ifTrue: [ dir deleteAll ].
+		AbSettings initialize ]
 ]
 
 { #category : 'tests' }

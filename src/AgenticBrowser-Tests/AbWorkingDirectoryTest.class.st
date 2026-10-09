@@ -319,24 +319,18 @@ AbWorkingDirectoryTest >> testExportClassNamedWritesClassFile [
 ]
 
 { #category : 'tests' }
-AbWorkingDirectoryTest >> testEnsureExistsAssigns9080Then9081WhenUseCritIsTrue [
+AbWorkingDirectoryTest >> testEnsureExistsAssignsNoPortWhenUseCritIsTrue [
 
-	| root first second |
+	| root topic |
 	AbSettings initialize.
 	AbSettings default useCrit: true.
 	root := FileLocator temp / ('ab-wd-crit-' , UUID new asString36).
-	root ensureCreateDirectory.
-	first := self newTopic: 'crit-a'.
-	second := self newTopic: 'crit-b'.
-	first workingDirectoryPath: (root / 'a') fullName.
-	second workingDirectoryPath: (root / 'b') fullName.
+	topic := self newTopic: 'crit-on'.
+	topic workingDirectoryPath: (root / 'on') fullName.
 	[
-		AbTopicManager forTest addTopic: first.
-		AbTopicManager forTest addTopic: second.
-		first workingDirectory ensureExists.
-		second workingDirectory ensureExists.
-		self assert: (AbCritConfigFile in: first workingDirectory path) port equals: 9080.
-		self assert: (AbCritConfigFile in: second workingDirectory path) port equals: 9081
+		AbTopicManager forTest addTopic: topic.
+		topic workingDirectory ensureExists.
+		self assert: (AbCritConfigFile in: topic workingDirectory path) port isNil
 	] ensure: [
 		root exists ifTrue: [ root deleteAll ].
 		AbSettings initialize ]
