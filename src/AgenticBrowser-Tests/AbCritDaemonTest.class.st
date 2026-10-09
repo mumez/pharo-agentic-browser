@@ -22,7 +22,7 @@ AbCritDaemonTest >> tearDown [
 
 	self root exists ifTrue: [ self root deleteAll ].
 	AbSettings initialize.
-	AbCritDaemon resetLaunchMutexes.
+	AbCritDaemon resetLaunchMutex.
 	super tearDown
 ]
 
@@ -57,15 +57,36 @@ AbCritDaemonTest >> topicAt: aDirectory [
 ]
 
 { #category : 'private' }
-AbCritDaemonTest >> readyTopicNamed: aString [
+AbCritDaemonTest >> readyTopicWithoutConfigNamed: aString [
 
 	| dir topic |
 	dir := self directoryNamed: aString.
 	(dir / '.git') ensureCreateDirectory.
 	topic := self topicAt: dir.
 	AbSettings default useCrit: true.
-	(AbCritConfigFile in: dir) writePort: 9080.
 	topic stateMachine handleEvent: #promptSent.
+	^ topic
+]
+
+{ #category : 'private' }
+AbCritDaemonTest >> readyTopicNamed: aString [
+
+	| topic |
+	topic := self readyTopicWithoutConfigNamed: aString.
+	(AbCritConfigFile in: topic workingDirectory path) writePort: 9080.
+	^ topic
+]
+
+{ #category : 'private' }
+AbCritDaemonTest >> registerRunningTopicHoldingPort: anInteger named: aString [
+
+	| topic stub |
+	topic := self topicAt: (self directoryNamed: aString).
+	(AbCritConfigFile in: topic workingDirectory path) writePort: anInteger.
+	stub := self daemonFor: topic.
+	stub commandBlock: [ :command | '{"daemon":{"running":true}}' ].
+	topic session critDaemon: stub.
+	AbTopicManager forTest addTopic: topic.
 	^ topic
 ]
 
@@ -137,18 +158,18 @@ AbCritDaemonTest >> testUnavailableReasonWhenGitIsMissing [
 ]
 
 { #category : 'tests' }
-AbCritDaemonTest >> testUnavailableReasonWhenPortIsMissing [
+AbCritDaemonTest >> testIsAvailableWithoutConfigFile [
 
-	| dir topic |
-	dir := self directoryNamed: 'noport'.
-	(dir / '.git') ensureCreateDirectory.
-	topic := self topicAt: dir.
-	AbSettings default useCrit: true.
-	self assert: (AbCritDaemon forTopic: topic) unavailableReason equals: 'no crit port assigned'
+	| topic daemon |
+	topic := self readyTopicWithoutConfigNamed: 'noconfig'.
+	daemon := AbCritDaemon forTopic: topic.
+	self deny: (topic workingDirectory path / '.crit.config.json') exists.
+	self assert: daemon unavailableReason isNil.
+	self assert: daemon isAvailable
 ]
 
 { #category : 'tests' }
-AbCritDaemonTest >> testIsAvailableWhenSwitchGitAndPortHold [
+AbCritDaemonTest >> testIsAvailableWhenSwitchAndGitHold [
 
 	| topic daemon |
 	topic := self readyTopicNamed: 'ready'.
@@ -240,8 +261,8 @@ AbCritDaemonTest >> testStartReviewTimesOutWhenDaemonNeverRuns [
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
 		ifFailed: [ :failed | reason := failed ].
-	self assert: reason equals: 'crit did not start within 10 seconds'.
-	self assert: topic messages last text equals: 'Crit review failed: crit did not start within 10 seconds (log: ' , log fullName , ')'.
+	self assert: reason equals: 'crit did not start within 10 seconds on port 9080 (the port may be in use by another process)'.
+	self assert: topic messages last text equals: 'Crit review failed: ' , reason , ' (log: ' , log fullName , ')'.
 	self assert: (self spawnCount: daemon) equals: 1.
 	self assert: topic isWorking
 ]
@@ -276,7 +297,7 @@ AbCritDaemonTest >> testStartReviewPollStatusErrorsCountAsNotRunning [
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
 		ifFailed: [ :failed | reason := failed ].
-	self assert: reason equals: 'crit did not start within 10 seconds'.
+	self assert: (reason beginsWith: 'crit did not start within 10 seconds on port 9080').
 	self assert: (self spawnCount: daemon) equals: 1
 ]
 
@@ -301,21 +322,74 @@ AbCritDaemonTest >> testStartReviewSpawnErrorPostsMessageAndLeavesStatus [
 ]
 
 { #category : 'tests' }
-AbCritDaemonTest >> testStartReviewRefusesMissingPortWithoutACommand [
+AbCritDaemonTest >> testStartReviewWithoutConfigWritesPortThenReportsUrl [
 
-	| dir topic daemon reason |
-	dir := self directoryNamed: 'no-port'.
-	(dir / '.git') ensureCreateDirectory.
-	topic := self topicAt: dir.
-	AbSettings default useCrit: true.
-	topic stateMachine handleEvent: #promptSent.
+	| topic daemon url port |
+	topic := self readyTopicWithoutConfigNamed: 'no-config'.
+	daemon := self daemonFor: topic.
+	daemon statusReplies
+		add: '{"daemon":{"running":false}}';
+		add: '{"daemon":{"running":true}}'.
+	daemon
+		startReviewForHost: 'localhost'
+		ifStarted: [ :startedUrl :startedPort | url := startedUrl. port := startedPort ]
+		ifFailed: [ :reason | self fail: reason ].
+	self assert: url equals: 'http://localhost:9080/'.
+	self assert: port equals: 9080.
+	self assert: (AbCritConfigFile in: topic workingDirectory path) port equals: 9080.
+	self assert: (self spawnCount: daemon) equals: 1
+]
+
+{ #category : 'tests' }
+AbCritDaemonTest >> testStartReviewMovesPortHeldByAnotherRunningTopic [
+
+	| topic daemon port |
+	self registerRunningTopicHoldingPort: 9080 named: 'holder'.
+	topic := self readyTopicNamed: 'mover'.
+	daemon := self daemonFor: topic.
+	daemon statusReplies
+		add: '{"daemon":{"running":false}}';
+		add: '{"daemon":{"running":true}}'.
+	daemon
+		startReviewForHost: 'localhost'
+		ifStarted: [ :startedUrl :startedPort | port := startedPort ]
+		ifFailed: [ :reason | self fail: reason ].
+	self assert: port equals: 9081.
+	self assert: (AbCritConfigFile in: topic workingDirectory path) port equals: 9081
+]
+
+{ #category : 'tests' }
+AbCritDaemonTest >> testStartReviewReusesRunningDaemonWithoutMovingItsPort [
+
+	| topic daemon port |
+	self registerRunningTopicHoldingPort: 9080 named: 'holder'.
+	topic := self readyTopicNamed: 'keeper'.
+	daemon := self daemonFor: topic.
+	daemon statusReplies add: '{"daemon":{"running":true}}'.
+	daemon
+		startReviewForHost: 'localhost'
+		ifStarted: [ :startedUrl :startedPort | port := startedPort ]
+		ifFailed: [ :reason | self fail: reason ].
+	self assert: port equals: 9080.
+	self assert: (AbCritConfigFile in: topic workingDirectory path) port equals: 9080.
+	self assert: (self spawnCount: daemon) equals: 0
+]
+
+{ #category : 'tests' }
+AbCritDaemonTest >> testStartReviewFailsWithoutSpawningWhenPortRangeIsExhausted [
+
+	| topic daemon reason |
+	AbSettings default critPortRange: '9080-9080'.
+	self registerRunningTopicHoldingPort: 9080 named: 'holder'.
+	topic := self readyTopicWithoutConfigNamed: 'exhausted'.
 	daemon := self daemonFor: topic.
 	daemon
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
 		ifFailed: [ :failed | reason := failed ].
-	self assert: reason equals: 'no crit port assigned'.
-	self assert: daemon executedCommands isEmpty
+	self assert: reason equals: 'crit port range exhausted: 9080-9080'.
+	self assert: (topic messages last text beginsWith: 'Crit review failed: crit port range exhausted').
+	self assert: (self spawnCount: daemon) equals: 0
 ]
 
 { #category : 'tests' }

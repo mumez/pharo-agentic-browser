@@ -4,26 +4,28 @@ I am the crit review daemon for one topic's working directory.
 Responsibility:
 - I decide whether crit review is available, and why a start must be refused.
 - I start or reuse the detached crit daemon and report one system message plus one callback.
-- I serialize overlapping starts for the same directory so only one spawn runs.
+- Before spawning, I ensure the working directory has a crit port no other running crit holds, creating .crit.config.json when it is missing.
+- I serialize all starts, across directories, so overlapping starts spawn once and never pick the same port.
 - I never stop crit, and I never signal to my caller.
 
 Collaborators:
 - AbTopic: I read its working directory, status, and logger, and I post the review message on it.
-- AbCritConfigFile: I read the assigned port through one cached instance.
-- AbTopicSession: It caches me so repeated availability checks reuse my config file.
+- AbCritConfigFile: I ask it to ensure the port before spawning, and read the port through one cached instance.
+- AbTopicSession: It caches me, one per topic.
 - AbSettings: I read #useCrit and the crit log directory.
 - AbStubCritDaemon: Tests override #runShellCommand: so no process is spawned.
 
 Public API and Key Messages:
 - AbCritDaemon class>>forTopic: - Daemon for one topic.
-- #isAvailable / #unavailableReason / #refusalReasonOnStart - Whether the control is shown and whether a start may proceed.
+- #isAvailable / #unavailableReason / #refusalReasonOnStart - Whether the control is shown (useCrit and .git) and whether a start may proceed.
+- #isDaemonRunning - Whether crit status reports a running daemon; signals an Error when the status cannot be read.
 - #startReviewForHost:ifStarted:ifFailed: - Synchronous start. ifStarted: receives the url and port. ifFailed: receives the reason.
 
 Internal Representation:
 - topic - The AbTopic whose working directory crit serves.
-- configFile - Lazily created AbCritConfigFile for the working directory.
+- configFile - Lazily created AbCritConfigFile for the working directory; reset before ensuring the port so the file is read again.
 - pollAttemptsUntilRunning / pollDelayUntilRunning - How many status checks to make, and the pause between them. Defaults are 20 and 500 ms.
-- launchMutexes (class) - One Mutex per working-directory path, covering status, spawn, and poll.
+- launchMutex (class) - One Mutex for all directories, covering status, port selection, spawn, and poll.
 "
 Class {
 	#name : 'AbCritDaemon',
@@ -35,8 +37,7 @@ Class {
 		'pollDelayUntilRunning'
 	],
 	#classInstVars : [
-		'launchMutexes',
-		'launchMutexRegistryMutex'
+		'launchMutex'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -62,33 +63,19 @@ AbCritDaemon class >> isValidReviewHost: aString [
 { #category : 'class initialization' }
 AbCritDaemon class >> initialize [
 
-	self resetLaunchMutexes
+	self resetLaunchMutex
 ]
 
 { #category : 'private' }
-AbCritDaemon class >> launchMutexes [
+AbCritDaemon class >> launchMutex [
 
-	^ launchMutexes ifNil: [ launchMutexes := Dictionary new ]
+	^ launchMutex ifNil: [ launchMutex := Mutex new ]
 ]
 
 { #category : 'private' }
-AbCritDaemon class >> launchMutexRegistryMutex [
+AbCritDaemon class >> resetLaunchMutex [
 
-	^ launchMutexRegistryMutex ifNil: [ launchMutexRegistryMutex := Mutex new ]
-]
-
-{ #category : 'private' }
-AbCritDaemon class >> launchMutexFor: aDirectoryFullName [
-
-	^ self launchMutexRegistryMutex critical: [
-		  self launchMutexes at: aDirectoryFullName ifAbsentPut: [ Mutex new ] ]
-]
-
-{ #category : 'private' }
-AbCritDaemon class >> resetLaunchMutexes [
-
-	launchMutexes := nil.
-	launchMutexRegistryMutex := nil
+	launchMutex := nil
 ]
 
 { #category : 'accessing' }
@@ -138,7 +125,6 @@ AbCritDaemon >> unavailableReason [
 
 	AbSettings default useCrit ifFalse: [ ^ 'useCrit is false' ].
 	(self directory / '.git') exists ifFalse: [ ^ 'working directory has no .git' ].
-	self configFile port ifNil: [ ^ 'no crit port assigned' ].
 	^ nil
 ]
 
@@ -168,18 +154,33 @@ AbCritDaemon >> launchForHost: aHostString ifStarted: started ifFailed: failed [
 	running := [ self isDaemonRunning ] on: Error do: [ nil ].
 	running ifNil: [ ^ self fail: 'crit status failed (is crit on PATH?)' with: failed ].
 	running ifFalse: [
+		self ensurePort.
 		[ self spawn ] on: Error do: [ :ex | ^ self fail: ex messageText with: failed ].
 		self waitUntilRunning ifFalse: [
-			^ self fail: 'crit did not start within 10 seconds' with: failed ] ].
+			^ self fail: self startTimeoutReason with: failed ] ].
 	url := self reviewUrlForHost: aHostString.
 	self topic addSystemMessage: 'Crit review: ' , url.
 	started value: url value: self configFile port
 ]
 
 { #category : 'private' }
+AbCritDaemon >> ensurePort [
+
+	self configFile: nil.
+	AbCritConfigFile ensurePortIn: self topic workingDirectory
+]
+
+{ #category : 'private' }
+AbCritDaemon >> startTimeoutReason [
+
+	^ 'crit did not start within 10 seconds on port {1} (the port may be in use by another process)'
+		  format: { self configFile port }
+]
+
+{ #category : 'private' }
 AbCritDaemon >> withLaunchMutexDo: aBlock [
 
-	(self class launchMutexFor: self directory fullName) critical: aBlock
+	self class launchMutex critical: aBlock
 ]
 
 { #category : 'private' }
@@ -194,7 +195,13 @@ AbCritDaemon >> configFile [
 	^ configFile ifNil: [ configFile := AbCritConfigFile in: self directory ]
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
+AbCritDaemon >> configFile: anAbCritConfigFile [
+
+	configFile := anAbCritConfigFile
+]
+
+{ #category : 'testing' }
 AbCritDaemon >> isDaemonRunning [
 
 	| json daemon running |
