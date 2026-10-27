@@ -16,6 +16,7 @@ Public API and Key Messages:
 - AbMessage class>>aiPermissionRequestText:options: - Create an AI permission request message.
 - AbMessage class>>exportApprovalRequestText:options: - Create a package export approval request.
 - #isApprovalRequest - Returns true for either type of approval request.
+- #blocksAgentProgress - Returns true when the agent waits for my answer (AI permission requests only).
 - #approvalOption / #approvalOption: - The response chosen by the human (or set on timeout); nil until resolved.
 - #appendText: - Extend AI message text incrementally as streaming chunks arrive.
 
@@ -148,8 +149,16 @@ AbMessage >> isAiPermission: aBoolean [
 ]
 
 { #category : 'accessing' }
+AbMessage >> blocksAgentProgress [
+	"The agent waits for an answer to an AI permission request; export approvals do not
+	make it wait."
+
+	^ self isAiPermission
+]
+
+{ #category : 'accessing' }
 AbMessage >> isApprovalRequest [
-	^ isAiPermission or: [ isExportApproval ]
+	^ self isAiPermission or: [ self isExportApproval ]
 ]
 
 { #category : 'accessing' }
@@ -185,9 +194,9 @@ AbMessage >> printOn: aStream [
 	super printOn: aStream.
 	aStream
 		nextPut: $(;
-		print: sender;
+		print: self sender;
 		nextPutAll: ': ';
-		nextPutAll: (text ifNil: [ '' ]);
+		nextPutAll: (self text ifNil: [ '' ]);
 		nextPut: $)
 ]
 

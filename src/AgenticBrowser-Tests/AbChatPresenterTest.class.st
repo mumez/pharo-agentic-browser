@@ -74,6 +74,34 @@ AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testStatusChangeToWorkingKeepsExportApprovalOnScreen [
+	"Export approvals do not make the agent wait, so the topic may resume working while
+	one is still on screen."
+
+	| topic exportApproval |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter pendingApprovalMessage equals: exportApproval.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusChangeToWorkingExitsAiPermissionApprovalMode [
+
+	| topic aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: aiPermission.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter pendingApprovalMessage isNil.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testCommandSelectionInitInsertsSlashCommand [
 
 	presenter commandNames: #( 'init' ).
