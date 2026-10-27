@@ -70,6 +70,12 @@ The core workflow:
 - [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer)
 - At least one ACP-compatible agent installed (e.g. `claude-agent-acp`, `agent acp`)
   - Whether usage is billed to your subscription plan or as pay-as-you-go API key usage depends on each agent's own authentication and billing scheme
+  - Claude Code and Codex do not support ACP out of the box. To use them, install the ACP adapters [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp) and [codex-acp](https://github.com/agentclientprotocol/codex-acp) separately (requires [Node.js](https://nodejs.org/), which provides `npm`):
+
+    ```bash
+    npm install -g @agentclientprotocol/claude-agent-acp
+    npm install -g @agentclientprotocol/codex-acp
+    ```
 
 ## Installation
 
@@ -280,10 +286,10 @@ AgenticBrowser adds `on_finish_unresolved` / `on_finish_approved` hooks to the d
 
 Any ACP compatible coding agent can be used. The following agents are available as presets in the New Topic dialog:
 
-| Agent | Arguments | Install |
+| Agent | Command + Arguments | Install |
 |-------|-----------| ----------- |
 | Claude Code | [`claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp) | `npm install -g @agentclientprotocol/claude-agent-acp` |
-| Codex | [`codex-acp`](https://github.com/zed-industries/codex-acp) | `npm install -g @agentclientprotocol/codex-acp` |
+| Codex | [`codex-acp`](https://github.com/agentclientprotocol/codex-acp) | `npm install -g @agentclientprotocol/codex-acp` |
 | Gemini CLI | [`gemini --acp`](https://github.com/google-gemini/gemini-cli) | ACP is built-in |
 | OpenCode | [`opencode acp`](https://github.com/anomalyco/opencode) | ACP is built-in |
 | GitHub Copilot CLI | [`copilot --acp --stdio`](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) | ACP is built-in |
