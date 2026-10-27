@@ -39,6 +39,14 @@ AbMessageTest >> testAiPermissionRequestCreationWithOptions [
 ]
 
 { #category : 'tests' }
+AbMessageTest >> testBlocksAgentProgress [
+
+	self assert: (AbMessage aiPermissionRequestText: 'Read a?') blocksAgentProgress.
+	self deny: (AbMessage exportApprovalRequestText: 'Export Foo?') blocksAgentProgress.
+	self deny: (AbMessage sender: #ai text: 'Hello') blocksAgentProgress
+]
+
+{ #category : 'tests' }
 AbMessageTest >> testAppendText [
 
 	| msg before |

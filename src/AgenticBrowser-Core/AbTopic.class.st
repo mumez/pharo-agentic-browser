@@ -604,15 +604,16 @@ AbTopic >> resetFromGoalAchieved [
 AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
 	"Answer anApprovalMessage, the request shown to the human; it may already have been
 	answered by a timeout, which keeps its answer. The agent may ask for several permissions
-	at once: announce the next pending request, and resume working once no AI permission
-	request is left (pending export approvals do not make the agent wait)."
+	at once: announce the next pending request, and resume working once no request that
+	blocks the agent is left (#pendingApprovalMessage answers those first)."
 
 	anApprovalMessage ifNil: [ ^ self ].
 	anApprovalMessage approvalOption ifNil: [
 		anApprovalMessage approvalOption: anOptionId.
 		self announceMessageAdded: anApprovalMessage ].
-	self pendingApprovalMessage ifNotNil: [ :next | self announceMessageAdded: next ].
-	self pendingAiPermissionMessage ifNotNil: [ ^ self ].
+	self pendingApprovalMessage ifNotNil: [ :next |
+		self announceMessageAdded: next.
+		next blocksAgentProgress ifTrue: [ ^ self ] ].
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'

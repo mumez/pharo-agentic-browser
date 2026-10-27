@@ -97,7 +97,8 @@ AbChatPresenterTest >> testStatusChangeToWorkingExitsAiPermissionApprovalMode [
 	aiPermission := topic addAiPermissionRequest: 'Read a?'.
 	presenter enterApprovalMode: aiPermission.
 	presenter onTopicStatusChanged: topic status: #working.
-	self assert: presenter pendingApprovalMessage isNil
+	self assert: presenter pendingApprovalMessage isNil.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }

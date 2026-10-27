@@ -16,6 +16,7 @@ Public API and Key Messages:
 - AbMessage class>>aiPermissionRequestText:options: - Create an AI permission request message.
 - AbMessage class>>exportApprovalRequestText:options: - Create a package export approval request.
 - #isApprovalRequest - Returns true for either type of approval request.
+- #blocksAgentProgress - Returns true when the agent waits for my answer (AI permission requests only).
 - #approvalOption / #approvalOption: - The response chosen by the human (or set on timeout); nil until resolved.
 - #appendText: - Extend AI message text incrementally as streaming chunks arrive.
 
@@ -145,6 +146,14 @@ AbMessage >> isAiPermission [
 { #category : 'accessing' }
 AbMessage >> isAiPermission: aBoolean [
 	isAiPermission := aBoolean
+]
+
+{ #category : 'accessing' }
+AbMessage >> blocksAgentProgress [
+	"The agent waits for an answer to an AI permission request; export approvals do not
+	make it wait."
+
+	^ isAiPermission
 ]
 
 { #category : 'accessing' }
