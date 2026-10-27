@@ -716,7 +716,7 @@ AbTopicManagerRipple >> handleCancelPrompt: aMessage [
 { #category : 'send handling' }
 AbTopicManagerRipple >> handleResolveApproval: aMessage [
 	"messageId is optional: clients that send it answer the request they show;
-	others answer the oldest pending request."
+	others answer the current pending request (see AbTopic>>pendingApprovalMessage)."
 
 	| body topicId topic optionId pending |
 	body := aMessage body.

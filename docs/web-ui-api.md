@@ -484,7 +484,7 @@ Resolves the pending approval for a topic by selecting one of the available opti
 | Field | Type | Description |
 |-------|------|-------------|
 | `topicId` | string | Topic to resolve |
-| `messageId` | string | Optional. `id` of the approval message shown to the user. When omitted, the oldest pending approval is resolved. Several approvals can be pending at once, so clients should send it. |
+| `messageId` | string | Optional. `id` of the approval message shown to the user. When omitted, the current pending approval is resolved (AI permission requests take precedence over export approvals, regardless of arrival order). Several approvals can be pending at once, so clients should send it. |
 | `optionId` | string | Selected option value |
 
 If `messageId` refers to a message that is not a pending approval (unknown, or already answered, e.g. by a timeout), error `10003` is returned.

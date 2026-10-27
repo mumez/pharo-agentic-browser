@@ -436,8 +436,8 @@ AbChatPresenter >> onDenyButtonClicked [
 
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
-	"AbTopic answers the oldest pending request, so keep showing the request being
-	answered when more arrive; AbTopic announces the next one once it is answered."
+	"Show one request at a time: keep the request on screen until the human answers it
+	(onConfirmButtonClicked / onDenyButtonClicked); AbTopic then announces the next one."
 
 	self messagesPresenter addOrUpdateMessage: anAbMessage.
 	(anAbMessage == self pendingApprovalMessage and: [

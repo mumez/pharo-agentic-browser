@@ -20,7 +20,7 @@ Public API and Key Messages:
 - #sendPrompt: / #sendPrompt:withResources: - Send a human message and execute the agent.
 - #requestPermission: / #requestPermission:options: - Block the agent thread for human approval.
 - #resolveApproval:withOptionId: - Resolve the approval shown in the UI.
-- #resolveApprovalWithOptionId: - Resolve the oldest pending approval.
+- #resolveApprovalWithOptionId: - Resolve the current pending approval (AI permission requests first).
 - #goalDescription: - Set a goal and notify the agent.
 - #status - Return the current FSM state name (#initial, #working, #waitingForHuman, #endTurn, #goalAchieved).
 
@@ -603,14 +603,14 @@ AbTopic >> resetFromGoalAchieved [
 { #category : 'operations' }
 AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
 	"Answer anApprovalMessage, the request shown to the human; it may already have been
-	answered by a timeout. The agent may ask for several permissions at once: announce
-	the answered request and the next pending one, and resume working only when none is left."
+	answered by a timeout, which keeps its answer. The agent may ask for several permissions
+	at once: announce the next pending one, and resume working only when none is left."
 
 	| next |
 	anApprovalMessage ifNil: [ ^ self ].
-	anApprovalMessage approvalOption ifNotNil: [ ^ self ].
-	anApprovalMessage approvalOption: anOptionId.
-	self announceMessageAdded: anApprovalMessage.
+	anApprovalMessage approvalOption ifNil: [
+		anApprovalMessage approvalOption: anOptionId.
+		self announceMessageAdded: anApprovalMessage ].
 	next := self pendingApprovalMessage.
 	next ifNotNil: [
 		self announceMessageAdded: next.
@@ -622,7 +622,8 @@ AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
 
 { #category : 'operations' }
 AbTopic >> resolveApprovalWithOptionId: anOptionId [
-	"Answer the oldest pending request, for clients that do not know which request is shown."
+	"Answer the current pending request (see #pendingApprovalMessage: AI permission requests
+	come before export approvals), for clients that do not know which request is shown."
 
 	self resolveApproval: self pendingApprovalMessage withOptionId: anOptionId
 ]

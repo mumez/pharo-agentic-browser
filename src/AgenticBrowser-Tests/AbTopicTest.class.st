@@ -554,6 +554,28 @@ AbTopicTest >> testPendingApprovalMessageWithId [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testResolveApprovalOfAlreadyAnsweredMessageAnnouncesTheNextPending [
+	"The human clicks on a request a timeout has just answered: the click must still
+	bring the next pending request to the screen."
+
+	| topic answered pending announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	answered approvalOption: AbConstants rejectOnce.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+	self assert: announced last equals: pending ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testResolveApprovalOfAlreadyAnsweredMessageKeepsItsAnswer [
 	"The request on screen may have been answered by a timeout before the human clicks."
 
