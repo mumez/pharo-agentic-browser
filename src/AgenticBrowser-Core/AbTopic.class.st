@@ -20,7 +20,7 @@ Public API and Key Messages:
 - #sendPrompt: / #sendPrompt:withResources: - Send a human message and execute the agent.
 - #requestPermission: / #requestPermission:options: - Block the agent thread for human approval.
 - #resolveApproval:withOptionId: - Resolve the approval shown in the UI.
-- #resolveApprovalWithOptionId: - Resolve the current pending approval (AI permission requests first).
+- #resolveCurrentPendingApprovalWithOptionId: - Resolve the current pending approval (AI permission requests first).
 - #goalDescription: - Set a goal and notify the agent.
 - #status - Return the current FSM state name (#initial, #working, #waitingForHuman, #endTurn, #goalAchieved).
 
@@ -621,7 +621,7 @@ AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
 ]
 
 { #category : 'operations' }
-AbTopic >> resolveApprovalWithOptionId: anOptionId [
+AbTopic >> resolveCurrentPendingApprovalWithOptionId: anOptionId [
 	"Answer the current pending request (see #pendingApprovalMessage: AI permission requests
 	come before export approvals), for clients that do not know which request is shown."
 

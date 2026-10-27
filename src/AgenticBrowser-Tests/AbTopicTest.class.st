@@ -381,7 +381,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #initial
@@ -457,7 +457,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
@@ -474,7 +474,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce
 ]
@@ -521,7 +521,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
@@ -535,7 +535,7 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
 ]
@@ -615,12 +615,12 @@ AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 	topic := AbTopic new.
 	msg := AbMessage aiPermissionRequestText: 'Export?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testResolveApprovalWithOptionId [
+AbTopicTest >> testResolveCurrentPendingApprovalWithOptionId [
 
 	| topic msg |
 	topic := AbTopic new.
@@ -632,17 +632,17 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 				       'Allow once' -> AbConstants allowOnce.
 				       'Deny' -> AbConstants rejectOnce }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
+AbTopicTest >> testResolveCurrentPendingApprovalWithOptionIdResolvesExportApproval [
 	| topic msg |
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #initial
 ]
@@ -663,7 +663,7 @@ AbTopicTest >> testResolveApprovalWithSeveralPendingAnnouncesTheNext [
 		do: [ :ann | announced add: ann message ]
 		for: self.
 	[
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: (announced includes: first).
 	self assert: announced last equals: second ]
 		ensure: [ topic announcer unsubscribe: self ]
@@ -680,13 +680,13 @@ AbTopicTest >> testResolveApprovalWithSeveralPendingKeepsWaitingForHuman [
 	first := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
 	second := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
 
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: first approvalOption equals: AbConstants allowOnce.
 	self assert: second approvalOption isNil.
 	self assert: topic pendingApprovalMessage equals: second.
 	self assert: topic status equals: #waitingForHuman.
 
-	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: second approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
 ]
