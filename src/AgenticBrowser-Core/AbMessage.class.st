@@ -153,7 +153,7 @@ AbMessage >> blocksAgentProgress [
 	"The agent waits for an answer to an AI permission request; export approvals do not
 	make it wait."
 
-	^ isAiPermission
+	^ self isAiPermission
 ]
 
 { #category : 'accessing' }
