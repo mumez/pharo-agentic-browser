@@ -574,7 +574,9 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 	aStatus = #working
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
-	(self pendingApprovalMessage notNil and: [ aStatus ~= #waitingForHuman ])
+	"Export approvals do not make the agent wait, so keep them on screen while it works."
+	(self pendingApprovalMessage notNil and: [
+		 self pendingApprovalMessage isAiPermission and: [ aStatus ~= #waitingForHuman ] ])
 		ifTrue: [ self exitApprovalMode ].
 	self messagesPresenter refreshMessages
 ]

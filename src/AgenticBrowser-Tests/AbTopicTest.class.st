@@ -609,6 +609,29 @@ AbTopicTest >> testResolveApprovalWithOptionIdAnswersTheGivenMessage [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testResolveApprovalOfLastAiPermissionResumesWorkingWithExportApprovalPending [
+	"Only AI permission requests make the agent wait: once none is left, the topic must
+	resume working even if an export approval is still pending, so #turnEnded is not lost."
+
+	| topic aiPermission exportApproval announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: aiPermission withOptionId: AbConstants allowOnce.
+	self assert: topic status equals: #working.
+	self assert: exportApproval approvalOption isNil.
+	self assert: announced last equals: exportApproval ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 
 	| topic msg |
