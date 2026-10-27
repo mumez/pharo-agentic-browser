@@ -593,11 +593,19 @@ AbTopic >> resetFromGoalAchieved [
 
 { #category : 'operations' }
 AbTopic >> resolveApprovalWithOptionId: anOptionId [
+	"Answer the oldest pending request. The agent may ask for several permissions
+	at once: announce the answered request and the next pending one, and resume
+	working only when none is left."
 
-	| pending |
+	| pending next |
 	pending := self pendingApprovalMessage.
 	pending ifNil: [ ^ self ].
 	pending approvalOption: anOptionId.
+	self announceMessageAdded: pending.
+	next := self pendingApprovalMessage.
+	next ifNotNil: [
+		self announceMessageAdded: next.
+		^ self ].
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'

@@ -580,6 +580,50 @@ AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithSeveralPendingAnnouncesTheNext [
+	"AbChatPresenter shows a request when it is announced; after the first of several
+	concurrent requests is answered, the next one must be announced so it gets shown."
+
+	| topic first second announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	first := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	second := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	self assert: (announced includes: first).
+	self assert: announced last equals: second ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithSeveralPendingKeepsWaitingForHuman [
+	"The agent may ask for several permissions at once. Answering one must leave the
+	topic waiting for the others, and resume working only after the last one."
+
+	| topic first second |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	first := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	second := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+
+	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	self assert: first approvalOption equals: AbConstants allowOnce.
+	self assert: second approvalOption isNil.
+	self assert: topic pendingApprovalMessage equals: second.
+	self assert: topic status equals: #waitingForHuman.
+
+	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	self assert: second approvalOption equals: AbConstants rejectOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testSendPromptDelegatesToSendPromptWithResources [
 
 	| topic |

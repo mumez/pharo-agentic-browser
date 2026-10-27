@@ -476,6 +476,37 @@ AbChatPresenterTest >> testOnMessageAddedResolvedApprovalExitsApprovalMode [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedResolvedApprovalShowsTheNextPending [
+
+	| first second |
+	first := AbMessage aiPermissionRequestText: 'Read a?'.
+	second := AbMessage aiPermissionRequestText: 'Read b?'.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	first approvalOption: AbConstants allowOnce.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	self assert: presenter pendingApprovalMessage equals: second.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedSecondApprovalRequestKeepsTheFirstOnScreen [
+	"AbTopic answers the oldest pending request, so the chat must keep showing it
+	when the agent sends more requests before it is answered."
+
+	| first second |
+	first := AbMessage aiPermissionRequestText: 'Read a?'.
+	second := AbMessage aiPermissionRequestText: 'Read b?'.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	self assert: presenter pendingApprovalMessage equals: first
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
 
 	| msg |

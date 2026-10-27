@@ -434,12 +434,15 @@ AbChatPresenter >> onDenyButtonClicked [
 
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
+	"AbTopic answers the oldest pending request, so keep showing the request being
+	answered when more arrive; AbTopic announces the next one once it is answered."
 
 	self messagesPresenter addOrUpdateMessage: anAbMessage.
-	(anAbMessage isApprovalRequest and: [ anAbMessage approvalOption isNil ])
-		ifTrue: [ self enterApprovalMode: anAbMessage ].
 	(anAbMessage == self pendingApprovalMessage and: [
-		 anAbMessage approvalOption notNil ]) ifTrue: [ self exitApprovalMode ]
+		 anAbMessage approvalOption notNil ]) ifTrue: [ self exitApprovalMode ].
+	(anAbMessage isApprovalRequest and: [
+		 anAbMessage approvalOption isNil and: [ self pendingApprovalMessage isNil ] ])
+		ifTrue: [ self enterApprovalMode: anAbMessage ]
 ]
 
 { #category : 'event handling' }
