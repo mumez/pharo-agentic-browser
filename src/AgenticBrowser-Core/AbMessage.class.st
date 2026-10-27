@@ -158,7 +158,7 @@ AbMessage >> blocksAgentProgress [
 
 { #category : 'accessing' }
 AbMessage >> isApprovalRequest [
-	^ isAiPermission or: [ isExportApproval ]
+	^ self isAiPermission or: [ self isExportApproval ]
 ]
 
 { #category : 'accessing' }
@@ -194,9 +194,9 @@ AbMessage >> printOn: aStream [
 	super printOn: aStream.
 	aStream
 		nextPut: $(;
-		print: sender;
+		print: self sender;
 		nextPutAll: ': ';
-		nextPutAll: (text ifNil: [ '' ]);
+		nextPutAll: (self text ifNil: [ '' ]);
 		nextPut: $)
 ]
 
