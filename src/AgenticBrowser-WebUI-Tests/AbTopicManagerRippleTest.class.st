@@ -573,6 +573,46 @@ AbTopicManagerRippleTest >> testSendPromptSignalsErrorWhenTopicNotFound [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testResolveApprovalWithAnsweredMessageIdSignalsNoPendingApproval [
+
+	| topic answered msg |
+	topic := self newMockTopic: 'Approve Test'.
+	AbTopicManager forTest addTopic: topic.
+	answered := topic addAiPermissionRequest: 'Read a?'.
+	answered approvalOption: AbConstants rejectOnce.
+	topic addAiPermissionRequest: 'Read b?'.
+	mockSocket reset.
+	msg := self sendMessage: '/approval/resolve'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'messageId' put: answered id;
+			        at: 'optionId' put: AbConstants allowOnce;
+			        yourself).
+	self dispatch: msg.
+	self assert: (mockSocket lastError at: 'error') code equals: 10003.
+	self assert: answered approvalOption equals: AbConstants rejectOnce
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testResolveApprovalWithMessageIdAnswersThatMessage [
+
+	| topic exportApproval aiPermission msg |
+	topic := self newMockTopic: 'Approve Test'.
+	AbTopicManager forTest addTopic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	msg := self sendMessage: '/approval/resolve'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'messageId' put: exportApproval id;
+			        at: 'optionId' put: AbConstants allowOnce;
+			        yourself).
+	self dispatch: msg.
+	self assert: exportApproval approvalOption equals: AbConstants allowOnce.
+	self assert: aiPermission approvalOption isNil
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testResolveApprovalSignalsErrorWhenNoPendingApproval [
 
 	| topic msg |

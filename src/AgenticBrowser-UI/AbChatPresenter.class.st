@@ -10,7 +10,7 @@ Responsibility:
 - I collect @mention resources (code and screenshots) and selected file attachments from the input text before sending a prompt.
 
 Collaborators:
-- AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApprovalWithOptionId:, setConfigOptionId:value:).
+- AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApproval:withOptionId:, setConfigOptionId:value:).
 - AbMessagesPresenter: I delegate message rendering to it.
 - AbNormalInputPresenter: My default input widget; I enable/disable Cancel based on topic status.
 - AbConfirmPresenter: Replaces the input area during approval mode.
@@ -419,7 +419,8 @@ AbChatPresenter >> onConfirmButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
 	self currentTopic
-		resolveApprovalWithOptionId: self confirmPresenter selectedOptionId.
+		resolveApproval: self pendingApprovalMessage
+		withOptionId: self confirmPresenter selectedOptionId.
 	self exitApprovalMode
 ]
 
@@ -428,7 +429,8 @@ AbChatPresenter >> onDenyButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
 	self currentTopic
-		resolveApprovalWithOptionId: self confirmPresenter selectedOptionIdForDenyAction.
+		resolveApproval: self pendingApprovalMessage
+		withOptionId: self confirmPresenter selectedOptionIdForDenyAction.
 	self exitApprovalMode
 ]
 

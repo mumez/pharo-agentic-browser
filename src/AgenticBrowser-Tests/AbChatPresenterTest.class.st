@@ -120,6 +120,20 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testConfirmApprovalAnswersTheMessageOnScreen [
+
+	| topic exportApproval aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onConfirmButtonClicked.
+	self assert: exportApproval approvalOption equals: presenter confirmPresenter selectedOptionId.
+	self assert: aiPermission approvalOption isNil
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
@@ -141,6 +155,20 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
 	self assert: presenter pendingApprovalMessage isNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testDenyApprovalAnswersTheMessageOnScreen [
+
+	| topic exportApproval aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onDenyButtonClicked.
+	self assert: exportApproval approvalOption equals: presenter confirmPresenter selectedOptionIdForDenyAction.
+	self assert: aiPermission approvalOption isNil
 ]
 
 { #category : 'tests' }
