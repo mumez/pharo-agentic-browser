@@ -19,7 +19,8 @@ Collaborators:
 Public API and Key Messages:
 - #sendPrompt: / #sendPrompt:withResources: - Send a human message and execute the agent.
 - #requestPermission: / #requestPermission:options: - Block the agent thread for human approval.
-- #resolveApprovalWithOptionId: - Resolve a pending approval from the UI.
+- #resolveApproval:withOptionId: - Resolve the approval shown in the UI.
+- #resolveCurrentPendingApprovalWithOptionId: - Resolve the current pending approval (AI permission requests first).
 - #goalDescription: - Set a goal and notify the agent.
 - #status - Return the current FSM state name (#initial, #working, #waitingForHuman, #endTurn, #goalAchieved).
 
@@ -500,6 +501,14 @@ AbTopic >> pendingApprovalMessage [
 ]
 
 { #category : 'approval-private' }
+AbTopic >> pendingApprovalMessageWithId: aMessageId [
+
+	^ self messages
+		detect: [ :m | m isApprovalRequest and: [ m approvalOption isNil and: [ m id = aMessageId ] ] ]
+		ifNone: [ nil ]
+]
+
+{ #category : 'approval-private' }
 AbTopic >> pendingExportApprovalMessage [
 
 	^ self messages
@@ -592,16 +601,16 @@ AbTopic >> resetFromGoalAchieved [
 ]
 
 { #category : 'operations' }
-AbTopic >> resolveApprovalWithOptionId: anOptionId [
-	"Answer the oldest pending request. The agent may ask for several permissions
-	at once: announce the answered request and the next pending one, and resume
-	working only when none is left."
+AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
+	"Answer anApprovalMessage, the request shown to the human; it may already have been
+	answered by a timeout, which keeps its answer. The agent may ask for several permissions
+	at once: announce the next pending one, and resume working only when none is left."
 
-	| pending next |
-	pending := self pendingApprovalMessage.
-	pending ifNil: [ ^ self ].
-	pending approvalOption: anOptionId.
-	self announceMessageAdded: pending.
+	| next |
+	anApprovalMessage ifNil: [ ^ self ].
+	anApprovalMessage approvalOption ifNil: [
+		anApprovalMessage approvalOption: anOptionId.
+		self announceMessageAdded: anApprovalMessage ].
 	next := self pendingApprovalMessage.
 	next ifNotNil: [
 		self announceMessageAdded: next.
@@ -609,6 +618,14 @@ AbTopic >> resolveApprovalWithOptionId: anOptionId [
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'
+]
+
+{ #category : 'operations' }
+AbTopic >> resolveCurrentPendingApprovalWithOptionId: anOptionId [
+	"Answer the current pending request (see #pendingApprovalMessage: AI permission requests
+	come before export approvals), for clients that do not know which request is shown."
+
+	self resolveApproval: self pendingApprovalMessage withOptionId: anOptionId
 ]
 
 { #category : 'operations' }

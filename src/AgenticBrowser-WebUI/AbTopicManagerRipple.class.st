@@ -715,18 +715,22 @@ AbTopicManagerRipple >> handleCancelPrompt: aMessage [
 
 { #category : 'send handling' }
 AbTopicManagerRipple >> handleResolveApproval: aMessage [
+	"messageId is optional: clients that send it answer the request they show;
+	others answer the current pending request (see AbTopic>>pendingApprovalMessage)."
 
 	| body topicId topic optionId pending |
 	body := aMessage body.
 	topicId := body at: 'topicId'.
 	topic := self topicManager at: topicId.
 	topic ifNil: [ self topicNotFoundError: topicId ].
-	pending := topic pendingApprovalMessage.
+	pending := (body at: 'messageId' ifAbsent: [ nil ])
+		           ifNil: [ topic pendingApprovalMessage ]
+		           ifNotNil: [ :messageId | topic pendingApprovalMessageWithId: messageId ].
 	pending ifNil: [ self noPendingApprovalError: topicId ].
 	optionId := (body at: 'optionId') asSymbol.
 	(pending approvalOptions anySatisfy: [ :assoc | assoc value = optionId ])
 		ifFalse: [ self invalidOptionError: optionId ].
-	topic resolveApprovalWithOptionId: optionId
+	topic resolveApproval: pending withOptionId: optionId
 ]
 
 { #category : 'private' }

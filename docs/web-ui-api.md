@@ -478,8 +478,16 @@ Resolves the pending approval for a topic by selecting one of the available opti
 
 **Body:**
 ```json
-{ "topicId": "abc123", "optionId": "allowOnce" }
+{ "topicId": "abc123", "messageId": "5f1c...", "optionId": "allowOnce" }
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `topicId` | string | Topic to resolve |
+| `messageId` | string | Optional. `id` of the approval message shown to the user. When omitted, the current pending approval is resolved (AI permission requests take precedence over export approvals, regardless of arrival order). Several approvals can be pending at once, so clients should send it. |
+| `optionId` | string | Selected option value |
+
+If `messageId` refers to a message that is not a pending approval (unknown, or already answered, e.g. by a timeout), error `10003` is returned.
 
 ---
 
@@ -791,7 +799,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 |---------------|-----------|-------|
 | `10001` | `Topic not found: <topicId>` | `topicId` does not exist |
 | `10002` | `Topic is busy: <topicId>` | Operation requires idle topic, but it is `working` |
-| `10003` | `No pending approval for topic: <topicId>` | `/approval/resolve` called with nothing pending |
+| `10003` | `No pending approval for topic: <topicId>` | `/approval/resolve` called with nothing pending, or with a `messageId` that is not a pending approval |
 | `10004` | `Invalid optionId: <optionId>` | `optionId` not in the pending approval's option list |
 | `10005` | `Failed to create topic: <reason>` | Topic creation failed |
 | `10006` | `Failed to save: <reason>` | `/app/save` encountered an error |
@@ -839,7 +847,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 
 7. Handle an approval:
    ← send     { event: "messageAdded", topicId, message: { type: "aiPermission", approvalOptions: [...] } }
-   → send     /approval/resolve  { topicId, optionId: "allowOnce" }
+   → send     /approval/resolve  { topicId, messageId, optionId: "allowOnce" }
 
 8. Another tab renames a topic — this tab receives:
    ← publish  topicsUpdated  { event: "topicsUpdated", requesterId: "<other-tab-token>" }
