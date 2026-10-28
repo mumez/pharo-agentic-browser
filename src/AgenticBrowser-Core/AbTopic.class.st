@@ -518,32 +518,22 @@ AbTopic >> pendingExportApprovalMessage [
 
 { #category : 'approval-private' }
 AbTopic >> respondAiPermissionOnTimeout: aMessage [
+	"Resolve it the same way as a human answer, so other pending requests keep the topic waiting for human.
+	A message the human answered just before the timeout was already resolved."
 
-	self
-		respondOnTimeout: aMessage
-		approvalOption: self settings aiPermissionTimeoutOption
-		logMessage: 'requestPermission: timeout reached, auto resolving by timeout option'
-		changeToHumanResponded: true
+	aMessage approvalOption ifNotNil: [ ^ self ].
+	self logger debug: 'requestPermission: timeout reached, auto resolving by timeout option'.
+	self resolveApproval: aMessage withOptionId: self settings aiPermissionTimeoutOption
 ]
 
 { #category : 'approval-private' }
 AbTopic >> respondExportOnTimeout: aMessage [
+	"Export approvals never make the agent wait, so the state is left unchanged."
 
-	self
-		respondOnTimeout: aMessage
-		approvalOption: self settings exportApprovalTimeoutOption
-		logMessage: 'requestPackageExport: timeout reached, auto resolving by timeout option'
-		changeToHumanResponded: false
-]
-
-{ #category : 'approval-private' }
-AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
 	aMessage approvalOption ifNotNil: [ ^ self ].
-	self logger debug: aString.
-	aMessage approvalOption: anOptionSymbol.
-	self announceMessageAdded: aMessage.
-	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
-		self stateMachine handleEvent: #humanResponded ]
+	self logger debug: 'requestPackageExport: timeout reached, auto resolving by timeout option'.
+	aMessage approvalOption: self settings exportApprovalTimeoutOption.
+	self announceMessageAdded: aMessage
 ]
 
 { #category : 'accessing' }
