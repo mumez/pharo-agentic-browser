@@ -521,19 +521,31 @@ AbTopic >> respondAiPermissionOnTimeout: aMessage [
 	"Resolve it the same way as a human answer, so other pending requests keep the topic waiting for human.
 	A message the human answered just before the timeout was already resolved."
 
-	aMessage approvalOption ifNotNil: [ ^ self ].
-	self logger debug: 'requestPermission: timeout reached, auto resolving by timeout option'.
-	self resolveApproval: aMessage withOptionId: self settings aiPermissionTimeoutOption
+	self
+		ifUnansweredAtTimeout: aMessage
+		log: 'requestPermission: timeout reached, auto resolving by timeout option'
+		do: [ self resolveApproval: aMessage withOptionId: self settings aiPermissionTimeoutOption ]
 ]
 
 { #category : 'approval-private' }
 AbTopic >> respondExportOnTimeout: aMessage [
 	"Export approvals never make the agent wait, so the state is left unchanged."
 
+	self
+		ifUnansweredAtTimeout: aMessage
+		log: 'requestPackageExport: timeout reached, auto resolving by timeout option'
+		do: [
+			aMessage approvalOption: self settings exportApprovalTimeoutOption.
+			self announceMessageAdded: aMessage ]
+]
+
+{ #category : 'approval-private' }
+AbTopic >> ifUnansweredAtTimeout: aMessage log: aString do: aBlock [
+	"A timeout resolves only a message nobody answered yet; the human may have answered just before it fired."
+
 	aMessage approvalOption ifNotNil: [ ^ self ].
-	self logger debug: 'requestPackageExport: timeout reached, auto resolving by timeout option'.
-	aMessage approvalOption: self settings exportApprovalTimeoutOption.
-	self announceMessageAdded: aMessage
+	self logger debug: aString.
+	aBlock value
 ]
 
 { #category : 'accessing' }

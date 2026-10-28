@@ -579,6 +579,31 @@ AbTopicTest >> testAiPermissionTimeoutOfAlreadyAnsweredMessageKeepsItsAnswer [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutOfAlreadyAnsweredMessageWithSeveralPendingDoesNotAnnounceTheNextAgain [
+	"The human answers the first request (which announces the second), then the first request's timeout fires."
+
+	| topic answered pending announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+	self assert: (announced occurrencesOf: pending) equals: 1.
+
+	topic respondAiPermissionOnTimeout: answered.
+	self assert: (announced occurrencesOf: pending) equals: 1.
+	self assert: answered approvalOption equals: AbConstants allowOnce.
+	self assert: topic status equals: #waitingForHuman ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testExportApprovalTimeoutWhileWaitingForHumanKeepsWaitingForHuman [
 	"Export approvals never make the agent wait, so their timeout must not resume working."
 
