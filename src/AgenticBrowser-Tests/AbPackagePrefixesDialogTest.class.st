@@ -32,3 +32,17 @@ AbPackagePrefixesDialogTest >> testPrefixPatternsReturnsSameCollection [
 	dialog prefixPatterns: patterns.
 	self assert: (dialog prefixPatterns includesAll: patterns)
 ]
+
+{ #category : 'tests' }
+AbPackagePrefixesDialogTest >> testButtonsFitInsideWindow [
+
+	| dialog window windowMorph |
+	dialog := AbPackagePrefixesDialog new.
+	window := dialog openDialog.
+	[
+	windowMorph := window adapter widget.
+	windowMorph fullBounds.
+	self assert: (windowMorph bounds containsRect: dialog okButton adapter widget bounds).
+	self assert: (windowMorph bounds containsRect: dialog cancelButton adapter widget bounds) ]
+		ensure: [ window close ]
+]
