@@ -32,3 +32,19 @@ AbPackagePrefixesDialogTest >> testPrefixPatternsReturnsSameCollection [
 	dialog prefixPatterns: patterns.
 	self assert: (dialog prefixPatterns includesAll: patterns)
 ]
+
+{ #category : 'tests' }
+AbPackagePrefixesDialogTest >> testButtonsFitInsideWindow [
+
+	| dialog window windowMorph |
+	"Morph bounds are not laid out in a headless image, so this layout check needs a real display."
+	SmalltalkImage current isInteractiveGraphic ifFalse: [ ^ self skip ].
+	dialog := AbPackagePrefixesDialog new.
+	window := dialog openDialog.
+	[
+	windowMorph := window adapter widget.
+	windowMorph fullBounds.
+	self assert: (windowMorph bounds containsRect: dialog okButton adapter widget bounds).
+	self assert: (windowMorph bounds containsRect: dialog cancelButton adapter widget bounds) ]
+		ensure: [ window close ]
+]
