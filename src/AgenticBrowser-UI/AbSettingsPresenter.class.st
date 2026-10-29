@@ -281,15 +281,7 @@ AbSettingsPresenter >> initializePresenters [
 	goalSetCommandField := self newTextInput.
 	goalSetCommandField text: self settings goalSetCommand.
 
-	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
-	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
-	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
-	useStBuddySkillOnInitialPromptCheckbox whenChangedDo: [ :useStBuddySkill |
-		self updateInitialPromptSkillFieldForUseStBuddySkill: useStBuddySkill ].
-
-	initialPromptSkillField := self newTextInput.
-	initialPromptSkillField text: self settings initialPromptSkill.
-
+	self initializeInitialPromptSkillPresenters.
 	self initializeCritSettingsPresenters.
 
 	saveButton := self newButton.
@@ -306,6 +298,18 @@ AbSettingsPresenter >> updateInitialPromptSkillFieldForUseStBuddySkill: aBoolean
 	self initialPromptSkillField text: (aBoolean
 			 ifTrue: [ self settings defaultInitialPromptSkill ]
 			 ifFalse: [ '' ])
+]
+
+{ #category : 'initialization' }
+AbSettingsPresenter >> initializeInitialPromptSkillPresenters [
+	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
+	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
+	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
+	useStBuddySkillOnInitialPromptCheckbox whenChangedDo: [ :useStBuddySkill |
+		self updateInitialPromptSkillFieldForUseStBuddySkill: useStBuddySkill ].
+
+	initialPromptSkillField := self newTextInput.
+	initialPromptSkillField text: self settings initialPromptSkill
 ]
 
 { #category : 'initialization' }
