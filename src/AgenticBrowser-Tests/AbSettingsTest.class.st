@@ -195,6 +195,14 @@ AbSettingsTest >> testDefaultCodingAgentsContainsClaudeAgentAcp [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testDefaultAgentArgumentsPresetsContainsGrokBuild [
+
+	self
+		assert: (AbSettings default agentArgumentsPresets at: 'Grok Build')
+		equals: #( 'grok' 'agent' 'stdio' )
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testDefaultCodingAgentsEachHasNameAndCommand [
 
 	AbSettings default codingAgents do: [ :each |

@@ -293,10 +293,11 @@ Any ACP compatible coding agent can be used. The following agents are available 
 | Gemini CLI | [`gemini --acp`](https://github.com/google-gemini/gemini-cli) | ACP is built-in |
 | OpenCode | [`opencode acp`](https://github.com/anomalyco/opencode) | ACP is built-in |
 | GitHub Copilot CLI | [`copilot --acp --stdio`](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) | ACP is built-in |
-| Cursor CLI | [`agent acp`](https://cursor.com/cli) | ACP is built-in |
+| Cursor CLI | [`cursor-agent acp`](https://cursor.com/cli) | ACP is built-in |
 | Kilo Code | [`kilo acp`](https://kilo.ai/cli) | ACP is built-in |
 | Kiro CLI | [`kiro-cli acp`](https://kiro.dev/cli/) | ACP is built-in |
 | Devin CLI | [`devin acp`](https://devin.ai/cli) | ACP is built-in |
+| Grok Build | [`grok agent stdio`](https://docs.x.ai/build/overview) | ACP is built-in |
 
 > **Strongly Recommended:** Install the [smalltalk-dev-plugin](https://github.com/mumez/smalltalk-dev-plugin) in your agent. It provides Smalltalk-aware skills and MCP servers that agents can use to work directly with Pharo inside the session.
 

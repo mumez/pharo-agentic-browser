@@ -17,7 +17,7 @@ Collaborators:
 - AbTopic: receives agent arguments, mode config, and model config
 
 Public API and Key Messages:
-- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro / #devin - select a preset agent
+- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro / #devin / #grok - select a preset agent
 - #planMode - start the agent in plan mode (where supported)
 - #model: aString - override the model name passed to the agent
 "
@@ -133,6 +133,11 @@ AbCodingAgentBuilder >> flattenedOptions: aCollection [
 { #category : 'shortcuts' }
 AbCodingAgentBuilder >> gemini [
 	self useAgentArgumentsAt: 'Gemini CLI'
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> grok [
+	self useAgentArgumentsAt: 'Grok Build'
 ]
 
 { #category : 'initialization' }

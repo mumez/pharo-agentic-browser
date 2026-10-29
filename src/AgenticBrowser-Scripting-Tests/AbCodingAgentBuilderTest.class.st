@@ -30,6 +30,14 @@ AbCodingAgentBuilderTest >> testCodexSetsArguments [
 ]
 
 { #category : 'tests' }
+AbCodingAgentBuilderTest >> testGrokSetsArguments [
+
+	| builder |
+	builder := AbCodingAgentBuilder new grok.
+	self assert: builder agentArguments equals: #( 'grok' 'agent' 'stdio' )
+]
+
+{ #category : 'tests' }
 AbCodingAgentBuilderTest >> testModelRaisesErrorWhenModelConfigOptionNil [
 
 	| builder topic |
