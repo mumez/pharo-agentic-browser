@@ -16,7 +16,7 @@ Public API and Key Messages:
 - AbSettingsPresenter class>>openOnDefault - Open editor for the global AbSettings singleton; saves to ab-settings.json on confirm.
 - AbSettingsPresenter class>>openOnTopic: - Open editor for a topic's settings copy; replaces the topic's settings on confirm without a global save. The crit settings are hidden because crit reads only the global settings.
 - #saveAction: - Inject a custom save block (receives the edited AbSettings as argument).
-- #showsCritSettings: - Show or hide the crit review checkbox, network access checkbox, port range field, and validation message (shown by default).
+- #showsCritSettings: - Show or hide the crit review checkbox, network access checkbox, port range field, and validation message (shown by default); the window is shorter when they are hidden.
 
 Internal Representation:
 - saveAction - Block called with the edited AbSettings on save; defaults to a no-op.
@@ -368,5 +368,13 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ 550
+		initialExtent: 420 @ self windowHeight
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> windowHeight [
+	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it."
+	^ self showsCritSettings
+		ifTrue: [ 550 ]
+		ifFalse: [ 420 ]
 ]
