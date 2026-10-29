@@ -308,6 +308,19 @@ AbSettingsPresenterTest >> testSaveIgnoresInvalidCritPortRangeWhenCritSettingsAr
 ]
 
 { #category : 'tests' }
+AbSettingsPresenterTest >> testWindowIsShorterWhenCritSettingsAreHidden [
+	| presenterWithoutCrit |
+	presenterWithoutCrit := AbSettingsPresenter on: AbSettings new.
+	presenterWithoutCrit showsCritSettings: false.
+	self presenter open.
+	presenterWithoutCrit open.
+	[ self assert: presenterWithoutCrit window initialExtent y < self presenter window initialExtent y ]
+		ensure: [
+			self presenter window close.
+			presenterWithoutCrit window close ]
+]
+
+{ #category : 'tests' }
 AbSettingsPresenterTest >> testOpenOnTopicHidesCritSettings [
 	| topicPresenter |
 	topicPresenter := AbSettingsPresenter openOnTopic: self newMockTopic.
