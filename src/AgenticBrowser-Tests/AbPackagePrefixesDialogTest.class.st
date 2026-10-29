@@ -37,6 +37,8 @@ AbPackagePrefixesDialogTest >> testPrefixPatternsReturnsSameCollection [
 AbPackagePrefixesDialogTest >> testButtonsFitInsideWindow [
 
 	| dialog window windowMorph |
+	"Morph bounds are not laid out in a headless image, so this layout check needs a real display."
+	SmalltalkImage current isInteractiveGraphic ifFalse: [ ^ self skip ].
 	dialog := AbPackagePrefixesDialog new.
 	window := dialog openDialog.
 	[
