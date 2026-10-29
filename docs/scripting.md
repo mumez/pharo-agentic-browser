@@ -101,6 +101,8 @@ Inside `agentBy:`, the block argument responds to:
 | `cursorAgent` | Cursor CLI |
 | `kilo` | Kilo Code |
 | `kiro` | Kiro CLI |
+| `devin` | Devin CLI |
+| `grokBuild` | Grok Build |
 
 Additional configuration:
 

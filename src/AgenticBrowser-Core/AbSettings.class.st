@@ -230,10 +230,11 @@ AbSettings >> defaultCodingAgentsJsonString [
   {"name": "OpenCode", "command": ["opencode", "acp"]},
   {"name": "Copilot CLI", "command": ["copilot", "--acp", "--stdio"]},
   {"name": "codex-acp", "command": ["codex-acp"]},
-  {"name": "Cursor CLI", "command": ["agent", "acp"]},
+  {"name": "Cursor CLI", "command": ["cursor-agent", "acp"]},
   {"name": "Kilo Code", "command": ["kilo", "acp"]},
   {"name": "Kiro CLI", "command": ["kiro-cli", "acp"]},
-  {"name": "Devin CLI", "command": ["devin", "acp"]}
+  {"name": "Devin CLI", "command": ["devin", "acp"]},
+  {"name": "Grok Build", "command": ["grok", "agent", "stdio"]}
 ]
 '
 ]
