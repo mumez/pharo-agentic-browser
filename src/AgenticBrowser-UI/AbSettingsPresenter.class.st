@@ -2,7 +2,8 @@
 I am a settings editor that presents and saves an AbSettings instance.
 
 Responsibility:
-- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the crit review checkbox, the crit LAN access checkbox, and the crit port range field.
+- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the initial prompt skill field with its st-buddy checkbox, the crit review checkbox, the crit LAN access checkbox, and the crit port range field.
+- I rewrite the initial prompt skill field when the st-buddy checkbox is toggled (on: the AbSettings default skill, off: empty); editing the field does not change the checkbox, and on save only the field text is written.
 - I validate the crit port range on save (reusing AbSettings>>critPortInterval); when it is invalid I write nothing, skip the saveAction, keep the window open, and show the expected format in a validation message label.
 - I support two entry points: editing the global default settings (via #openOnDefault) and editing a per-topic copy (via #openOnTopic:).
 - On save I invoke a configurable saveAction block; for the global path this writes ab-settings.json, for the topic path it replaces the topic's in-memory settings only.
@@ -37,6 +38,7 @@ Class {
 		'useDefaultMcpServersCheckbox',
 		'useCommandOnGoalSetCheckbox',
 		'goalSetCommandField',
+		'initialPromptSkillField',
 		'useStBuddySkillOnInitialPromptCheckbox',
 		'useCritCheckbox',
 		'critAllowUnauthenticatedNetworkCheckbox',
@@ -132,6 +134,11 @@ AbSettingsPresenter >> useCommandOnGoalSetCheckbox [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> initialPromptSkillField [
+	^ initialPromptSkillField
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> useStBuddySkillOnInitialPromptCheckbox [
 	^ useStBuddySkillOnInitialPromptCheckbox
 ]
@@ -193,7 +200,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
 	self settings useCommandOnGoalSet: useCommandOnGoalSetCheckbox state.
 	self settings goalSetCommand: goalSetCommandField text.
-	self settings useStBuddySkillOnInitialPrompt: useStBuddySkillOnInitialPromptCheckbox state.
+	self settings initialPromptSkill: initialPromptSkillField text.
 	self settings useCrit: self useCritCheckbox state.
 	self settings critAllowUnauthenticatedNetwork: self critAllowUnauthenticatedNetworkCheckbox state.
 	self settings critPortRange: self critPortRangeField text.
@@ -277,6 +284,11 @@ AbSettingsPresenter >> initializePresenters [
 	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
 	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
 	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
+	useStBuddySkillOnInitialPromptCheckbox whenChangedDo: [ :useStBuddySkill |
+		self updateInitialPromptSkillFieldForUseStBuddySkill: useStBuddySkill ].
+
+	initialPromptSkillField := self newTextInput.
+	initialPromptSkillField text: self settings initialPromptSkill.
 
 	self initializeCritSettingsPresenters.
 
@@ -287,6 +299,13 @@ AbSettingsPresenter >> initializePresenters [
 	cancelButton := self newButton.
 	cancelButton label: 'Cancel'.
 	cancelButton action: [ self window close ]
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> updateInitialPromptSkillFieldForUseStBuddySkill: aBoolean [
+	self initialPromptSkillField text: (aBoolean
+			 ifTrue: [ self settings defaultInitialPromptSkill ]
+			 ifFalse: [ '' ])
 ]
 
 { #category : 'initialization' }
@@ -331,6 +350,7 @@ AbSettingsPresenter >> addGeneralSettingsTo: aBoxLayout [
 		add: self useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
 		add: self useCommandOnGoalSetCheckbox withConstraints: [ :c | c height: 28 ];
 		add: (self labeledRow: 'Goal settings command:' field: self goalSetCommandField);
+		add: (self labeledRow: 'Initial Prompt Skill:' field: self initialPromptSkillField);
 		add: self useStBuddySkillOnInitialPromptCheckbox withConstraints: [ :c | c height: 28 ]
 ]
 
@@ -375,6 +395,6 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 AbSettingsPresenter >> windowHeight [
 	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it."
 	^ self showsCritSettings
-		ifTrue: [ 550 ]
-		ifFalse: [ 420 ]
+		ifTrue: [ 584 ]
+		ifFalse: [ 454 ]
 ]

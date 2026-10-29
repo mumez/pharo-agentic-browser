@@ -165,7 +165,7 @@ AgenticBrowser open.
 
 You can also right-click a topic to **Rename...**, **Delete**, or **Set Goal...**.
 
-> **Note:** The first message in each topic is automatically prefixed with `/st-buddy ` to activate the Smalltalk buddy agent mode.
+> **Note:** The first message in each topic is automatically prefixed with the `initialPromptSkill` setting (default `/smalltalk-dev:st-buddy`) and a space to activate the Smalltalk buddy agent mode. Change it in **Initial Prompt Skill** of the Settings dialog for other agents or custom skills (e.g. `$st-buddy` for codex/junie), or leave it empty to send the first message as is.
 
 ### Code Mentions
 
@@ -393,7 +393,7 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 | `exportApprovalTimeoutOption` | `#reject_once` | Auto-response on export timeout |
 | `watcherMessageThrottleSeconds` | `2` | Minimum seconds between watcher system messages for the same package |
 | `maxAttachmentSize` | `5242880` (5 MB) | Max characters of a file attachment's contents embedded into a prompt |
-| `useStBuddySkillOnInitialPrompt` | `true` | Prefix the initial prompt with the `st-buddy` skill instruction |
+| `initialPromptSkill` | `'/smalltalk-dev:st-buddy'` | Skill invocation prepended (with a space) to the first prompt of a topic, e.g. `'$st-buddy'` for codex/junie; empty disables the prefix. Replaces the former boolean `useStBuddySkillOnInitialPrompt`; an `ab-settings.json` with the old key is still read (`true` → default skill, `false` → empty) |
 | `useCommandOnGoalSet` | `false` | Prefix the goal notification prompt with `goalSetCommand` |
 | `goalSetCommand` | `'/goal'` | Command prefix used when `useCommandOnGoalSet` is true |
 | `monitoringIntervalSeconds` | `15` | Seconds between the periodic topic checks (e.g. resuming stalled goal topics). Formerly `stallMonitoringIntervalSeconds`; an `ab-settings.json` with the old key is still read, and is saved with the new key |

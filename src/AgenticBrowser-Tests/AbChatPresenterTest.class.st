@@ -612,7 +612,31 @@ AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 	presenter normalInputPresenter inputField text: 'hello world'.
 	presenter onSendButtonClicked.
 	self assert: topic messages size equals: 1.
-	self assert: topic messages first text equals: '/st-buddy hello world'
+	self assert: topic messages first text equals: '/smalltalk-dev:st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonPrefixesFirstMessageWithCustomInitialPromptSkill [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithCustomSkill'.
+	topic settings initialPromptSkill: '$st-buddy'.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: '$st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonDoesNotPrefixFirstMessageWhenInitialPromptSkillIsEmpty [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithEmptySkill'.
+	topic settings initialPromptSkill: ''.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: 'hello world'
 ]
 
 { #category : 'tests' }
