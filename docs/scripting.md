@@ -102,7 +102,7 @@ Inside `agentBy:`, the block argument responds to:
 | `kilo` | Kilo Code |
 | `kiro` | Kiro CLI |
 | `devin` | Devin CLI |
-| `grok` | Grok Build |
+| `grokBuild` | Grok Build |
 
 Additional configuration:
 

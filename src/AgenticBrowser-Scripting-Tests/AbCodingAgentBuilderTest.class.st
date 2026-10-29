@@ -30,10 +30,10 @@ AbCodingAgentBuilderTest >> testCodexSetsArguments [
 ]
 
 { #category : 'tests' }
-AbCodingAgentBuilderTest >> testGrokSetsArguments [
+AbCodingAgentBuilderTest >> testGrokBuildSetsArguments [
 
 	| builder |
-	builder := AbCodingAgentBuilder new grok.
+	builder := AbCodingAgentBuilder new grokBuild.
 	self assert: builder agentArguments equals: #( 'grok' 'agent' 'stdio' )
 ]
 
