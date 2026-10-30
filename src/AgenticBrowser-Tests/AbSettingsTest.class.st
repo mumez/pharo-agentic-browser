@@ -267,6 +267,25 @@ AbSettingsTest >> testInitialPromptSkillSettable [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillSetterTreatsNilAsEmpty [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: nil.
+	self assert: settings initialPromptSkill equals: ''.
+	self deny: settings useStBuddySkillOnInitialPrompt
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillSetterTrimsSurroundingSpaces [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: ' $st-buddy '.
+	self assert: settings initialPromptSkill equals: '$st-buddy'
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testUseStBuddySkillOnInitialPromptDefaultIsTrue [
 
 	self assert: AbSettings default useStBuddySkillOnInitialPrompt
@@ -306,10 +325,10 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptIsTrueForStBuddySkills [
 
 	| settings |
 	settings := AbSettings defaultCopied.
-	settings initialPromptSkill: '/st-buddy'.
-	self assert: settings useStBuddySkillOnInitialPrompt.
-	settings initialPromptSkill: ' /smalltalk-dev:st-buddy '.
-	self assert: settings useStBuddySkillOnInitialPrompt
+	#( '/st-buddy' '/smalltalk-dev:st-buddy' '$st-buddy' '$smalltalk-dev:st-buddy' ' /smalltalk-dev:st-buddy ' )
+		do: [ :each |
+			settings initialPromptSkill: each.
+			self assert: settings useStBuddySkillOnInitialPrompt ]
 ]
 
 { #category : 'tests' }
@@ -317,10 +336,9 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptIsFalseForOtherSkills [
 
 	| settings |
 	settings := AbSettings defaultCopied.
-	settings initialPromptSkill: '$st-buddy'.
-	self deny: settings useStBuddySkillOnInitialPrompt.
-	settings initialPromptSkill: ''.
-	self deny: settings useStBuddySkillOnInitialPrompt
+	#( '$other-skill' 'st-buddy' '/st-buddy extra' '' ) do: [ :each |
+		settings initialPromptSkill: each.
+		self deny: settings useStBuddySkillOnInitialPrompt ]
 ]
 
 { #category : 'tests' }

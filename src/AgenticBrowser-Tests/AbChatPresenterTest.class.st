@@ -628,6 +628,18 @@ AbChatPresenterTest >> testSendButtonPrefixesFirstMessageWithCustomInitialPrompt
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testSendButtonPrefixesFirstMessageWithTrimmedInitialPromptSkill [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithPaddedSkill'.
+	topic settings initialPromptSkill: ' $st-buddy '.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: '$st-buddy hello world'
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testSendButtonDoesNotPrefixFirstMessageWhenInitialPromptSkillIsEmpty [
 
 	| topic |

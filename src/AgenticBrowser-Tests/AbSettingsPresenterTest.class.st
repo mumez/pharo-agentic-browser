@@ -181,9 +181,9 @@ AbSettingsPresenterTest >> testEditingInitialPromptSkillFieldKeepsCheckboxState 
 AbSettingsPresenterTest >> testOpeningOnCustomInitialPromptSkillShowsItWithCheckboxOff [
 	| s |
 	s := AbSettings new.
-	s initialPromptSkill: '$st-buddy'.
+	s initialPromptSkill: '$other-skill'.
 	presenter := AbSettingsPresenter on: s.
-	self assert: presenter initialPromptSkillField text equals: '$st-buddy'.
+	self assert: presenter initialPromptSkillField text equals: '$other-skill'.
 	self deny: presenter useStBuddySkillOnInitialPromptCheckbox state
 ]
 

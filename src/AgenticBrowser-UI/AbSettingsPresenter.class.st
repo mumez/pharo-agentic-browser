@@ -397,7 +397,9 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 
 { #category : 'private' }
 AbSettingsPresenter >> windowHeight [
-	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it."
+	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it.
+	The heights are fixed pixel values tuned by eye at the default font size; they are not derived from the current font (e.g. StandardFonts defaultFont), so a larger font setting can still clip rows.
+	They grow additively: each added 28 px row plus the layout's 6 px spacing adds 34 px (the 'Initial Prompt Skill:' row raised 550/420 to 584/454). The 130 px difference is the crit block: two 28 px checkboxes, the port range row, the 20 px validation label, and their spacing."
 	^ self showsCritSettings
 		ifTrue: [ 584 ]
 		ifFalse: [ 454 ]

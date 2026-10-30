@@ -357,7 +357,7 @@ Returns the topic's current settings. Only the fields meaningful in the WebUI co
 | `useDefaultMcpServers` | boolean | When `true`, built-in Smalltalk MCP servers are merged into `mcp.json` (default: `true`) |
 | `aiPermissionWaitTimeoutSeconds` | integer | Seconds to wait for a human response to an AI permission request (default: `1800`) |
 | `aiPermissionTimeoutOption` | string | Auto-response on timeout: `"allow_once"`, `"allow_always"`, or `"reject_once"` (default: `"reject_once"`) |
-| `useStBuddySkillOnInitialPrompt` | boolean | Legacy flag derived from `initialPromptSkill`: `true` when it is `"/st-buddy"` or `"/smalltalk-dev:st-buddy"` |
+| `useStBuddySkillOnInitialPrompt` | boolean | Legacy flag derived from `initialPromptSkill`: `true` when it is st-buddy invoked with `/` or `$`, with or without the `smalltalk-dev:` prefix (e.g. `"/smalltalk-dev:st-buddy"`, `"$st-buddy"`) |
 | `initialPromptSkill` | string | Skill invocation prepended (followed by a space) to the first prompt of the topic, e.g. `"$st-buddy"` for codex/junie; empty disables the prefix (default: `"/smalltalk-dev:st-buddy"`) |
 
 **Errors:** `10001` if the `topicId` does not exist.

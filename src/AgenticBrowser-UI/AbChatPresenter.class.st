@@ -505,7 +505,7 @@ AbChatPresenter >> onSendButtonClicked [
 	text := self normalInputPresenter inputText trimBoth.
 	text ifEmpty: [ ^ self ].
 	self normalInputPresenter clearInput.
-	initialPromptSkill := self currentTopic settings initialPromptSkill trimBoth.
+	initialPromptSkill := self currentTopic settings initialPromptSkill.
 	promptText := (self isFirstMessageInTopic and: [ initialPromptSkill notEmpty ])
 		              ifTrue: [ '{1} {2}' format: { initialPromptSkill. text } ]
 		              ifFalse: [ text ].
