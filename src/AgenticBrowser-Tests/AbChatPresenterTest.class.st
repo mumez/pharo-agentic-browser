@@ -37,6 +37,13 @@ AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testStatusBarDropListsUseWidePopup [
+
+	{ presenter commandsDropList. presenter modelDropList. presenter modeDropList } do: [ :dropList |
+		self assert: dropList class equals: AbWidePopupDropListPresenter ]
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testCancelButtonDisabledInitially [
 
 	self deny: presenter normalInputPresenter isCancelEnabled
@@ -71,6 +78,34 @@ AbChatPresenterTest >> testCancelButtonEnabledWhenTopicWorking [
 	presenter topic: topic.
 	presenter onTopicStatusChanged: topic status: #working.
 	self assert: presenter normalInputPresenter isCancelEnabled
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusChangeToWorkingKeepsExportApprovalOnScreen [
+	"Export approvals do not make the agent wait, so the topic may resume working while
+	one is still on screen."
+
+	| topic exportApproval |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter pendingApprovalMessage equals: exportApproval.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testStatusChangeToWorkingExitsAiPermissionApprovalMode [
+
+	| topic aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: aiPermission.
+	presenter onTopicStatusChanged: topic status: #working.
+	self assert: presenter pendingApprovalMessage isNil.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter normalInputPresenter
 ]
 
 { #category : 'tests' }
@@ -120,6 +155,20 @@ AbChatPresenterTest >> testConfirmApprovalUsesSelectedOptionId [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testConfirmApprovalAnswersTheMessageOnScreen [
+
+	| topic exportApproval aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onConfirmButtonClicked.
+	self assert: exportApproval approvalOption equals: presenter confirmPresenter selectedOptionId.
+	self assert: aiPermission approvalOption isNil
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testConfirmButtonClickSwitchesToNormalInputPresenter [
 
 	| topic approvalMessage |
@@ -141,6 +190,20 @@ AbChatPresenterTest >> testDenyApprovalExitsApprovalMode [
 	presenter enterApprovalMode: approvalMessage.
 	presenter onDenyButtonClicked.
 	self assert: presenter pendingApprovalMessage isNil
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testDenyApprovalAnswersTheMessageOnScreen [
+
+	| topic exportApproval aiPermission |
+	topic := self newTopic.
+	presenter topic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	presenter enterApprovalMode: exportApproval.
+	presenter onDenyButtonClicked.
+	self assert: exportApproval approvalOption equals: presenter confirmPresenter selectedOptionIdForDenyAction.
+	self assert: aiPermission approvalOption isNil
 ]
 
 { #category : 'tests' }
@@ -476,6 +539,37 @@ AbChatPresenterTest >> testOnMessageAddedResolvedApprovalExitsApprovalMode [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedResolvedApprovalShowsTheNextPending [
+
+	| first second |
+	first := AbMessage aiPermissionRequestText: 'Read a?'.
+	second := AbMessage aiPermissionRequestText: 'Read b?'.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	first approvalOption: AbConstants allowOnce.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	self assert: presenter pendingApprovalMessage equals: second.
+	self assert: presenter currentAnswerAreaPresenter equals: presenter confirmPresenter
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testOnMessageAddedSecondApprovalRequestKeepsTheFirstOnScreen [
+	"AbTopic answers the oldest pending request, so the chat must keep showing it
+	when the agent sends more requests before it is answered."
+
+	| first second |
+	first := AbMessage aiPermissionRequestText: 'Read a?'.
+	second := AbMessage aiPermissionRequestText: 'Read b?'.
+	presenter onMessageAdded: first.
+	presenter onMessageAdded: second.
+
+	self assert: presenter pendingApprovalMessage equals: first
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testOnMessageAddedUpdatesMessagesPresenterCount [
 
 	| msg |
@@ -525,7 +619,43 @@ AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 	presenter normalInputPresenter inputField text: 'hello world'.
 	presenter onSendButtonClicked.
 	self assert: topic messages size equals: 1.
-	self assert: topic messages first text equals: '/st-buddy hello world'
+	self assert: topic messages first text equals: '/smalltalk-dev:st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonPrefixesFirstMessageWithCustomInitialPromptSkill [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithCustomSkill'.
+	topic settings initialPromptSkill: '$st-buddy'.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: '$st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonPrefixesFirstMessageWithTrimmedInitialPromptSkill [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithPaddedSkill'.
+	topic settings initialPromptSkill: ' $st-buddy '.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: '$st-buddy hello world'
+]
+
+{ #category : 'tests' }
+AbChatPresenterTest >> testSendButtonDoesNotPrefixFirstMessageWhenInitialPromptSkillIsEmpty [
+
+	| topic |
+	topic := AbMockTopicNoPromptSend new title: 'ab-test-sendButtonWithEmptySkill'.
+	topic settings initialPromptSkill: ''.
+	presenter topic: topic.
+	presenter normalInputPresenter inputField text: 'hello world'.
+	presenter onSendButtonClicked.
+	self assert: topic messages first text equals: 'hello world'
 ]
 
 { #category : 'tests' }

@@ -381,7 +381,7 @@ AbTopicTest >> testRequestPackageExportFromIdleReturnsResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #initial
@@ -457,7 +457,7 @@ AbTopicTest >> testRequestPermissionFromDoneTransitionsToWorking [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
@@ -474,7 +474,7 @@ AbTopicTest >> testRequestPermissionReturnsResolvedResponse [
 	done signal ] fork.
 	[ topic hasPendingApprovalRequest ] whileFalse: [
 		(Delay forMilliseconds: 1) wait ].
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	done waitTimeoutMilliseconds: 1000.
 	self assert: option equals: AbConstants allowOnce
 ]
@@ -513,6 +513,113 @@ AbTopicTest >> testRequestPermissionTimesOutUsingAiPermissionTimeoutOption [
 ]
 
 { #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutWithSeveralPendingKeepsWaitingForHuman [
+
+	| topic timedOut pending |
+	topic := AbTopic new.
+	topic settings aiPermissionTimeoutOption: AbConstants allowAlways.
+	topic stateMachine handleEvent: #promptSent.
+	timedOut := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+
+	topic respondAiPermissionOnTimeout: timedOut.
+	self assert: timedOut approvalOption equals: AbConstants allowAlways.
+	self assert: topic status equals: #waitingForHuman.
+	self assert: topic pendingApprovalMessage equals: pending
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutWithSeveralPendingAnnouncesTheNextPending [
+
+	| topic timedOut pending announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	timedOut := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic respondAiPermissionOnTimeout: timedOut.
+	self assert: announced last equals: pending ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutOfLastPendingResumesWorking [
+
+	| topic answered timedOut |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	timedOut := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	answered approvalOption: AbConstants allowOnce.
+
+	topic respondAiPermissionOnTimeout: timedOut.
+	self assert: timedOut approvalOption equals: topic settings aiPermissionTimeoutOption.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutOfAlreadyAnsweredMessageKeepsItsAnswer [
+	"The human may answer just before the timeout fires."
+
+	| topic answered |
+	topic := AbTopic new.
+	topic settings aiPermissionTimeoutOption: AbConstants rejectOnce.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+
+	topic respondAiPermissionOnTimeout: answered.
+	self assert: answered approvalOption equals: AbConstants allowOnce.
+	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testAiPermissionTimeoutOfAlreadyAnsweredMessageWithSeveralPendingDoesNotAnnounceTheNextAgain [
+	"The human answers the first request (which announces the second), then the first request's timeout fires."
+
+	| topic answered pending announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+	self assert: (announced occurrencesOf: pending) equals: 1.
+
+	topic respondAiPermissionOnTimeout: answered.
+	self assert: (announced occurrencesOf: pending) equals: 1.
+	self assert: answered approvalOption equals: AbConstants allowOnce.
+	self assert: topic status equals: #waitingForHuman ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testExportApprovalTimeoutWhileWaitingForHumanKeepsWaitingForHuman [
+	"Export approvals never make the agent wait, so their timeout must not resume working."
+
+	| topic exportApproval aiPermission |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+
+	topic respondExportOnTimeout: exportApproval.
+	self assert: exportApproval approvalOption equals: topic settings exportApprovalTimeoutOption.
+	self assert: aiPermission approvalOption isNil.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
 AbTopicTest >> testResolveApprovalAllowAlways [
 
 	| topic msg |
@@ -521,7 +628,7 @@ AbTopicTest >> testResolveApprovalAllowAlways [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I modify DBAdapter?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
@@ -535,9 +642,100 @@ AbTopicTest >> testResolveApprovalRejectOnce [
 	topic stateMachine handleEvent: #permissionRequested.
 	msg := AbMessage aiPermissionRequestText: 'May I delete files?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #working
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testPendingApprovalMessageWithId [
+
+	| topic answered pending |
+	topic := AbTopic new.
+	answered := topic addAiPermissionRequest: 'Read a?'.
+	answered approvalOption: AbConstants allowOnce.
+	pending := topic addExportApprovalRequest: 'Export Foo?'.
+	self assert: (topic pendingApprovalMessageWithId: pending id) equals: pending.
+	self assert: (topic pendingApprovalMessageWithId: answered id) isNil.
+	self assert: (topic pendingApprovalMessageWithId: 'no-such-id') isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalOfAlreadyAnsweredMessageAnnouncesTheNextPending [
+	"The human clicks on a request a timeout has just answered: the click must still
+	bring the next pending request to the screen."
+
+	| topic answered pending announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	answered approvalOption: AbConstants rejectOnce.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+	self assert: announced last equals: pending ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalOfAlreadyAnsweredMessageKeepsItsAnswer [
+	"The request on screen may have been answered by a timeout before the human clicks."
+
+	| topic answered pending |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	answered := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	pending := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	answered approvalOption: AbConstants rejectOnce.
+
+	topic resolveApproval: answered withOptionId: AbConstants allowOnce.
+	self assert: answered approvalOption equals: AbConstants rejectOnce.
+	self assert: pending approvalOption isNil
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithOptionIdAnswersTheGivenMessage [
+	"An export approval may be on screen while an older AI permission request is pending:
+	the answer must go to the request the human is looking at."
+
+	| topic exportApproval aiPermission |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+
+	topic resolveApproval: exportApproval withOptionId: AbConstants rejectOnce.
+	self assert: exportApproval approvalOption equals: AbConstants rejectOnce.
+	self assert: aiPermission approvalOption isNil.
+	self assert: topic status equals: #waitingForHuman
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalOfLastAiPermissionResumesWorkingWithExportApprovalPending [
+	"Only AI permission requests make the agent wait: once none is left, the topic must
+	resume working even if an export approval is still pending, so #turnEnded is not lost."
+
+	| topic aiPermission exportApproval announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveApproval: aiPermission withOptionId: AbConstants allowOnce.
+	self assert: topic status equals: #working.
+	self assert: exportApproval approvalOption isNil.
+	self assert: announced last equals: exportApproval ]
+		ensure: [ topic announcer unsubscribe: self ]
 ]
 
 { #category : 'tests' }
@@ -547,12 +745,12 @@ AbTopicTest >> testResolveApprovalWhenNotWaitingForHumanDoesNotChangeState [
 	topic := AbTopic new.
 	msg := AbMessage aiPermissionRequestText: 'Export?'.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: topic status equals: #initial
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testResolveApprovalWithOptionId [
+AbTopicTest >> testResolveCurrentPendingApprovalWithOptionId [
 
 	| topic msg |
 	topic := AbTopic new.
@@ -564,19 +762,63 @@ AbTopicTest >> testResolveApprovalWithOptionId [
 				       'Allow once' -> AbConstants allowOnce.
 				       'Deny' -> AbConstants rejectOnce }.
 	topic messages add: msg.
-	topic resolveApprovalWithOptionId: AbConstants allowOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
 	self assert: msg approvalOption equals: AbConstants allowOnce.
 	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }
-AbTopicTest >> testResolveApprovalWithOptionIdResolvesExportApproval [
+AbTopicTest >> testResolveCurrentPendingApprovalWithOptionIdResolvesExportApproval [
 	| topic msg |
 	topic := AbTopic new.
 	msg := topic addExportApprovalRequest: 'Export Foo?'.
-	topic resolveApprovalWithOptionId: AbConstants rejectOnce.
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
 	self assert: msg approvalOption equals: AbConstants rejectOnce.
 	self assert: topic status equals: #initial
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithSeveralPendingAnnouncesTheNext [
+	"AbChatPresenter shows a request when it is announced; after the first of several
+	concurrent requests is answered, the next one must be announced so it gets shown."
+
+	| topic first second announced |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	first := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	second := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+	announced := OrderedCollection new.
+	topic announcer
+		when: AbMessageAdded
+		do: [ :ann | announced add: ann message ]
+		for: self.
+	[
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
+	self assert: (announced includes: first).
+	self assert: announced last equals: second ]
+		ensure: [ topic announcer unsubscribe: self ]
+]
+
+{ #category : 'tests' }
+AbTopicTest >> testResolveApprovalWithSeveralPendingKeepsWaitingForHuman [
+	"The agent may ask for several permissions at once. Answering one must leave the
+	topic waiting for the others, and resume working only after the last one."
+
+	| topic first second |
+	topic := AbTopic new.
+	topic stateMachine handleEvent: #promptSent.
+	first := topic addAiPermissionRequestAndWaitForHuman: 'Read a?' options: AbConstants defaultApprovalOptions.
+	second := topic addAiPermissionRequestAndWaitForHuman: 'Read b?' options: AbConstants defaultApprovalOptions.
+
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants allowOnce.
+	self assert: first approvalOption equals: AbConstants allowOnce.
+	self assert: second approvalOption isNil.
+	self assert: topic pendingApprovalMessage equals: second.
+	self assert: topic status equals: #waitingForHuman.
+
+	topic resolveCurrentPendingApprovalWithOptionId: AbConstants rejectOnce.
+	self assert: second approvalOption equals: AbConstants rejectOnce.
+	self assert: topic status equals: #working
 ]
 
 { #category : 'tests' }

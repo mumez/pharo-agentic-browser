@@ -19,7 +19,8 @@ Collaborators:
 Public API and Key Messages:
 - #sendPrompt: / #sendPrompt:withResources: - Send a human message and execute the agent.
 - #requestPermission: / #requestPermission:options: - Block the agent thread for human approval.
-- #resolveApprovalWithOptionId: - Resolve a pending approval from the UI.
+- #resolveApproval:withOptionId: - Resolve the approval shown in the UI.
+- #resolveCurrentPendingApprovalWithOptionId: - Resolve the current pending approval (AI permission requests first).
 - #goalDescription: - Set a goal and notify the agent.
 - #status - Return the current FSM state name (#initial, #working, #waitingForHuman, #endTurn, #goalAchieved).
 
@@ -500,6 +501,14 @@ AbTopic >> pendingApprovalMessage [
 ]
 
 { #category : 'approval-private' }
+AbTopic >> pendingApprovalMessageWithId: aMessageId [
+
+	^ self messages
+		detect: [ :m | m isApprovalRequest and: [ m approvalOption isNil and: [ m id = aMessageId ] ] ]
+		ifNone: [ nil ]
+]
+
+{ #category : 'approval-private' }
 AbTopic >> pendingExportApprovalMessage [
 
 	^ self messages
@@ -509,32 +518,34 @@ AbTopic >> pendingExportApprovalMessage [
 
 { #category : 'approval-private' }
 AbTopic >> respondAiPermissionOnTimeout: aMessage [
+	"Resolve it the same way as a human answer, so other pending requests keep the topic waiting for human.
+	A message the human answered just before the timeout was already resolved."
 
 	self
-		respondOnTimeout: aMessage
-		approvalOption: self settings aiPermissionTimeoutOption
-		logMessage: 'requestPermission: timeout reached, auto resolving by timeout option'
-		changeToHumanResponded: true
+		respondOnTimeoutBy: [
+			self logger debug: 'requestPermission: timeout reached, auto resolving by timeout option'.
+			self resolveApproval: aMessage withOptionId: self settings aiPermissionTimeoutOption ]
+		doNothingIfAnswered: aMessage
 ]
 
 { #category : 'approval-private' }
 AbTopic >> respondExportOnTimeout: aMessage [
+	"Export approvals never make the agent wait, so the state is left unchanged."
 
 	self
-		respondOnTimeout: aMessage
-		approvalOption: self settings exportApprovalTimeoutOption
-		logMessage: 'requestPackageExport: timeout reached, auto resolving by timeout option'
-		changeToHumanResponded: false
+		respondOnTimeoutBy: [
+			self logger debug: 'requestPackageExport: timeout reached, auto resolving by timeout option'.
+			aMessage approvalOption: self settings exportApprovalTimeoutOption.
+			self announceMessageAdded: aMessage ]
+		doNothingIfAnswered: aMessage
 ]
 
 { #category : 'approval-private' }
-AbTopic >> respondOnTimeout: aMessage approvalOption: anOptionSymbol logMessage: aString changeToHumanResponded: aBoolean [
+AbTopic >> respondOnTimeoutBy: aBlock doNothingIfAnswered: aMessage [
+	"A timeout resolves only a message nobody answered yet; the human may have answered just before it fired."
+
 	aMessage approvalOption ifNotNil: [ ^ self ].
-	self logger debug: aString.
-	aMessage approvalOption: anOptionSymbol.
-	self announceMessageAdded: aMessage.
-	(aBoolean and: [ self isWaitingForHuman ]) ifTrue: [
-		self stateMachine handleEvent: #humanResponded ]
+	aBlock value
 ]
 
 { #category : 'accessing' }
@@ -592,15 +603,30 @@ AbTopic >> resetFromGoalAchieved [
 ]
 
 { #category : 'operations' }
-AbTopic >> resolveApprovalWithOptionId: anOptionId [
+AbTopic >> resolveApproval: anApprovalMessage withOptionId: anOptionId [
+	"Answer anApprovalMessage, the request shown to the human; it may already have been
+	answered by a timeout, which keeps its answer. The agent may ask for several permissions
+	at once: announce the next pending request, and resume working once no request that
+	blocks the agent is left (#pendingApprovalMessage answers those first)."
 
-	| pending |
-	pending := self pendingApprovalMessage.
-	pending ifNil: [ ^ self ].
-	pending approvalOption: anOptionId.
+	anApprovalMessage ifNil: [ ^ self ].
+	anApprovalMessage approvalOption ifNil: [
+		anApprovalMessage approvalOption: anOptionId.
+		self announceMessageAdded: anApprovalMessage ].
+	self pendingApprovalMessage ifNotNil: [ :next |
+		self announceMessageAdded: next.
+		next blocksAgentProgress ifTrue: [ ^ self ] ].
 	self isWaitingForHuman ifTrue: [ self stateMachine handleEvent: #humanResponded ].
 	self logger debug: 'resolveApproval: status(after humanResponded)=' , self status printString.
 	self logger debug: 'resolveApproval: done'
+]
+
+{ #category : 'operations' }
+AbTopic >> resolveCurrentPendingApprovalWithOptionId: anOptionId [
+	"Answer the current pending request (see #pendingApprovalMessage: AI permission requests
+	come before export approvals), for clients that do not know which request is shown."
+
+	self resolveApproval: self pendingApprovalMessage withOptionId: anOptionId
 ]
 
 { #category : 'operations' }

@@ -13,6 +13,7 @@ CLAUDE.md
 CLAUDE.local.md
 opencode.json
 .worktrees/
+wt-*/
 .audit/
 openspec/
 

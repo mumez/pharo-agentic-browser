@@ -6,11 +6,11 @@ Responsibility:
 - I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, file attachment button, and animated dots label.
 - I subscribe to topic announcements (AbMessageAdded, AbTopicStatusChanged, AbTopicCurrentModelChanged, AbTopicCurrentModeChanged, AbTopicAvailableCommandsChanged) and update the UI accordingly.
 - I switch layouts dynamically between ""normal"" and ""approval"" mode when an AbMessage with isApprovalRequest = true arrives.
-- I prepend '/st-buddy ' to the first human message sent in a topic.
+- I prepend the topic's #initialPromptSkill setting (e.g. '/smalltalk-dev:st-buddy') and a space to the first human message sent in a topic, unless the setting is empty.
 - I collect @mention resources (code and screenshots) and selected file attachments from the input text before sending a prompt.
 
 Collaborators:
-- AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApprovalWithOptionId:, setConfigOptionId:value:).
+- AbTopic: I subscribe to its announcer and forward user actions (sendPrompt:withResources:, cancelPrompt, resolveApproval:withOptionId:, setConfigOptionId:value:).
 - AbMessagesPresenter: I delegate message rendering to it.
 - AbNormalInputPresenter: My default input widget; I enable/disable Cancel based on topic status.
 - AbConfirmPresenter: Replaces the input area during approval mode.
@@ -219,11 +219,11 @@ AbChatPresenter >> initializeStatusBar [
 		layout: (SpBoxLayout newLeftToRight
 				 borderWidth: 2;
 				 vAlignCenter;
-				 add: (commandsDropList := statusBarPresenter newDropList)
+				 add: (commandsDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 120 ];
-				 add: (modelDropList := statusBarPresenter newDropList)
+				 add: (modelDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 220 ];
-				 add: (modeDropList := statusBarPresenter newDropList)
+				 add: (modeDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 120 ];
 				 add: (screenshotButton := statusBarPresenter newButton)
 				 withConstraints: [ :c | c width: 28 ];
@@ -419,7 +419,8 @@ AbChatPresenter >> onConfirmButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
 	self currentTopic
-		resolveApprovalWithOptionId: self confirmPresenter selectedOptionId.
+		resolveApproval: self pendingApprovalMessage
+		withOptionId: self confirmPresenter selectedOptionId.
 	self exitApprovalMode
 ]
 
@@ -428,18 +429,22 @@ AbChatPresenter >> onDenyButtonClicked [
 
 	self currentTopic ifNil: [ ^ self ].
 	self currentTopic
-		resolveApprovalWithOptionId: self confirmPresenter selectedOptionIdForDenyAction.
+		resolveApproval: self pendingApprovalMessage
+		withOptionId: self confirmPresenter selectedOptionIdForDenyAction.
 	self exitApprovalMode
 ]
 
 { #category : 'event handling' }
 AbChatPresenter >> onMessageAdded: anAbMessage [
+	"Show one request at a time: keep the request on screen until the human answers it
+	(onConfirmButtonClicked / onDenyButtonClicked); AbTopic then announces the next one."
 
 	self messagesPresenter addOrUpdateMessage: anAbMessage.
-	(anAbMessage isApprovalRequest and: [ anAbMessage approvalOption isNil ])
-		ifTrue: [ self enterApprovalMode: anAbMessage ].
 	(anAbMessage == self pendingApprovalMessage and: [
-		 anAbMessage approvalOption notNil ]) ifTrue: [ self exitApprovalMode ]
+		 anAbMessage approvalOption notNil ]) ifTrue: [ self exitApprovalMode ].
+	(anAbMessage isApprovalRequest and: [
+		 anAbMessage approvalOption isNil and: [ self pendingApprovalMessage isNil ] ])
+		ifTrue: [ self enterApprovalMode: anAbMessage ]
 ]
 
 { #category : 'event handling' }
@@ -495,14 +500,14 @@ AbChatPresenter >> onFileAttachmentButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText mentions resources screenshots fileAttachments |
+	| text initialPromptSkill promptText mentions resources screenshots fileAttachments |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimBoth.
 	text ifEmpty: [ ^ self ].
 	self normalInputPresenter clearInput.
-	promptText := (self isFirstMessageInTopic and: [
-		               self currentTopic settings useStBuddySkillOnInitialPrompt ])
-		              ifTrue: [ '/st-buddy ' , text ]
+	initialPromptSkill := self currentTopic settings initialPromptSkill.
+	promptText := (self isFirstMessageInTopic and: [ initialPromptSkill notEmpty ])
+		              ifTrue: [ '{1} {2}' format: { initialPromptSkill. text } ]
 		              ifFalse: [ text ].
 	mentions := AbCodeMentionParser parseFrom: text.
 	resources := AbCodeMentionEmbedder resourcesFor: mentions.
@@ -569,7 +574,9 @@ AbChatPresenter >> onTopicStatusChanged: aTopic status: aStatus [
 	aStatus = #working
 		ifTrue: [ self startDotsAnimation ]
 		ifFalse: [ self stopDotsAnimation ].
-	(self pendingApprovalMessage notNil and: [ aStatus ~= #waitingForHuman ])
+	"Requests that do not block the agent stay on screen while it works."
+	(self pendingApprovalMessage notNil and: [
+		 self pendingApprovalMessage blocksAgentProgress and: [ aStatus ~= #waitingForHuman ] ])
 		ifTrue: [ self exitApprovalMode ].
 	self messagesPresenter refreshMessages
 ]

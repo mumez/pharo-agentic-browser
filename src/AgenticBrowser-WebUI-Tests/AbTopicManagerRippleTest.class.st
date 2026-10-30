@@ -573,6 +573,46 @@ AbTopicManagerRippleTest >> testSendPromptSignalsErrorWhenTopicNotFound [
 ]
 
 { #category : 'tests' }
+AbTopicManagerRippleTest >> testResolveApprovalWithAnsweredMessageIdSignalsNoPendingApproval [
+
+	| topic answered msg |
+	topic := self newMockTopic: 'Approve Test'.
+	AbTopicManager forTest addTopic: topic.
+	answered := topic addAiPermissionRequest: 'Read a?'.
+	answered approvalOption: AbConstants rejectOnce.
+	topic addAiPermissionRequest: 'Read b?'.
+	mockSocket reset.
+	msg := self sendMessage: '/approval/resolve'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'messageId' put: answered id;
+			        at: 'optionId' put: AbConstants allowOnce;
+			        yourself).
+	self dispatch: msg.
+	self assert: (mockSocket lastError at: 'error') code equals: 10003.
+	self assert: answered approvalOption equals: AbConstants rejectOnce
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testResolveApprovalWithMessageIdAnswersThatMessage [
+
+	| topic exportApproval aiPermission msg |
+	topic := self newMockTopic: 'Approve Test'.
+	AbTopicManager forTest addTopic: topic.
+	exportApproval := topic addExportApprovalRequest: 'Export Foo?'.
+	aiPermission := topic addAiPermissionRequest: 'Read a?'.
+	msg := self sendMessage: '/approval/resolve'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'messageId' put: exportApproval id;
+			        at: 'optionId' put: AbConstants allowOnce;
+			        yourself).
+	self dispatch: msg.
+	self assert: exportApproval approvalOption equals: AbConstants allowOnce.
+	self assert: aiPermission approvalOption isNil
+]
+
+{ #category : 'tests' }
 AbTopicManagerRippleTest >> testResolveApprovalSignalsErrorWhenNoPendingApproval [
 
 	| topic msg |
@@ -1149,7 +1189,8 @@ AbTopicManagerRippleTest >> testGetSettingsRepliesWithDefaultValues [
 	self assert: (settings at: 'useDefaultMcpServers') equals: true.
 	self assert: (settings at: 'aiPermissionWaitTimeoutSeconds') equals: 1800.
 	self assert: (settings at: 'aiPermissionTimeoutOption') equals: AbConstants rejectOnce.
-	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true
+	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true.
+	self assert: (settings at: 'initialPromptSkill') equals: '/smalltalk-dev:st-buddy'
 ]
 
 { #category : 'tests' }
@@ -1179,6 +1220,25 @@ AbTopicManagerRippleTest >> testSetSettingsUpdatesTopicSettings [
 	self assert: topic settings aiPermissionWaitTimeoutSeconds equals: 60.
 	self assert: topic settings aiPermissionTimeoutOption equals: AbConstants allowOnce.
 	self assert: topic settings useStBuddySkillOnInitialPrompt equals: false
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetSettingsUpdatesInitialPromptSkill [
+
+	| topic msg |
+	topic := self newTopic: 'Settings Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/setSettings'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'settings' put: (Dictionary new
+				         at: 'initialPromptSkill' put: '$st-buddy';
+				         at: 'useStBuddySkillOnInitialPrompt' put: false;
+				         yourself);
+			        yourself).
+	ripple handleRequest: msg.
+	self assert: ((mockSocket lastReply at: 'body') at: 'ok').
+	self assert: topic settings initialPromptSkill equals: '$st-buddy'
 ]
 
 { #category : 'tests' }

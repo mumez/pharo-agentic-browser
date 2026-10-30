@@ -169,7 +169,7 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'codingAgents').
 	self assert: (dict includesKey: 'goalSetCommand').
 	self assert: (dict includesKey: 'useCommandOnGoalSet').
-	self assert: (dict includesKey: 'useStBuddySkillOnInitialPrompt').
+	self assert: (dict includesKey: 'initialPromptSkill').
 	self assert: (dict includesKey: 'goalHavingTopicStallThresholdSeconds').
 	self assert: (dict includesKey: 'monitoringIntervalSeconds').
 	self assert: (dict includesKey: 'useCrit').
@@ -177,7 +177,8 @@ AbSettingsTest >> testAsFullJsonDictionaryContainsAllAccessingKeys [
 	self assert: (dict includesKey: 'critAllowUnauthenticatedNetwork').
 	self deny: (dict includesKey: 'watcherMessageThrottleDuration').
 	self deny: (dict includesKey: 'stallMonitoringIntervalSeconds').
-	self deny: (dict includesKey: 'critPortInterval')
+	self deny: (dict includesKey: 'critPortInterval').
+	self deny: (dict includesKey: 'useStBuddySkillOnInitialPrompt')
 ]
 
 { #category : 'tests' }
@@ -192,6 +193,14 @@ AbSettingsTest >> testDefaultCodingAgentsContainsClaudeAgentAcp [
 	| agents |
 	agents := AbSettings default codingAgents.
 	self assert: (agents anySatisfy: [ :each | (each at: 'name') = 'claude-agent-acp' ])
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testDefaultAgentArgumentsPresetsContainsGrokBuild [
+
+	self
+		assert: (AbSettings default agentArgumentsPresets at: 'Grok Build')
+		equals: #( 'grok' 'agent' 'stdio' )
 ]
 
 { #category : 'tests' }
@@ -243,18 +252,113 @@ AbSettingsTest >> testUseCommandOnGoalSetSettable [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillDefaultIsStBuddy [
+
+	self assert: AbSettings default initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillSettable [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: '$st-buddy'.
+	self assert: settings initialPromptSkill equals: '$st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillSetterTreatsNilAsEmpty [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: nil.
+	self assert: settings initialPromptSkill equals: ''.
+	self deny: settings useStBuddySkillOnInitialPrompt
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testInitialPromptSkillSetterTrimsSurroundingSpaces [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: ' $st-buddy '.
+	self assert: settings initialPromptSkill equals: '$st-buddy'
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testUseStBuddySkillOnInitialPromptDefaultIsTrue [
 
 	self assert: AbSettings default useStBuddySkillOnInitialPrompt
 ]
 
 { #category : 'tests' }
-AbSettingsTest >> testUseStBuddySkillOnInitialPromptSettable [
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptTrueSetsDefaultInitialPromptSkill [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	settings initialPromptSkill: '$st-buddy'.
+	settings useStBuddySkillOnInitialPrompt: true.
+	self assert: settings initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptFalseClearsInitialPromptSkill [
 
 	| settings |
 	settings := AbSettings defaultCopied.
 	settings useStBuddySkillOnInitialPrompt: false.
-	self assert: settings useStBuddySkillOnInitialPrompt equals: false
+	self assert: settings initialPromptSkill equals: ''.
+	self deny: settings useStBuddySkillOnInitialPrompt
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptSetterDoesNotStoreOwnKey [
+
+	| settings |
+	settings := AbSettings new.
+	settings useStBuddySkillOnInitialPrompt: true.
+	self deny: (settings keys includes: #useStBuddySkillOnInitialPrompt)
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptIsTrueForStBuddySkills [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	#( '/st-buddy' '/smalltalk-dev:st-buddy' '$st-buddy' '$smalltalk-dev:st-buddy' ' /smalltalk-dev:st-buddy ' )
+		do: [ :each |
+			settings initialPromptSkill: each.
+			self assert: settings useStBuddySkillOnInitialPrompt ]
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testUseStBuddySkillOnInitialPromptIsFalseForOtherSkills [
+
+	| settings |
+	settings := AbSettings defaultCopied.
+	#( '$other-skill' 'st-buddy' '/st-buddy extra' '' ) do: [ :each |
+		settings initialPromptSkill: each.
+		self deny: settings useStBuddySkillOnInitialPrompt ]
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testLoadFromAcceptsOldUseStBuddySkillOnInitialPromptTrue [
+
+	| file settings |
+	file := FileSystem memory root / 'ab-settings.json'.
+	file writeStreamDo: [ :stream | stream nextPutAll: '{"useStBuddySkillOnInitialPrompt": true}' ].
+	settings := AbSettings loadFrom: file.
+	self assert: settings initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsTest >> testLoadFromAcceptsOldUseStBuddySkillOnInitialPromptFalse [
+
+	| file settings |
+	file := FileSystem memory root / 'ab-settings.json'.
+	file writeStreamDo: [ :stream | stream nextPutAll: '{"useStBuddySkillOnInitialPrompt": false}' ].
+	settings := AbSettings loadFrom: file.
+	self assert: settings initialPromptSkill equals: ''
 ]
 
 { #category : 'tests' }

@@ -154,13 +154,59 @@ AbSettingsPresenterTest >> testUseStBuddySkillOnInitialPromptCheckboxShowsDefaul
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testSaveWritesUseStBuddySkillOnInitialPromptToSettings [
+AbSettingsPresenterTest >> testInitialPromptSkillFieldShowsDefaultValue [
+	self assert: presenter initialPromptSkillField text equals: '/smalltalk-dev:st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testUncheckingUseStBuddySkillCheckboxClearsInitialPromptSkillField [
+	presenter useStBuddySkillOnInitialPromptCheckbox state: false.
+	self assert: presenter initialPromptSkillField text equals: ''
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testCheckingUseStBuddySkillCheckboxRestoresDefaultInitialPromptSkill [
+	presenter useStBuddySkillOnInitialPromptCheckbox state: false.
+	presenter useStBuddySkillOnInitialPromptCheckbox state: true.
+	self assert: presenter initialPromptSkillField text equals: '/smalltalk-dev:st-buddy'
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testEditingInitialPromptSkillFieldKeepsCheckboxState [
+	presenter initialPromptSkillField text: '$st-buddy'.
+	self assert: presenter useStBuddySkillOnInitialPromptCheckbox state equals: true
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testOpeningOnCustomInitialPromptSkillShowsItWithCheckboxOff [
+	| s |
+	s := AbSettings new.
+	s initialPromptSkill: '$other-skill'.
+	presenter := AbSettingsPresenter on: s.
+	self assert: presenter initialPromptSkillField text equals: '$other-skill'.
+	self deny: presenter useStBuddySkillOnInitialPromptCheckbox state
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesClearedInitialPromptSkillToSettings [
 	| s |
 	s := AbSettings new.
 	presenter := AbSettingsPresenter on: s.
 	presenter useStBuddySkillOnInitialPromptCheckbox state: false.
 	presenter saveSettings.
-	self assert: s useStBuddySkillOnInitialPrompt equals: false
+	self assert: s initialPromptSkill equals: ''.
+	self deny: s useStBuddySkillOnInitialPrompt
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesCustomInitialPromptSkillWhileCheckboxIsOn [
+	| s |
+	s := AbSettings new.
+	presenter := AbSettingsPresenter on: s.
+	presenter initialPromptSkillField text: '$st-buddy'.
+	presenter saveSettings.
+	self assert: presenter useStBuddySkillOnInitialPromptCheckbox state equals: true.
+	self assert: s initialPromptSkill equals: '$st-buddy'
 ]
 
 { #category : 'tests' }
@@ -305,6 +351,19 @@ AbSettingsPresenterTest >> testSaveIgnoresInvalidCritPortRangeWhenCritSettingsAr
 	self presenter saveAction: [ called := true ].
 	self assert: self presenter saveSettings.
 	self assert: called
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testWindowIsShorterWhenCritSettingsAreHidden [
+	| presenterWithoutCrit |
+	presenterWithoutCrit := AbSettingsPresenter on: AbSettings new.
+	presenterWithoutCrit showsCritSettings: false.
+	self presenter open.
+	presenterWithoutCrit open.
+	[ self assert: presenterWithoutCrit window initialExtent y < self presenter window initialExtent y ]
+		ensure: [
+			self presenter window close.
+			presenterWithoutCrit window close ]
 ]
 
 { #category : 'tests' }

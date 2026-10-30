@@ -2,7 +2,8 @@
 I am a settings editor that presents and saves an AbSettings instance.
 
 Responsibility:
-- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the crit review checkbox, the crit LAN access checkbox, and the crit port range field.
+- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the initial prompt skill field with its st-buddy checkbox, the crit review checkbox, the crit LAN access checkbox, and the crit port range field.
+- I rewrite the initial prompt skill field when the st-buddy checkbox is toggled (on: the AbSettings default skill, off: empty); editing the field does not change the checkbox, and on save only the field text is written.
 - I validate the crit port range on save (reusing AbSettings>>critPortInterval); when it is invalid I write nothing, skip the saveAction, keep the window open, and show the expected format in a validation message label.
 - I support two entry points: editing the global default settings (via #openOnDefault) and editing a per-topic copy (via #openOnTopic:).
 - On save I invoke a configurable saveAction block; for the global path this writes ab-settings.json, for the topic path it replaces the topic's in-memory settings only.
@@ -16,7 +17,7 @@ Public API and Key Messages:
 - AbSettingsPresenter class>>openOnDefault - Open editor for the global AbSettings singleton; saves to ab-settings.json on confirm.
 - AbSettingsPresenter class>>openOnTopic: - Open editor for a topic's settings copy; replaces the topic's settings on confirm without a global save. The crit settings are hidden because crit reads only the global settings.
 - #saveAction: - Inject a custom save block (receives the edited AbSettings as argument).
-- #showsCritSettings: - Show or hide the crit review checkbox, network access checkbox, port range field, and validation message (shown by default).
+- #showsCritSettings: - Show or hide the crit review checkbox, network access checkbox, port range field, and validation message (shown by default); the window is shorter when they are hidden.
 
 Internal Representation:
 - saveAction - Block called with the edited AbSettings on save; defaults to a no-op.
@@ -37,6 +38,7 @@ Class {
 		'useDefaultMcpServersCheckbox',
 		'useCommandOnGoalSetCheckbox',
 		'goalSetCommandField',
+		'initialPromptSkillField',
 		'useStBuddySkillOnInitialPromptCheckbox',
 		'useCritCheckbox',
 		'critAllowUnauthenticatedNetworkCheckbox',
@@ -132,6 +134,11 @@ AbSettingsPresenter >> useCommandOnGoalSetCheckbox [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> initialPromptSkillField [
+	^ initialPromptSkillField
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> useStBuddySkillOnInitialPromptCheckbox [
 	^ useStBuddySkillOnInitialPromptCheckbox
 ]
@@ -193,7 +200,7 @@ AbSettingsPresenter >> saveSettings [
 	self settings useDefaultMcpServers: useDefaultMcpServersCheckbox state.
 	self settings useCommandOnGoalSet: useCommandOnGoalSetCheckbox state.
 	self settings goalSetCommand: goalSetCommandField text.
-	self settings useStBuddySkillOnInitialPrompt: useStBuddySkillOnInitialPromptCheckbox state.
+	self settings initialPromptSkill: initialPromptSkillField text.
 	self settings useCrit: self useCritCheckbox state.
 	self settings critAllowUnauthenticatedNetwork: self critAllowUnauthenticatedNetworkCheckbox state.
 	self settings critPortRange: self critPortRangeField text.
@@ -274,10 +281,7 @@ AbSettingsPresenter >> initializePresenters [
 	goalSetCommandField := self newTextInput.
 	goalSetCommandField text: self settings goalSetCommand.
 
-	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
-	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
-	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
-
+	self initializeInitialPromptSkillPresenters.
 	self initializeCritSettingsPresenters.
 
 	saveButton := self newButton.
@@ -287,6 +291,25 @@ AbSettingsPresenter >> initializePresenters [
 	cancelButton := self newButton.
 	cancelButton label: 'Cancel'.
 	cancelButton action: [ self window close ]
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> updateInitialPromptSkillFieldForUseStBuddySkill: aBoolean [
+	self initialPromptSkillField text: (aBoolean
+			 ifTrue: [ self settings defaultInitialPromptSkill ]
+			 ifFalse: [ '' ])
+]
+
+{ #category : 'initialization' }
+AbSettingsPresenter >> initializeInitialPromptSkillPresenters [
+	useStBuddySkillOnInitialPromptCheckbox := self newCheckBox.
+	useStBuddySkillOnInitialPromptCheckbox label: 'Use st-buddy skill on initial prompt'.
+	useStBuddySkillOnInitialPromptCheckbox state: self settings useStBuddySkillOnInitialPrompt.
+	useStBuddySkillOnInitialPromptCheckbox whenChangedDo: [ :useStBuddySkill |
+		self updateInitialPromptSkillFieldForUseStBuddySkill: useStBuddySkill ].
+
+	initialPromptSkillField := self newTextInput.
+	initialPromptSkillField text: self settings initialPromptSkill
 ]
 
 { #category : 'initialization' }
@@ -331,6 +354,7 @@ AbSettingsPresenter >> addGeneralSettingsTo: aBoxLayout [
 		add: self useDefaultMcpServersCheckbox withConstraints: [ :c | c height: 28 ];
 		add: self useCommandOnGoalSetCheckbox withConstraints: [ :c | c height: 28 ];
 		add: (self labeledRow: 'Goal settings command:' field: self goalSetCommandField);
+		add: (self labeledRow: 'Initial Prompt Skill:' field: self initialPromptSkillField);
 		add: self useStBuddySkillOnInitialPromptCheckbox withConstraints: [ :c | c height: 28 ]
 ]
 
@@ -368,5 +392,15 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ 550
+		initialExtent: 480 @ self windowHeight
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> windowHeight [
+	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it.
+	The heights are fixed pixel values tuned by eye at the default font size; they are not derived from the current font (e.g. StandardFonts defaultFont), so a larger font setting can still clip rows.
+	They grow additively: each added 28 px row plus the layout's 6 px spacing adds 34 px (the 'Initial Prompt Skill:' row raised 550/420 to 584/454). The 130 px difference is the crit block: two 28 px checkboxes, the port range row, the 20 px validation label, and their spacing."
+	^ self showsCritSettings
+		ifTrue: [ 584 ]
+		ifFalse: [ 454 ]
 ]
