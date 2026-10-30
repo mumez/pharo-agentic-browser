@@ -81,9 +81,28 @@ AbWidePopupDropListPresenterTest >> testPopupListWidensToFitWidestItem [
 	self presenter items: { 'st-buddy'. widestItem }.
 	self openWindowOfExtent: 160 @ 100.
 	self dropListMorph showList.
+	self dropListMorph listMorph fullBounds.
 	font := self dropListMorph listMorph font.
 	self assert: self dropListMorph listMorph width > self dropListMorph width.
-	self assert: self dropListMorph listMorph width >= (font widthOfString: widestItem)
+	self assert: self dropListMorph listMorph width >= (font widthOfString: widestItem).
+	"Pins popupListPadding: a theme or font change that makes it too small brings the horizontal scrollbar back."
+	self deny: self dropListMorph listMorph hIsScrollbarShowing
+]
+
+{ #category : 'tests' }
+AbWidePopupDropListPresenterTest >> testPopupListWidensWhenOpeningAbove [
+	"A status bar at the bottom of a low window has little room below, so DropListMorph>>positionList opens the popup above the button."
+
+	SmalltalkImage current isInteractiveGraphic ifFalse: [ ^ self skip ].
+	self presenter items: ((1 to: 10) collect: [ :index |
+			 'smalltalk-dev:smalltalk-implementation-finder-' , index printString ]).
+	self openWindowOfExtent: 160 @ 100.
+	self window adapter widget
+		position: 100 @ (self currentWorld bottom - 100);
+		fullBounds.
+	self dropListMorph showList.
+	self assert: self dropListMorph listMorph bottom <= self dropListMorph boundsInWorld top.
+	self assert: self dropListMorph listMorph width > self dropListMorph width
 ]
 
 { #category : 'tests' }

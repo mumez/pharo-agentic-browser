@@ -6,6 +6,9 @@ Responsibility:
 
 Collaborators:
 - AbMorphicWidePopupDropListAdapter: builds me.
+
+Constraint:
+- I must not declare instance variables. AbMorphicWidePopupDropListAdapter changes the standard SpDropListMorph into me with #adoptInstance:, which fails when the object shape differs.
 "
 Class {
 	#name : 'AbWidePopupDropListMorph',
