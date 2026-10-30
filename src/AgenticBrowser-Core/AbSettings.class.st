@@ -7,6 +7,7 @@ Responsibility:
 - I control whether built-in Smalltalk MCP servers are merged into the agent's MCP config.
 - I control whether crit review is offered (#useCrit), the inclusive port range string (#critPortRange) from which a port is picked when crit starts, and whether crit accepts unauthenticated network access or binds to localhost only (#critAllowUnauthenticatedNetwork).
 - I persist the list of available coding agents shown in the New Topic dialog.
+- I hold the skill invocation (#initialPromptSkill, e.g. '/smalltalk-dev:st-buddy' or '$st-buddy') prepended to the first prompt of a topic; an empty string disables the prefix. #useStBuddySkillOnInitialPrompt is derived from it (true for st-buddy invoked with '/' or '$', with or without the 'smalltalk-dev:' prefix), and its setter is still accepted when loading an older ab-settings.json or via the WebUI /topic/setSettings.
 - I control how often AbTopicManager runs its periodic topic checks via #monitoringIntervalSeconds. I still accept the old key stallMonitoringIntervalSeconds when loading, and save it under the new key.
 - I load from and save to ab-settings.json using STON/JSON serialization.
 - I delegate defaults to the global instance when I am a non-default (per-topic) copy.
@@ -264,9 +265,9 @@ AbSettings >> defaultUseDefaultMcpServers [
 ]
 
 { #category : 'defaults' }
-AbSettings >> defaultUseStBuddySkillOnInitialPrompt [
-	self isDefault ifFalse: [ ^ self class default defaultUseStBuddySkillOnInitialPrompt ].
-	^ true
+AbSettings >> defaultInitialPromptSkill [
+	self isDefault ifFalse: [ ^ self class default defaultInitialPromptSkill ].
+	^ '/smalltalk-dev:st-buddy'
 ]
 
 { #category : 'defaults' }
@@ -411,17 +412,32 @@ AbSettings >> useDefaultMcpServers: aBoolean [
 ]
 
 { #category : 'accessing' }
+AbSettings >> initialPromptSkill [
+
+	^ self at: #initialPromptSkill ifAbsent: [ self defaultInitialPromptSkill ]
+]
+
+{ #category : 'accessing' }
+AbSettings >> initialPromptSkill: aString [
+
+	self at: #initialPromptSkill put: (aString ifNil: [ '' ]) trimBoth
+]
+
+{ #category : 'testing' }
 AbSettings >> useStBuddySkillOnInitialPrompt [
 
-	^ self
-		  at: #useStBuddySkillOnInitialPrompt
-		  ifAbsent: [ self defaultUseStBuddySkillOnInitialPrompt ]
+	"Matches the st-buddy skill with or without the plugin prefix, invoked either as a Claude Code slash command (/) or a Codex skill mention ($)."
+
+	^ self initialPromptSkill matchesRegex: '[/$](smalltalk-dev\:)?st-buddy'
 ]
 
 { #category : 'accessing' }
 AbSettings >> useStBuddySkillOnInitialPrompt: aBoolean [
+	"Kept so that an ab-settings.json saved before #initialPromptSkill existed keeps its choice on load, and so that the WebUI /topic/setSettings still accepts the legacy key."
 
-	self at: #useStBuddySkillOnInitialPrompt put: aBoolean
+	self initialPromptSkill: (aBoolean
+			 ifTrue: [ self defaultInitialPromptSkill ]
+			 ifFalse: [ '' ])
 ]
 
 { #category : 'accessing' }

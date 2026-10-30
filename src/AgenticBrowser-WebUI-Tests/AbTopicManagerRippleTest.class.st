@@ -1189,7 +1189,8 @@ AbTopicManagerRippleTest >> testGetSettingsRepliesWithDefaultValues [
 	self assert: (settings at: 'useDefaultMcpServers') equals: true.
 	self assert: (settings at: 'aiPermissionWaitTimeoutSeconds') equals: 1800.
 	self assert: (settings at: 'aiPermissionTimeoutOption') equals: AbConstants rejectOnce.
-	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true
+	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true.
+	self assert: (settings at: 'initialPromptSkill') equals: '/smalltalk-dev:st-buddy'
 ]
 
 { #category : 'tests' }
@@ -1219,6 +1220,25 @@ AbTopicManagerRippleTest >> testSetSettingsUpdatesTopicSettings [
 	self assert: topic settings aiPermissionWaitTimeoutSeconds equals: 60.
 	self assert: topic settings aiPermissionTimeoutOption equals: AbConstants allowOnce.
 	self assert: topic settings useStBuddySkillOnInitialPrompt equals: false
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testSetSettingsUpdatesInitialPromptSkill [
+
+	| topic msg |
+	topic := self newTopic: 'Settings Test'.
+	AbTopicManager forTest addTopic: topic.
+	msg := self requestMessage: '/topic/setSettings'
+		       body: (Dictionary new
+			        at: 'topicId' put: topic topicId;
+			        at: 'settings' put: (Dictionary new
+				         at: 'initialPromptSkill' put: '$st-buddy';
+				         at: 'useStBuddySkillOnInitialPrompt' put: false;
+				         yourself);
+			        yourself).
+	ripple handleRequest: msg.
+	self assert: ((mockSocket lastReply at: 'body') at: 'ok').
+	self assert: topic settings initialPromptSkill equals: '$st-buddy'
 ]
 
 { #category : 'tests' }

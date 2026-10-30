@@ -483,11 +483,12 @@ AbTopicManagerRipple >> handleSetSettings: aMessage [
 
 { #category : 'private' }
 AbTopicManagerRipple >> topicSettingKeys [
-	"Topic settings exposed to the web UI via /topic/getSettings and /topic/setSettings"
+	"Topic settings exposed to the web UI via /topic/getSettings and /topic/setSettings.
+	initialPromptSkill comes after the legacy useStBuddySkillOnInitialPrompt so that a custom skill sent together with it is not overwritten on set."
 
 	^ #( 'useCommandOnGoalSet' 'goalSetCommand' 'useDefaultMcpServers'
 	     'aiPermissionWaitTimeoutSeconds' 'aiPermissionTimeoutOption'
-	     'useStBuddySkillOnInitialPrompt' )
+	     'useStBuddySkillOnInitialPrompt' 'initialPromptSkill' )
 ]
 
 { #category : 'request handling' }

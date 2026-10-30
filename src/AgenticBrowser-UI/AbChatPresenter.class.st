@@ -6,7 +6,7 @@ Responsibility:
 - I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, file attachment button, and animated dots label.
 - I subscribe to topic announcements (AbMessageAdded, AbTopicStatusChanged, AbTopicCurrentModelChanged, AbTopicCurrentModeChanged, AbTopicAvailableCommandsChanged) and update the UI accordingly.
 - I switch layouts dynamically between ""normal"" and ""approval"" mode when an AbMessage with isApprovalRequest = true arrives.
-- I prepend '/st-buddy ' to the first human message sent in a topic.
+- I prepend the topic's #initialPromptSkill setting (e.g. '/smalltalk-dev:st-buddy') and a space to the first human message sent in a topic, unless the setting is empty.
 - I collect @mention resources (code and screenshots) and selected file attachments from the input text before sending a prompt.
 
 Collaborators:
@@ -500,14 +500,14 @@ AbChatPresenter >> onFileAttachmentButtonClicked [
 { #category : 'event handling' }
 AbChatPresenter >> onSendButtonClicked [
 
-	| text promptText mentions resources screenshots fileAttachments |
+	| text initialPromptSkill promptText mentions resources screenshots fileAttachments |
 	self currentTopic ifNil: [ ^ self ].
 	text := self normalInputPresenter inputText trimBoth.
 	text ifEmpty: [ ^ self ].
 	self normalInputPresenter clearInput.
-	promptText := (self isFirstMessageInTopic and: [
-		               self currentTopic settings useStBuddySkillOnInitialPrompt ])
-		              ifTrue: [ '/st-buddy ' , text ]
+	initialPromptSkill := self currentTopic settings initialPromptSkill.
+	promptText := (self isFirstMessageInTopic and: [ initialPromptSkill notEmpty ])
+		              ifTrue: [ '{1} {2}' format: { initialPromptSkill. text } ]
 		              ifFalse: [ text ].
 	mentions := AbCodeMentionParser parseFrom: text.
 	resources := AbCodeMentionEmbedder resourcesFor: mentions.
