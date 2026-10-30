@@ -219,11 +219,11 @@ AbChatPresenter >> initializeStatusBar [
 		layout: (SpBoxLayout newLeftToRight
 				 borderWidth: 2;
 				 vAlignCenter;
-				 add: (commandsDropList := statusBarPresenter newDropList)
+				 add: (commandsDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 120 ];
-				 add: (modelDropList := statusBarPresenter newDropList)
+				 add: (modelDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 220 ];
-				 add: (modeDropList := statusBarPresenter newDropList)
+				 add: (modeDropList := statusBarPresenter instantiate: AbWidePopupDropListPresenter)
 				 withConstraints: [ :c | c width: 120 ];
 				 add: (screenshotButton := statusBarPresenter newButton)
 				 withConstraints: [ :c | c width: 28 ];

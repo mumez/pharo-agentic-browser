@@ -37,6 +37,13 @@ AbChatPresenterTest >> testCancelButtonClickEndsWorkingTurn [
 ]
 
 { #category : 'tests' }
+AbChatPresenterTest >> testStatusBarDropListsUseWidePopup [
+
+	{ presenter commandsDropList. presenter modelDropList. presenter modeDropList } do: [ :dropList |
+		self assert: dropList class equals: AbWidePopupDropListPresenter ]
+]
+
+{ #category : 'tests' }
 AbChatPresenterTest >> testCancelButtonDisabledInitially [
 
 	self deny: presenter normalInputPresenter isCancelEnabled
