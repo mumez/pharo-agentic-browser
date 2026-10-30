@@ -155,7 +155,7 @@ AbSettingsPresenterTest >> testUseStBuddySkillOnInitialPromptCheckboxShowsDefaul
 
 { #category : 'tests' }
 AbSettingsPresenterTest >> testInitialPromptSkillFieldShowsDefaultValue [
-	self assert: presenter initialPromptSkillField text equals: '/smalltalk-dev:st-buddy'
+	self assert: presenter initialPromptSkillField text equals: '/st-buddy'
 ]
 
 { #category : 'tests' }
@@ -168,7 +168,7 @@ AbSettingsPresenterTest >> testUncheckingUseStBuddySkillCheckboxClearsInitialPro
 AbSettingsPresenterTest >> testCheckingUseStBuddySkillCheckboxRestoresDefaultInitialPromptSkill [
 	presenter useStBuddySkillOnInitialPromptCheckbox state: false.
 	presenter useStBuddySkillOnInitialPromptCheckbox state: true.
-	self assert: presenter initialPromptSkillField text equals: '/smalltalk-dev:st-buddy'
+	self assert: presenter initialPromptSkillField text equals: '/st-buddy'
 ]
 
 { #category : 'tests' }

@@ -1190,7 +1190,7 @@ AbTopicManagerRippleTest >> testGetSettingsRepliesWithDefaultValues [
 	self assert: (settings at: 'aiPermissionWaitTimeoutSeconds') equals: 1800.
 	self assert: (settings at: 'aiPermissionTimeoutOption') equals: AbConstants rejectOnce.
 	self assert: (settings at: 'useStBuddySkillOnInitialPrompt') equals: true.
-	self assert: (settings at: 'initialPromptSkill') equals: '/smalltalk-dev:st-buddy'
+	self assert: (settings at: 'initialPromptSkill') equals: '/st-buddy'
 ]
 
 { #category : 'tests' }

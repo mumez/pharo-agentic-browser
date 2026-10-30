@@ -254,7 +254,7 @@ AbSettingsTest >> testUseCommandOnGoalSetSettable [
 { #category : 'tests' }
 AbSettingsTest >> testInitialPromptSkillDefaultIsStBuddy [
 
-	self assert: AbSettings default initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+	self assert: AbSettings default initialPromptSkill equals: '/st-buddy'
 ]
 
 { #category : 'tests' }
@@ -298,7 +298,7 @@ AbSettingsTest >> testUseStBuddySkillOnInitialPromptTrueSetsDefaultInitialPrompt
 	settings := AbSettings defaultCopied.
 	settings initialPromptSkill: '$st-buddy'.
 	settings useStBuddySkillOnInitialPrompt: true.
-	self assert: settings initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+	self assert: settings initialPromptSkill equals: '/st-buddy'
 ]
 
 { #category : 'tests' }
@@ -348,7 +348,7 @@ AbSettingsTest >> testLoadFromAcceptsOldUseStBuddySkillOnInitialPromptTrue [
 	file := FileSystem memory root / 'ab-settings.json'.
 	file writeStreamDo: [ :stream | stream nextPutAll: '{"useStBuddySkillOnInitialPrompt": true}' ].
 	settings := AbSettings loadFrom: file.
-	self assert: settings initialPromptSkill equals: '/smalltalk-dev:st-buddy'
+	self assert: settings initialPromptSkill equals: '/st-buddy'
 ]
 
 { #category : 'tests' }

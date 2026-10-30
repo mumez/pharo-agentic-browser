@@ -345,7 +345,7 @@ Returns the topic's current settings. Only the fields meaningful in the WebUI co
     "aiPermissionWaitTimeoutSeconds": 1800,
     "aiPermissionTimeoutOption": "reject_once",
     "useStBuddySkillOnInitialPrompt": true,
-    "initialPromptSkill": "/smalltalk-dev:st-buddy"
+    "initialPromptSkill": "/st-buddy"
   }
 }
 ```
@@ -358,7 +358,7 @@ Returns the topic's current settings. Only the fields meaningful in the WebUI co
 | `aiPermissionWaitTimeoutSeconds` | integer | Seconds to wait for a human response to an AI permission request (default: `1800`) |
 | `aiPermissionTimeoutOption` | string | Auto-response on timeout: `"allow_once"`, `"allow_always"`, or `"reject_once"` (default: `"reject_once"`) |
 | `useStBuddySkillOnInitialPrompt` | boolean | Legacy flag derived from `initialPromptSkill`: `true` when it is st-buddy invoked with `/` or `$`, with or without the `smalltalk-dev:` prefix (e.g. `"/smalltalk-dev:st-buddy"`, `"$st-buddy"`) |
-| `initialPromptSkill` | string | Skill invocation prepended (followed by a space) to the first prompt of the topic, e.g. `"$st-buddy"` for codex/junie; empty disables the prefix (default: `"/smalltalk-dev:st-buddy"`) |
+| `initialPromptSkill` | string | Skill invocation prepended (followed by a space) to the first prompt of the topic, e.g. `"$st-buddy"` for codex/junie; empty disables the prefix (default: `"/st-buddy"`) |
 
 **Errors:** `10001` if the `topicId` does not exist.
 
@@ -388,7 +388,7 @@ Updates per-topic settings. Only the fields present in the `settings` body are a
 | `useDefaultMcpServers` | boolean | Enable/disable merging built-in Smalltalk MCP servers |
 | `aiPermissionWaitTimeoutSeconds` | integer | AI permission request wait timeout in seconds |
 | `aiPermissionTimeoutOption` | string | Auto-response on timeout (`"allow_once"`, `"allow_always"`, `"reject_once"`) |
-| `useStBuddySkillOnInitialPrompt` | boolean | Legacy flag, still accepted: `true` sets `initialPromptSkill` to `"/smalltalk-dev:st-buddy"`, `false` sets it to `""` |
+| `useStBuddySkillOnInitialPrompt` | boolean | Legacy flag, still accepted: `true` sets `initialPromptSkill` to `"/st-buddy"`, `false` sets it to `""` |
 | `initialPromptSkill` | string | Skill invocation prepended to the first prompt; empty disables the prefix. Applied after `useStBuddySkillOnInitialPrompt` when both are sent |
 
 **Errors:** `10001` if the `topicId` does not exist.

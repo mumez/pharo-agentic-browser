@@ -6,7 +6,7 @@ Responsibility:
 - I own the status bar: commands drop-list, model drop-list, mode drop-list, screenshot capture button, file attachment button, and animated dots label.
 - I subscribe to topic announcements (AbMessageAdded, AbTopicStatusChanged, AbTopicCurrentModelChanged, AbTopicCurrentModeChanged, AbTopicAvailableCommandsChanged) and update the UI accordingly.
 - I switch layouts dynamically between ""normal"" and ""approval"" mode when an AbMessage with isApprovalRequest = true arrives.
-- I prepend the topic's #initialPromptSkill setting (e.g. '/smalltalk-dev:st-buddy') and a space to the first human message sent in a topic, unless the setting is empty.
+- I prepend the topic's #initialPromptSkill setting (e.g. '/st-buddy') and a space to the first human message sent in a topic, unless the setting is empty.
 - I collect @mention resources (code and screenshots) and selected file attachments from the input text before sending a prompt.
 
 Collaborators:
