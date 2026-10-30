@@ -392,7 +392,7 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Settings';
-		initialExtent: 420 @ self windowHeight
+		initialExtent: 480 @ self windowHeight
 ]
 
 { #category : 'private' }
