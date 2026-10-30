@@ -619,7 +619,7 @@ AbChatPresenterTest >> testSendButtonWithNoMentionsAddsMessage [
 	presenter normalInputPresenter inputField text: 'hello world'.
 	presenter onSendButtonClicked.
 	self assert: topic messages size equals: 1.
-	self assert: topic messages first text equals: '/smalltalk-dev:st-buddy hello world'
+	self assert: topic messages first text equals: '/st-buddy hello world'
 ]
 
 { #category : 'tests' }
