@@ -272,15 +272,9 @@ Watching starts automatically when a topic first connects (on the first **Send**
 
 [crit](https://github.com/tomasz-tomczyk/crit) is a tool for reviewing changed files from a web browser. With the crit integration, you can start crit from AgenticBrowser through a menu (or a button in the Web UI) instead of running it yourself. When you finish a review, the agent picks up your comments and its responses flow into the topic's conversation in AgenticBrowser.
 
-crit review is disabled by default. To enable it, check **Use crit review** in the Settings dialog (or set `useCrit` to `true` in `ab-settings.json`), and make sure the `crit` command is on your `PATH`.
+To enable it, check **Use crit review** in the Settings dialog and make sure the `crit` command is on your `PATH`. Then, when the agent's turn has ended, right-click the topic and choose **Review by crit**.
 
-When `useCrit` is `true` and the topic's working directory is a git repository, right-click the topic and choose **Review by crit** to review the agent's changes in crit.
-
-AgenticBrowser adds `on_finish_unresolved` / `on_finish_approved` hooks to the directory's `.crit.config.json`. When you press **Finish** for the first time after starting the review, the hook saves the result under `<imageDir>/agentic-browser/crit-results/`, and AgenticBrowser sends crit's review prompt to the topic once the agent's turn has ended (it checks every `monitoringIntervalSeconds`). The prompt ends with `crit --session <id>`, so from then on the agent receives later rounds from crit itself. An approval on the first Finish is shown as a system message instead.
-
-- crit asks you once to trust the project's hooks when you first press Finish.
-- If `.crit.config.json` already defines its own `on_finish_unresolved` or `on_finish_approved` hook, AgenticBrowser leaves it unchanged and does not deliver the first result.
-- The "first Finish" state is not saved with the image. After restarting the image, choose **Review by crit** again.
+For installation and the review flow, see [docs/use-crit.md](docs/use-crit.md).
 
 ## Supported Agents
 
