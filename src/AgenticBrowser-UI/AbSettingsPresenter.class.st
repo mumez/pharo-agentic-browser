@@ -2,9 +2,9 @@
 I am a settings editor that presents and saves an AbSettings instance.
 
 Responsibility:
-- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the initial prompt skill field with its st-buddy checkbox, the crit review checkbox, the crit LAN access checkbox, and the crit port range field.
+- I display all editable AbSettings fields: watcher throttle, AI permission timeout, export approval timeout, their timeout-option drop-lists, MCP server checkbox, goal-settings command fields, the initial prompt skill field with its st-buddy checkbox, the crit review checkbox, the crit LAN access checkbox, the crit port range field, and the monitoring interval field.
 - I rewrite the initial prompt skill field when the st-buddy checkbox is toggled (on: the AbSettings default skill, off: empty); editing the field does not change the checkbox, and on save only the field text is written.
-- I validate the crit port range on save (reusing AbSettings>>critPortInterval); when it is invalid I write nothing, skip the saveAction, keep the window open, and show the expected format in a validation message label.
+- I validate the monitoring interval (a positive integer) and the crit port range (reusing AbSettings>>critPortInterval) on save; when either is invalid I write nothing, skip the saveAction, keep the window open, and show the expected format in a validation message label.
 - I support two entry points: editing the global default settings (via #openOnDefault) and editing a per-topic copy (via #openOnTopic:).
 - On save I invoke a configurable saveAction block; for the global path this writes ab-settings.json, for the topic path it replaces the topic's in-memory settings only.
 
@@ -15,15 +15,15 @@ Collaborators:
 
 Public API and Key Messages:
 - AbSettingsPresenter class>>openOnDefault - Open editor for the global AbSettings singleton; saves to ab-settings.json on confirm.
-- AbSettingsPresenter class>>openOnTopic: - Open editor for a topic's settings copy; replaces the topic's settings on confirm without a global save. The crit settings are hidden because crit reads only the global settings.
+- AbSettingsPresenter class>>openOnTopic: - Open editor for a topic's settings copy; replaces the topic's settings on confirm without a global save. The global-only settings are hidden because crit and AbTopicManager's monitoring loop read only the global settings.
 - #saveAction: - Inject a custom save block (receives the edited AbSettings as argument).
-- #showsCritSettings: - Show or hide the crit review checkbox, network access checkbox, port range field, and validation message (shown by default); the window is shorter when they are hidden.
+- #showsGlobalOnlySettings: - Show or hide the monitoring interval field, crit review checkbox, network access checkbox, port range field, and validation message (shown by default); the window is shorter when they are hidden.
 
 Internal Representation:
 - saveAction - Block called with the edited AbSettings on save; defaults to a no-op.
 - All field/widget instVars hold the Spec2 presenters for each individual setting.
-- validationMessageLabel - Label that is empty normally and explains the expected crit port range format after an invalid save attempt.
-- showsCritSettings - Whether the crit settings rows are laid out and the crit port range is checked on save.
+- validationMessageLabel - Label that is empty normally and explains the expected format after an invalid save attempt.
+- showsGlobalOnlySettings - Whether the global-only settings rows are laid out and their values are checked on save.
 "
 Class {
 	#name : 'AbSettingsPresenter',
@@ -43,8 +43,9 @@ Class {
 		'useCritCheckbox',
 		'critAllowUnauthenticatedNetworkCheckbox',
 		'critPortRangeField',
+		'monitoringIntervalField',
 		'validationMessageLabel',
-		'showsCritSettings',
+		'showsGlobalOnlySettings',
 		'saveButton',
 		'cancelButton'
 	],
@@ -71,7 +72,7 @@ AbSettingsPresenter class >> openOnTopic: aTopic [
 	presenter := self on: settingsCopy.
 	presenter saveAction: [ :editedSettings |
 		aTopic settings: editedSettings ].
-	presenter showsCritSettings: false.
+	presenter showsGlobalOnlySettings: false.
 	presenter open.
 	^ presenter
 ]
@@ -84,7 +85,7 @@ AbSettingsPresenter >> settings [
 { #category : 'initialization' }
 AbSettingsPresenter >> initialize [
 	saveAction := [].
-	showsCritSettings := true.
+	showsGlobalOnlySettings := true.
 	super initialize
 ]
 
@@ -164,18 +165,23 @@ AbSettingsPresenter >> critPortRangeField [
 ]
 
 { #category : 'accessing' }
+AbSettingsPresenter >> monitoringIntervalField [
+	^ monitoringIntervalField
+]
+
+{ #category : 'accessing' }
 AbSettingsPresenter >> validationMessageLabel [
 	^ validationMessageLabel
 ]
 
 { #category : 'accessing' }
-AbSettingsPresenter >> showsCritSettings [
-	^ showsCritSettings
+AbSettingsPresenter >> showsGlobalOnlySettings [
+	^ showsGlobalOnlySettings
 ]
 
 { #category : 'accessing' }
-AbSettingsPresenter >> showsCritSettings: aBoolean [
-	showsCritSettings := aBoolean
+AbSettingsPresenter >> showsGlobalOnlySettings: aBoolean [
+	showsGlobalOnlySettings := aBoolean
 ]
 
 { #category : 'accessing' }
@@ -190,8 +196,8 @@ AbSettingsPresenter >> cancelButton [
 
 { #category : 'actions' }
 AbSettingsPresenter >> saveSettings [
-	"Answer whether the settings were written; an invalid crit port range writes nothing and shows the expected format instead."
-	self validateCritPortRange ifFalse: [ ^ false ].
+	"Answer whether the settings were written; an invalid global-only setting writes nothing and shows the expected format instead."
+	self validateGlobalOnlySettings ifFalse: [ ^ false ].
 	self settings watcherMessageThrottleSeconds: watcherThrottleField text asInteger.
 	self settings aiPermissionWaitTimeoutSeconds: aiTimeoutField text asInteger.
 	self settings exportApprovalWaitTimeoutSeconds: exportTimeoutField text asInteger.
@@ -201,21 +207,37 @@ AbSettingsPresenter >> saveSettings [
 	self settings useCommandOnGoalSet: useCommandOnGoalSetCheckbox state.
 	self settings goalSetCommand: goalSetCommandField text.
 	self settings initialPromptSkill: initialPromptSkillField text.
-	self settings useCrit: self useCritCheckbox state.
-	self settings critAllowUnauthenticatedNetwork: self critAllowUnauthenticatedNetworkCheckbox state.
-	self settings critPortRange: self critPortRangeField text.
+	self showsGlobalOnlySettings ifTrue: [ self writeGlobalOnlySettings ].
 	self saveAction cull: self settings.
 	^ true
 ]
 
 { #category : 'private' }
-AbSettingsPresenter >> validateCritPortRange [
-	"Answer whether the crit port range can be saved, showing the expected format in the validation message when it cannot. The range is not checked when the crit settings are hidden."
-	(self showsCritSettings and: [ self isCritPortRangeValid not ]) ifTrue: [
-		self validationMessageLabel label: 'Crit port range must look like ' , self settings defaultCritPortRange , ' (1-65535).'.
-		^ false ].
-	self validationMessageLabel label: ''.
-	^ true
+AbSettingsPresenter >> writeGlobalOnlySettings [
+	self settings useCrit: self useCritCheckbox state.
+	self settings critAllowUnauthenticatedNetwork: self critAllowUnauthenticatedNetworkCheckbox state.
+	self settings critPortRange: self critPortRangeField text.
+	self settings monitoringIntervalSeconds: self monitoringIntervalField text asInteger
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> validateGlobalOnlySettings [
+	"Answer whether the global-only settings can be saved, showing the expected format in the validation message when they cannot. They are not checked when they are hidden."
+	self validationMessageLabel label: self globalOnlySettingsValidationMessage.
+	^ self validationMessageLabel label isEmpty
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> globalOnlySettingsValidationMessage [
+	self showsGlobalOnlySettings ifFalse: [ ^ '' ].
+	self isMonitoringIntervalValid ifFalse: [ ^ 'Monitoring interval must be a positive integer.' ].
+	self isCritPortRangeValid ifFalse: [ ^ 'Crit port range must look like ' , self settings defaultCritPortRange , ' (1-65535).' ].
+	^ ''
+]
+
+{ #category : 'private' }
+AbSettingsPresenter >> isMonitoringIntervalValid [
+	^ (self monitoringIntervalField text asInteger ifNil: [ 0 ]) > 0
 ]
 
 { #category : 'private' }
@@ -284,6 +306,9 @@ AbSettingsPresenter >> initializePresenters [
 	self initializeInitialPromptSkillPresenters.
 	self initializeCritSettingsPresenters.
 
+	monitoringIntervalField := self newTextInput.
+	monitoringIntervalField text: self settings monitoringIntervalSeconds printString.
+
 	saveButton := self newButton.
 	saveButton label: 'Save'.
 	saveButton action: [ self saveSettings ifTrue: [ self window close ] ].
@@ -337,7 +362,7 @@ AbSettingsPresenter >> defaultLayout [
 		spacing: 6;
 		yourself.
 	self addGeneralSettingsTo: layout.
-	self showsCritSettings ifTrue: [ self addCritSettingsTo: layout ].
+	self showsGlobalOnlySettings ifTrue: [ self addGlobalOnlySettingsTo: layout ].
 	^ layout
 		addLast: self actionButtonsLayout withConstraints: [ :c | c height: 34 ];
 		yourself
@@ -359,8 +384,9 @@ AbSettingsPresenter >> addGeneralSettingsTo: aBoxLayout [
 ]
 
 { #category : 'layout' }
-AbSettingsPresenter >> addCritSettingsTo: aBoxLayout [
+AbSettingsPresenter >> addGlobalOnlySettingsTo: aBoxLayout [
 	aBoxLayout
+		add: (self labeledRow: 'Monitoring interval (seconds):' field: self monitoringIntervalField);
 		add: self useCritCheckbox withConstraints: [ :c | c height: 28 ];
 		add: self critAllowUnauthenticatedNetworkCheckbox withConstraints: [ :c | c height: 28 ];
 		add: (self labeledRow: 'Crit port range:' field: self critPortRangeField);
@@ -397,10 +423,10 @@ AbSettingsPresenter >> initializeWindow: aWindowPresenter [
 
 { #category : 'private' }
 AbSettingsPresenter >> windowHeight [
-	"Shrink the window when the crit rows are hidden so the remaining rows do not stretch to fill it.
+	"Shrink the window when the global-only rows are hidden so the remaining rows do not stretch to fill it.
 	The heights are fixed pixel values tuned by eye at the default font size; they are not derived from the current font (e.g. StandardFonts defaultFont), so a larger font setting can still clip rows.
-	They grow additively: each added 28 px row plus the layout's 6 px spacing adds 34 px (the 'Initial Prompt Skill:' row raised 550/420 to 584/454). The 130 px difference is the crit block: two 28 px checkboxes, the port range row, the 20 px validation label, and their spacing."
-	^ self showsCritSettings
-		ifTrue: [ 584 ]
+	They grow additively: each added 28 px row plus the layout's 6 px spacing adds 34 px (the 'Initial Prompt Skill:' row raised 550/420 to 584/454). The 164 px difference is the global-only block: the monitoring interval row, two 28 px checkboxes, the port range row, the 20 px validation label, and their spacing."
+	^ self showsGlobalOnlySettings
+		ifTrue: [ 618 ]
 		ifFalse: [ 454 ]
 ]
