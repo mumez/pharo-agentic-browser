@@ -223,16 +223,15 @@ AbSettingsPresenter >> writeGlobalOnlySettings [
 { #category : 'private' }
 AbSettingsPresenter >> validateGlobalOnlySettings [
 	"Answer whether the global-only settings can be saved, showing the expected format in the validation message when they cannot. They are not checked when they are hidden."
-	self validationMessageLabel label: self globalOnlySettingsValidationMessage.
-	^ self validationMessageLabel label isEmpty
-]
-
-{ #category : 'private' }
-AbSettingsPresenter >> globalOnlySettingsValidationMessage [
-	self showsGlobalOnlySettings ifFalse: [ ^ '' ].
-	self isMonitoringIntervalValid ifFalse: [ ^ 'Monitoring interval must be a positive integer.' ].
-	self isCritPortRangeValid ifFalse: [ ^ 'Crit port range must look like ' , self settings defaultCritPortRange , ' (1-65535).' ].
-	^ ''
+	self validationMessageLabel label: ''.
+	self showsGlobalOnlySettings ifFalse: [ ^ true ].
+	self isMonitoringIntervalValid ifFalse: [
+		self validationMessageLabel label: 'Monitoring interval must be a positive integer.'.
+		^ false ].
+	self isCritPortRangeValid ifFalse: [
+		self validationMessageLabel label: 'Crit port range must look like ' , self settings defaultCritPortRange , ' (1-65535).'.
+		^ false ].
+	^ true
 ]
 
 { #category : 'private' }
