@@ -324,16 +324,16 @@ AbSettingsPresenterTest >> testSaveButtonClosesWindowWhenSettingsAreValid [
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testCritSettingsAreShownByDefault [
-	self assert: self presenter showsCritSettings.
+AbSettingsPresenterTest >> testGlobalOnlySettingsAreShownByDefault [
+	self assert: self presenter showsGlobalOnlySettings.
 	self assert: (self presenter layout allPresenters includes: self presenter useCritCheckbox).
 	self assert: (self presenter layout allPresenters includes: self presenter critAllowUnauthenticatedNetworkCheckbox).
 	self assert: (self presenter layout allPresenters includes: self presenter critPortRangeField)
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testCritSettingsAreHiddenWhenNotShown [
-	self presenter showsCritSettings: false.
+AbSettingsPresenterTest >> testGlobalOnlySettingsAreHiddenWhenNotShown [
+	self presenter showsGlobalOnlySettings: false.
 	self deny: (self presenter layout allPresenters includes: self presenter useCritCheckbox).
 	self deny: (self presenter layout allPresenters includes: self presenter critAllowUnauthenticatedNetworkCheckbox).
 	self deny: (self presenter layout allPresenters includes: self presenter critPortRangeField).
@@ -341,12 +341,12 @@ AbSettingsPresenterTest >> testCritSettingsAreHiddenWhenNotShown [
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testSaveIgnoresInvalidCritPortRangeWhenCritSettingsAreHidden [
+AbSettingsPresenterTest >> testSaveIgnoresInvalidCritPortRangeWhenGlobalOnlySettingsAreHidden [
 	| s called |
 	s := AbSettings new.
 	s critPortRange: 'abc'.
 	self presenter: (AbSettingsPresenter on: s).
-	self presenter showsCritSettings: false.
+	self presenter showsGlobalOnlySettings: false.
 	called := false.
 	self presenter saveAction: [ called := true ].
 	self assert: self presenter saveSettings.
@@ -354,10 +354,10 @@ AbSettingsPresenterTest >> testSaveIgnoresInvalidCritPortRangeWhenCritSettingsAr
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testWindowIsShorterWhenCritSettingsAreHidden [
+AbSettingsPresenterTest >> testWindowIsShorterWhenGlobalOnlySettingsAreHidden [
 	| presenterWithoutCrit |
 	presenterWithoutCrit := AbSettingsPresenter on: AbSettings new.
-	presenterWithoutCrit showsCritSettings: false.
+	presenterWithoutCrit showsGlobalOnlySettings: false.
 	self presenter open.
 	presenterWithoutCrit open.
 	[ self assert: presenterWithoutCrit window initialExtent y < self presenter window initialExtent y ]
@@ -367,8 +367,70 @@ AbSettingsPresenterTest >> testWindowIsShorterWhenCritSettingsAreHidden [
 ]
 
 { #category : 'tests' }
-AbSettingsPresenterTest >> testOpenOnTopicHidesCritSettings [
+AbSettingsPresenterTest >> testOpenOnTopicHidesGlobalOnlySettings [
 	| topicPresenter |
 	topicPresenter := AbSettingsPresenter openOnTopic: self newMockTopic.
-	[ self deny: topicPresenter showsCritSettings ] ensure: [ topicPresenter window close ]
+	[ self deny: topicPresenter showsGlobalOnlySettings ] ensure: [ topicPresenter window close ]
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testMonitoringIntervalFieldShowsDefaultValue [
+	self assert: self presenter monitoringIntervalField text equals: '15'
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWritesMonitoringIntervalToSettings [
+	| s |
+	s := AbSettings new.
+	self presenter: (AbSettingsPresenter on: s).
+	self presenter monitoringIntervalField text: '45'.
+	self presenter saveSettings.
+	self assert: s monitoringIntervalSeconds equals: 45
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWithInvalidMonitoringIntervalDoesNotWriteSettings [
+	#( 'abc' '' '0' '-5' ) do: [ :invalidInterval |
+		| s |
+		s := AbSettings new.
+		self presenter: (AbSettingsPresenter on: s).
+		self presenter monitoringIntervalField text: invalidInterval.
+		self deny: self presenter saveSettings.
+		self assert: s monitoringIntervalSeconds equals: 15 ]
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWithInvalidMonitoringIntervalShowsValidationMessage [
+	self presenter monitoringIntervalField text: 'abc'.
+	self presenter saveSettings.
+	self assert: (self presenter validationMessageLabel label includesSubstring: 'Monitoring interval')
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveWithInvalidMonitoringIntervalDoesNotCallSaveAction [
+	| called |
+	called := false.
+	self presenter saveAction: [ called := true ].
+	self presenter monitoringIntervalField text: '0'.
+	self presenter saveSettings.
+	self deny: called
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testMonitoringIntervalFieldIsShownByDefault [
+	self assert: (self presenter layout allPresenters includes: self presenter monitoringIntervalField)
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testMonitoringIntervalFieldIsHiddenWhenGlobalOnlySettingsAreHidden [
+	self presenter showsGlobalOnlySettings: false.
+	self deny: (self presenter layout allPresenters includes: self presenter monitoringIntervalField)
+]
+
+{ #category : 'tests' }
+AbSettingsPresenterTest >> testSaveIgnoresInvalidMonitoringIntervalWhenGlobalOnlySettingsAreHidden [
+	self presenter showsGlobalOnlySettings: false.
+	self presenter monitoringIntervalField text: 'abc'.
+	self assert: self presenter saveSettings.
+	self assert: self presenter settings monitoringIntervalSeconds equals: 15
 ]
