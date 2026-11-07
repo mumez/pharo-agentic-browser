@@ -40,7 +40,9 @@ crit opens in your web browser. Review the changed files and add comments to the
 
 Press **Finish Review**. AgenticBrowser sends your review to the topic's agent once its turn has ended (it checks every `monitoringIntervalSeconds`).
 
-The first time, crit asks you to trust the project's hooks. AgenticBrowser needs these hooks to receive the review result.
+The first time, crit asks you to trust the project's hooks. AgenticBrowser needs these hooks to receive the review result. Usually, choose **Trust until prompts change**.
+
+![crit asking to trust the project's prompts](screenshots/crit/crit-trust-project-prompts.png)
 
 ### 4. Check the agent's response
 
