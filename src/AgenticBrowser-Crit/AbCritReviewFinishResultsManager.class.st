@@ -2,10 +2,10 @@
 I am the singleton that owns the result files of crit review Finishes, written as JSON files by the finish hooks that AgenticBrowser puts in .crit.config.json.
 
 Responsibility:
-- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under crit-results/ in the AgenticBrowser root directory.
+- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under _crit-results/ in the AgenticBrowser root directory.
 - I prepare a topic's finish hooks, which save crit's finish payload into my files, and merge them into given hooks unless the user defined a finish hook there.
 - I delete a topic's result files.
-- I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
+- I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root, or one written into the legacy crit-results/ directory by older versions, is still treated as ours.
 - I list the result files in my directory as AbCritReviewFinishResult instances, reading the topicId and kind from each file name.
 - I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. Results of unknown topics and later rounds are deleted. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
 
@@ -24,7 +24,7 @@ Public API and Key Messages:
 - #deliverResultsToTopicsIn: - Deliver the pending results to the topics of an AbTopicManager, as described above. Does nothing while useCrit is false.
 
 Internal Representation:
-- directory - Overrides the crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
+- directory - Overrides the _crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
 - default (class inst var) - The global singleton instance.
 "
 Class {
@@ -52,8 +52,14 @@ AbCritReviewFinishResultsManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'constants' }
 AbCritReviewFinishResultsManager >> directoryName [
+
+	^ '_crit-results'
+]
+
+{ #category : 'constants' }
+AbCritReviewFinishResultsManager >> legacyDirectoryName [
 
 	^ 'crit-results'
 ]
@@ -143,7 +149,7 @@ AbCritReviewFinishResultsManager >> deleteFilesFor: aTopic [
 AbCritReviewFinishResultsManager >> isSystemDefinedHookCommand: aCommandString [
 
 	^ aCommandString isString and: [
-		  aCommandString matchesRegex: 'inline\:cat > ''.*/' , self directoryName , '/[^/]+-(' , ('|' join: self finishKinds) , ')\.json''' ]
+		  aCommandString matchesRegex: 'inline\:cat > ''.*/(' , ('|' join: { self directoryName. self legacyDirectoryName }) , ')/[^/]+-(' , ('|' join: self finishKinds) , ')\.json''' ]
 ]
 
 { #category : 'accessing' }

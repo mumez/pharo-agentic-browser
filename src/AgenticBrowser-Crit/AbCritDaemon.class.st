@@ -361,7 +361,7 @@ AbCritDaemon >> onFailDo: aFailedBlock reason: aReasonString [
 { #category : 'accessing' }
 AbCritDaemon >> logFile [
 
-	^ AbSettings defaultAgenticBrowserRootDirectory / 'crit-logs' / (self directory basename , '.log')
+	^ AbSettings defaultAgenticBrowserRootDirectory / '_crit-logs' / (self directory basename , '.log')
 ]
 
 { #category : 'command execution' }
