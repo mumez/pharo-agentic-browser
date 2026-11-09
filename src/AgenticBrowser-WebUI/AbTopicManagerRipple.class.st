@@ -19,7 +19,7 @@ Public API and Key Messages:
 - /crit/start - Request. Replies {ok: true} once validation passes, then starts crit review for a topic and
   later pushes critReviewStarted or critReviewFailed to this client.
 - /workingDirectories/list - Lists immediate subfolders of the agentic-browser root (excluding
-  reserved 'topic-template' and 'screenshots') with creation/modification timestamps.
+  reserved 'topic-template', 'screenshots', and any name starting with '_') with creation/modification timestamps.
 - /topics/create - Accepts optional 'workingDirectory' (a plain relative folder name) and
   'checkExistingDirectory' (default false) body keys. When 'checkExistingDirectory' is true and
   the folder already exists, creation fails with a FOLDER_EXISTS-equivalent error (code 10009);
@@ -410,8 +410,9 @@ AbTopicManagerRipple >> validateWorkingDirectoryName: aDirName [
 { #category : 'private' }
 AbTopicManagerRipple >> isReservedWorkingDirectoryName: aString [
 
-	^ { AbTopicTemplateDirectory reservedFolderName. AbScreenshotAttachment reservedFolderName }
-		  includes: aString
+	^ (aString beginsWith: '_') or: [
+		  { AbTopicTemplateDirectory reservedFolderName. AbScreenshotAttachment reservedFolderName }
+			  includes: aString ]
 ]
 
 { #category : 'json' }

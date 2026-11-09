@@ -110,7 +110,7 @@ AbCritDaemonTest >> assertSpawnCommandForTopic: topicName expectedHostAndFlags: 
 	| daemon log |
 	daemon := self daemonFor: (self readyTopicNamed: topicName).
 	daemon spawn.
-	log := AbSettings defaultAgenticBrowserRootDirectory / 'crit-logs' / (topicName , '.log').
+	log := AbSettings defaultAgenticBrowserRootDirectory / '_crit-logs' / (topicName , '.log').
 	self assert: (self spawnCount: daemon) equals: 1.
 	self
 		assert: daemon executedCommands last
@@ -300,7 +300,7 @@ AbCritDaemonTest >> testStartReviewSpawnsThenReportsUrl [
 		startReviewForHost: '192.168.1.10'
 		ifStarted: [ :startedUrl :startedPort | url := startedUrl ]
 		ifFailed: [ :reason | self fail: reason ].
-	log := AbSettings defaultAgenticBrowserRootDirectory / 'crit-logs' / 'spawn.log'.
+	log := AbSettings defaultAgenticBrowserRootDirectory / '_crit-logs' / 'spawn.log'.
 	self assert: url equals: 'http://192.168.1.10:9080/'.
 	self assert: topic messages last text equals: 'Crit review: http://192.168.1.10:9080/ (crit asks once to trust this project''s hooks when you first press Finish)'.
 	self assert: (self spawnCount: daemon) equals: 1.
@@ -354,7 +354,7 @@ AbCritDaemonTest >> testStartReviewTimesOutWhenDaemonNeverRuns [
 	| topic daemon reason log |
 	topic := self readyTopicNamed: 'timeout'.
 	daemon := self daemonFor: topic.
-	log := AbSettings defaultAgenticBrowserRootDirectory / 'crit-logs' / 'timeout.log'.
+	log := AbSettings defaultAgenticBrowserRootDirectory / '_crit-logs' / 'timeout.log'.
 	daemon
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]
@@ -421,7 +421,7 @@ AbCritDaemonTest >> testStartReviewStatusFailurePostsMessageWithoutSpawning [
 	topic := self readyTopicNamed: 'path'.
 	daemon := self daemonFor: topic.
 	daemon statusReplies add: 'not-json'.
-	log := AbSettings defaultAgenticBrowserRootDirectory / 'crit-logs' / 'path.log'.
+	log := AbSettings defaultAgenticBrowserRootDirectory / '_crit-logs' / 'path.log'.
 	daemon
 		startReviewForHost: 'localhost'
 		ifStarted: [ :url :port | self fail: url ]

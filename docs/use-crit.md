@@ -67,4 +67,4 @@ The agent's response to the review is also shown in the topic's conversation in 
 ## Notes
 
 - AgenticBrowser adds `on_finish_unresolved` / `on_finish_approved` hooks to the working directory's `.crit.config.json`. If the file already defines its own hook for either of them, AgenticBrowser leaves it unchanged and does not deliver the first result.
-- AgenticBrowser delivers only the first Finish after a review starts. The hook saves the result under `<imageDir>/agentic-browser/crit-results/`, and the prompt sent to the agent ends with `crit --session <id>`, so the agent receives later rounds from crit itself.
+- AgenticBrowser delivers only the first Finish after a review starts. The hook saves the result under `<imageDir>/agentic-browser/_crit-results/`, and the prompt sent to the agent ends with `crit --session <id>`, so the agent receives later rounds from crit itself.

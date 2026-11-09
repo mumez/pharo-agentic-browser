@@ -156,7 +156,8 @@ Creates a new topic.
 - `title` — display name (defaults to `"Untitled"` if omitted)
 - `agentArguments` — array of agent CLI arguments (optional)
 - `workingDirectory` — optional. A plain relative folder name (no path separators, no `..`, not
-  an absolute path, and not one of the reserved names `topic-template`/`screenshots`) naming a
+  an absolute path, not one of the reserved names `topic-template`/`screenshots`, and not starting
+  with `_`, which is reserved for internal folders such as `_crit-results`) naming a
   subfolder of the agentic-browser root to use as the topic's working directory. See
   `request /workingDirectories/list` below for discovering existing folder names.
   - If omitted entirely, today's default behavior is unchanged: the server auto-assigns a
@@ -181,7 +182,8 @@ Creates a new topic.
 
 Returns the subfolders available under the agentic-browser root that can be used as a topic's
 `workingDirectory` when creating a topic (see `request /topics/create` above). The reserved
-folders `topic-template` and `screenshots` are excluded.
+folders `topic-template` and `screenshots`, and any folder whose name starts with `_` (reserved for
+internal folders such as `_crit-results` and `_crit-logs`), are excluded.
 
 **Request body:** _(empty)_
 
@@ -809,7 +811,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10007` | `No model config available for: <topicId>` | `/topic/setModel` called before agent connected and sent model options |
 | `10008` | `No mode config available for: <topicId>` | `/topic/setMode` called before agent connected and sent mode options |
 | `10009` | `Working directory already exists: <workingDirectory>` | `/topics/create` called with `checkExistingDirectory: true` and a `workingDirectory` folder that already exists |
-| `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`) |
+| `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`, or any name starting with `_`) |
 | `10011` | `Crit review not available: <reason>` | `/crit/start` when crit review is unavailable, or the topic status is `initial` |
 | `10012` | `Invalid crit review host: <host>` | `/crit/start` when `host` is empty or contains characters outside letters, digits, `.`, `-`, `:` |
 

@@ -347,7 +347,7 @@ AbCritConfigFileTest >> testEnsureFinishHooksReplacesOurHookFromAnotherRoot [
 
 	self writeJson: (Dictionary new
 		at: 'hooks' put: (Dictionary new
-			at: 'on_finish_unresolved' put: 'inline:cat > ''/old/crit-results/t-unresolved.json''';
+			at: 'on_finish_unresolved' put: 'inline:cat > ''/old/_crit-results/t-unresolved.json''';
 			yourself);
 		yourself) in: root.
 	self assert: ((AbCritConfigFile in: root) ensureFinishHooksFor: finishHooksTopic).

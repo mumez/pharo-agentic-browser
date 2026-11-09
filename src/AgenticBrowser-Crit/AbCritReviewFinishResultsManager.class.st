@@ -2,7 +2,7 @@
 I am the singleton that owns the result files of crit review Finishes, written as JSON files by the finish hooks that AgenticBrowser puts in .crit.config.json.
 
 Responsibility:
-- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under crit-results/ in the AgenticBrowser root directory.
+- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under _crit-results/ in the AgenticBrowser root directory.
 - I prepare a topic's finish hooks, which save crit's finish payload into my files, and merge them into given hooks unless the user defined a finish hook there.
 - I delete a topic's result files.
 - I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
@@ -24,7 +24,7 @@ Public API and Key Messages:
 - #deliverResultsToTopicsIn: - Deliver the pending results to the topics of an AbTopicManager, as described above. Does nothing while useCrit is false.
 
 Internal Representation:
-- directory - Overrides the crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
+- directory - Overrides the _crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
 - default (class inst var) - The global singleton instance.
 "
 Class {
@@ -52,10 +52,10 @@ AbCritReviewFinishResultsManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'constants' }
 AbCritReviewFinishResultsManager >> directoryName [
 
-	^ 'crit-results'
+	^ '_crit-results'
 ]
 
 { #category : 'accessing' }
