@@ -5,7 +5,7 @@ Responsibility:
 - I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under _crit-results/ in the AgenticBrowser root directory.
 - I prepare a topic's finish hooks, which save crit's finish payload into my files, and merge them into given hooks unless the user defined a finish hook there.
 - I delete a topic's result files.
-- I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root, or one written into the legacy crit-results/ directory by older versions, is still treated as ours.
+- I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
 - I list the result files in my directory as AbCritReviewFinishResult instances, reading the topicId and kind from each file name.
 - I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. Results of unknown topics and later rounds are deleted. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
 
@@ -56,12 +56,6 @@ AbCritReviewFinishResultsManager class >> default [
 AbCritReviewFinishResultsManager >> directoryName [
 
 	^ '_crit-results'
-]
-
-{ #category : 'constants' }
-AbCritReviewFinishResultsManager >> legacyDirectoryName [
-
-	^ 'crit-results'
 ]
 
 { #category : 'accessing' }
@@ -149,7 +143,7 @@ AbCritReviewFinishResultsManager >> deleteFilesFor: aTopic [
 AbCritReviewFinishResultsManager >> isSystemDefinedHookCommand: aCommandString [
 
 	^ aCommandString isString and: [
-		  aCommandString matchesRegex: 'inline\:cat > ''.*/(' , ('|' join: { self directoryName. self legacyDirectoryName }) , ')/[^/]+-(' , ('|' join: self finishKinds) , ')\.json''' ]
+		  aCommandString matchesRegex: 'inline\:cat > ''.*/' , self directoryName , '/[^/]+-(' , ('|' join: self finishKinds) , ')\.json''' ]
 ]
 
 { #category : 'accessing' }

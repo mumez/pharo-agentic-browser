@@ -59,16 +59,6 @@ AbCritReviewFinishResultsManagerTest >> testIsSystemDefinedHookCommandRecognizes
 ]
 
 { #category : 'tests' }
-AbCritReviewFinishResultsManagerTest >> testIsSystemDefinedHookCommandRecognizesCommandsWritingIntoLegacyResultDirectory [
-
-	| manager |
-	manager := AbCritReviewFinishResultsManager new.
-	self assert: (manager isSystemDefinedHookCommand: 'inline:cat > ''/old/root/agentic-browser/crit-results/abc-unresolved.json''').
-	self assert: (manager isSystemDefinedHookCommand: 'inline:cat > ' , '/r/it''s/crit-results/a-b-approved.json' shellQuoted).
-	self deny: (manager isSystemDefinedHookCommand: 'inline:cat > ''/old/other-results/abc-unresolved.json''')
-]
-
-{ #category : 'tests' }
 AbCritReviewFinishResultsManagerTest >> testResultsReadTopicIdAndKindFromResultFilesOnly [
 
 	| dir results |
@@ -128,13 +118,13 @@ AbCritReviewFinishResultsManagerTest >> testFinishHooksAttachedToForAddsThemKeep
 	topic := AbTopic new.
 	original := Dictionary new
 		at: 'on_review_start' put: 'inline:true';
-		at: 'on_finish_unresolved' put: 'inline:cat > ''/old/crit-results/x-unresolved.json''';
+		at: 'on_finish_unresolved' put: 'inline:cat > ''/old/_crit-results/x-unresolved.json''';
 		yourself.
 	hooks := manager finishHooksAttachedTo: original for: topic.
 	self assert: (hooks at: 'on_review_start') equals: 'inline:true'.
 	(manager prepareFinishHooksFor: topic) keysAndValuesDo: [ :name :command |
 		self assert: (hooks at: name) equals: command ].
-	self assert: (original at: 'on_finish_unresolved') equals: 'inline:cat > ''/old/crit-results/x-unresolved.json'''
+	self assert: (original at: 'on_finish_unresolved') equals: 'inline:cat > ''/old/_crit-results/x-unresolved.json'''
 ]
 
 { #category : 'tests' }
