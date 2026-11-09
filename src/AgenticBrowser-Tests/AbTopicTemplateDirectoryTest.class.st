@@ -41,6 +41,12 @@ AbTopicTemplateDirectoryTest >> testSetupDirectoryCreatesDirectoryWhenMissing [
 ]
 
 { #category : 'tests' }
+AbTopicTemplateDirectoryTest >> testDefaultGitignoreContentIgnoresCritConfig [
+
+	self assert: (AbTopicTemplateDirectory defaultGitignoreContent lines includes: '.crit.config.json')
+]
+
+{ #category : 'tests' }
 AbTopicTemplateDirectoryTest >> testSetupDirectoryGeneratesDefaultFilesWhenEmpty [
 
 	| templateDir instance |
@@ -51,6 +57,9 @@ AbTopicTemplateDirectoryTest >> testSetupDirectoryGeneratesDefaultFilesWhenEmpty
 	[
 		self assert: (templateDir / 'CLAUDE.md') exists.
 		self assert: (templateDir / 'AGENTS.md') exists.
+		self
+			assert: (templateDir / '.gitignore') contents
+			equals: AbTopicTemplateDirectory defaultGitignoreContent.
 		self deny: (templateDir / '.crit.config.json') exists
 	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
 ]
@@ -68,6 +77,7 @@ AbTopicTemplateDirectoryTest >> testSetupDirectorySkipsGenerationWhenNotEmpty [
 		            setupDirectory.
 	[
 		self deny: (templateDir / 'CLAUDE.md') exists.
-		self deny: (templateDir / 'AGENTS.md') exists
+		self deny: (templateDir / 'AGENTS.md') exists.
+		self deny: (templateDir / '.gitignore') exists
 	] ensure: [ templateDir exists ifTrue: [ templateDir deleteAll ] ]
 ]
