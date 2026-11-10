@@ -5,7 +5,7 @@ Responsibility:
 - I tell subscribers which topic's review finished, how it finished, and how many comments remain unresolved.
 
 Collaborators:
-- AbCritReviewFinishResultsManager: It announces me after delivering an approval or sending an unresolved prompt, and when it discards a later round's result, which crit returns to the agent itself.
+- AbCritReviewFinishResultsManager: It announces me after delivering an approval or sending an unresolved prompt, and when it handles a later round's result, which crit returns to the agent itself.
 - AbTopicManagerRipple: It pushes me to WebUI clients as a critReviewFinished event.
 
 Public API and Key Messages:

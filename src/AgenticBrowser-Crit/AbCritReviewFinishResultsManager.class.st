@@ -182,26 +182,24 @@ AbCritReviewFinishResultsManager >> deliverResultsToTopicsIn: anAbTopicManager [
 { #category : 'private' }
 AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult toTopic: aTopicOrNil [
 
-	| daemon finished |
+	| daemon |
 	aTopicOrNil ifNil: [
 		Transcript crShow: 'AbCritReviewFinishResultsManager: discarding crit result of unknown topic ' , anAbCritReviewFinishResult topicId.
 		^ anAbCritReviewFinishResult delete ].
 	daemon := aTopicOrNil critDaemon.
-	daemon isAwaitingFirstFinish ifFalse: [ ^ self announceLaterRoundResult: anAbCritReviewFinishResult toTopic: aTopicOrNil ].
+	daemon isAwaitingFirstFinish ifFalse: [ ^ self deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopicOrNil ].
 	anAbCritReviewFinishResult isApproved
 		ifTrue: [ aTopicOrNil addSystemMessage: 'Crit review approved.' ]
 		ifFalse: [
 			(aTopicOrNil isEndTurn or: [ aTopicOrNil isInitial ]) ifFalse: [ ^ self ].
 			aTopicOrNil sendPrompt: anAbCritReviewFinishResult prompt ].
-	finished := self finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopicOrNil.
-	anAbCritReviewFinishResult delete.
 	daemon awaitingFirstFinish: false.
-	aTopicOrNil announcer announce: finished
+	self deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopicOrNil
 ]
 
 { #category : 'private' }
-AbCritReviewFinishResultsManager >> announceLaterRoundResult: anAbCritReviewFinishResult toTopic: aTopic [
-	"crit returns a later round's result to the agent itself, so only tell subscribers about it."
+AbCritReviewFinishResultsManager >> deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopic [
+	"Announce after deleting the result file, so a failed delete is retried without a duplicate announcement."
 
 	| finished |
 	finished := self finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopic.
