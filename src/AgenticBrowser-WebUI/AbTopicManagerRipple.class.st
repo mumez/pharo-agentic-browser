@@ -8,7 +8,8 @@ Responsibility:
 - I push real-time topic events (messageAdded, statusChanged, etc.) to the client via server-send.
 - I subscribe to ALL events for ALL topics at connect time and when new topics are added.
   All connected clients receive messageAdded, statusChanged, modelChanged, modeChanged,
-  commandsChanged, goalChanged, topicAdded, and topicRemoved for every topic (broadcast model).
+  commandsChanged, goalChanged, critReviewFinished, topicAdded, and topicRemoved for every topic
+  (broadcast model).
 
 Public API and Key Messages:
 - AbTopicManagerRipple class>>roomName - 'agentic-browser' room identifier
@@ -18,6 +19,8 @@ Public API and Key Messages:
 - #unregistered - Unsubscribes all announcer subscriptions (called by RpWebSocketBaseHandler on disconnect)
 - /crit/start - Request. Replies {ok: true} once validation passes, then starts crit review for a topic and
   later pushes critReviewStarted or critReviewFailed to this client.
+- critReviewFinished - Pushed to all clients when a crit review Finish is delivered to a topic
+  (approved, or unresolved once its prompt is sent), with topicId, kind, and unresolvedCount.
 - /workingDirectories/list - Lists immediate subfolders of the agentic-browser root (excluding
   reserved 'topic-template' and 'screenshots') with creation/modification timestamps.
 - /topics/create - Accepts optional 'workingDirectory' (a plain relative folder name) and
@@ -114,6 +117,14 @@ AbTopicManagerRipple >> subscribeToTopicManagerEvents [
 { #category : 'private' }
 AbTopicManagerRipple >> subscribeToTopic: aTopic [
 
+	self subscribeToConversationEventsOf: aTopic.
+	self subscribeToAgentOptionEventsOf: aTopic.
+	self subscribeToCritEventsOf: aTopic
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> subscribeToConversationEventsOf: aTopic [
+
 	aTopic announcer
 		when: AbTopicStatusChanged
 		do: [ :ann | self onStatusChanged: ann ]
@@ -122,6 +133,15 @@ AbTopicManagerRipple >> subscribeToTopic: aTopic [
 		when: AbMessageAdded
 		do: [ :ann | self onMessageAdded: ann ]
 		for: self.
+	aTopic announcer
+		when: AbTopicGoalChanged
+		do: [ :ann | self onGoalChanged: ann ]
+		for: self
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> subscribeToAgentOptionEventsOf: aTopic [
+
 	aTopic announcer
 		when: AbTopicCurrentModelChanged
 		do: [ :ann | self onModelChanged: ann ]
@@ -133,10 +153,15 @@ AbTopicManagerRipple >> subscribeToTopic: aTopic [
 	aTopic announcer
 		when: AbTopicAvailableCommandsChanged
 		do: [ :ann | self onCommandsChanged: ann ]
-		for: self.
+		for: self
+]
+
+{ #category : 'private' }
+AbTopicManagerRipple >> subscribeToCritEventsOf: aTopic [
+
 	aTopic announcer
-		when: AbTopicGoalChanged
-		do: [ :ann | self onGoalChanged: ann ]
+		when: AbCritReviewFinished
+		do: [ :ann | self onCritReviewFinished: ann ]
 		for: self
 ]
 
@@ -839,5 +864,16 @@ AbTopicManagerRipple >> onCommandsChanged: ann [
 		 put: (ann commands
 			  ifNil: [ #() ]
 			  ifNotNil: [ :cmds | cmds collect: [ :cmd | cmd asDictionary ] ]);
+		 yourself)
+]
+
+{ #category : 'topic events' }
+AbTopicManagerRipple >> onCritReviewFinished: ann [
+
+	self pushToClient: (Dictionary new
+		 at: 'event' put: 'critReviewFinished';
+		 at: 'topicId' put: ann topic topicId;
+		 at: 'kind' put: ann kind asString;
+		 at: 'unresolvedCount' put: ann unresolvedCount;
 		 yourself)
 ]

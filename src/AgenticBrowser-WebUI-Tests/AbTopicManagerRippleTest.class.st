@@ -1521,3 +1521,19 @@ AbTopicManagerRippleTest >> testStartCritPushesFailureWithoutChangingStatus [
 		self assert: ((pushes first at: 'body') at: 'topicId') equals: topic topicId.
 		self assert: topic isEndTurn ]
 ]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCritReviewFinishedPushesEventToAllClients [
+
+	| topic pushes body |
+	topic := self newMockTopic: 'Crit Finished Topic'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	topic announcer announce: (AbCritReviewFinished topic: topic kind: #unresolved unresolvedCount: 2).
+	pushes := self critPushesNamed: 'critReviewFinished'.
+	self assert: pushes size equals: 1.
+	body := pushes first at: 'body'.
+	self assert: (body at: 'topicId') equals: topic topicId.
+	self assert: (body at: 'kind') equals: 'unresolved'.
+	self assert: (body at: 'unresolvedCount') equals: 2
+]

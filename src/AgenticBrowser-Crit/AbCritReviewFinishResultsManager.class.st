@@ -7,7 +7,7 @@ Responsibility:
 - I delete a topic's result files.
 - I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
 - I list the result files in my directory as AbCritReviewFinishResult instances, reading the topicId and kind from each file name.
-- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. Results of unknown topics and later rounds are deleted. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
+- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. After delivering, I announce AbCritReviewFinished on the topic's announcer. Results of unknown topics and later rounds are deleted without an announcement. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
 
 Collaborators:
 - AbSettings: I read #defaultAgenticBrowserRootDirectory, and #useCrit through #settings.
@@ -15,7 +15,8 @@ Collaborators:
 - AbCritDaemon: It asks me to delete its topic's stale files when a review starts.
 - AbCritConfigFile: It passes me its hooks to attach a topic's finish hooks to, and writes back the ones I answer.
 - AbTopicManager: It asks me to deliver pending results to its topics, which I look up with its #at:.
-- AbTopic: I send it the prompt or system message, and read its status, logger, and crit daemon.
+- AbTopic: I send it the prompt or system message, read its status, logger, and crit daemon, and announce on its announcer.
+- AbCritReviewFinished: I announce one per delivered result.
 - AbCritDaemon: I ask whether it awaits its first finish, and clear that once delivered.
 
 Public API and Key Messages:
@@ -195,7 +196,17 @@ AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult to
 			(aTopicOrNil isEndTurn or: [ aTopicOrNil isInitial ]) ifFalse: [ ^ self ].
 			aTopicOrNil sendPrompt: anAbCritReviewFinishResult prompt ].
 	anAbCritReviewFinishResult delete.
-	daemon awaitingFirstFinish: false
+	daemon awaitingFirstFinish: false.
+	self announceFinishOf: anAbCritReviewFinishResult toTopic: aTopicOrNil
+]
+
+{ #category : 'private' }
+AbCritReviewFinishResultsManager >> announceFinishOf: anAbCritReviewFinishResult toTopic: aTopic [
+
+	aTopic announcer announce: (AbCritReviewFinished
+			 topic: aTopic
+			 kind: anAbCritReviewFinishResult kind
+			 unresolvedCount: anAbCritReviewFinishResult unresolvedCount)
 ]
 
 { #category : 'private' }
