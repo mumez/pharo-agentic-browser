@@ -632,12 +632,14 @@ The review control stays enabled, so the user can retry.
 
 ### `critReviewFinished` — a crit review Finish was delivered to a topic
 
-Broadcast to all connected clients when the first Finish of a review round is delivered to the topic:
+Broadcast to all connected clients when a Finish of a crit review is delivered to the topic.
+
+For the first Finish after a review starts:
 
 - `approved`: sent together with the `Crit review approved.` system message.
 - `unresolved`: sent when the unresolved comments are actually sent to the agent as a prompt. While the topic is busy (not `endTurn` or `initial`), the prompt and this event wait until a later delivery.
 
-Finishes of later rounds, which crit returns to the agent itself, do not send this event.
+Finishes of later rounds, which crit returns to the agent itself, send only this event, without a system message or prompt. This keeps the client's review state current, for example when a later round is approved after an unresolved one.
 
 ```json
 {
