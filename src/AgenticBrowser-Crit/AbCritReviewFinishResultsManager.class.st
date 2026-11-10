@@ -7,7 +7,7 @@ Responsibility:
 - I delete a topic's result files.
 - I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
 - I list the result files in my directory as AbCritReviewFinishResult instances, reading the topicId and kind from each file name.
-- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. After delivering, I announce AbCritReviewFinished on the topic's announcer. Results of unknown topics and later rounds are deleted without an announcement. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
+- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. After delivering, I announce AbCritReviewFinished on the topic's announcer. Results of later rounds, which crit returns to the agent itself, are deleted and only announced, without a message or prompt. Results of unknown topics are deleted without an announcement. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
 
 Collaborators:
 - AbSettings: I read #defaultAgenticBrowserRootDirectory, and #useCrit through #settings.
@@ -16,7 +16,7 @@ Collaborators:
 - AbCritConfigFile: It passes me its hooks to attach a topic's finish hooks to, and writes back the ones I answer.
 - AbTopicManager: It asks me to deliver pending results to its topics, which I look up with its #at:.
 - AbTopic: I send it the prompt or system message, read its status, logger, and crit daemon, and announce on its announcer.
-- AbCritReviewFinished: I announce one per delivered result.
+- AbCritReviewFinished: I announce one per delivered result and per later-round result.
 - AbCritDaemon: I ask whether it awaits its first finish, and clear that once delivered.
 
 Public API and Key Messages:
@@ -187,9 +187,7 @@ AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult to
 		Transcript crShow: 'AbCritReviewFinishResultsManager: discarding crit result of unknown topic ' , anAbCritReviewFinishResult topicId.
 		^ anAbCritReviewFinishResult delete ].
 	daemon := aTopicOrNil critDaemon.
-	daemon isAwaitingFirstFinish ifFalse: [
-		aTopicOrNil logger info: 'deliverResultsToTopicsIn: discarding a later crit result'.
-		^ anAbCritReviewFinishResult delete ].
+	daemon isAwaitingFirstFinish ifFalse: [ ^ self announceLaterRoundResult: anAbCritReviewFinishResult toTopic: aTopicOrNil ].
 	anAbCritReviewFinishResult isApproved
 		ifTrue: [ aTopicOrNil addSystemMessage: 'Crit review approved.' ]
 		ifFalse: [
@@ -199,6 +197,16 @@ AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult to
 	anAbCritReviewFinishResult delete.
 	daemon awaitingFirstFinish: false.
 	aTopicOrNil announcer announce: finished
+]
+
+{ #category : 'private' }
+AbCritReviewFinishResultsManager >> announceLaterRoundResult: anAbCritReviewFinishResult toTopic: aTopic [
+	"crit returns a later round's result to the agent itself, so only tell subscribers about it."
+
+	| finished |
+	finished := self finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopic.
+	anAbCritReviewFinishResult delete.
+	aTopic announcer announce: finished
 ]
 
 { #category : 'private' }

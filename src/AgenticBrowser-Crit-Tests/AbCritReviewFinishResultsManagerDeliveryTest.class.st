@@ -204,11 +204,34 @@ AbCritReviewFinishResultsManagerDeliveryTest >> testDoesNotAnnounceFinishWhilePr
 ]
 
 { #category : 'tests' }
-AbCritReviewFinishResultsManagerDeliveryTest >> testDoesNotAnnounceDiscardedFinish [
+AbCritReviewFinishResultsManagerDeliveryTest >> testAnnouncesLaterRoundUnresolvedFinishWithoutPromptOrMessage [
 
-	| topic |
+	| topic messageCount |
 	topic := self topicAwaitingFirstFinish: false events: #( #promptSent #turnEnded ).
+	messageCount := topic messages size.
 	self writeUnresolvedFor: topic.
 	self deliverResults.
-	self assert: finishAnnouncements isEmpty
+	self assert: sentPrompts isEmpty.
+	self assert: topic messages size equals: messageCount.
+	self assert: finishAnnouncements size equals: 1.
+	self assert: finishAnnouncements first topic identicalTo: topic.
+	self assert: finishAnnouncements first kind equals: #unresolved.
+	self assert: finishAnnouncements first unresolvedCount equals: 1
+]
+
+{ #category : 'tests' }
+AbCritReviewFinishResultsManagerDeliveryTest >> testAnnouncesLaterRoundApprovedFinishWithoutPromptOrMessage [
+
+	| topic messageCount file |
+	topic := self topicAwaitingFirstFinish: false events: #( #promptSent #turnEnded ).
+	messageCount := topic messages size.
+	file := self writeResult: #approved containing: '{"approved":true}' forTopicId: topic topicId.
+	self deliverResults.
+	self assert: sentPrompts isEmpty.
+	self assert: topic messages size equals: messageCount.
+	self deny: file exists.
+	self assert: finishAnnouncements size equals: 1.
+	self assert: finishAnnouncements first topic identicalTo: topic.
+	self assert: finishAnnouncements first kind equals: #approved.
+	self assert: finishAnnouncements first unresolvedCount equals: 0
 ]
