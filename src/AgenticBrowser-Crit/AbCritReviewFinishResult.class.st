@@ -11,6 +11,7 @@ Collaborators:
 Public API and Key Messages:
 - AbCritReviewFinishResult class>>file:topicId:kind: - Instance for one result file.
 - #topicId / #kind / #isApproved - The topic and finish kind of the file, without reading it.
+- #unresolvedCount - The unresolved comment count read from the payload; 0 for an approval, which does not read the file.
 - #payload - The hook's stdin JSON as a Dictionary. Signals an error when the file is not complete JSON (for example while the hook is still writing it).
 - #prompt - English prompt in the shape of crit's own: unresolved count, the unresolved comments with their replies, the crit comment --reply-to instruction, and the next round command (crit --session <id>).
 - #delete - Delete the result file.
@@ -93,6 +94,13 @@ AbCritReviewFinishResult >> payload [
 ]
 
 { #category : 'accessing' }
+AbCritReviewFinishResult >> unresolvedCount [
+
+	self isApproved ifTrue: [ ^ 0 ].
+	^ self payload at: 'unresolved_count'
+]
+
+{ #category : 'accessing' }
 AbCritReviewFinishResult >> prompt [
 
 	^ String lf join: {
@@ -111,7 +119,7 @@ AbCritReviewFinishResult >> prompt [
 AbCritReviewFinishResult >> summarySentence [
 
 	| count |
-	count := self payload at: 'unresolved_count'.
+	count := self unresolvedCount.
 	^ 'The review finished with {1} unresolved {2}.' format: {
 			  count.
 			  (count = 1

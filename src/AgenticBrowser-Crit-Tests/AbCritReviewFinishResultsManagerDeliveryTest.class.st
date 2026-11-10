@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'topicManager',
 		'sentPrompts',
-		'resultTopicIds'
+		'resultTopicIds',
+		'finishAnnouncements'
 	],
 	#category : 'AgenticBrowser-Crit-Tests',
 	#package : 'AgenticBrowser-Crit-Tests'
@@ -18,7 +19,8 @@ AbCritReviewFinishResultsManagerDeliveryTest >> setUp [
 	AbSettings default useCrit: true.
 	topicManager := AbTopicManager forTest.
 	sentPrompts := OrderedCollection new.
-	resultTopicIds := OrderedCollection new
+	resultTopicIds := OrderedCollection new.
+	finishAnnouncements := OrderedCollection new
 ]
 
 { #category : 'running' }
@@ -67,6 +69,7 @@ AbCritReviewFinishResultsManagerDeliveryTest >> topicAwaitingFirstFinish: aBoole
 	topic onSendBlock: [ :text :resources | sentPrompts add: text ].
 	anEventCollection do: [ :event | topic stateMachine handleEvent: event ].
 	topic critDaemon awaitingFirstFinish: aBoolean.
+	topic announcer when: AbCritReviewFinished do: [ :ann | finishAnnouncements add: ann ] for: self.
 	topicManager addTopic: topic.
 	^ topic
 ]
@@ -162,4 +165,50 @@ AbCritReviewFinishResultsManagerDeliveryTest >> testKeepsUnreadableResultForRetr
 	self assert: brokenTopic critDaemon isAwaitingFirstFinish.
 	self assert: sentPrompts size equals: 1.
 	self deny: goodTopic critDaemon isAwaitingFirstFinish
+]
+
+{ #category : 'tests' }
+AbCritReviewFinishResultsManagerDeliveryTest >> testAnnouncesUnresolvedFinishWhenPromptIsSent [
+
+	| topic |
+	topic := self topicAwaitingFirstFinish: true events: #( #promptSent #turnEnded ).
+	self writeUnresolvedFor: topic.
+	self deliverResults.
+	self assert: finishAnnouncements size equals: 1.
+	self assert: finishAnnouncements first topic identicalTo: topic.
+	self assert: finishAnnouncements first kind equals: #unresolved.
+	self assert: finishAnnouncements first unresolvedCount equals: 1
+]
+
+{ #category : 'tests' }
+AbCritReviewFinishResultsManagerDeliveryTest >> testAnnouncesApprovedFinish [
+
+	| topic |
+	topic := self topicAwaitingFirstFinish: true events: #( #promptSent ).
+	self writeResult: #approved containing: '{"approved":true}' forTopicId: topic topicId.
+	self deliverResults.
+	self assert: finishAnnouncements size equals: 1.
+	self assert: finishAnnouncements first topic identicalTo: topic.
+	self assert: finishAnnouncements first kind equals: #approved.
+	self assert: finishAnnouncements first unresolvedCount equals: 0
+]
+
+{ #category : 'tests' }
+AbCritReviewFinishResultsManagerDeliveryTest >> testDoesNotAnnounceFinishWhilePromptIsHeldBack [
+
+	| topic |
+	topic := self topicAwaitingFirstFinish: true events: #( #promptSent ).
+	self writeUnresolvedFor: topic.
+	self deliverResults.
+	self assert: finishAnnouncements isEmpty
+]
+
+{ #category : 'tests' }
+AbCritReviewFinishResultsManagerDeliveryTest >> testDoesNotAnnounceDiscardedFinish [
+
+	| topic |
+	topic := self topicAwaitingFirstFinish: false events: #( #promptSent #turnEnded ).
+	self writeUnresolvedFor: topic.
+	self deliverResults.
+	self assert: finishAnnouncements isEmpty
 ]

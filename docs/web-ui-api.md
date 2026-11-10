@@ -10,7 +10,7 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 - Default port: `8080`
 - No authentication required (LAN single-user).
 
-On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
+On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
 
 **Client registration requirements (send immediately after connect):**
 - `{ "type": "register", "address": "serverEventPushed" }` — required to receive all server-initiated push events (`messageAdded`, `statusChanged`, etc.)
@@ -502,10 +502,10 @@ Push events arrive in two ways depending on the event type:
 
 | Delivery | Message type | Events |
 |----------|-------------|--------|
-| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved` |
+| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, `topicRemoved` |
 | `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
 
-For `send`-type events, the `body` always contains an `event` field. `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, and `topicRemoved` are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them. `critReviewStarted` and `critReviewFailed` are sent only to the connection that called `/crit/start`, because the URL contains that browser's host.
+For `send`-type events, the `body` always contains an `event` field. `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, and `topicRemoved` are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them. `critReviewStarted` and `critReviewFailed` are sent only to the connection that called `/crit/start`, because the URL contains that browser's host.
 
 For `publish`-type events, only clients that sent `{ "type": "register", "address": "topicsUpdated" }` receive them.
 
@@ -629,6 +629,29 @@ Sent only to the connection that called `/crit/start`. The same reason is also p
 - the message of an error raised while spawning crit
 
 The review control stays enabled, so the user can retry.
+
+### `critReviewFinished` — a crit review Finish was delivered to a topic
+
+Broadcast to all connected clients when the first Finish of a review round is delivered to the topic:
+
+- `approved`: sent together with the `Crit review approved.` system message.
+- `unresolved`: sent when the unresolved comments are actually sent to the agent as a prompt. While the topic is busy (not `endTurn` or `initial`), the prompt and this event wait until a later delivery.
+
+Finishes of later rounds, which crit returns to the agent itself, do not send this event.
+
+```json
+{
+  "event": "critReviewFinished",
+  "topicId": "abc123",
+  "kind": "unresolved",
+  "unresolvedCount": 2
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `kind` | string | `"approved"` or `"unresolved"` |
+| `unresolvedCount` | number | Number of unresolved comments; `0` when `kind` is `"approved"` |
 
 ---
 
