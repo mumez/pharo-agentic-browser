@@ -182,7 +182,7 @@ AbCritReviewFinishResultsManager >> deliverResultsToTopicsIn: anAbTopicManager [
 { #category : 'private' }
 AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult toTopic: aTopicOrNil [
 
-	| daemon |
+	| daemon finished |
 	aTopicOrNil ifNil: [
 		Transcript crShow: 'AbCritReviewFinishResultsManager: discarding crit result of unknown topic ' , anAbCritReviewFinishResult topicId.
 		^ anAbCritReviewFinishResult delete ].
@@ -195,18 +195,20 @@ AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult to
 		ifFalse: [
 			(aTopicOrNil isEndTurn or: [ aTopicOrNil isInitial ]) ifFalse: [ ^ self ].
 			aTopicOrNil sendPrompt: anAbCritReviewFinishResult prompt ].
+	finished := self finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopicOrNil.
 	anAbCritReviewFinishResult delete.
 	daemon awaitingFirstFinish: false.
-	self announceFinishOf: anAbCritReviewFinishResult toTopic: aTopicOrNil
+	aTopicOrNil announcer announce: finished
 ]
 
 { #category : 'private' }
-AbCritReviewFinishResultsManager >> announceFinishOf: anAbCritReviewFinishResult toTopic: aTopic [
+AbCritReviewFinishResultsManager >> finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopic [
+	"Build this before the result file is deleted, because it reads the result's payload."
 
-	aTopic announcer announce: (AbCritReviewFinished
-			 topic: aTopic
-			 kind: anAbCritReviewFinishResult kind
-			 unresolvedCount: anAbCritReviewFinishResult unresolvedCount)
+	^ AbCritReviewFinished
+		  topic: aTopic
+		  kind: anAbCritReviewFinishResult kind
+		  unresolvedCount: anAbCritReviewFinishResult unresolvedCount
 ]
 
 { #category : 'private' }
