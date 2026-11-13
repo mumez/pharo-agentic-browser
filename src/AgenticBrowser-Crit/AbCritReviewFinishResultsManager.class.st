@@ -2,12 +2,12 @@
 I am the singleton that owns the result files of crit review Finishes, written as JSON files by the finish hooks that AgenticBrowser puts in .crit.config.json.
 
 Responsibility:
-- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under crit-results/ in the AgenticBrowser root directory.
+- I own where result files live and how they are named: one file per topic and finish kind (unresolved or approved) under _crit-results/ in the AgenticBrowser root directory.
 - I prepare a topic's finish hooks, which save crit's finish payload into my files, and merge them into given hooks unless the user defined a finish hook there.
 - I delete a topic's result files.
 - I recognize finish hook commands that write into my directory, so a hook from an earlier AgenticBrowser root is still treated as ours.
 - I list the result files in my directory as AbCritReviewFinishResult instances, reading the topicId and kind from each file name.
-- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. Results of unknown topics and later rounds are deleted. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
+- I deliver each pending result to its topic while the topic's crit daemon awaits its first finish: an approval becomes a system message, and an unresolved result becomes a prompt once the topic is #endTurn or #initial. After delivering, I announce AbCritReviewFinished on the topic's announcer. Results of later rounds, which crit returns to the agent itself, are deleted and only announced, without a message or prompt. Results of unknown topics are deleted without an announcement. A result that cannot be read (for example while crit's hook is still writing it) is logged and kept for the next delivery.
 
 Collaborators:
 - AbSettings: I read #defaultAgenticBrowserRootDirectory, and #useCrit through #settings.
@@ -15,7 +15,8 @@ Collaborators:
 - AbCritDaemon: It asks me to delete its topic's stale files when a review starts.
 - AbCritConfigFile: It passes me its hooks to attach a topic's finish hooks to, and writes back the ones I answer.
 - AbTopicManager: It asks me to deliver pending results to its topics, which I look up with its #at:.
-- AbTopic: I send it the prompt or system message, and read its status, logger, and crit daemon.
+- AbTopic: I send it the prompt or system message, read its status, logger, and crit daemon, and announce on its announcer.
+- AbCritReviewFinished: I announce one per delivered result and per later-round result.
 - AbCritDaemon: I ask whether it awaits its first finish, and clear that once delivered.
 
 Public API and Key Messages:
@@ -24,7 +25,7 @@ Public API and Key Messages:
 - #deliverResultsToTopicsIn: - Deliver the pending results to the topics of an AbTopicManager, as described above. Does nothing while useCrit is false.
 
 Internal Representation:
-- directory - Overrides the crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
+- directory - Overrides the _crit-results directory (tests use an in-memory one); nil means under the AgenticBrowser root directory.
 - default (class inst var) - The global singleton instance.
 "
 Class {
@@ -52,10 +53,10 @@ AbCritReviewFinishResultsManager class >> default [
 	^ default ifNil: [ default := self new ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'constants' }
 AbCritReviewFinishResultsManager >> directoryName [
 
-	^ 'crit-results'
+	^ '_crit-results'
 ]
 
 { #category : 'accessing' }
@@ -186,16 +187,34 @@ AbCritReviewFinishResultsManager >> deliverResult: anAbCritReviewFinishResult to
 		Transcript crShow: 'AbCritReviewFinishResultsManager: discarding crit result of unknown topic ' , anAbCritReviewFinishResult topicId.
 		^ anAbCritReviewFinishResult delete ].
 	daemon := aTopicOrNil critDaemon.
-	daemon isAwaitingFirstFinish ifFalse: [
-		aTopicOrNil logger info: 'deliverResultsToTopicsIn: discarding a later crit result'.
-		^ anAbCritReviewFinishResult delete ].
+	daemon isAwaitingFirstFinish ifFalse: [ ^ self deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopicOrNil ].
 	anAbCritReviewFinishResult isApproved
 		ifTrue: [ aTopicOrNil addSystemMessage: 'Crit review approved.' ]
 		ifFalse: [
 			(aTopicOrNil isEndTurn or: [ aTopicOrNil isInitial ]) ifFalse: [ ^ self ].
 			aTopicOrNil sendPrompt: anAbCritReviewFinishResult prompt ].
+	daemon awaitingFirstFinish: false.
+	self deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopicOrNil
+]
+
+{ #category : 'private' }
+AbCritReviewFinishResultsManager >> deleteAndAnnounceResult: anAbCritReviewFinishResult toTopic: aTopic [
+	"Announce after deleting the result file, so a failed delete is retried without a duplicate announcement."
+
+	| finished |
+	finished := self finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopic.
 	anAbCritReviewFinishResult delete.
-	daemon awaitingFirstFinish: false
+	aTopic announcer announce: finished
+]
+
+{ #category : 'private' }
+AbCritReviewFinishResultsManager >> finishAnnouncementOf: anAbCritReviewFinishResult toTopic: aTopic [
+	"Build this before the result file is deleted, because it reads the result's payload."
+
+	^ AbCritReviewFinished
+		  topic: aTopic
+		  kind: anAbCritReviewFinishResult kind
+		  unresolvedCount: anAbCritReviewFinishResult unresolvedCount
 ]
 
 { #category : 'private' }

@@ -10,7 +10,7 @@ ws://<host>:<port>/ws/agentic-browser?token=<sessionId>
 - Default port: `8080`
 - No authentication required (LAN single-user).
 
-On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
+On connect the server subscribes the client to **all events for all topics** immediately. Every push event (`messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, `topicRemoved`) is broadcast to all connected clients. The client uses `topicId` in each event to route it to the right view.
 
 **Client registration requirements (send immediately after connect):**
 - `{ "type": "register", "address": "serverEventPushed" }` — required to receive all server-initiated push events (`messageAdded`, `statusChanged`, etc.)
@@ -156,7 +156,8 @@ Creates a new topic.
 - `title` — display name (defaults to `"Untitled"` if omitted)
 - `agentArguments` — array of agent CLI arguments (optional)
 - `workingDirectory` — optional. A plain relative folder name (no path separators, no `..`, not
-  an absolute path, and not one of the reserved names `topic-template`/`screenshots`) naming a
+  an absolute path, not one of the reserved names `topic-template`/`screenshots`, and not starting
+  with `_`, which is reserved for internal folders such as `_crit-results`) naming a
   subfolder of the agentic-browser root to use as the topic's working directory. See
   `request /workingDirectories/list` below for discovering existing folder names.
   - If omitted entirely, today's default behavior is unchanged: the server auto-assigns a
@@ -181,7 +182,8 @@ Creates a new topic.
 
 Returns the subfolders available under the agentic-browser root that can be used as a topic's
 `workingDirectory` when creating a topic (see `request /topics/create` above). The reserved
-folders `topic-template` and `screenshots` are excluded.
+folders `topic-template` and `screenshots`, and any folder whose name starts with `_` (reserved for
+internal folders such as `_crit-results` and `_crit-logs`), are excluded.
 
 **Request body:** _(empty)_
 
@@ -500,10 +502,10 @@ Push events arrive in two ways depending on the event type:
 
 | Delivery | Message type | Events |
 |----------|-------------|--------|
-| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, `topicRemoved` |
+| `send` to address `"serverEventPushed"` | `send` | `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, `topicRemoved` |
 | `publish` to address `"topicsUpdated"` | `publish` | `topicsUpdated` |
 
-For `send`-type events, the `body` always contains an `event` field. `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `topicAdded`, and `topicRemoved` are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them. `critReviewStarted` and `critReviewFailed` are sent only to the connection that called `/crit/start`, because the URL contains that browser's host.
+For `send`-type events, the `body` always contains an `event` field. `messageAdded`, `statusChanged`, `modelChanged`, `modeChanged`, `commandsChanged`, `goalChanged`, `critReviewFinished`, `topicAdded`, and `topicRemoved` are broadcast to every connected client that has registered for `"serverEventPushed"`; the client uses `topicId` to route them. `critReviewStarted` and `critReviewFailed` are sent only to the connection that called `/crit/start`, because the URL contains that browser's host.
 
 For `publish`-type events, only clients that sent `{ "type": "register", "address": "topicsUpdated" }` receive them.
 
@@ -627,6 +629,31 @@ Sent only to the connection that called `/crit/start`. The same reason is also p
 - the message of an error raised while spawning crit
 
 The review control stays enabled, so the user can retry.
+
+### `critReviewFinished` — a crit review Finish was delivered to a topic
+
+Broadcast to all connected clients when a Finish of a crit review is delivered to the topic.
+
+For the first Finish after a review starts:
+
+- `approved`: sent together with the `Crit review approved.` system message.
+- `unresolved`: sent when the unresolved comments are actually sent to the agent as a prompt. While the topic is busy (not `endTurn` or `initial`), the prompt and this event wait until a later delivery.
+
+Finishes of later rounds, which crit returns to the agent itself, send only this event, without a system message or prompt. This keeps the client's review state current, for example when a later round is approved after an unresolved one.
+
+```json
+{
+  "event": "critReviewFinished",
+  "topicId": "abc123",
+  "kind": "unresolved",
+  "unresolvedCount": 2
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `kind` | string | `"approved"` or `"unresolved"` |
+| `unresolvedCount` | number | Number of unresolved comments; `0` when `kind` is `"approved"` |
 
 ---
 
@@ -809,7 +836,7 @@ Errors on `request` messages include a `correlationId` matching the original req
 | `10007` | `No model config available for: <topicId>` | `/topic/setModel` called before agent connected and sent model options |
 | `10008` | `No mode config available for: <topicId>` | `/topic/setMode` called before agent connected and sent mode options |
 | `10009` | `Working directory already exists: <workingDirectory>` | `/topics/create` called with `checkExistingDirectory: true` and a `workingDirectory` folder that already exists |
-| `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`) |
+| `10010` | `Invalid working directory name: <workingDirectory>` | `/topics/create`'s `workingDirectory` is empty, `.`, contains `/`, `\`, or `..`, is an absolute path, or is a reserved name (`topic-template`, `screenshots`, or any name starting with `_`) |
 | `10011` | `Crit review not available: <reason>` | `/crit/start` when crit review is unavailable, or the topic status is `initial` |
 | `10012` | `Invalid crit review host: <host>` | `/crit/start` when `host` is empty or contains characters outside letters, digits, `.`, `-`, `:` |
 

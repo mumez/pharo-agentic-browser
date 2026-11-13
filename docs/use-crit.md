@@ -40,7 +40,9 @@ crit opens in your web browser. Review the changed files and add comments to the
 
 Press **Finish Review**. AgenticBrowser sends your review to the topic's agent once its turn has ended (it checks every `monitoringIntervalSeconds`).
 
-The first time, crit asks you to trust the project's hooks. AgenticBrowser needs these hooks to receive the review result.
+The first time, crit asks you to trust the project's hooks. AgenticBrowser needs these hooks to receive the review result. Usually, choose **Trust until prompts change**.
+
+![crit asking to trust the project's prompts](screenshots/crit/crit-trust-project-prompts.png)
 
 ### 4. Check the agent's response
 
@@ -65,4 +67,11 @@ The agent's response to the review is also shown in the topic's conversation in 
 ## Notes
 
 - AgenticBrowser adds `on_finish_unresolved` / `on_finish_approved` hooks to the working directory's `.crit.config.json`. If the file already defines its own hook for either of them, AgenticBrowser leaves it unchanged and does not deliver the first result.
-- AgenticBrowser delivers only the first Finish after a review starts. The hook saves the result under `<imageDir>/agentic-browser/crit-results/`, and the prompt sent to the agent ends with `crit --session <id>`, so the agent receives later rounds from crit itself.
+- AgenticBrowser delivers only the first Finish after a review starts. The hook saves the result under `<imageDir>/agentic-browser/_crit-results/`, and the prompt sent to the agent ends with `crit --session <id>`, so the agent receives later rounds from crit itself.
+
+## Upgrading from v1.9.1 or earlier
+
+In v2.0.0, AgenticBrowser's internal crit directories were renamed with a `_` prefix: `crit-results` became `_crit-results`, and `crit-logs` became `_crit-logs`.
+
+- **Hooks**: A `.crit.config.json` written by an earlier version still has hooks that point to `<imageDir>/agentic-browser/crit-results/`. AgenticBrowser treats them as your own hooks, so it leaves them unchanged and does not deliver the review result. In each working directory, either change `crit-results` to `_crit-results` in the `on_finish_unresolved` / `on_finish_approved` paths, or, if the file has no settings of your own, delete `.crit.config.json` so that AgenticBrowser creates it again on the next review.
+- **Old directories**: `<imageDir>/agentic-browser/crit-results/` is no longer used, so delete it. `<imageDir>/agentic-browser/crit-logs/` can stay, but new logs go to `_crit-logs/`.

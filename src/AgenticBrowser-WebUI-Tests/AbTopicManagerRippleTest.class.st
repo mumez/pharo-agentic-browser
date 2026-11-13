@@ -270,6 +270,7 @@ AbTopicManagerRippleTest >> testListWorkingDirectoriesExcludesReservedFolders [
 		| msg reply names |
 		(tempRoot / 'topic-template') ensureCreateDirectory.
 		(tempRoot / 'screenshots') ensureCreateDirectory.
+		(tempRoot / '_crit-results') ensureCreateDirectory.
 		(tempRoot / 'real-project') ensureCreateDirectory.
 		msg := self requestMessage: '/workingDirectories/list' body: nil.
 		ripple handleRequest: msg.
@@ -277,6 +278,7 @@ AbTopicManagerRippleTest >> testListWorkingDirectoriesExcludesReservedFolders [
 		names := ((reply at: 'body') at: 'workingDirectories') collect: [ :d | d at: 'name' ].
 		self deny: (names includes: 'topic-template').
 		self deny: (names includes: 'screenshots').
+		self deny: (names includes: '_crit-results').
 		self assert: (names includes: 'real-project') ]
 ]
 
@@ -414,6 +416,22 @@ AbTopicManagerRippleTest >> testCreateTopicSignalsErrorForReservedWorkingDirecto
 	[ ripple handleRequest: msg ]
 		on: RpError
 		do: [ :e | self assert: e code equals: 10010 ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCreateTopicSignalsErrorForReservedWorkingDirectoryNameStartingWithUnderscore [
+
+	self withTempWorkingDirectoriesRoot: [ :tempRoot |
+		| msg |
+		msg := self requestMessage: '/topics/create'
+			       body: (Dictionary new
+					        at: 'title' put: 'Bad WD Topic';
+					        at: 'workingDirectory' put: '_anything';
+					        yourself).
+		self
+			should: [ ripple handleRequest: msg ]
+			raise: RpError
+			withExceptionDo: [ :e | self assert: e code equals: 10010 ] ]
 ]
 
 { #category : 'tests' }
@@ -1520,4 +1538,20 @@ AbTopicManagerRippleTest >> testStartCritPushesFailureWithoutChangingStatus [
 		self assert: ((pushes first at: 'body') at: 'reason') equals: 'crit status failed (is crit on PATH?)'.
 		self assert: ((pushes first at: 'body') at: 'topicId') equals: topic topicId.
 		self assert: topic isEndTurn ]
+]
+
+{ #category : 'tests' }
+AbTopicManagerRippleTest >> testCritReviewFinishedPushesEventToAllClients [
+
+	| topic pushes body |
+	topic := self newMockTopic: 'Crit Finished Topic'.
+	AbTopicManager forTest addTopic: topic.
+	mockSocket reset.
+	topic announcer announce: (AbCritReviewFinished topic: topic kind: #unresolved unresolvedCount: 2).
+	pushes := self critPushesNamed: 'critReviewFinished'.
+	self assert: pushes size equals: 1.
+	body := pushes first at: 'body'.
+	self assert: (body at: 'topicId') equals: topic topicId.
+	self assert: (body at: 'kind') equals: 'unresolved'.
+	self assert: (body at: 'unresolvedCount') equals: 2
 ]

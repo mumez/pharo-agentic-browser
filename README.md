@@ -375,7 +375,7 @@ Settings are managed by `AbSettings` and persisted as `ab-settings.json` in the 
 
 ### Global Settings
 
-Open the Settings dialog from the **Settings…** menu in the browser window's menu bar. The dialog covers timeout values, timeout options, MCP server preferences, and crit review settings.
+Open the Settings dialog from the **Settings…** menu in the browser window's menu bar. The dialog covers timeout values, timeout options, MCP server preferences, the monitoring interval, and crit review settings.
 
 | Key | Default | Description |
 |-----|---------|-------------|
@@ -390,7 +390,7 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 | `initialPromptSkill` | `'/st-buddy'` | Skill invocation prepended (with a space) to the first prompt of a topic, e.g. `'$st-buddy'` for codex/junie; empty disables the prefix. Replaces the former boolean `useStBuddySkillOnInitialPrompt`; an `ab-settings.json` with the old key is still read (`true` → default skill, `false` → empty) |
 | `useCommandOnGoalSet` | `false` | Prefix the goal notification prompt with `goalSetCommand` |
 | `goalSetCommand` | `'/goal'` | Command prefix used when `useCommandOnGoalSet` is true |
-| `monitoringIntervalSeconds` | `15` | Seconds between the periodic topic checks (e.g. resuming stalled goal topics). Formerly `stallMonitoringIntervalSeconds`; an `ab-settings.json` with the old key is still read, and is saved with the new key |
+| `monitoringIntervalSeconds` | `15` | Seconds between the periodic topic checks: resuming stalled goal topics and sending finished crit reviews to their agents (**Monitoring interval (seconds)** in the Settings dialog; must be a positive integer). Formerly `stallMonitoringIntervalSeconds`; an `ab-settings.json` with the old key is still read, and is saved with the new key |
 | `useCrit` | `false` | Offer **Review by crit** for topics whose working directory is a git repository (**Use crit review** in the Settings dialog) |
 | `critAllowUnauthenticatedNetwork` | `true` | Let crit accept unauthenticated access from other hosts in the LAN; when `false`, crit binds to localhost only (**Allow crit access within LAN** in the Settings dialog) |
 | `critPortRange` | `'9080-9100'` | Inclusive port range (`<low>-<high>`, 1-65535) from which a free port is picked when crit starts |
@@ -399,7 +399,7 @@ Open the Settings dialog from the **Settings…** menu in the browser window's m
 
 Each topic starts with a copy of the global settings. Right-click a topic in the sidebar and choose **Edit Settings...** to open the settings dialog for that topic alone.
 
-The crit settings are global only; they are hidden in the per-topic settings dialog because crit reads only the global settings.
+The monitoring interval and the crit settings are global only; they are hidden in the per-topic settings dialog because the monitoring loop and crit read only the global settings.
 
 Per-topic settings are persisted with the topic via Fuel when `AbTopicManager save` is called.
 
