@@ -26,7 +26,9 @@ crit review is disabled by default. To enable it, check **Use crit review** in t
 
 ### 1. Start the review
 
-The topic's working directory must be a git repository. When the agent's turn has ended, right-click the topic and choose **Review by crit**. The item is disabled while the agent is working.
+> **Note:** The topic's working directory must be a *git repository*, because crit reviews the changes git tracks. A new topic's working directory is not a git repository until you or the agent run `git init` in it. Until then, **Review by crit** is hidden from the context menu, even with **Use crit review** turned on. So if the item is missing, check that the working directory contains a `.git` directory.
+
+When the agent's turn has ended, right-click the topic and choose **Review by crit**. The item is disabled while the agent is working.
 
 ![Review by crit in the topic's context menu](screenshots/crit/review-by-crit-menu.png)
 
