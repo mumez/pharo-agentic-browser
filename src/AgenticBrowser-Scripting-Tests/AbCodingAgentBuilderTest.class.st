@@ -1,16 +1,61 @@
 Class {
 	#name : 'AbCodingAgentBuilderTest',
 	#superclass : 'AbTestCase',
+	#instVars : [
+		'originalSettings'
+	],
 	#category : 'AgenticBrowser-Scripting-Tests',
 	#package : 'AgenticBrowser-Scripting-Tests'
 }
+
+{ #category : 'accessing' }
+AbCodingAgentBuilderTest >> originalSettings [
+
+	^ originalSettings
+]
+
+{ #category : 'accessing' }
+AbCodingAgentBuilderTest >> originalSettings: aSettings [
+
+	originalSettings := aSettings
+]
+
+{ #category : 'running' }
+AbCodingAgentBuilderTest >> setUp [
+
+	"Load presets from a test settings file holding the code defaults, so a saved ab-settings.json in the image directory cannot hide or change them."
+	super setUp.
+	self originalSettings: AbSettings default.
+	AbSettings
+		fileName: 'ab-test-settings.json';
+		default: nil;
+		save;
+		load
+]
+
+{ #category : 'running' }
+AbCodingAgentBuilderTest >> tearDown [
+
+	AbSettings defaultFileReference ensureDelete.
+	AbSettings fileName: nil.
+	AbSettings default: self originalSettings.
+	super tearDown
+]
+
+{ #category : 'tests' }
+AbCodingAgentBuilderTest >> testAntigravitySetsArguments [
+
+	| builder |
+	builder := AbCodingAgentBuilder new antigravity.
+	self assert: builder agentArguments equals: #( 'agy' 'acp' )
+]
 
 { #category : 'tests' }
 AbCodingAgentBuilderTest >> testBuildByBlock [
 
 	| builder |
-	builder := AbCodingAgentBuilder new buildBy: [ :a | a gemini ].
-	self assert: builder agentArguments equals: #( 'gemini' '--acp' )
+	builder := AbCodingAgentBuilder new buildBy: [ :a | a antigravity ].
+	self assert: builder agentArguments equals: #( 'agy' 'acp' )
 ]
 
 { #category : 'tests' }

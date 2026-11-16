@@ -1,7 +1,7 @@
 "
 I configure which AI coding agent and mode to use for an orchestration step.
 
-I am built via an #agentBy: block in the DSL. Shortcut messages (#claude, #codex, #gemini, etc.)
+I am built via an #agentBy: block in the DSL. Shortcut messages (#claude, #codex, #antigravity, etc.)
 set the agent command arguments from AbSettings presets. Optional messages (#planMode, #model:)
 add further configuration that is applied once the ACP session is established.
 
@@ -17,7 +17,7 @@ Collaborators:
 - AbTopic: receives agent arguments, mode config, and model config
 
 Public API and Key Messages:
-- #claude / #codex / #gemini / #opencode / #copilot / #cursorAgent / #kilo / #kiro / #devin / #grokBuild - select a preset agent
+- #claude / #codex / #antigravity / #opencode / #copilot / #cursorAgent / #kilo / #kiro / #devin / #grokBuild - select a preset agent
 - #planMode - start the agent in plan mode (where supported)
 - #model: aString - override the model name passed to the agent
 "
@@ -41,6 +41,11 @@ AbCodingAgentBuilder >> agentArguments [
 { #category : 'accessing' }
 AbCodingAgentBuilder >> agentArguments: anArray [
 	agentArguments := anArray
+]
+
+{ #category : 'shortcuts' }
+AbCodingAgentBuilder >> antigravity [
+	self useAgentArgumentsAt: 'Antigravity CLI'
 ]
 
 { #category : 'privates' }
@@ -128,11 +133,6 @@ AbCodingAgentBuilder >> flattenedOptions: aCollection [
 		opt isGroup
 			ifTrue: [ opt options ]
 			ifFalse: [ { opt } ] ]
-]
-
-{ #category : 'shortcuts' }
-AbCodingAgentBuilder >> gemini [
-	self useAgentArgumentsAt: 'Gemini CLI'
 ]
 
 { #category : 'shortcuts' }

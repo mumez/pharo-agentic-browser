@@ -112,7 +112,7 @@ Returns the list of available coding agent presets from `AbSettings`.
 {
   "agents": [
     { "name": "claude-agent-acp", "command": ["claude-agent-acp"] },
-    { "name": "Gemini CLI",        "command": ["gemini", "--acp"] }
+    { "name": "Antigravity CLI",  "command": ["agy", "acp"] }
   ]
 }
 ```

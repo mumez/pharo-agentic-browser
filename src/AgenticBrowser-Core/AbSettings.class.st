@@ -28,6 +28,7 @@ Public API and Key Messages:
 Internal Representation:
 - settingsDict - Dictionary keyed by Symbol storing all explicitly set values.
 - default (class inst var) - Cached global singleton; reset on class initialize.
+- fileName (class inst var) - Settings file name under the agentic browser root; 'ab-settings.json' when nil. Tests swap it to load their own settings file.
 
 Implementation Points:
 - Non-default instances delegate missing keys to the global instance via #isDefault checks in every #defaultXxx method, so per-topic copies only override keys that are explicitly set.
@@ -40,7 +41,8 @@ Class {
 		'settingsDict'
 	],
 	#classInstVars : [
-		'default'
+		'default',
+		'fileName'
 	],
 	#category : 'AgenticBrowser-Core',
 	#package : 'AgenticBrowser-Core'
@@ -50,6 +52,12 @@ Class {
 AbSettings class >> default [
 
 	^ default ifNil: [ default := self new ]
+]
+
+{ #category : 'accessing' }
+AbSettings class >> default: aSettings [
+
+	default := aSettings
 ]
 
 { #category : 'persistence' }
@@ -70,16 +78,28 @@ AbSettings class >> defaultCopied [
 	^ self copiedFrom: self default
 ]
 
+{ #category : 'defaults' }
+AbSettings class >> defaultFileName [
+
+	^ 'ab-settings.json'
+]
+
 { #category : 'persistence' }
 AbSettings class >> defaultFileReference [
 
 	^ self defaultAgenticBrowserRootDirectory / self fileName
 ]
 
-{ #category : 'persistence' }
+{ #category : 'accessing' }
 AbSettings class >> fileName [
 
-	^ 'ab-settings.json'
+	^ fileName ifNil: [ self defaultFileName ]
+]
+
+{ #category : 'accessing' }
+AbSettings class >> fileName: aString [
+
+	fileName := aString
 ]
 
 { #category : 'class initialization' }
@@ -227,7 +247,7 @@ AbSettings >> defaultCodingAgentsJsonString [
 	^ '
 [
   {"name": "claude-agent-acp", "command": ["claude-agent-acp"]},
-  {"name": "Gemini CLI", "command": ["gemini", "--acp"]},
+  {"name": "Antigravity CLI", "command": ["agy", "acp"]},
   {"name": "OpenCode", "command": ["opencode", "acp"]},
   {"name": "Copilot CLI", "command": ["copilot", "--acp", "--stdio"]},
   {"name": "codex-acp", "command": ["codex-acp"]},
