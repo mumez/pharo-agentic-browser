@@ -28,7 +28,7 @@ Public API and Key Messages:
 Internal Representation:
 - settingsDict - Dictionary keyed by Symbol storing all explicitly set values.
 - default (class inst var) - Cached global singleton; reset on class initialize.
-- fileName (class inst var) - Settings file name under the agentic browser root; 'ab-settings.json' when nil. Tests swap it to load their own settings file.
+- fileName (class inst var) - Settings file name under the agentic browser root; 'ab-settings.json' when nil; reset on class initialize. Tests swap it to load their own settings file.
 
 Implementation Points:
 - Non-default instances delegate missing keys to the global instance via #isDefault checks in every #defaultXxx method, so per-topic copies only override keys that are explicitly set.
@@ -105,7 +105,8 @@ AbSettings class >> fileName: aString [
 { #category : 'class initialization' }
 AbSettings class >> initialize [
 
-	default := nil
+	default := nil.
+	fileName := nil
 ]
 
 { #category : 'persistence' }

@@ -53,6 +53,14 @@ AbSettingsTest >> testDefaultCopiedDoesNotMutateDefault [
 ]
 
 { #category : 'tests' }
+AbSettingsTest >> testInitializeResetsFileName [
+
+	AbSettings fileName: 'ab-test-settings.json'.
+	AbSettings initialize.
+	self assert: AbSettings fileName equals: AbSettings defaultFileName
+]
+
+{ #category : 'tests' }
 AbSettingsTest >> testDefaultReturnsSingletonInstance [
 
 	self assert: AbSettings default == AbSettings default
