@@ -29,7 +29,7 @@ before writing a single line.
 
 ## Project Overview
 
-A Pharo-native UI for managing multiple AI coding agent sessions (Claude Code, Gemini CLI, OpenCode, etc.) in parallel. Each session is a **topic** with its own chat, working directory, and state machine.
+A Pharo-native UI for managing multiple AI coding agent sessions (Claude Code, Antigravity CLI, OpenCode, etc.) in parallel. Each session is a **topic** with its own chat, working directory, and state machine.
 
 ### Package Structure
 
@@ -121,6 +121,6 @@ Reference: https://github.com/mumez/PharoSmalltalkInteropServer
 ### Key gotchas
 
 - **No `addHumanMessage:`** — to add a human message manually use `AbMessage sender: #human text: '...'` and add it to `topic messages`. The real entry point for sending a prompt is `topic sendPrompt:` which also connects to an ACP agent.
-- **`agentArguments:` not `agentName:`** — `AbTopic` stores agent CLI args as an array (e.g. `#('gemini' '--acp')`), not a name string.
+- **`agentArguments:` not `agentName:`** — `AbTopic` stores agent CLI args as an array (e.g. `#('agy' 'acp')`), not a name string.
 - **GUI requires X11/display** — `AbBrowserPresenter open` needs a display server. In headless Cloud Agent VMs, test domain logic via `eval` instead.
 - **smalltalkCI is installed at `/opt/smalltalkCI`** — added to `PATH` via the update script; no need to reinstall.

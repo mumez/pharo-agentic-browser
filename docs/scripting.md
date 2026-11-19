@@ -95,7 +95,7 @@ Inside `agentBy:`, the block argument responds to:
 |---------|-------------|
 | `claude` | Claude Code (`claude-agent-acp`) |
 | `codex` | Codex (`codex-acp`) |
-| `gemini` | Gemini CLI |
+| `antigravity` | Antigravity CLI |
 | `opencode` | OpenCode |
 | `copilot` | GitHub Copilot CLI |
 | `cursorAgent` | Cursor CLI |
